@@ -1,7 +1,4 @@
-from gensim import corpora
-from gensim import models
-from pprint import pprint  # pretty-printer
-from collections import defaultdict
+from pprint import pprint
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import NMF, LatentDirichletAllocation
 import os
@@ -12,8 +9,8 @@ import json
 # Internal help functions
 ###########
 
-NR_OF_TOP_WORDS = 20
-NR_OF_TOP_DOCUMENTS = 10
+NR_OF_TOP_WORDS = 25
+NR_OF_TOP_DOCUMENTS = 200
 
 # The bow that is used
 def get_scikit_bow(documents, ngram_length, vectorizer):
@@ -31,11 +28,7 @@ def get_scikit_bow(documents, ngram_length, vectorizer):
         to_return.append(list(el))
     return to_return, tf_vectorizer, tf
 
-def get_scikit_bow_new_documents(documents, vectorizer):
-    tf = vectorizer.transform([documents])
-    inversed = vectorizer.inverse_transform(tf)
-    return(list(inversed[0]))
-
+"""
 def display_topics(model, feature_names, no_top_words):
     for topic_idx, topic in enumerate(model.components_):
         print ("Topic " +  str(topic_idx))
@@ -49,6 +42,7 @@ def display_topics(H, W, feature_names, documents, no_top_words, no_top_document
         top_doc_indices = np.argsort( W[:,topic_idx] )[::-1][0:no_top_documents]
         for doc_index in top_doc_indices:
             print(documents[doc_index])
+"""
 
 def get_scikit_topics(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents):
 
@@ -61,15 +55,17 @@ def get_scikit_topics(model, vectorizer, transformed, documents, nr_of_top_words
         # terms
         term_list = []
         for i in topic.argsort()[:-nr_of_top_words - 1:-1]:
-            term_list.append((feature_names[i], topic[i]))
+            if topic[i] > 0.000:
+                term_list.append((feature_names[i], topic[i]))
 
         # documents
         doc_list = []
         doc_strength = sorted(W[:,topic_idx])[::-1]
         top_doc_indices = np.argsort( W[:,topic_idx] )[::-1][0:no_top_documents]
         for doc_i, strength in zip(top_doc_indices, doc_strength):
-            doc_list.append((doc_i, documents[doc_i], strength))
-        topic_tuple = (topic_idx, term_list, top_doc_indices,  doc_list)
+            if strength > 0.000:
+                doc_list.append((doc_i, documents[doc_i], strength))
+        topic_tuple = (topic_idx, term_list, doc_list)
         return_list.append(topic_tuple)
     return return_list
 
@@ -82,6 +78,7 @@ TOPIC_INDEX = "topic_index"
 #The strength not normalized. If that is to be done, see for instance:
 # https://stackoverflow.com/questions/40597075/python-sklearn-latent-dirichlet-allocation-transform-v-fittransform#40637379
 #doc_topic_distr contains the strength for each topic
+"""
 def get_scikit_topic_for_use(doc_topic_distr, model, tf_vectorizer, documents, no_top_words):
     return_list = []
     feature_names = tf_vectorizer.get_feature_names()
@@ -97,7 +94,7 @@ def get_scikit_topic_for_use(doc_topic_distr, model, tf_vectorizer, documents, n
             topic_idx = topic_idx + 1
         return_list.append({DOCUMENT: document, TOPICS:return_list_for_document})
     return return_list
-
+"""
 #############
 # The public functions
 #############
@@ -105,32 +102,23 @@ def get_scikit_topic_for_use(doc_topic_distr, model, tf_vectorizer, documents, n
 ############
 # Train models
 ############
-# Copied from
+# Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_lda_model(documents, number_of_topics, ngram_length):
     texts, tf_vectorizer, tf = get_scikit_bow(documents, ngram_length, CountVectorizer)
-    lda = LatentDirichletAllocation(n_components=number_of_topics, max_iter=5, learning_method='online', learning_offset=50.,random_state=0).fit(tf)
+    lda = LatentDirichletAllocation(n_components=number_of_topics, max_iter=10, learning_method='online', learning_offset=50.,random_state=0).fit(tf)
     topic_info = get_scikit_topics(lda, tf_vectorizer, tf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
-    return topic_info, lda, None, tf_vectorizer
+    return topic_info, lda, tf_vectorizer
 
 
-# Copied from
+# Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_nmf_model(documents, number_of_topics, ngram_length):
     texts, tfidf_vectorizer, tfidf = get_scikit_bow(documents, ngram_length, TfidfVectorizer)
     nmf = NMF(n_components=number_of_topics, random_state=1, alpha=.1, l1_ratio=.5, init='nndsvd').fit(tfidf)
     topic_info = get_scikit_topics(nmf, tfidf_vectorizer, tfidf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
-    return topic_info, nmf, None, tfidf_vectorizer
+    return topic_info, nmf, tfidf_vectorizer
 
-############
-# Use models
-############
-
-def use_scikit_model(documents, model, vectorizer):
-    texts = vectorizer.transform(documents)
-    doc_topic_distr = model.transform(texts)
-    topics_for_documents = get_scikit_topic_for_use(doc_topic_distr, model, vectorizer, documents, NR_OF_TOP_WORDS)
-    return topics_for_documents
 
 
 def read_test_documents():
@@ -143,7 +131,7 @@ def read_test_documents():
             cleaned = el.replace('"full_text" : ', "").strip().replace('"', '').replace('\\n*', ' ').replace('\\', ' ')
             no_links = []
             for word in cleaned.split(" "):
-                if "//" not in word and "http" not in word:
+                if "//" not in word and "http" not in word and "@" not in word:
                     no_links.append(word)
             lines.append(" ".join(no_links))
     return list(set(lines))
@@ -158,35 +146,21 @@ def run_main():
 
     #documents = ["Human machine interface for lab abc computer applications.",  "A survey of user opinion of computer system response time. System and human system engineering testing of EPS Relation of user perceived response time to error measurement"] *100
 
-    #new_documents = ["error measurement" "User opinion", "abc computer", "computer applications"]
-
     print("Make models for "+ str(len(documents)) + " documents.")
     
     print("*************")
     print("scikit lda")
-    topic_info, scikit_lda, tf_feature_names, tf_vectorizer = train_scikit_lda_model(documents, 10, 2)
+    topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, 10, 2)
     pprint(topic_info)
-
-    """
-    topic_res = use_scikit_model(new_documents, scikit_lda, tf_vectorizer)
-    for el in topic_res:
-        print(el)
-        print("-----")
-    """    
 
     print()
     print("*************")
+    print("*************")
+    print("*************")
     print("scikit nmf")
-    topic_info, scikit_nmf, tf_feature_names, tf_vectorizer = train_scikit_nmf_model(documents, 10, 2)
+    topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, 10, 2)
     pprint(topic_info)
 
-    """
-    topic_res = use_scikit_model(new_documents, scikit_nmf, tf_vectorizer)
-    for el in topic_res:
-        print(el)
-        print("-----")
-    """    
-
-    
+    print("\nMade models for "+ str(len(documents)) + " documents.")
 if __name__ == '__main__':
     run_main()
