@@ -4,6 +4,8 @@ from sklearn.decomposition import NMF, LatentDirichletAllocation
 import os
 import numpy as np
 import json
+from collections import deque
+from collections import Counter
 
 ###########
 # Internal help functions
@@ -43,14 +45,48 @@ def display_topics(H, W, feature_names, documents, no_top_words, no_top_document
         for doc_index in top_doc_indices:
             print(documents[doc_index])
 """
+TOPIC_NUMBER = "TOPIC_NUMBER"
+TERM_LIST = "TERM_LIST"
+DOCUMENT_LIST = "DOCUMENT_LIST"
+OVERLAP_CUT_OFF = 0.6
 
+def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
+    current_set = Counter(current_topic)
+    for previous_topic in previous_topic_list:
+        previous_set = Counter(previous_topic)
+        overlap = list((current_set & previous_set).elements())
+        if overlap != []:
+            overlap_figure = len(overlap)/((len(previous_topic) + len(current_topic))/2)
+            if overlap_figure > overlap_cut_off:
+                #print(overlap_figure)
+                return True
+    return False
+    
+def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_words, no_top_documents):
+    previous_topic_list_list = []
+    filtered_ret_list = [] # only include topics that have been stable in this
+    for nr, model in enumerate(model_list):
+        ret_list = get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents)    
+        for el in ret_list:
+            current_topic = [term for term, prob in el[TERM_LIST]]
+            found_match = False
+            for previous_topic_list in previous_topic_list_list:
+                if is_overlap(current_topic, previous_topic_list, OVERLAP_CUT_OFF):
+                     previous_topic_list.append(current_topic)
+                     found_match = True
+                     if nr == len(model_list) - 1: # last iteratio in loop
+                         if len(previous_topic_list) ==  len(model_list): # only add if this topic has occurred in all runs
+                             filtered_ret_list.append(el) 
+            if not found_match:
+                previous_topic_list_list.append([current_topic])
 
-def get_scikit_topics(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents):
+    return filtered_ret_list # return results from the last run:
 
+def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents):
     W = model.transform(transformed)
     H = model.components_
-
-    return_list = []
+        
+    ret_list = []
     feature_names = vectorizer.get_feature_names() 
     for topic_idx, topic in enumerate(H):
         # terms
@@ -80,9 +116,9 @@ def get_scikit_topics(model, vectorizer, transformed, documents, nr_of_top_words
                             marked_document = marked_document.replace(term.upper(), "<b>" + term.upper() + "</b>")
                 if found_term:
                     doc_list.append((doc_i, marked_document, strength)) # only include documents where at least on one of the terms is found
-        topic_tuple = (topic_idx, term_list, doc_list)
-        return_list.append(topic_tuple)
-    return return_list
+        topic_dict = {TOPIC_NUMBER:topic_idx, TERM_LIST:term_list, DOCUMENT_LIST:doc_list}
+        ret_list.append(topic_dict)
+    return ret_list
 
 DOCUMENT = "document"
 TOPICS = "topics"
@@ -119,19 +155,25 @@ def get_scikit_topic_for_use(doc_topic_distr, model, tf_vectorizer, documents, n
 ############
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
-def train_scikit_lda_model(documents, number_of_topics, ngram_length):
+def train_scikit_lda_model(documents, number_of_topics, ngram_length, number_of_runs):
     texts, tf_vectorizer, tf = get_scikit_bow(documents, ngram_length, CountVectorizer)
-    lda = LatentDirichletAllocation(n_components=number_of_topics, max_iter=10, learning_method='online', learning_offset=50.,random_state=0).fit(tf)
-    topic_info = get_scikit_topics(lda, tf_vectorizer, tf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
+    model_list = []
+    for i in range(0, number_of_runs):
+        lda = LatentDirichletAllocation(n_components=number_of_topics, max_iter=10, learning_method='online', learning_offset=50.).fit(tf)
+        model_list.append(lda)
+    topic_info = get_scikit_topics(model_list, tf_vectorizer, tf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
     return topic_info, lda, tf_vectorizer
 
 
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
-def train_scikit_nmf_model(documents, number_of_topics, ngram_length):
+def train_scikit_nmf_model(documents, number_of_topics, ngram_length, number_of_runs):
     texts, tfidf_vectorizer, tfidf = get_scikit_bow(documents, ngram_length, TfidfVectorizer)
-    nmf = NMF(n_components=number_of_topics, random_state=1, alpha=.1, l1_ratio=.5, init='nndsvd').fit(tfidf)
-    topic_info = get_scikit_topics(nmf, tfidf_vectorizer, tfidf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
+    model_list = []
+    for i in range(0, number_of_runs):
+        nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='nndsvd').fit(tfidf)
+        model_list.append(nmf)
+    topic_info = get_scikit_topics(model_list, tfidf_vectorizer, tfidf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
     return topic_info, nmf, tfidf_vectorizer
 
 
@@ -166,17 +208,21 @@ def run_main():
     
     print("*************")
     print("scikit lda")
-    topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, 10, 2)
-    pprint(topic_info)
+    topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, 10, 2, 5)
+    #for el in topic_info:
+    #    pprint(el)
+    print(len(topic_info))
 
+    
     print()
     print("*************")
     print("*************")
     print("*************")
     print("scikit nmf")
-    topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, 10, 2)
-    pprint(topic_info)
-
+    topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, 10, 2, 5)
+    #for el in topic_info:
+    #    pprint(el)
+    print(len(topic_info))
     print("\nMade models for "+ str(len(documents)) + " documents.")
 if __name__ == '__main__':
     run_main()
