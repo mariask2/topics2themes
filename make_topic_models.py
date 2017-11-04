@@ -44,6 +44,7 @@ def display_topics(H, W, feature_names, documents, no_top_words, no_top_document
             print(documents[doc_index])
 """
 
+
 def get_scikit_topics(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents):
 
     W = model.transform(transformed)
@@ -54,17 +55,31 @@ def get_scikit_topics(model, vectorizer, transformed, documents, nr_of_top_words
     for topic_idx, topic in enumerate(H):
         # terms
         term_list = []
+        term_set = set()
         for i in topic.argsort()[:-nr_of_top_words - 1:-1]:
             if topic[i] > 0.000:
                 term_list.append((feature_names[i], topic[i]))
-
+                for term in feature_names[i].split(" "):
+                    term_set.add(term)
         # documents
         doc_list = []
         doc_strength = sorted(W[:,topic_idx])[::-1]
         top_doc_indices = np.argsort( W[:,topic_idx] )[::-1][0:no_top_documents]
         for doc_i, strength in zip(top_doc_indices, doc_strength):
             if strength > 0.000:
-                doc_list.append((doc_i, documents[doc_i], strength))
+                marked_document = documents[doc_i]
+                found_term = False
+                for term in term_set:
+                    if term in documents[doc_i] or term[0].upper() + term[1:] in documents[doc_i] :
+                        found_term = True
+                        before_changed = marked_document
+                        marked_document = marked_document.replace(term, "<b>" + term + "</b>")
+                        if  marked_document == before_changed:
+                            marked_document = marked_document.replace(term[0].upper() + term[1:], "<b>" + term[0].upper() + term[1:] + "</b>")
+                        if marked_document == before_changed:
+                            marked_document = marked_document.replace(term.upper(), "<b>" + term.upper() + "</b>")
+                if found_term:
+                    doc_list.append((doc_i, marked_document, strength)) # only include documents where at least on one of the terms is found
         topic_tuple = (topic_idx, term_list, doc_list)
         return_list.append(topic_tuple)
     return return_list
@@ -128,7 +143,8 @@ def read_test_documents():
     f.close()
     for el in text_lines:
         if '"full_text"' in el:
-            cleaned = el.replace('"full_text" : ', "").strip().replace('"', '').replace('\\n*', ' ').replace('\\', ' ')
+            cleaned = el.replace('"full_text" : ', "").strip().replace('"', '').replace('\\n*', ' ').replace('\\', ' ').replace('&amp', ' ').replace("'ve", ' have')
+            cleande = cleaned.replace("don't", 'do not').replace("doesn't", 'does not').replace("Don't", 'Do not').replace("Doesn't", 'Does not')
             no_links = []
             for word in cleaned.split(" "):
                 if "//" not in word and "http" not in word and "@" not in word:
