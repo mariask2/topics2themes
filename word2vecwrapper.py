@@ -59,7 +59,7 @@ class Word2vecWrapper:
                     self._vocabulary_list.append(el[0])
                 else:
                     self._vocabulary_list.append(el)
-            print(self._vocabulary_list)
+            print("Vocabulary list length " + str(len(self._vocabulary_list)))
 
     def get_vector(self, word):
         if len(word) == 3 and word[1] == "_":

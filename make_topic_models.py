@@ -103,13 +103,16 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
     for topic_idx, topic in enumerate(H):
         # terms
         term_list = []
-        term_set = set()
+        term_list_replace = []
         for i in topic.argsort()[:-nr_of_top_words - 1:-1]:
             if topic[i] > 0.000:
                 term_list.append((feature_names[i], topic[i]))
                 for term in feature_names[i].split(" "):
-                    term_set.add(term)
-        # documents
+                    for split_synonym in term.split("_"):
+                        term_list_replace.append(split_synonym)
+        term_list_replace = list(set(term_list_replace))
+        term_list_replace.sort(key = len, reverse = True)
+        
         doc_list = []
         doc_strength = sorted(W[:,topic_idx])[::-1]
         top_doc_indices = np.argsort( W[:,topic_idx] )[::-1][0:no_top_documents]
@@ -117,7 +120,7 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
             if strength > 0.000:
                 marked_document = documents[doc_i]
                 found_term = False
-                for term in term_set:
+                for term in term_list_replace:
                     if term in documents[doc_i] or term[0].upper() + term[1:] in documents[doc_i] :
                         found_term = True
                         before_changed = marked_document
@@ -164,7 +167,8 @@ def get_scikit_topic_for_use(doc_topic_distr, model, tf_vectorizer, documents, n
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_lda_model(documents, number_of_topics, ngram_length, number_of_runs):
-    texts, tf_vectorizer, tf = get_scikit_bow(documents, ngram_length, CountVectorizer)
+    pre_processed_documents = pre_process_word2vec(documents)
+    texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, ngram_length, CountVectorizer)
     model_list = []
     for i in range(0, number_of_runs):
         lda = LatentDirichletAllocation(n_components=number_of_topics, max_iter=10, learning_method='online', learning_offset=50.).fit(tf)
@@ -187,7 +191,6 @@ def train_scikit_nmf_model(documents, number_of_topics, ngram_length, number_of_
     return topic_info, nmf, tfidf_vectorizer
 
 def pre_process_word2vec(documents):
-
     word_vectorizer = CountVectorizer(binary = True, min_df=1, stop_words='english')
     word_vectorizer.fit_transform(documents)
     word2vec = word2vecwrapper.Word2vecWrapper(SPACE_FOR_PATH, 300)
@@ -226,7 +229,29 @@ def read_test_documents():
 # Test function
 ###########
 
+def print_topic_info(topic_info, model_type):
+    file_name = "testoutput_" + model_type  + ".html"
+    
+    f = open(file_name, "w")
 
+    f.write('<html><body><font face="times"><div style="width:400px;margin:40px;">\n')
+    f.write("<h1> Results for model type " +  model_type + " </h1>\n")
+    for nr, el in enumerate(topic_info):
+        f.write("<p>\n")
+        f.write("<h2> Topic " + str(nr) + "</h2>\n")
+        f.write("<p>\n")
+        for term in el[TERM_LIST]:
+            f.write(str(term) + "<br>\n")
+        for document in el[DOCUMENT_LIST]:
+            f.write("<p>\n")
+            f.write(document[1])
+            f.write("</p>\n")
+        f.write("</p>\n")
+        f.write("</p>\n")
+    f.write("</div></font></body></html>\n")
+    f.flush()
+    f.close()
+    
 def run_main():
     documents = read_test_documents()
 
@@ -243,6 +268,7 @@ def run_main():
     for el in topic_info:
         pprint(el)
     print(len(topic_info))
+    print_topic_info(topic_info, "lda")
     """
     
     print()
@@ -251,9 +277,13 @@ def run_main():
     print("*************")
     print("scikit nmf")
     topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, NUMBER_OF_TOPICS, N_GRAM_N, NUMBER_OF_RUNS)
+    """
     for el in topic_info:
         pprint(el)
-    print(len(topic_info))
+    """
+    print("Found " + str(len(topic_info)) + " stable topics")
+    print_topic_info(topic_info, "nmf")
+
     print("\nMade models for "+ str(len(documents)) + " documents.")
 if __name__ == '__main__':
     run_main()
