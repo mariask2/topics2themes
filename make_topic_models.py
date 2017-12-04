@@ -6,38 +6,62 @@ import numpy as np
 import json
 from collections import Counter
 import word2vecwrapper
+from glob import glob
+from sklearn.feature_extraction import text
 
 
 ###########
 # Internal help functions
 ###########
 
-NR_OF_TOP_WORDS = 25
+NR_OF_TOP_WORDS = 50
 NR_OF_TOP_DOCUMENTS = 50
 TOPIC_NUMBER = "TOPIC_NUMBER"
 TERM_LIST = "TERM_LIST"
 DOCUMENT_LIST = "DOCUMENT_LIST"
-OVERLAP_CUT_OFF = 0.8
+OVERLAP_CUT_OFF = 0.7
 DOCUMENT = "document"
 TOPICS = "topics"
 TERMS_IN_TOPIC = "terms_in_topic"
 TOPIC_CONFIDENCE = "topic_confidence"
 TOPIC_INDEX = "topic_index"
 NUMBER_OF_TOPICS = 10
-N_GRAM_N = 2
+N_GRAM_N = 1
 NUMBER_OF_RUNS = 10
 MIN_DOCUMENT_FREQUENCY = 3
 SPACE_FOR_PATH = "/Users/maria/mariaskeppstedtdsv/post-doc/gavagai/googlespace/GoogleNews-vectors-negative300.bin"
+STOP_WORD_FILE = "english_added.txt"
 
+f = open(STOP_WORD_FILE)
+additional_stop_words = [word.strip() for word in f.readlines()]
+f.close()
+stop_words_set = text.ENGLISH_STOP_WORDS.union(additional_stop_words)
+
+def find_frequent_n_grams(documents):
+    new_documents = []
+    ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 3), min_df=0.005, stop_words='english')
+    ngram_vectorizer.fit_transform(documents)
+    for document in documents:
+        new_document = document
+        for el in ngram_vectorizer.get_feature_names():
+            if el in document:
+                new_document = new_document.replace(el, el.replace(" ", "_"))
+        new_documents.append(new_document)
+    return new_documents
+
+    
 # The bow that is used
 def get_scikit_bow(documents, ngram_length, vectorizer):
+
     min_document_frequency = MIN_DOCUMENT_FREQUENCY
     max_document_frequency = 0.95
     if len(documents) < 3: # if there is only two documents these parameters are the only that work
         min_document_frequency = 1
         max_document_frequency = 1.0
+
+    
     tf_vectorizer = vectorizer(max_df= max_document_frequency, min_df=min_document_frequency,\
-                                   ngram_range = (1, ngram_length), stop_words='english')
+                                   ngram_range = (1, ngram_length), stop_words=stop_words_set)
     tf = tf_vectorizer.fit_transform(documents)
     inversed = tf_vectorizer.inverse_transform(tf)
     to_return = []
@@ -108,8 +132,9 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
             if topic[i] > 0.000:
                 term_list.append((feature_names[i], topic[i]))
                 for term in feature_names[i].split(" "):
-                    for split_synonym in term.split("_"):
-                        term_list_replace.append(split_synonym)
+                    for split_synonym in term.split("__"):
+                        for split_collocation in split_synonym.split("_"):
+                            term_list_replace.append(split_collocation)
         term_list_replace = list(set(term_list_replace))
         term_list_replace.sort(key = len, reverse = True)
         
@@ -124,11 +149,11 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
                     if term in documents[doc_i] or term[0].upper() + term[1:] in documents[doc_i] :
                         found_term = True
                         before_changed = marked_document
-                        marked_document = marked_document.replace(term, "<b>" + term + "</b>")
+                        marked_document = marked_document.replace(term, " <b> " + term + " </b> ")
                         if  marked_document == before_changed:
-                            marked_document = marked_document.replace(term[0].upper() + term[1:], "<b>" + term[0].upper() + term[1:] + "</b>")
+                            marked_document = marked_document.replace(term[0].upper() + term[1:], " <b> " + term[0].upper() + term[1:] + " </b> ")
                         if marked_document == before_changed:
-                            marked_document = marked_document.replace(term.upper(), "<b>" + term.upper() + "</b>")
+                            marked_document = marked_document.replace(term.upper(), " <b> " + term.upper() + " </b> ")
                 if found_term:
                     doc_list.append((doc_i, marked_document, strength)) # only include documents where at least on one of the terms is found
         topic_dict = {TOPIC_NUMBER:topic_idx, TERM_LIST:term_list, DOCUMENT_LIST:doc_list}
@@ -167,7 +192,7 @@ def get_scikit_topic_for_use(doc_topic_distr, model, tf_vectorizer, documents, n
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_lda_model(documents, number_of_topics, ngram_length, number_of_runs):
-    pre_processed_documents = pre_process_word2vec(documents)
+    pre_processed_documents = pre_process(documents)
     texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, ngram_length, CountVectorizer)
     model_list = []
     for i in range(0, number_of_runs):
@@ -181,7 +206,7 @@ def train_scikit_lda_model(documents, number_of_topics, ngram_length, number_of_
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_nmf_model(documents, number_of_topics, ngram_length, number_of_runs):
-    pre_processed_documents = pre_process_word2vec(documents)
+    pre_processed_documents = pre_process(documents)
     texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, ngram_length, TfidfVectorizer)
     model_list = []
     for i in range(0, number_of_runs):
@@ -190,8 +215,10 @@ def train_scikit_nmf_model(documents, number_of_topics, ngram_length, number_of_
     topic_info = get_scikit_topics(model_list, tfidf_vectorizer, tfidf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
     return topic_info, nmf, tfidf_vectorizer
 
-def pre_process_word2vec(documents):
-    word_vectorizer = CountVectorizer(binary = True, min_df=1, stop_words='english')
+def pre_process(raw_documents):
+    documents = find_frequent_n_grams(raw_documents)
+        
+    word_vectorizer = CountVectorizer(binary = True, min_df=2, stop_words=stop_words_set)
     word_vectorizer.fit_transform(documents)
     word2vec = word2vecwrapper.Word2vecWrapper(SPACE_FOR_PATH, 300)
     word2vec.set_vocabulary(word_vectorizer.get_feature_names())
@@ -209,6 +236,25 @@ def pre_process_word2vec(documents):
     
     return pre_processed_documents
 
+def read_discussion_documents():
+    lines = []
+    base = "mumsnet_scikitformat"
+    for f in glob(os.path.join(base, "for/*")) + glob(os.path.join(base, "against/*")) :
+        opened = open(f)
+        text = opened.read()
+        text = text.replace('"full_text" : ', "").strip().replace('"', '').replace('\\n*', ' ').replace('\\', ' ').replace('&amp', ' ').replace("'ve", ' have')
+        text = text.replace("don't", 'do not').replace("doesn't", 'does not').replace("Don't", 'Do not').replace("Doesn't", 'Does not')
+        text = text.replace("_NEWLINE_", " ").replace("_CITATION_PREVIOUS_POST_PARAGRAPH", " ").replace("_CITATION_PREVIOUS_POST_", " ").replace("_POSTER_", " ")
+        no_links = []
+        for word in text.split(" "):
+            if "//" not in word and "http" not in word and "@" not in word:
+                no_links.append(word)
+        cleaned_text = " ".join(no_links)
+        lines.append(cleaned_text)
+        opened.close()
+    return list(set(lines))
+
+"""
 def read_test_documents():
     lines = []
     f = open("vaccination-tweets-raw.json")
@@ -217,14 +263,14 @@ def read_test_documents():
     for el in text_lines:
         if '"full_text"' in el:
             cleaned = el.replace('"full_text" : ', "").strip().replace('"', '').replace('\\n*', ' ').replace('\\', ' ').replace('&amp', ' ').replace("'ve", ' have')
-            cleande = cleaned.replace("don't", 'do not').replace("doesn't", 'does not').replace("Don't", 'Do not').replace("Doesn't", 'Does not')
+            cleaned = cleaned.replace("don't", 'do not').replace("doesn't", 'does not').replace("Don't", 'Do not').replace("Doesn't", 'Does not')
             no_links = []
             for word in cleaned.split(" "):
                 if "//" not in word and "http" not in word and "@" not in word:
                     no_links.append(word)
             lines.append(" ".join(no_links))
     return list(set(lines))
-
+"""
 ##########
 # Test function
 ###########
@@ -241,9 +287,13 @@ def print_topic_info(topic_info, model_type):
         f.write("<h2> Topic " + str(nr) + "</h2>\n")
         f.write("<p>\n")
         for term in el[TERM_LIST]:
-            f.write(str(term) + "<br>\n")
-        for document in el[DOCUMENT_LIST]:
+            f.write(str(term).replace("__","/") + "<br>\n")
+        f.write("<p>\n")
+        f.write(", ".join([term[0].replace("__","/") for term in el[TERM_LIST]]))
+        f.write("</p>\n")
+        for nr, document in enumerate(el[DOCUMENT_LIST]):
             f.write("<p>\n")
+            f.write("<br><p> Document number " + str(nr) + " Strength: " + str(document[2]) + "</p>\n")
             f.write(document[1])
             f.write("</p>\n")
         f.write("</p>\n")
@@ -253,11 +303,7 @@ def print_topic_info(topic_info, model_type):
     f.close()
     
 def run_main():
-    documents = read_test_documents()
-
-   
-    
-    #documents = ["Human machine interface for lab abc computer applications.",  "A survey of user opinion of computer system response time. System and human system engineering testing of EPS Relation of user perceived response time to error measurement"] *100
+    documents = read_discussion_documents()
 
     print("Make models for "+ str(len(documents)) + " documents.")
 

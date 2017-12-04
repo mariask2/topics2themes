@@ -26,10 +26,10 @@ MANUAL_MADE_DICT = {"increase" : "increase__increased__increases__increasing",\
                     "increases" : "increase__increased__increases__increasing",\
                     "increasing" : "increase__increased__increases__increasing",\
                     "increased" : "increase__increased__increases__increasing",\
-                    "child" : "child__children__kid__kids",\
-                    "children" : "child__children__kid__kids",\
-                    "kid" : "child__children__kid__kids",\
-                    "kids" : "child__children__kid__kids",\
+                    #                    "child" : "child__children__kid__kids",\
+                    #"children" : "child__children__kid__kids",\
+                    #"kid" : "child__children__kid__kids",\
+                    #"kids" : "child__children__kid__kids",\
                     "awful": "awful__bad__hideous__horrible__horrid__terrible",\
                     "bad": "awful__bad__hideous__horrible__horrid__terrible",\
                     "hideous": "awful__bad__hideous__horrible__horrid__terrible",\
@@ -42,18 +42,18 @@ MANUAL_MADE_DICT = {"increase" : "increase__increased__increases__increasing",\
                     "significant": "bigger__considerable__big__significant__substantial__huge",\
                     "substantial": "bigger__considerable__big__significant__substantial__huge",\
                     "huge": "bigger__considerable__big__significant__substantial__huge",\
-                    "decent":  "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
-                    "excellent" : "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
-                    "fantastic" : "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
-                    "good" : "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
-                    "great":  "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
-                    "lovely":  "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
-                    "nice"  :"decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
-                    "tremendous" : "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
-                    "wonderful"  :"decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
-                    "luckily": "luckily__thankfully",\
-                    "thankfully": "luckily__thankfully",\
-                    "sadly" : "sadly__unfortunately",\
+                    #"decent":  "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
+                    #"excellent" : "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
+                    #"fantastic" : "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
+                    #"good" : "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
+                    #"great":  "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
+                    #"lovely":  "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
+                    #"nice"  :"decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
+                    #"tremendous" : "decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
+                    #"wonderful"  :"decent__excellent__fantastic__good__great__lovely__nice__tremendous__wonderful",\
+                    #"luckily": "luckily__thankfully",\
+                    #"thankfully": "luckily__thankfully",\
+                    #"sadly" : "sadly__unfortunately",\
                     "unfortunately" : "sadly__unfortunately",\
                     "doctor":"doctor__doctors__physicians",\
                     "doctors":"doctor__doctors__physicians",\

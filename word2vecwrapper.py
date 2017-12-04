@@ -4,13 +4,14 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 from sklearn.metrics.pairwise import euclidean_distances
+from domain_synonym_dictionary import MANUAL_MADE_DICT
+from domain_synonym_dictionary import NO_MATCH
 
 ########################
 # To vectorize the data
 #########################
 
-# Are not allowed to be in synonym clusters
-NO_MATCH = set(["polio", "measles", "measle"])
+
 
 class Word2vecWrapper:
     """
@@ -106,11 +107,11 @@ class Word2vecWrapper:
                     self.cluster_dict[label] = []
                 self.cluster_dict[label].append(term)
 
-        self.term_similar_dict = {}
+        self.term_similar_dict = MANUAL_MADE_DICT
         for label, items in self.cluster_dict.items():
             if len(items) > 1:
                 for term in items:
-                    self.term_similar_dict[term] = "_".join(items)
+                    self.term_similar_dict[term] = "__".join(items)
 
         for item in list(set(self.term_similar_dict.values())):
             print(item)
