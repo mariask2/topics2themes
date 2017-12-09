@@ -1,4 +1,11 @@
-# Are not allowed to be in synonym clusters
+"""
+Domain dependent lexicons
+"""
+
+"""
+These words are not allowed to be in synonym clusters (since when running the automatic clustering of vectors they are added to an incorrect cluster)
+"""
+
 NO_MATCH = set(["polio", "measles", "measle", "chickenpox", "flu", "meningitis", "mumps", "pertussis", "capable",\
                 "incapable", "likely", "unlikely", "black", "white",\
     "increase", "increased", "increases", "increasing", "boy", "girl",\
@@ -21,12 +28,14 @@ NO_MATCH = set(["polio", "measles", "measle", "chickenpox", "flu", "meningitis",
     "brother", "brothers", "cousin", "dad", "daughter", "daughters", "father", "grandmother", "mother", "siblings", "sister", "son",\
     ])
 
-
+"""
+Manually defined clusters (The format is not very user friendly, and could be improved)
+"""
 MANUAL_MADE_DICT = {"increase" : "increase__increased__increases__increasing",\
                     "increases" : "increase__increased__increases__increasing",\
                     "increasing" : "increase__increased__increases__increasing",\
                     "increased" : "increase__increased__increases__increasing",\
-                    #                    "child" : "child__children__kid__kids",\
+                    #"child" : "child__children__kid__kids",\
                     #"children" : "child__children__kid__kids",\
                     #"kid" : "child__children__kid__kids",\
                     #"kids" : "child__children__kid__kids",\
@@ -54,7 +63,7 @@ MANUAL_MADE_DICT = {"increase" : "increase__increased__increases__increasing",\
                     #"luckily": "luckily__thankfully",\
                     #"thankfully": "luckily__thankfully",\
                     #"sadly" : "sadly__unfortunately",\
-                    "unfortunately" : "sadly__unfortunately",\
+                    #"unfortunately" : "sadly__unfortunately",\
                     "doctor":"doctor__doctors__physicians",\
                     "doctors":"doctor__doctors__physicians",\
                     "physicians":"doctor__doctors__physicians",\

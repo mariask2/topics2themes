@@ -15,3 +15,7 @@ You write the following to run the code:
 
 source activate topic_modelling
 python make_topic_models.py
+
+
+Part of the code is inspired from:
+https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730

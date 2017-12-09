@@ -1,6 +1,11 @@
+"""
+For accessing word2vec, cluster vectors and replace terms with synonym clusters
+"""
+
 import gensim
 from sklearn import preprocessing
 import numpy as np
+import gc
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 from sklearn.metrics.pairwise import euclidean_distances
@@ -28,8 +33,6 @@ class Word2vecWrapper:
         if semantic_vector_length is not None:
             self.default_vector = [0] * self.semantic_vector_length
 
-        self.empty_vector = None
-        self.nearest_centroid_clf = None
     
     def load(self):
         """
@@ -52,8 +55,10 @@ class Word2vecWrapper:
 
 
     def set_vocabulary(self, vocabulary_list):
-        #if self._vocabulary_list is None:
-        if True:
+        """
+        Set the vocabulary that is to be included in the clustering
+        """
+        if self._vocabulary_list is None:
             self._vocabulary_list = []            
             for el in vocabulary_list:
                 if len(el) == 3 and el[1] == "_":
@@ -65,21 +70,21 @@ class Word2vecWrapper:
     def get_vector(self, word):
         if len(word) == 3 and word[1] == "_":
             word = word[0] # To cover for a bug in scikit learn, one char tokens have been transformed to longer. These are here transformed back
-        
-        #print("word, in word2vec wrapper", word)
         try:
             self.load()
             raw_vec = self.word2vec_model[word]
             if len(raw_vec) != self.semantic_vector_length:
-                print("The true semantic vector has length " + str(len(raw_vec)))
-                print("while the configuration file states that is should have length " + str(self.semantic_vector_length))
-                exit(1)
+               raise Exception("The true semantic vector has length "\
+                            + str(len(raw_vec)) \
+                            +"while the configuration file states that is should have length "\
+                            + str(self.semantic_vector_length))
             return raw_vec
         except KeyError:
             return self.default_vector
         
-    def load_clustering(self):
+    def load_clustering(self, output_file):
         print("Clustering vectors, this might take a while ....")
+        
         if self._vocabulary_list is None:
             raise Exception("set_vocabulary is not yet run")
 
@@ -113,14 +118,17 @@ class Word2vecWrapper:
                 for term in items:
                     self.term_similar_dict[term] = "__".join(items)
 
+        f = open(output_file, "w")
         for item in list(set(self.term_similar_dict.values())):
-            print(item)
-           
+            f.write(item + "\n")
+        f.close()   
         self.nr_of_clusters = len(set(labels)) 
         print("Clustered vectors")
         
 
     def get_similars(self, word):
+        if not self.term_similar_dict:
+            raise Exception("load_clustering is not yet run")
         try: # TODO: Check that all is initialised here
             similars = self.term_similar_dict[word]
             return similars

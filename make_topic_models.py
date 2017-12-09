@@ -1,3 +1,7 @@
+"""
+For performing topic modelling. The main file of the package
+"""
+
 from pprint import pprint
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import NMF, LatentDirichletAllocation
@@ -8,38 +12,156 @@ from collections import Counter
 import word2vecwrapper
 from glob import glob
 from sklearn.feature_extraction import text
+from topic_model_configuration import *
 
 
-###########
-# Internal help functions
-###########
-
-NR_OF_TOP_WORDS = 50
-NR_OF_TOP_DOCUMENTS = 50
 TOPIC_NUMBER = "TOPIC_NUMBER"
 TERM_LIST = "TERM_LIST"
 DOCUMENT_LIST = "DOCUMENT_LIST"
-OVERLAP_CUT_OFF = 0.7
 DOCUMENT = "document"
 TOPICS = "topics"
 TERMS_IN_TOPIC = "terms_in_topic"
 TOPIC_CONFIDENCE = "topic_confidence"
 TOPIC_INDEX = "topic_index"
-NUMBER_OF_TOPICS = 10
-N_GRAM_N = 1
-NUMBER_OF_RUNS = 10
-MIN_DOCUMENT_FREQUENCY = 3
-SPACE_FOR_PATH = "/Users/maria/mariaskeppstedtdsv/post-doc/gavagai/googlespace/GoogleNews-vectors-negative300.bin"
-STOP_WORD_FILE = "english_added.txt"
+
+#####
+# Stop word list
+######
 
 f = open(STOP_WORD_FILE)
 additional_stop_words = [word.strip() for word in f.readlines()]
 f.close()
 stop_words_set = text.ENGLISH_STOP_WORDS.union(additional_stop_words)
 
+####
+# Main 
+####
+
+def run_main():
+    documents = read_discussion_documents()
+    
+    print("Make models for "+ str(len(documents)) + " documents.")
+
+    """
+    # Did not return any sensible topics on the test corpus
+    # Therefore, it is commented out, but the code is retained
+    # as it might work on another corpus
+    print("*************")
+    print("scikit lda")
+    file_name_lda = "testoutput_lda.html"
+    print("Will write topic modelling output to '" + file_name_lda + "'")
+    print("WARNING: If output file exists, content will be overwritten")
+    print()
+    topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, NUMBER_OF_TOPICS, NUMBER_OF_RUNS)
+
+    print("Found " + str(len(topic_info)) + " stable topics")
+    print_topic_info(topic_info, file_name_lda, "lda")
+    """
+    
+    print()
+    print("*************")
+    print("scikit nmf")
+    
+    file_name_nmf = "testoutput_nmf.html"
+    print("Will write topic modelling output to '" + file_name_nmf + "'")
+    print("WARNING: If output file exists, content will be overwritten")
+    print()
+    topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, NUMBER_OF_TOPICS,  NUMBER_OF_RUNS)
+
+    print("Found " + str(len(topic_info)) + " stable topics")
+
+    print_topic_info(topic_info, file_name_nmf, "nmf")
+
+    print("\nMade models for "+ str(len(documents)) + " documents.")
+
+
+######
+# Read documents from file
+######
+def read_discussion_documents():
+    lines = []
+    files = []
+    for data_dir in DATA_DIRS:
+        files.extend(glob(os.path.join(data_dir, "*.txt")))
+
+    for f in files:
+        opened = open(f)
+        text = opened.read()
+        cleaned_text = corpus_specific_text_cleaning(text)
+        lines.append(cleaned_text)
+        opened.close()
+        
+    return list(set(lines))
+
+
+    
+###########
+# Overall functionality for pre-processing, training models and printing output
+############
+
+
+# Copied (and modified) from
+#https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
+def train_scikit_lda_model(documents, number_of_topics, number_of_runs):
+    pre_processed_documents = pre_process(documents)
+    texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, CountVectorizer)
+    model_list = []
+    for i in range(0, number_of_runs):
+        lda = LatentDirichletAllocation(n_components=number_of_topics, max_iter=10, learning_method='online', learning_offset=50.).fit(tf)
+        model_list.append(lda)
+    topic_info = get_scikit_topics(model_list, tf_vectorizer, tf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
+    return topic_info, lda, tf_vectorizer
+
+# Copied (and modified) from
+#https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
+def train_scikit_nmf_model(documents, number_of_topics, number_of_runs):
+    pre_processed_documents = pre_process(documents)
+    texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, TfidfVectorizer)
+    model_list = []
+    for i in range(0, number_of_runs):
+        nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='nndsvd').fit(tfidf)
+        model_list.append(nmf)
+    topic_info = get_scikit_topics(model_list, tfidf_vectorizer, tfidf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
+    return topic_info, nmf, tfidf_vectorizer
+
+    
+#####
+# Pre-process and turn the documents into lists of terms to feed to the topic models
+#####
+
+def pre_process(raw_documents):
+    documents = find_frequent_n_grams(raw_documents)
+        
+    word_vectorizer = CountVectorizer(binary = True, min_df=2, stop_words=stop_words_set)
+    word_vectorizer.fit_transform(documents)
+
+    cluster_output = "cluster_output.txt"
+    print("The output of word clustering will be written to '"  + cluster_output + "'")
+    word2vec = word2vecwrapper.Word2vecWrapper(SPACE_FOR_PATH, VECTOR_LENGTH)
+    word2vec.set_vocabulary(word_vectorizer.get_feature_names())
+    word2vec.load_clustering(cluster_output)
+
+    pre_processed_documents = []
+    for document in documents:
+        pre_processed_document = []
+        very_simple_tok = document.lower().replace(".", " .").replace(",", " ,").\
+            replace(":", " :").replace(";", " ;").replace("!", " !").replace("?", " ?").replace("(", " ( ").replace(")", " ) ").split(" ")
+        for token in very_simple_tok:
+            pre_processed_document.append(word2vec.get_similars(token))
+        pre_processed_documents.append(" ".join(pre_processed_document))
+
+    word2vec.end()
+    return pre_processed_documents
+
+
 def find_frequent_n_grams(documents):
+    """
+    Frequent collocations are concatenated to one term in the corpus
+    (For instance smallpox and small pox are both used, now small_pox will be
+    created, which will then show up as a synonym).
+    """
     new_documents = []
-    ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 3), min_df=0.005, stop_words='english')
+    ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 3), min_df=COLLOCATION_CUF_OFF, stop_words='english')
     ngram_vectorizer.fit_transform(documents)
     for document in documents:
         new_document = document
@@ -50,16 +172,30 @@ def find_frequent_n_grams(documents):
     return new_documents
 
     
-# The bow that is used
-def get_scikit_bow(documents, ngram_length, vectorizer):
 
+def get_scikit_bow(documents, vectorizer):
+    """
+    Will tranform the list of documents that are given as input, to a list of terms
+    that occurr in these documents
+
+    The vectorizer that is given as input is the type of scikit learn vectorizer that is to be used
+
+    The list of terms will be a result of the pre-processed documents, and might, for instance
+    look as follows for the on of the documents:
+
+    ['vaccination_programmes', 'cease__ceased', 'prefer']
+
+    vaccination_programmes is a collocation and cease__ceased is one word
+    """
+    
     min_document_frequency = MIN_DOCUMENT_FREQUENCY
-    max_document_frequency = 0.95
+    max_document_frequency = MAX_DOCUMENT_FREQUENCY
     if len(documents) < 3: # if there is only two documents these parameters are the only that work
+                           # but just for debugging, no point of running with only two documents
         min_document_frequency = 1
         max_document_frequency = 1.0
 
-    
+    ngram_length = 1
     tf_vectorizer = vectorizer(max_df= max_document_frequency, min_df=min_document_frequency,\
                                    ngram_range = (1, ngram_length), stop_words=stop_words_set)
     tf = tf_vectorizer.fit_transform(documents)
@@ -67,38 +203,21 @@ def get_scikit_bow(documents, ngram_length, vectorizer):
     to_return = []
     for el in inversed:
         to_return.append(list(el))
+
     return to_return, tf_vectorizer, tf
 
-"""
-def display_topics(model, feature_names, no_top_words):
-    for topic_idx, topic in enumerate(model.components_):
-        print ("Topic " +  str(topic_idx))
-        print(" ".join([feature_names[i] for i in topic.argsort()[:-no_top_words - 1:-1]]))
-
-# Copied from: https://medium.com/towards-data-science/improving-the-interpretation-of-topic-models-87fd2ee3847d
-def display_topics(H, W, feature_names, documents, no_top_words, no_top_documents):
-    for topic_idx, topic in enumerate(H):
-        print("Topic %d:" % (topic_idx))
-        print(" ".join([feature_names[i] for i in topic.argsort()[:-no_top_words - 1:-1]]))
-        top_doc_indices = np.argsort( W[:,topic_idx] )[::-1][0:no_top_documents]
-        for doc_index in top_doc_indices:
-            print(documents[doc_index])
-"""
 
 
-def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
-    current_set = Counter(current_topic)
-    for previous_topic in previous_topic_list:
-        previous_set = Counter(previous_topic)
-        overlap = list((current_set & previous_set).elements())
-        if overlap != []:
-            overlap_figure = len(overlap)/((len(previous_topic) + len(current_topic))/2)
-            if overlap_figure > overlap_cut_off:
-                #print(overlap_figure)
-                return True
-    return False
-    
+######
+# Train the topic models and retrieve info from them
+######
+
 def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_words, no_top_documents):
+
+    """
+    Return info from topics that were stable enough to appear in all models in model_list
+    """
+    
     previous_topic_list_list = []
     filtered_ret_list = [] # only include topics that have been stable in this
     for nr, model in enumerate(model_list):
@@ -107,10 +226,11 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
             current_topic = [term for term, prob in el[TERM_LIST]]
             found_match = False
             for previous_topic_list in previous_topic_list_list:
+                # current_topic and previous_topic_list contains a list of terms
                 if is_overlap(current_topic, previous_topic_list, OVERLAP_CUT_OFF):
                      previous_topic_list.append(current_topic)
                      found_match = True
-                     if nr == len(model_list) - 1: # last iteratio in loop
+                     if nr == len(model_list) - 1: # last iteration in loop
                          if len(previous_topic_list) ==  len(model_list): # only add if this topic has occurred in all runs
                              filtered_ret_list.append(el) 
             if not found_match:
@@ -118,7 +238,12 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
 
     return filtered_ret_list # return results from the last run:
 
+
 def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents):
+    """
+    Returns a dictionary with topic topic number, term list and document list for the model
+    {TOPIC_NUMBER:topic_idx, TERM_LIST:term_list, DOCUMENT_LIST:doc_list}
+    """
     W = model.transform(transformed)
     H = model.components_
         
@@ -160,124 +285,28 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
         ret_list.append(topic_dict)
     return ret_list
 
+def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
+    """
+    Check if the term list for two model overlap, with a cutoff of 'overlap_cut_off'
+    """
+    current_set = Counter(current_topic)
+    for previous_topic in previous_topic_list:
+        previous_set = Counter(previous_topic)
+        overlap = list((current_set & previous_set).elements())
+        if overlap != []:
+            overlap_figure = len(overlap)/((len(previous_topic) + len(current_topic))/2)
+            if overlap_figure > overlap_cut_off:
+                return True
+    return False
 
+#######
+# Print output from the model
+#######
 
-#The strength not normalized. If that is to be done, see for instance:
-# https://stackoverflow.com/questions/40597075/python-sklearn-latent-dirichlet-allocation-transform-v-fittransform#40637379
-#doc_topic_distr contains the strength for each topic
-"""
-def get_scikit_topic_for_use(doc_topic_distr, model, tf_vectorizer, documents, no_top_words):
-    return_list = []
-    feature_names = tf_vectorizer.get_feature_names()
-    for document, topic_strength_for_document in zip(documents, doc_topic_distr):        
-        return_list_for_document = []
-        topic_idx = 0
-        for topic, topic_strength in zip(model.components_, topic_strength_for_document):
-            term_list = []
-            for i in topic.argsort()[:-no_top_words - 1:-1]:
-                term_list.append((feature_names[i], topic[i]))
-            topic_dict = {TOPIC_INDEX: topic_idx, TERMS_IN_TOPIC : term_list, TOPIC_CONFIDENCE : topic_strength}
-            return_list_for_document.append(topic_dict)
-            topic_idx = topic_idx + 1
-        return_list.append({DOCUMENT: document, TOPICS:return_list_for_document})
-    return return_list
-"""
-#############
-# The public functions
-#############
-
-############
-# Train models
-############
-# Copied (and modified) from
-#https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
-def train_scikit_lda_model(documents, number_of_topics, ngram_length, number_of_runs):
-    pre_processed_documents = pre_process(documents)
-    texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, ngram_length, CountVectorizer)
-    model_list = []
-    for i in range(0, number_of_runs):
-        lda = LatentDirichletAllocation(n_components=number_of_topics, max_iter=10, learning_method='online', learning_offset=50.).fit(tf)
-        model_list.append(lda)
-    topic_info = get_scikit_topics(model_list, tf_vectorizer, tf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
-    return topic_info, lda, tf_vectorizer
-
-
-
-# Copied (and modified) from
-#https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
-def train_scikit_nmf_model(documents, number_of_topics, ngram_length, number_of_runs):
-    pre_processed_documents = pre_process(documents)
-    texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, ngram_length, TfidfVectorizer)
-    model_list = []
-    for i in range(0, number_of_runs):
-        nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='nndsvd').fit(tfidf)
-        model_list.append(nmf)
-    topic_info = get_scikit_topics(model_list, tfidf_vectorizer, tfidf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
-    return topic_info, nmf, tfidf_vectorizer
-
-def pre_process(raw_documents):
-    documents = find_frequent_n_grams(raw_documents)
-        
-    word_vectorizer = CountVectorizer(binary = True, min_df=2, stop_words=stop_words_set)
-    word_vectorizer.fit_transform(documents)
-    word2vec = word2vecwrapper.Word2vecWrapper(SPACE_FOR_PATH, 300)
-    word2vec.set_vocabulary(word_vectorizer.get_feature_names())
-    word2vec.load_clustering()
-
-    pre_processed_documents = []
-    for document in documents:
-        pre_processed_document = []
-        very_simple_tok = document.lower().replace(".", " .").replace(",", " ,").\
-            replace(":", " :").replace(";", " ;").replace("!", " !").replace("?", " ?").replace("(", " ( ").replace(")", " ) ").split(" ")
-        for token in very_simple_tok:
-            pre_processed_document.append(word2vec.get_similars(token))
-        pre_processed_documents.append(" ".join(pre_processed_document))
-
-    
-    return pre_processed_documents
-
-def read_discussion_documents():
-    lines = []
-    base = "mumsnet_scikitformat"
-    for f in glob(os.path.join(base, "for/*")) + glob(os.path.join(base, "against/*")) :
-        opened = open(f)
-        text = opened.read()
-        text = text.replace('"full_text" : ', "").strip().replace('"', '').replace('\\n*', ' ').replace('\\', ' ').replace('&amp', ' ').replace("'ve", ' have')
-        text = text.replace("don't", 'do not').replace("doesn't", 'does not').replace("Don't", 'Do not').replace("Doesn't", 'Does not')
-        text = text.replace("_NEWLINE_", " ").replace("_CITATION_PREVIOUS_POST_PARAGRAPH", " ").replace("_CITATION_PREVIOUS_POST_", " ").replace("_POSTER_", " ")
-        no_links = []
-        for word in text.split(" "):
-            if "//" not in word and "http" not in word and "@" not in word:
-                no_links.append(word)
-        cleaned_text = " ".join(no_links)
-        lines.append(cleaned_text)
-        opened.close()
-    return list(set(lines))
-
-"""
-def read_test_documents():
-    lines = []
-    f = open("vaccination-tweets-raw.json")
-    text_lines = f.readlines()
-    f.close()
-    for el in text_lines:
-        if '"full_text"' in el:
-            cleaned = el.replace('"full_text" : ', "").strip().replace('"', '').replace('\\n*', ' ').replace('\\', ' ').replace('&amp', ' ').replace("'ve", ' have')
-            cleaned = cleaned.replace("don't", 'do not').replace("doesn't", 'does not').replace("Don't", 'Do not').replace("Doesn't", 'Does not')
-            no_links = []
-            for word in cleaned.split(" "):
-                if "//" not in word and "http" not in word and "@" not in word:
-                    no_links.append(word)
-            lines.append(" ".join(no_links))
-    return list(set(lines))
-"""
-##########
-# Test function
-###########
-
-def print_topic_info(topic_info, model_type):
-    file_name = "testoutput_" + model_type  + ".html"
-    
+def print_topic_info(topic_info, file_name, model_type):
+    """
+    Prints output from the topic model in html format, with topic terms in bold face
+    """
     f = open(file_name, "w")
 
     f.write('<html><body><font face="times"><div style="width:400px;margin:40px;">\n')
@@ -301,35 +330,13 @@ def print_topic_info(topic_info, model_type):
     f.write("</div></font></body></html>\n")
     f.flush()
     f.close()
-    
-def run_main():
-    documents = read_discussion_documents()
 
-    print("Make models for "+ str(len(documents)) + " documents.")
 
-    """
-    print("*************")
-    print("scikit lda")
-    topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, NUMBER_OF_TOPICS, N_GRAM_N, NUMBER_OF_RUNS)
-    for el in topic_info:
-        pprint(el)
-    print(len(topic_info))
-    print_topic_info(topic_info, "lda")
-    """
-    
-    print()
-    print("*************")
-    print("*************")
-    print("*************")
-    print("scikit nmf")
-    topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, NUMBER_OF_TOPICS, N_GRAM_N, NUMBER_OF_RUNS)
-    """
-    for el in topic_info:
-        pprint(el)
-    """
-    print("Found " + str(len(topic_info)) + " stable topics")
-    print_topic_info(topic_info, "nmf")
 
-    print("\nMade models for "+ str(len(documents)) + " documents.")
+###
+# Start
+###
 if __name__ == '__main__':
     run_main()
+
+
