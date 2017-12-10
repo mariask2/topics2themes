@@ -130,6 +130,8 @@ def train_scikit_nmf_model(documents, number_of_topics, number_of_runs):
 #####
 
 def pre_process(raw_documents):
+    if not PRE_PROCESS:
+        return raw_documents
     documents = find_frequent_n_grams(raw_documents)
         
     word_vectorizer = CountVectorizer(binary = True, min_df=2, stop_words=stop_words_set)
@@ -304,35 +306,80 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 #######
 
 def print_topic_info(topic_info, file_name, model_type):
+    document_dict = {}
+    topic_info_list = []
+    
     """
     Prints output from the topic model in html format, with topic terms in bold face
     """
     f = open(file_name, "w")
+    f_json = open(file_name + ".json", "w")
 
     f.write('<html><body><font face="times"><div style="width:400px;margin:40px;">\n')
     f.write("<h1> Results for model type " +  model_type + " </h1>\n")
     for nr, el in enumerate(topic_info):
+        topic_info_object = {}
+        topic_info_object["id"] = el[TOPIC_NUMBER]
+        topic_info_object["label"] = ""
+        topic_info_object["topic_terms"] = []
+         
         f.write("<p>\n")
         f.write("<h2> Topic " + str(nr) + "</h2>\n")
         f.write("<p>\n")
         for term in el[TERM_LIST]:
             f.write(str(term).replace("__","/") + "<br>\n")
+            term_object = {}
+            term_object["term"] = term[0].replace("__","/")
+            term_object["score"] = term[1]
+            topic_info_object["topic_terms"].append(term_object)
         f.write("<p>\n")
         f.write(", ".join([term[0].replace("__","/") for term in el[TERM_LIST]]))
         f.write("</p>\n")
         for nr, document in enumerate(el[DOCUMENT_LIST]):
+            
+            if document[0] not in document_dict:
+                document_obj = {}
+                document_obj["text"] = document[1]
+                document_obj["id"] = int(str(document[0]))
+                document_obj["id_source"] = int(str(document[0]))
+                document_obj["timestamp"] = "Wed Oct 18 12:46:09 +0000 2017"
+                document_obj["document_topics"] = []
+                document_dict[document[0]] = document_obj
+
+            document_topic_obj = {}
+            document_topic_obj["topic_index"] = el[TOPIC_NUMBER]
+            document_topic_obj["topic_confidence"] = document[2]
+
+            # TODO: This information shouldn't be neeed, already made available above
+            document_topic_obj["terms_in_topic"] = []
+            for term in el[TERM_LIST]:
+                term_object = {}
+                term_object["term"] = term[0].replace("__","/")
+                term_object["score"] = term[1]
+                document_topic_obj["terms_in_topic"].append(term_object)
+            ###                
+
+            document_dict[document[0]]["document_topics"].append(document_topic_obj)
             f.write("<p>\n")
             f.write("<br><p> Document number " + str(nr) + " Strength: " + str(document[2]) + "</p>\n")
             f.write(document[1])
             f.write("</p>\n")
         f.write("</p>\n")
         f.write("</p>\n")
+
+        topic_info_list.append(topic_info_object)
     f.write("</div></font></body></html>\n")
     f.flush()
     f.close()
 
-
-
+    result_dict = {}
+    result_dict["topics"] = topic_info_list
+    result_dict["themes"] = [{"id": 0, "label": "Click here to add theme label", "theme_topics": []}]
+    result_dict["documents"] = [value for value in document_dict.values()]
+    f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
+    f_json.flush()
+    f_json.close()
+    
 ###
 # Start
 ###
