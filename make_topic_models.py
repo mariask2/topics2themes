@@ -31,6 +31,7 @@ MARKED_DOCUMENT = "marked_document"
 DOCUMENT_TOPIC_STRENGTH = "document_topic_strength"
 ORIGINAL_DOCUMENT =  "original_document"
 FOUND_TERMS = "found_terms"
+MARKED_DOCUMENT_TOK = "marked_document_tok"
 
 #####
 # Stop word list
@@ -138,7 +139,17 @@ def train_scikit_nmf_model(documents, number_of_topics, number_of_runs):
     topic_info = get_scikit_topics(model_list, tfidf_vectorizer, tfidf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
     return topic_info, nmf, tfidf_vectorizer
 
-    
+
+def get_very_simple_tokenised(document, lower = True):
+    if lower:
+        document = document.lower()
+    very_simple_tok = document.replace(".", " .").replace(",", " ,").\
+        replace(":", " :").replace("\t", ".\t").replace("..", ".").replace("...", ".").replace("\t", " ").replace(";", " ;").replace("!", " !").replace("?", " ?").replace("(", " ( ").replace(")", " ) ").replace("  ", " ").replace("   ", " ").split(" ")
+    return very_simple_tok
+
+def untokenize(simple_tokenised):
+    return " ".join(simple_tokenised).replace(" .", ".").replace(" ,", ",").\
+        replace(" :", ":").replace(" ;", ";").replace(" !", "!").replace(" ?", "?").replace(" ( ", "(").replace(" ) ", ")")
 #####
 # Pre-process and turn the documents into lists of terms to feed to the topic models
 #####
@@ -160,8 +171,7 @@ def pre_process(raw_documents):
     pre_processed_documents = []
     for document in documents:
         pre_processed_document = []
-        very_simple_tok = document.lower().replace(".", " .").replace(",", " ,").\
-            replace(":", " :").replace(";", " ;").replace("!", " !").replace("?", " ?").replace("(", " ( ").replace(")", " ) ").split(" ")
+        very_simple_tok = get_very_simple_tokenised(document)
         for token in very_simple_tok:
             pre_processed_document.append(word2vec.get_similars(token))
         pre_processed_documents.append(" ".join(pre_processed_document))
@@ -292,6 +302,13 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
         for doc_i, strength in zip(top_doc_indices, doc_strength):
             if strength > 0.000:
                 marked_document = documents[doc_i]
+                simple_tokenised = get_very_simple_tokenised(documents[doc_i], lower = False)
+                simple_tokenised_marked = []
+                for el in simple_tokenised:
+                    if el.lower() in term_list_replace:
+                        simple_tokenised_marked.append("<b>" + el + "</b>")
+                    else:
+                        simple_tokenised_marked.append(el)
                 for term in term_list_replace:
                     if term in documents[doc_i] or term[0].upper() + term[1:] in documents[doc_i]:
                         found_terms.extend(term_preprocessed_dict[term])
@@ -307,7 +324,8 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
                                     MARKED_DOCUMENT: marked_document, \
                                     DOCUMENT_TOPIC_STRENGTH : strength,\
                                     ORIGINAL_DOCUMENT: documents[doc_i],\
-                                    FOUND_TERMS : set(found_terms)})
+                                    FOUND_TERMS : set(found_terms),\
+                                    MARKED_DOCUMENT_TOK : untokenize(simple_tokenised_marked)})
         topic_dict = {TOPIC_NUMBER:topic_idx, TERM_LIST:term_list, DOCUMENT_LIST:doc_list}
         ret_list.append(topic_dict)
     return ret_list
@@ -367,6 +385,7 @@ def print_topic_info(topic_info, file_list, file_name, model_type):
                 document_obj["text"] = document[ORIGINAL_DOCUMENT]
                 document_obj["id"] = int(str(document[DOC_ID]))
                 document_obj["marked_text"] = document[MARKED_DOCUMENT]
+                document_obj["marked_text_tok"] = document[MARKED_DOCUMENT_TOK]
                 document_obj["id_source"] = int(str(document[DOC_ID]))
                 document_obj["timestamp"] = "Wed Oct 18 12:46:09 +0000 2017"
                 document_obj["document_topics"] = []

@@ -35,7 +35,7 @@ OVERLAP_CUT_OFF = 0.7
 """
 Whether to use pre-processing (collocation detection and synonym clustering)
 """
-PRE_PROCESS = True
+PRE_PROCESS = False
 
 """
 Mininimum occurrence in the corpus for a term to be included in the topic modelling
