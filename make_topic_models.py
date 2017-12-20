@@ -27,10 +27,10 @@ TEXT = "text"
 LABEL = "label"
 COLLOCATION_BINDER = "_"
 DOC_ID =  "doc_id"
-MARKED_DOCUMENT = "marked_document"
 DOCUMENT_TOPIC_STRENGTH = "document_topic_strength"
 ORIGINAL_DOCUMENT =  "original_document"
 FOUND_TERMS = "found_terms"
+FOUND_CONCEPTS = "found_concepts"
 MARKED_DOCUMENT_TOK = "marked_document_tok"
 
 #####
@@ -298,34 +298,27 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
         doc_list = []
         doc_strength = sorted(W[:,topic_idx])[::-1]
         top_doc_indices = np.argsort( W[:,topic_idx] )[::-1][0:no_top_documents]
+        found_concepts = []
         found_terms = []
         for doc_i, strength in zip(top_doc_indices, doc_strength):
             if strength > 0.000:
-                marked_document = documents[doc_i]
                 simple_tokenised = get_very_simple_tokenised(documents[doc_i], lower = False)
                 simple_tokenised_marked = []
                 for el in simple_tokenised:
                     if el.lower() in term_list_replace:
                         simple_tokenised_marked.append("<b>" + el + "</b>")
+                        found_concepts.extend(term_preprocessed_dict[el.lower()])
+                        found_terms.append(el.lower())
                     else:
                         simple_tokenised_marked.append(el)
-                for term in term_list_replace:
-                    if term in documents[doc_i] or term[0].upper() + term[1:] in documents[doc_i]:
-                        found_terms.extend(term_preprocessed_dict[term])
-                        before_changed = marked_document
-                        marked_document = marked_document.replace(term, " <b> " + term + " </b> ")
-                        if  marked_document == before_changed:
-                            marked_document = marked_document.replace(term[0].upper() + term[1:], " <b> " + term[0].upper() + term[1:] + " </b> ")
-                        if marked_document == before_changed:
-                            marked_document = marked_document.replace(term.upper(), " <b> " + term.upper() + " </b> ")
-                if len(found_terms) > 0 : # only include documents where at least on one of the terms is found
+                if len(found_concepts) > 0 : # only include documents where at least on one of the terms is found
                     doc_list.append(\
                                     {DOC_ID: doc_i, \
-                                    MARKED_DOCUMENT: marked_document, \
                                     DOCUMENT_TOPIC_STRENGTH : strength,\
                                     ORIGINAL_DOCUMENT: documents[doc_i],\
-                                    FOUND_TERMS : set(found_terms),\
-                                    MARKED_DOCUMENT_TOK : untokenize(simple_tokenised_marked)})
+                                    FOUND_CONCEPTS : set(found_concepts),\
+                                    MARKED_DOCUMENT_TOK : untokenize(simple_tokenised_marked),\
+                                    FOUND_TERMS: list(set(found_terms))})
         topic_dict = {TOPIC_NUMBER:topic_idx, TERM_LIST:term_list, DOCUMENT_LIST:doc_list}
         ret_list.append(topic_dict)
     return ret_list
@@ -384,10 +377,9 @@ def print_topic_info(topic_info, file_list, file_name, model_type):
                 document_obj = {}
                 document_obj["text"] = document[ORIGINAL_DOCUMENT]
                 document_obj["id"] = int(str(document[DOC_ID]))
-                document_obj["marked_text"] = document[MARKED_DOCUMENT]
                 document_obj["marked_text_tok"] = document[MARKED_DOCUMENT_TOK]
                 document_obj["id_source"] = int(str(document[DOC_ID]))
-                document_obj["timestamp"] = "Wed Oct 18 12:46:09 +0000 2017"
+                document_obj["timestamp"] = int(str(document[DOC_ID]))
                 document_obj["document_topics"] = []
                 document_obj["label"] = file_list[document[DOC_ID]][LABEL]
                 document_dict[document[DOC_ID]] = document_obj
@@ -396,12 +388,13 @@ def print_topic_info(topic_info, file_list, file_name, model_type):
             document_topic_obj = {}
             document_topic_obj["topic_index"] = el[TOPIC_NUMBER]
             document_topic_obj["topic_confidence"] = document[DOCUMENT_TOPIC_STRENGTH]
+            document_topic_obj["terms_found_in_text"] = document[FOUND_TERMS]
             
 
             # It is only the terms that are actually included in the document that are added here
             document_topic_obj["terms_in_topic"] = []
             for term in el[TERM_LIST]:
-                if term[0] in document[FOUND_TERMS]:
+                if term[0] in document[FOUND_CONCEPTS]:
                     term_object = {}
                     term_object["term"] = term[0].replace("__"," / ")
                     term_object["score"] = term[1]
@@ -411,7 +404,7 @@ def print_topic_info(topic_info, file_list, file_name, model_type):
             document_dict[document[DOC_ID]]["document_topics"].append(document_topic_obj)
             f.write("<p>\n")
             f.write("<br><p> Document number " + str(nr) + " Strength: " + str(document[DOCUMENT_TOPIC_STRENGTH]) + "</p>\n")
-            f.write(document[MARKED_DOCUMENT])
+            f.write(document[MARKED_DOCUMENT_TOK])
             f.write("</p>\n")
         f.write("</p>\n")
         f.write("</p>\n")
