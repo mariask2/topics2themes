@@ -25,6 +25,12 @@ TOPIC_CONFIDENCE = "topic_confidence"
 TOPIC_INDEX = "topic_index"
 TEXT = "text"
 LABEL = "label"
+COLLOCATION_BINDER = "_"
+DOC_ID =  "doc_id"
+MARKED_DOCUMENT = "marked_document"
+DOCUMENT_TOPIC_STRENGTH = "document_topic_strength"
+ORIGINAL_DOCUMENT =  "original_document"
+FOUND_TERMS = "found_terms"
 
 #####
 # Stop word list
@@ -177,7 +183,7 @@ def find_frequent_n_grams(documents):
         new_document = document
         for el in ngram_vectorizer.get_feature_names():
             if el in document:
-                new_document = new_document.replace(el, el.replace(" ", "_"))
+                new_document = new_document.replace(el, el.replace(" ", COLLOCATION_BINDER))
         new_documents.append(new_document)
     return new_documents
 
@@ -223,7 +229,6 @@ def get_scikit_bow(documents, vectorizer):
 ######
 
 def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_words, no_top_documents):
-
     """
     Return info from topics that were stable enough to appear in all models in model_list
     """
@@ -264,35 +269,45 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
     for topic_idx, topic in enumerate(H):
         # terms
         term_list = []
+        term_preprocessed_dict = {} # map collocation/synonym-cluster to the word that is found in the text
         term_list_replace = []
         for i in topic.argsort()[:-nr_of_top_words - 1:-1]:
             if topic[i] > 0.000:
                 term_list.append((feature_names[i], topic[i]))
-                for term in feature_names[i].split(" "):
-                    for split_synonym in term.split("__"):
-                        for split_collocation in split_synonym.split("_"):
-                            term_list_replace.append(split_collocation)
+                term = feature_names[i]
+                
+                for split_synonym in term.split(word2vecwrapper.SYNONYM_BINDER):
+                    for split_collocation in split_synonym.split(COLLOCATION_BINDER):
+                        term_list_replace.append(split_collocation)
+                        if split_collocation not in term_preprocessed_dict:
+                            term_preprocessed_dict[split_collocation] = []
+                        term_preprocessed_dict[split_collocation].append(term)
         term_list_replace = list(set(term_list_replace))
         term_list_replace.sort(key = len, reverse = True)
-        
+   
         doc_list = []
         doc_strength = sorted(W[:,topic_idx])[::-1]
         top_doc_indices = np.argsort( W[:,topic_idx] )[::-1][0:no_top_documents]
+        found_terms = []
         for doc_i, strength in zip(top_doc_indices, doc_strength):
             if strength > 0.000:
                 marked_document = documents[doc_i]
-                found_term = False
                 for term in term_list_replace:
-                    if term in documents[doc_i] or term[0].upper() + term[1:] in documents[doc_i] :
-                        found_term = True
+                    if term in documents[doc_i] or term[0].upper() + term[1:] in documents[doc_i]:
+                        found_terms.extend(term_preprocessed_dict[term])
                         before_changed = marked_document
                         marked_document = marked_document.replace(term, " <b> " + term + " </b> ")
                         if  marked_document == before_changed:
                             marked_document = marked_document.replace(term[0].upper() + term[1:], " <b> " + term[0].upper() + term[1:] + " </b> ")
                         if marked_document == before_changed:
                             marked_document = marked_document.replace(term.upper(), " <b> " + term.upper() + " </b> ")
-                if found_term:
-                    doc_list.append((doc_i, marked_document, strength, documents[doc_i])) # only include documents where at least on one of the terms is found
+                if len(found_terms) > 0 : # only include documents where at least on one of the terms is found
+                    doc_list.append(\
+                                    {DOC_ID: doc_i, \
+                                    MARKED_DOCUMENT: marked_document, \
+                                    DOCUMENT_TOPIC_STRENGTH : strength,\
+                                    ORIGINAL_DOCUMENT: documents[doc_i],\
+                                    FOUND_TERMS : set(found_terms)})
         topic_dict = {TOPIC_NUMBER:topic_idx, TERM_LIST:term_list, DOCUMENT_LIST:doc_list}
         ret_list.append(topic_dict)
     return ret_list
@@ -346,37 +361,38 @@ def print_topic_info(topic_info, file_list, file_name, model_type):
         f.write(", ".join([term[0].replace("__","/") for term in el[TERM_LIST]]))
         f.write("</p>\n")
         for nr, document in enumerate(el[DOCUMENT_LIST]):
-            
-            if document[0] not in document_dict:
+
+            if document[DOC_ID] not in document_dict:
                 document_obj = {}
-                document_obj["text"] = document[1]
-                document_obj["id"] = int(str(document[0]))
-                document_obj["original_text"] = document[3]
-                document_obj["id_source"] = int(str(document[0]))
+                document_obj["text"] = document[ORIGINAL_DOCUMENT]
+                document_obj["id"] = int(str(document[DOC_ID]))
+                document_obj["marked_text"] = document[MARKED_DOCUMENT]
+                document_obj["id_source"] = int(str(document[DOC_ID]))
                 document_obj["timestamp"] = "Wed Oct 18 12:46:09 +0000 2017"
                 document_obj["document_topics"] = []
-                document_obj["label"] = file_list[document[0]][LABEL]
-                document_dict[document[0]] = document_obj
-                if document_obj["original_text"] != file_list[document[0]][TEXT]:
-                    print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(file_list[document[0]][TEXT]))
+                document_obj["label"] = file_list[document[DOC_ID]][LABEL]
+                document_dict[document[DOC_ID]] = document_obj
+                if document_obj["text"] != file_list[document[DOC_ID]][TEXT]:
+                    print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(file_list[document[DOC_ID]][TEXT]))
             document_topic_obj = {}
             document_topic_obj["topic_index"] = el[TOPIC_NUMBER]
-            document_topic_obj["topic_confidence"] = document[2]
+            document_topic_obj["topic_confidence"] = document[DOCUMENT_TOPIC_STRENGTH]
             
 
-            # TODO: This information shouldn't be neeed, already made available above
+            # It is only the terms that are actually included in the document that are added here
             document_topic_obj["terms_in_topic"] = []
             for term in el[TERM_LIST]:
-                term_object = {}
-                term_object["term"] = term[0].replace("__","/")
-                term_object["score"] = term[1]
-                document_topic_obj["terms_in_topic"].append(term_object)
+                if term[0] in document[FOUND_TERMS]:
+                    term_object = {}
+                    term_object["term"] = term[0].replace("__"," / ")
+                    term_object["score"] = term[1]
+                    document_topic_obj["terms_in_topic"].append(term_object)
             ###                
 
-            document_dict[document[0]]["document_topics"].append(document_topic_obj)
+            document_dict[document[DOC_ID]]["document_topics"].append(document_topic_obj)
             f.write("<p>\n")
-            f.write("<br><p> Document number " + str(nr) + " Strength: " + str(document[2]) + "</p>\n")
-            f.write(document[1])
+            f.write("<br><p> Document number " + str(nr) + " Strength: " + str(document[DOCUMENT_TOPIC_STRENGTH]) + "</p>\n")
+            f.write(document[MARKED_DOCUMENT])
             f.write("</p>\n")
         f.write("</p>\n")
         f.write("</p>\n")

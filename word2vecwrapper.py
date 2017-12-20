@@ -16,7 +16,7 @@ from domain_synonym_dictionary import NO_MATCH
 # To vectorize the data
 #########################
 
-
+SYNONYM_BINDER = "__"
 
 class Word2vecWrapper:
     """
@@ -116,7 +116,7 @@ class Word2vecWrapper:
         for label, items in self.cluster_dict.items():
             if len(items) > 1:
                 for term in items:
-                    self.term_similar_dict[term] = "__".join(items)
+                    self.term_similar_dict[term] = SYNONYM_BINDER.join(items)
 
         f = open(output_file, "w")
         for item in list(set(self.term_similar_dict.values())):
