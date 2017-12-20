@@ -56,7 +56,7 @@ SPACE_FOR_PATH = "/Users/maria/mariaskeppstedtdsv/post-doc/gavagai/googlespace/G
 """
 Minimum proportion of documents that are to contain a term sequence for it to be counted as a collocation
 """
-COLLOCATION_CUF_OFF = 0.005
+COLLOCATION_CUT_OFF = 0.005
 
 """
 Length of the word2vec vectors
@@ -70,13 +70,20 @@ STOP_WORD_FILE = "english_added.txt"
 
 """
 The directories in which data is to be found. The data is to be in files with the ".txt" extension 
+in these directories. For each directory, there should also be a stance-label associated with
+the data
 """
-DATA_DIRS = ["mumsnet_scikitformat/for", "mumsnet_scikitformat/against"]
+DATA_LABEL = "data_label"
+DIRECTORY_NAME = "directory_name"
+
+DATA_LABEL_LIST = [{DATA_LABEL : "for", DIRECTORY_NAME : "mumsnet_scikitformat/for"},\
+                   {DATA_LABEL : "undecided", DIRECTORY_NAME : "mumsnet_scikitformat/uncertain"},\
+                   {DATA_LABEL : "against", DIRECTORY_NAME : "mumsnet_scikitformat/against"}]
 
 
 def corpus_specific_text_cleaning(text):
     """
-    For performing corpus specific cleaning. Added here, since it needs to be adapted to the corpus and therefore a kind of configuration
+    For performing corpus specific cleaning. Added to this file, since it needs to be adapted to the corpus and therefore a kind of configuration
     """
     text = text.replace('"full_text" : ', "").strip().replace('"', '').replace('\\n*', ' ').replace('\\', ' ').replace('&amp', ' ').replace("'ve", ' have')
     text = text.replace("don't", 'do not').replace("doesn't", 'does not').replace("Don't", 'Do not').replace("Doesn't", 'Does not')

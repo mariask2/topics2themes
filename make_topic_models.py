@@ -23,6 +23,8 @@ TOPICS = "topics"
 TERMS_IN_TOPIC = "terms_in_topic"
 TOPIC_CONFIDENCE = "topic_confidence"
 TOPIC_INDEX = "topic_index"
+TEXT = "text"
+LABEL = "label"
 
 #####
 # Stop word list
@@ -38,8 +40,10 @@ stop_words_set = text.ENGLISH_STOP_WORDS.union(additional_stop_words)
 ####
 
 def run_main():
-    documents = read_discussion_documents()
+    file_list = read_discussion_documents()
     
+    documents = [el[TEXT] for el in file_list]
+
     print("Make models for "+ str(len(documents)) + " documents.")
 
     """
@@ -70,7 +74,7 @@ def run_main():
 
     print("Found " + str(len(topic_info)) + " stable topics")
 
-    print_topic_info(topic_info, file_name_nmf, "nmf")
+    print_topic_info(topic_info, file_list, file_name_nmf, "nmf")
 
     print("\nMade models for "+ str(len(documents)) + " documents.")
 
@@ -79,19 +83,23 @@ def run_main():
 # Read documents from file
 ######
 def read_discussion_documents():
-    lines = []
-    files = []
-    for data_dir in DATA_DIRS:
+    file_list = []
+
+    for data_info in DATA_LABEL_LIST:
+        data_dir = data_info[DIRECTORY_NAME]
+        
+        files = []
+
         files.extend(glob(os.path.join(data_dir, "*.txt")))
 
-    for f in files:
-        opened = open(f)
-        text = opened.read()
-        cleaned_text = corpus_specific_text_cleaning(text)
-        lines.append(cleaned_text)
-        opened.close()
+        for f in files:
+            opened = open(f)
+            text = opened.read()
+            cleaned_text = corpus_specific_text_cleaning(text)
+            file_list.append({TEXT: cleaned_text, LABEL: data_info[DATA_LABEL]})
+            opened.close()
         
-    return list(set(lines))
+    return file_list
 
 
     
@@ -163,7 +171,7 @@ def find_frequent_n_grams(documents):
     created, which will then show up as a synonym).
     """
     new_documents = []
-    ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 3), min_df=COLLOCATION_CUF_OFF, stop_words='english')
+    ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 3), min_df=COLLOCATION_CUT_OFF, stop_words='english')
     ngram_vectorizer.fit_transform(documents)
     for document in documents:
         new_document = document
@@ -243,8 +251,10 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
 
 def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents):
     """
-    Returns a dictionary with topic topic number, term list and document list for the model
-    {TOPIC_NUMBER:topic_idx, TERM_LIST:term_list, DOCUMENT_LIST:doc_list}
+    Returns a list of dictionaries, where the dictionary contains topic number
+    , term list and document list for the model {TOPIC_NUMBER:topic_idx, TERM_LIST:term_list, DOCUMENT_LIST:doc_list}
+    The document list in turn, contains a four tuple with (document index, marked document, document strength, original document), where doc_i is the index in of
+    the documents as given as input to the model)
     """
     W = model.transform(transformed)
     H = model.components_
@@ -282,7 +292,7 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
                         if marked_document == before_changed:
                             marked_document = marked_document.replace(term.upper(), " <b> " + term.upper() + " </b> ")
                 if found_term:
-                    doc_list.append((doc_i, marked_document, strength)) # only include documents where at least on one of the terms is found
+                    doc_list.append((doc_i, marked_document, strength, documents[doc_i])) # only include documents where at least on one of the terms is found
         topic_dict = {TOPIC_NUMBER:topic_idx, TERM_LIST:term_list, DOCUMENT_LIST:doc_list}
         ret_list.append(topic_dict)
     return ret_list
@@ -305,7 +315,7 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 # Print output from the model
 #######
 
-def print_topic_info(topic_info, file_name, model_type):
+def print_topic_info(topic_info, file_list, file_name, model_type):
     document_dict = {}
     topic_info_list = []
     
@@ -341,14 +351,18 @@ def print_topic_info(topic_info, file_name, model_type):
                 document_obj = {}
                 document_obj["text"] = document[1]
                 document_obj["id"] = int(str(document[0]))
+                document_obj["original_text"] = document[3]
                 document_obj["id_source"] = int(str(document[0]))
                 document_obj["timestamp"] = "Wed Oct 18 12:46:09 +0000 2017"
                 document_obj["document_topics"] = []
+                document_obj["label"] = file_list[document[0]][LABEL]
                 document_dict[document[0]] = document_obj
-
+                if document_obj["original_text"] != file_list[document[0]][TEXT]:
+                    print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(file_list[document[0]][TEXT]))
             document_topic_obj = {}
             document_topic_obj["topic_index"] = el[TOPIC_NUMBER]
             document_topic_obj["topic_confidence"] = document[2]
+            
 
             # TODO: This information shouldn't be neeed, already made available above
             document_topic_obj["terms_in_topic"] = []
@@ -374,7 +388,7 @@ def print_topic_info(topic_info, file_name, model_type):
 
     result_dict = {}
     result_dict["topics"] = topic_info_list
-    result_dict["themes"] = [{"id": 0, "label": "Click here to add theme label", "theme_topics": []}]
+    result_dict["themes"] = [{"id": 0, "label": "Click here to add theme label", "theme_topics": [], "theme_documents":[]}]
     result_dict["documents"] = [value for value in document_dict.values()]
     f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
     f_json.flush()
