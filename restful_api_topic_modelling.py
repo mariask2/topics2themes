@@ -2,6 +2,7 @@ from flask import Flask, jsonify, abort, make_response, request, json
 import sys
 import traceback
 import linecache
+import make_topic_models
 
 app = Flask(__name__)
 
@@ -45,17 +46,23 @@ def authenticate():
     if key not in APPROVED_KEYS:
         abort(403)
 
+VACCINATION_MUMSNET = "vaccination_mumsnet"
 @app.route('/topic_modelling/api/v1.0/get_topic_model_results', methods=['GET'])
 def get_topic_model_results():
-    possible_dataset_names = ["vaccination_mumsnet"]
+    possible_dataset_names = [VACCINATION_MUMSNET]
     try:
         authenticate()
         dataset_name = request.values.get("dataset_name")
         if dataset_name not in possible_dataset_names:
             raise ValueError('The dataset name ' +  str(dataset_name) + ') is unknown')
     
-        result = {"test" : "test"}
-        return jsonify({'result' : result})
+        # TODO: With this code, only one dataset can be run
+        # Make it configurable
+        topic_model_results = jsonify({"result" : "no matching model"})
+        if dataset_name == VACCINATION_MUMSNET:
+            topic_model_results = make_topic_models.run_main()
+
+        return jsonify({"result" : topic_model_results})
     except Exception as e:
         return str(get_exception_info(e))
 

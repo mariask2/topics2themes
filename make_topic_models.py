@@ -81,9 +81,11 @@ def run_main():
 
     print("Found " + str(len(topic_info)) + " stable topics")
 
-    print_topic_info(topic_info, file_list, file_name_nmf, "nmf")
+    results = print_topic_info(topic_info, file_list, file_name_nmf, "nmf")
 
     print("\nMade models for "+ str(len(documents)) + " documents.")
+
+    return results
 
 
 ######
@@ -421,6 +423,7 @@ def print_topic_info(topic_info, file_list, file_name, model_type):
     f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
     f_json.flush()
     f_json.close()
+    return result_dict
     
 ###
 # Start
