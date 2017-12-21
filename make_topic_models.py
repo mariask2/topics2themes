@@ -11,6 +11,7 @@ import json
 from collections import Counter
 import word2vecwrapper
 from glob import glob
+import datetime
 from sklearn.feature_extraction import text
 from topic_model_configuration import *
 from topic_model_constants import *
@@ -426,6 +427,7 @@ def print_and_get_topic_info(topic_info, file_list):
     result_dict["topics"] = topic_info_list
     result_dict["themes"] = [{"id": 0, "label": "Click here to add theme label", "theme_topics": [], "theme_documents":[]}]
     result_dict["documents"] = [value for value in document_dict.values()]
+    result_dict["meta_data"] = {"creation_date" : str(datetime.datetime.now())}
     f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
     f_json.flush()
     f_json.close()
@@ -439,13 +441,21 @@ def initialise_dirs():
         os.makedirs(PATH_USER_INPUT)
 
 def get_cashed_topic_model():
-    pass
+    file_name = get_current_file_name() + ".json"
+    if not os.path.isfile(file_name):
+        return "No saved model with name " + file_name
+    f = open(file_name)
+    data = f.read()
+    f.close()
+    json_data = json.loads(data)
+    return json_data
 
 ###
 # Start
 ###
 if __name__ == '__main__':
-    #get_cashed_topic_model()
-    run_make_topic_models()
+#run_make_topic_models()
+    print(get_cashed_topic_model())
+
 
 

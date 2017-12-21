@@ -47,24 +47,34 @@ def authenticate():
         abort(403)
 
 VACCINATION_MUMSNET = "vaccination_mumsnet"
+
 @app.route('/topic_modelling/api/v1.0/get_topic_model_results', methods=['GET'])
-def get_topic_model_results():
+def get_new_topic_model_results():
+    return get_topic_model_results(make_topic_models.run_make_topic_models())
+
+@app.route('/topic_modelling/api/v1.0/get_cashed_topic_model_results', methods=['GET'])
+def get_cashed_topic_model_results():
+    return get_topic_model_results(make_topic_models.get_cashed_topic_model())
+
+
+def get_topic_model_results(topic_model_method):
     possible_dataset_names = [VACCINATION_MUMSNET]
     try:
         authenticate()
         dataset_name = request.values.get("dataset_name")
         if dataset_name not in possible_dataset_names:
             raise ValueError('The dataset name ' +  str(dataset_name) + ') is unknown')
-    
+        
         # TODO: With this code, only one dataset can be run
         # Make it configurable
         topic_model_results = jsonify({"result" : "no matching model"})
         if dataset_name == VACCINATION_MUMSNET:
-            topic_model_results = make_topic_models.run_make_topic_models()
-
+            topic_model_results = topic_model_method
+        
         return jsonify({"result" : topic_model_results})
     except Exception as e:
         return str(get_exception_info(e))
+
 
 
 APPROVED_KEYS = []

@@ -28,10 +28,9 @@ url_before_port = "http://127.0.0.1:"
 url_after_port = "/topic_modelling/api/v1.0/"
 
 
-def get_test_model(urlbase):
+def get_test_model(urlbase, method):
     dataset_name = "vaccination_mumsnet"
     params_text = urllib.parse.urlencode({"apiKey": APPROVED_KEYS[0], "dataset_name": dataset_name})
-    method = "get_topic_model_results"
     try:
         url = urlbase + method + "?%s" % params_text
         with urllib.request.urlopen(url) as f:
@@ -50,4 +49,9 @@ if __name__ == '__main__':
     port = sys.argv[1]
     
     urlbase = url_before_port + port + url_after_port
-    print(get_test_model(urlbase))
+    for method in ["get_topic_model_results", "get_cashed_topic_model_results"]:
+        print(get_test_model(urlbase, method))
+
+
+
+
