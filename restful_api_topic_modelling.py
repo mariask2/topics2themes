@@ -60,7 +60,7 @@ def get_topic_model_results():
         # Make it configurable
         topic_model_results = jsonify({"result" : "no matching model"})
         if dataset_name == VACCINATION_MUMSNET:
-            topic_model_results = make_topic_models.run_main()
+            topic_model_results = make_topic_models.run_make_topic_models()
 
         return jsonify({"result" : topic_model_results})
     except Exception as e:

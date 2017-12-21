@@ -1,4 +1,4 @@
-
+from topic_model_constants import *
 
 
 """
@@ -68,18 +68,25 @@ The stop word file of user-defined stopiwords to use (Scikit learn stop words ar
 """
 STOP_WORD_FILE = "english_added.txt"
 
+
+
 """
-The directories in which data is to be found. The data is to be in files with the ".txt" extension 
+The directories in which data is to be found. The data is to be in files with the ".txt" extension
 in these directories. For each directory, there should also be a stance-label associated with
 the data
 """
-DATA_LABEL = "data_label"
-DIRECTORY_NAME = "directory_name"
-
 DATA_LABEL_LIST = [{DATA_LABEL : "for", DIRECTORY_NAME : "mumsnet_scikitformat/for"},\
                    {DATA_LABEL : "undecided", DIRECTORY_NAME : "mumsnet_scikitformat/uncertain"},\
                    {DATA_LABEL : "against", DIRECTORY_NAME : "mumsnet_scikitformat/against"}]
 
+NAME = "mumsnet_vaccination"
+
+PATH_TOPIC_MODEL_OUTPUT = "topic_modelling_data"
+
+PATH_USER_INPUT = PATH_TOPIC_MODEL_OUTPUT
+
+
+TOPIC_MODEL_ALGORITHM = NMF_NAME
 
 def corpus_specific_text_cleaning(text):
     """

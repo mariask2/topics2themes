@@ -13,6 +13,7 @@ import word2vecwrapper
 from glob import glob
 from sklearn.feature_extraction import text
 from topic_model_configuration import *
+from topic_model_constants import *
 
 
 TOPIC_NUMBER = "TOPIC_NUMBER"
@@ -46,47 +47,51 @@ stop_words_set = text.ENGLISH_STOP_WORDS.union(additional_stop_words)
 # Main 
 ####
 
-def run_main():
+def run_make_topic_models():
+    initialise_dirs()
+    
     file_list = read_discussion_documents()
     
     documents = [el[TEXT] for el in file_list]
 
     print("Make models for "+ str(len(documents)) + " documents.")
-
-    """
-    # Did not return any sensible topics on the test corpus
-    # Therefore, it is commented out, but the code is retained
-    # as it might work on another corpus
-    print("*************")
-    print("scikit lda")
-    file_name_lda = "testoutput_lda.html"
-    print("Will write topic modelling output to '" + file_name_lda + "'")
-    print("WARNING: If output file exists, content will be overwritten")
-    print()
-    topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, NUMBER_OF_TOPICS, NUMBER_OF_RUNS)
-
-    print("Found " + str(len(topic_info)) + " stable topics")
-    print_topic_info(topic_info, file_name_lda, "lda")
-    """
     
-    print()
-    print("*************")
-    print("scikit nmf")
+    print("Will write topic modelling output to '" + get_current_file_name() + ".json' and '" + get_current_file_name() + ".html'")
+    print("WARNING: If output files exists, content will be overwritten")
     
-    file_name_nmf = "testoutput_nmf.html"
-    print("Will write topic modelling output to '" + file_name_nmf + "'")
-    print("WARNING: If output file exists, content will be overwritten")
-    print()
-    topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, NUMBER_OF_TOPICS,  NUMBER_OF_RUNS)
+    if TOPIC_MODEL_ALGORITHM == NMF_NAME:
+        print()
+        print("*************")
+        print("scikit nmf")
+        print()
+        topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, NUMBER_OF_TOPICS,  NUMBER_OF_RUNS)
+        
+        print("Found " + str(len(topic_info)) + " stable topics")
+        
+        results = print_and_get_topic_info(topic_info, file_list)
+        
+        print("\nMade models for "+ str(len(documents)) + " documents.")
+        
+        return results
 
-    print("Found " + str(len(topic_info)) + " stable topics")
 
-    results = print_topic_info(topic_info, file_list, file_name_nmf, "nmf")
+    if TOPIC_MODEL_ALGORITHM == LDA_NAME:
+    
+        print("*************")
+        print("scikit lda")
+        file_name_lda = "testoutput_lda.html"
+        print("Will write topic modelling output to '" + file_name_lda + "'")
+        print("WARNING: If output file exists, content will be overwritten")
+        print()
+        topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, NUMBER_OF_TOPICS, NUMBER_OF_RUNS)
 
-    print("\nMade models for "+ str(len(documents)) + " documents.")
+        print("Found " + str(len(topic_info)) + " stable topics")
+        results = print_and_get_topic_info(topic_info, file_list)
+        return results
 
-    return results
-
+    
+def get_current_file_name():
+    return os.path.join(PATH_TOPIC_MODEL_OUTPUT, NAME + "_" + TOPIC_MODEL_ALGORITHM)
 
 ######
 # Read documents from file
@@ -145,12 +150,12 @@ def train_scikit_nmf_model(documents, number_of_topics, number_of_runs):
 def get_very_simple_tokenised(document, lower = True):
     if lower:
         document = document.lower()
-    very_simple_tok = document.replace(".", " .").replace(",", " ,").\
+    very_simple_tok = document.replace(".", " .").replace('"', ' " ').replace(",", " ,").\
         replace(":", " :").replace("\t", ".\t").replace("..", ".").replace("...", ".").replace("\t", " ").replace(";", " ;").replace("!", " !").replace("?", " ?").replace("(", " ( ").replace(")", " ) ").replace("  ", " ").replace("   ", " ").split(" ")
     return very_simple_tok
 
 def untokenize(simple_tokenised):
-    return " ".join(simple_tokenised).replace(" .", ".").replace(" ,", ",").\
+    return " ".join(simple_tokenised).replace(" .", ".").replace(' " ', '"').replace(" ,", ",").\
         replace(" :", ":").replace(" ;", ";").replace(" !", "!").replace(" ?", "?").replace(" ( ", "(").replace(" ) ", ")")
 #####
 # Pre-process and turn the documents into lists of terms to feed to the topic models
@@ -300,9 +305,10 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
         doc_list = []
         doc_strength = sorted(W[:,topic_idx])[::-1]
         top_doc_indices = np.argsort( W[:,topic_idx] )[::-1][0:no_top_documents]
-        found_concepts = []
-        found_terms = []
+
         for doc_i, strength in zip(top_doc_indices, doc_strength):
+            found_concepts = []
+            found_terms = []
             if strength > 0.000:
                 simple_tokenised = get_very_simple_tokenised(documents[doc_i], lower = False)
                 simple_tokenised_marked = []
@@ -343,18 +349,18 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 # Print output from the model
 #######
 
-def print_topic_info(topic_info, file_list, file_name, model_type):
+def print_and_get_topic_info(topic_info, file_list):
     document_dict = {}
     topic_info_list = []
     
     """
-    Prints output from the topic model in html format, with topic terms in bold face
+        Prints output from the topic model in html and json format, with topic terms in bold face
     """
-    f = open(file_name, "w")
-    f_json = open(file_name + ".json", "w")
+    f = open(get_current_file_name() + ".html", "w")
+    f_json = open(get_current_file_name() + ".json", "w")
 
     f.write('<html><body><font face="times"><div style="width:400px;margin:40px;">\n')
-    f.write("<h1> Results for model type " +  model_type + " </h1>\n")
+    f.write("<h1> Results for model type " +  TOPIC_MODEL_ALGORITHM + " </h1>\n")
     for nr, el in enumerate(topic_info):
         topic_info_object = {}
         topic_info_object["id"] = el[TOPIC_NUMBER]
@@ -424,11 +430,22 @@ def print_topic_info(topic_info, file_list, file_name, model_type):
     f_json.flush()
     f_json.close()
     return result_dict
+
+def initialise_dirs():
+    if not os.path.exists(PATH_TOPIC_MODEL_OUTPUT):
+        os.makedirs(PATH_TOPIC_MODEL_OUTPUT)
     
+    if not os.path.exists(PATH_USER_INPUT):
+        os.makedirs(PATH_USER_INPUT)
+
+def get_cashed_topic_model():
+    pass
+
 ###
 # Start
 ###
 if __name__ == '__main__':
-    run_main()
+    #get_cashed_topic_model()
+    run_make_topic_models()
 
 
