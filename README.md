@@ -14,6 +14,7 @@ conda install gensim
 If you want to use the functionality of running the topic modelling as a flask server, you also need to have the following installed:
 
 pip install Flask
+pip install -U flask-cors
 
 You write the following to run the code:
 

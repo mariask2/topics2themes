@@ -33,6 +33,7 @@ def get_test_model(urlbase, method):
     params_text = urllib.parse.urlencode({"apiKey": APPROVED_KEYS[0], "dataset_name": dataset_name})
     try:
         url = urlbase + method + "?%s" % params_text
+        print(url)
         with urllib.request.urlopen(url) as f:
             c = f.read().decode('utf-8')
             return c

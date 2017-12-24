@@ -1,10 +1,14 @@
-from flask import Flask, jsonify, abort, make_response, request, json
+from flask import Flask, jsonify, abort, make_response, request, json, request, current_app
 import sys
 import traceback
 import linecache
+from datetime import timedelta
+from functools import update_wrapper
 import make_topic_models
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
+CORS(app)
 
 # To not have a lot of space in the output
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
@@ -25,7 +29,8 @@ def get_exception_info(e, extra_log_file = None):
     more = get_more_exception_info()
     print(e)
     print(more)
-    return make_response(jsonify({'error' : str(e) + " " + more}), 400)
+    resp = make_response(jsonify({'error' : str(e) + " " + more}), 400)
+    return resp
 
 def get_port():
     if len(sys.argv) < 2:
@@ -48,11 +53,30 @@ def authenticate():
 
 VACCINATION_MUMSNET = "vaccination_mumsnet"
 
-@app.route('/topic_modelling/api/v1.0/get_topic_model_results', methods=['GET'])
+@app.route('/topic_modelling/api/v1.0/get_topic_model_results', methods=['GET', 'POST'])
 def get_new_topic_model_results():
-    return get_topic_model_results(make_topic_models.run_make_topic_models())
+    res = get_topic_model_results(make_topic_models.run_make_topic_models())
+    print("*******")
+    #print(res.headers)
+    print("********")
+    FILE.write(str(res) + "\n")
+    return res
 
-@app.route('/topic_modelling/api/v1.0/get_cashed_topic_model_results', methods=['GET'])
+"""
+@app.route('/topic_modelling/api/v1.0/get_topic_model_results', methods=['OPTIONS'])
+def get_new_topic_model_results_options():
+    print("starting")
+    resp = make_response(jsonify({"result" : "test"}))
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+
+    #res = get_topic_model_results(make_topic_models.run_make_topic_models())
+    print("******* options")
+    print(res.headers)
+    print("********")
+    return res
+"""
+
+@app.route('/topic_modelling/api/v1.0/get_cashed_topic_model_results', methods=['OPTIONS', 'GET', 'POST'])
 def get_cashed_topic_model_results():
     return get_topic_model_results(make_topic_models.get_cashed_topic_model())
 
@@ -60,7 +84,8 @@ def get_cashed_topic_model_results():
 def get_topic_model_results(topic_model_method):
     possible_dataset_names = [VACCINATION_MUMSNET]
     try:
-        authenticate()
+        #authenticate() # TODO: No authentication is carried out. If the code is going to be
+        # used in a production environment, this should be added
         dataset_name = request.values.get("dataset_name")
         if dataset_name not in possible_dataset_names:
             raise ValueError('The dataset name ' +  str(dataset_name) + ') is unknown')
@@ -71,15 +96,23 @@ def get_topic_model_results(topic_model_method):
         if dataset_name == VACCINATION_MUMSNET:
             topic_model_results = topic_model_method
         
-        return jsonify({"result" : topic_model_results})
+        FILE.write("*****\n")
+        FILE.write(str(topic_model_results))
+        FILE.flush()
+        resp = make_response(jsonify({"result" : topic_model_results}))
+        print(resp)
+        #resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp
     except Exception as e:
-        return str(get_exception_info(e))
+        return get_exception_info(e)
 
 
 
 APPROVED_KEYS = []
+FILE = open("log_file.txt", "w")
 
 if __name__ == '__main__':
+
 
     load_keys(APPROVED_KEYS, "approved_keys.txt")
 
