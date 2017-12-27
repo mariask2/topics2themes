@@ -24,7 +24,7 @@ Number of runs to check the stability of the retrieved topics.
 Only topics that occur in all NUMBER_OF_RUNS runs will be
 considered valid
 """
-NUMBER_OF_RUNS = 2
+NUMBER_OF_RUNS = 5
 
 """
 Mininimum overlap of retrieved terms to considered the retrieved topic as
@@ -35,7 +35,7 @@ OVERLAP_CUT_OFF = 0.7
 """
 Whether to use pre-processing (collocation detection and synonym clustering)
 """
-PRE_PROCESS = False
+PRE_PROCESS = True
 
 """
 Mininimum occurrence in the corpus for a term to be included in the topic modelling
