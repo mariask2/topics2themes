@@ -28,12 +28,15 @@ TOPIC_INDEX = "topic_index"
 TEXT = "text"
 LABEL = "label"
 COLLOCATION_BINDER = "_"
+SYNONYM_BINDER = "__"
+SYNONYM_JSON_BINDER = " / "
 DOC_ID =  "doc_id"
 DOCUMENT_TOPIC_STRENGTH = "document_topic_strength"
 ORIGINAL_DOCUMENT =  "original_document"
 FOUND_TERMS = "found_terms"
 FOUND_CONCEPTS = "found_concepts"
 MARKED_DOCUMENT_TOK = "marked_document_tok"
+
 
 #####
 # Stop word list
@@ -363,22 +366,25 @@ def print_and_get_topic_info(topic_info, file_list):
     f.write('<html><body><font face="times"><div style="width:400px;margin:40px;">\n')
     f.write("<h1> Results for model type " +  TOPIC_MODEL_ALGORITHM + " </h1>\n")
     for nr, el in enumerate(topic_info):
+        
+        term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
+        start_label = '"' + " - ".join([term.split(SYNONYM_BINDER)[0] for (term,score) in term_list_sorted_on_score[:3]]) + '"'
         topic_info_object = {}
         topic_info_object["id"] = el[TOPIC_NUMBER]
-        topic_info_object["label"] = ""
+        topic_info_object["label"] = start_label
         topic_info_object["topic_terms"] = []
          
         f.write("<p>\n")
         f.write("<h2> Topic " + str(nr) + "</h2>\n")
         f.write("<p>\n")
         for term in el[TERM_LIST]:
-            f.write(str(term).replace("__","/") + "<br>\n")
+            f.write(str(term).replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER) + "<br>\n")
             term_object = {}
-            term_object["term"] = term[0].replace("__","/")
+            term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
             term_object["score"] = term[1]
             topic_info_object["topic_terms"].append(term_object)
         f.write("<p>\n")
-        f.write(", ".join([term[0].replace("__","/") for term in el[TERM_LIST]]))
+        f.write(", ".join([term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER) for term in el[TERM_LIST]]))
         f.write("</p>\n")
         for nr, document in enumerate(el[DOCUMENT_LIST]):
 
@@ -405,7 +411,7 @@ def print_and_get_topic_info(topic_info, file_list):
             for term in el[TERM_LIST]:
                 if term[0] in document[FOUND_CONCEPTS]:
                     term_object = {}
-                    term_object["term"] = term[0].replace("__"," / ")
+                    term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
                     term_object["score"] = term[1]
                     document_topic_obj["terms_in_topic"].append(term_object)
             ###                
