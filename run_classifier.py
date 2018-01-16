@@ -5,7 +5,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.feature_extraction import text
 from topic_model_configuration import *
 
-TOP_ELEMENTS_RANGE = [1, 2, 3, 4, 5]
+TOP_ELEMENTS_RANGE = [1, 2, 3, 4, 5, 6]
 
 f = open(STOP_WORD_FILE)
 additional_stop_words = [word.strip() for word in f.readlines()]
@@ -133,20 +133,22 @@ def run_classifier(filename, use_synonyms):
             else:
                 not_found_baseline[top_nr] =  not_found_baseline[top_nr] + 1
 
+    output_file.write("filename: " + "\t" +  filename  + "\t" +   "use_synonyms:"  + "\t" +   str(use_synonyms) + "\t" + "nr of cat:" +\
+                     "\t" + str(len(count_categories_dict.keys())) + "\t" + "\t".join(count_categories_dict.keys()) + "\n")
+    output_file.write("************\n")
     for top_nr in TOP_ELEMENTS_RANGE:
-        output_file.write("************\n")
-        output_file.write("Top " + str(top_nr) + " elements. \n")
-        print_found(found[top_nr], not_found[top_nr], "knearest", top_nr, output_file)
+        output_file.write("---------\n")
+        output_file.write("Top " + str(top_nr) + " elements. \t")
+        #print_found(found[top_nr], not_found[top_nr], "knearest", top_nr, output_file)
         print_found(found_logr[top_nr], not_found_logr[top_nr], "logistic", top_nr, output_file)
         print_found(found_baseline[top_nr], not_found_baseline[top_nr], "baseline", top_nr, output_file)
         output_file.write("\n\n")
         
 def print_found(found, not_found, name, top_nr, output_file):
     per_found = found/(found + not_found)
-    output_file.write("---\n")
-    output_file.write(name + "\t" + "    found:" + "\t" + str(found)  + "\n")
-    output_file.write(name + "\t" + "not found:" +  "\t"  + str(not_found) + "\n")
-    output_file.write(name + "\t" + "% found:" +  "\t"  + str(per_found) + "\n")
+    output_file.write(name + "\t" + "    found:" + "\t" + str(found)  + "\t")
+    output_file.write(name + "\t" + "not found:" +  "\t"  + str(not_found) + "\t")
+    output_file.write(name + "\t" + "% found:" +  "\t"  + str(per_found) + "\t")
     
     
 def baseline_classify(gold_standard_classification, count_categories_dict):
@@ -233,6 +235,6 @@ def is_clossification_correct(most_likely, gold_standard_classification):
         return False    
     
 if __name__ == '__main__':
-    run_classifier("classification_data/output_2_for_classification_topic1_annotated.txt", False)
+    run_classifier("classification_data/output_3_for_classification_topic1_annotated.txt", True)
     #run_classifier("classification_data/output_for_classification_topic2_annotated.txt")
     
