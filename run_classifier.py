@@ -5,7 +5,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.feature_extraction import text
 from topic_model_configuration import *
 
-NR_TOP_ELEMENTS = 3
+TOP_ELEMENTS_RANGE = [1, 2, 3, 4, 5]
 
 f = open(STOP_WORD_FILE)
 additional_stop_words = [word.strip() for word in f.readlines()]
@@ -87,16 +87,21 @@ def run_classifier(filename, use_synonyms):
         category_dict_inversed[el] = nr
 
 
-    found = 0
-    not_found = 0
+    found = {}
+    not_found = {}
+    found_logr = {}
+    not_found_logr = {}
+    found_baseline = {}
+    not_found_baseline = {}
 
-    found_logr = 0
-    not_found_logr = 0
+    for el in TOP_ELEMENTS_RANGE:
+        found[el] = 0
+        not_found[el] = 0
+        found_logr[el] = 0
+        not_found_logr[el] = 0
+        found_baseline[el] = 0
+        not_found_baseline[el] = 0
 
-
-    found_baseline = 0
-    not_found_baseline = 0
-    
     for current_el in range(0, len(data_lines)):
         unknown_str = data_lines[current_el][1]
         gold_standard_classification = data_lines[current_el][0]
@@ -104,42 +109,49 @@ def run_classifier(filename, use_synonyms):
         if len(training_data_y_x) != len(data_lines) -1:
             print("splitting of data incorrect")
             exit(1)
-        was_logr_classification_correct = \
-            classify_data_logisticregression(unknown_str, gold_standard_classification, training_data_y_x, vectorizer, category_dict, category_dict_inversed, count_categories_dict, use_synonyms)
-        if was_logr_classification_correct:
-            found_logr = found_logr + 1
-        else:
-            not_found_logr = not_found_logr + 1
             
-        was_classification_correct = \
-            classify_data_nearest_k(unknown_str, gold_standard_classification, training_data_y_x, vectorizer, category_dict, category_dict_inversed, count_categories_dict, use_synonyms)
-        if  was_classification_correct:
-            found = found + 1
-        else:
-            not_found = not_found + 1
+        most_likely_logr =  classify_data_logisticregression(unknown_str, gold_standard_classification, training_data_y_x, vectorizer, category_dict, category_dict_inversed, count_categories_dict, use_synonyms)
+        most_likely = classify_data_nearest_k(unknown_str, gold_standard_classification, training_data_y_x, vectorizer, category_dict, category_dict_inversed, count_categories_dict, use_synonyms)
+        most_likely_baseline = baseline_classify(gold_standard_classification, count_categories_dict)
 
-        was_baseline_correct = \
-             baseline_classify(gold_standard_classification, count_categories_dict)
-        if  was_baseline_correct:
-            found_baseline = found_baseline + 1
-        else:
-             not_found_baseline =  not_found_baseline + 1
+        for top_nr in TOP_ELEMENTS_RANGE:
+            was_logr_classification_correct = is_clossification_correct(most_likely_logr[:top_nr], gold_standard_classification)
+            if was_logr_classification_correct:
+                found_logr[top_nr] = found_logr[top_nr] + 1
+            else:
+                not_found_logr[top_nr] = not_found_logr[top_nr] + 1
 
-    print_found(found, not_found, "knearest")
-    print_found(found_logr, not_found_logr, "logistic")
-    print_found(found_baseline, not_found_baseline, "baseline")
-    
-def print_found(found, not_found, name):
+            was_classification_correct = is_clossification_correct(most_likely[:top_nr], gold_standard_classification)
+            if  was_classification_correct:
+                found[top_nr] = found[top_nr] + 1
+            else:
+                not_found[top_nr] = not_found[top_nr] + 1
+
+            was_baseline_correct = is_clossification_correct(most_likely_baseline[:top_nr], gold_standard_classification) 
+            if  was_baseline_correct:
+                found_baseline[top_nr] = found_baseline[top_nr] + 1
+            else:
+                not_found_baseline[top_nr] =  not_found_baseline[top_nr] + 1
+
+    for top_nr in TOP_ELEMENTS_RANGE:
+        output_file.write("************\n")
+        output_file.write("Top " + str(top_nr) + " elements. \n")
+        print_found(found[top_nr], not_found[top_nr], "knearest", top_nr, output_file)
+        print_found(found_logr[top_nr], not_found_logr[top_nr], "logistic", top_nr, output_file)
+        print_found(found_baseline[top_nr], not_found_baseline[top_nr], "baseline", top_nr, output_file)
+        output_file.write("\n\n")
+        
+def print_found(found, not_found, name, top_nr, output_file):
     per_found = found/(found + not_found)
-    print("---")
-    print(name + "\t" + "    found:" + "\t" + str(found))
-    print(name + "\t" + "not found:" +  "\t"  + str(not_found))
-    print(name + "\t" + "% found:" +  "\t"  + str(per_found))
+    output_file.write("---\n")
+    output_file.write(name + "\t" + "    found:" + "\t" + str(found)  + "\n")
+    output_file.write(name + "\t" + "not found:" +  "\t"  + str(not_found) + "\n")
+    output_file.write(name + "\t" + "% found:" +  "\t"  + str(per_found) + "\n")
     
     
 def baseline_classify(gold_standard_classification, count_categories_dict):
-    most_common = sorted([(item, key) for (key, item) in count_categories_dict.items()], reverse=True)[:NR_TOP_ELEMENTS]
-    return is_clossification_correct(most_common, gold_standard_classification)
+    most_common = sorted([(item, key) for (key, item) in count_categories_dict.items()], reverse=True)
+    return most_common
 
     
 def classify_data_nearest_k(unknown_str,  gold_standard_classification, training_data_y_x, vectorizer, category_dict, category_dict_inversed, count_categories_dict, use_synonyms):
@@ -152,9 +164,9 @@ def classify_data_nearest_k(unknown_str,  gold_standard_classification, training
         for prob, likely in most_likely:
             if count_categories_dict[likely] < k:
                 print(k)
-                return is_clossification_correct(most_likely, gold_standard_classification)
+                return most_likely
     print("outside of loop")
-    return is_clossification_correct(most_likely, gold_standard_classification)
+    return most_likely
 
 def classify_data_logisticregression(unknown_str,  gold_standard_classification, training_data_y_x, vectorizer, category_dict, category_dict_inversed, count_categories_dict, use_synonyms):
     transformed, training_data_y_filtered_for_included, transformed_test, categories = \
@@ -166,9 +178,8 @@ def classify_data_logisticregression(unknown_str,  gold_standard_classification,
     probs = clf.predict_proba(transformed_test)[0]
     print("-------")
     print(probs)
-    most_likely = sorted([(prob, category_dict[nr]) for (nr, prob) in enumerate(probs)], reverse = True)[:NR_TOP_ELEMENTS]
-    print(most_likely)
-    return is_clossification_correct(most_likely, gold_standard_classification)
+    most_likely = sorted([(prob, category_dict[nr]) for (nr, prob) in enumerate(probs)], reverse = True)
+    return most_likely
 
 
 def get_transformed_data(unknown_str, training_data_y_x, vectorizer, count_categories_dict, category_dict_inversed, use_synonyms):
@@ -207,7 +218,7 @@ def classify_kneighbor(vectorizer, transformed, training_data_y_filtered_for_inc
     #print(inversed_test)
     probs = clf.predict_proba(transformed_test)[0]
     print("-------")
-    most_likely = sorted([(prob, category_dict[nr]) for (nr, prob) in enumerate(probs)], reverse = True)[:NR_TOP_ELEMENTS]
+    most_likely = sorted([(prob, category_dict[nr]) for (nr, prob) in enumerate(probs)], reverse = True)
     return most_likely
 
 def is_clossification_correct(most_likely, gold_standard_classification):
@@ -222,6 +233,6 @@ def is_clossification_correct(most_likely, gold_standard_classification):
         return False    
     
 if __name__ == '__main__':
-    run_classifier("classification_data/output_2_for_classification_topic1_annotated.txt", True)
+    run_classifier("classification_data/output_2_for_classification_topic1_annotated.txt", False)
     #run_classifier("classification_data/output_for_classification_topic2_annotated.txt")
     
