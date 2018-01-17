@@ -4,6 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.feature_extraction import text
 from topic_model_configuration import *
+import os
 
 TOP_ELEMENTS_RANGE = [1, 2, 3, 4, 5, 6]
 
@@ -35,12 +36,14 @@ def replace_with_synonym(line, use_synonyms):
         return " ".join(to_return)
     return line
     
-def run_classifier(filename, use_synonyms):    
+def run_classifier(filename, use_synonyms, output_path):    
     f = open(filename)
     lines  = f.readlines()
     f.close()
 
-    output_file = open("tempfile.txt", "w")
+    output_filename_base =  "synonyms_" + str(use_synonyms) + "_" + os.path.basename(filename) 
+    output_filename = os.path.join(output_path, output_filename_base)
+    output_file = open(output_filename, "w")
 
     data_lines = []
 
@@ -136,8 +139,11 @@ def run_classifier(filename, use_synonyms):
     output_file.write("filename: " + "\t" +  filename  + "\t" +   "use_synonyms:"  + "\t" +   str(use_synonyms) + "\t" + "nr of cat:" +\
                      "\t" + str(len(count_categories_dict.keys())) + "\t" + "\t".join(count_categories_dict.keys()) + "\n")
     output_file.write("************\n")
+    output_file.write("Top nr of elements. \t")
+    print_found("found_logr", "not_found_logr", "logistic regression", "top_nr", output_file)
+    print_found("found_base", "not_found_base", "baseline", "top_nr", output_file)
+    output_file.write("\n----------------------------\n")
     for top_nr in TOP_ELEMENTS_RANGE:
-        output_file.write("---------\n")
         output_file.write("Top " + str(top_nr) + " elements. \t")
         #print_found(found[top_nr], not_found[top_nr], "knearest", top_nr, output_file)
         print_found(found_logr[top_nr], not_found_logr[top_nr], "logistic", top_nr, output_file)
@@ -145,7 +151,10 @@ def run_classifier(filename, use_synonyms):
         output_file.write("\n\n")
         
 def print_found(found, not_found, name, top_nr, output_file):
-    per_found = found/(found + not_found)
+    try:
+        per_found = found/(found + not_found)
+    except TypeError:
+        per_found = "% found " + name
     output_file.write(name + "\t" + "    found:" + "\t" + str(found)  + "\t")
     output_file.write(name + "\t" + "not found:" +  "\t"  + str(not_found) + "\t")
     output_file.write(name + "\t" + "% found:" +  "\t"  + str(per_found) + "\t")
@@ -233,8 +242,17 @@ def is_clossification_correct(most_likely, gold_standard_classification):
         print(gold_standard_classification + " should have been " + str( [likely for (prob, likely) in most_likely]))
         print("*****")
         return False    
-    
+
+def start_classification():
+    output_path = "machine_learning_results"
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    run_classifier("classification_data/output_3_for_classification_topic1_annotated.txt", True, output_path)
+
+
+
 if __name__ == '__main__':
-    run_classifier("classification_data/output_3_for_classification_topic1_annotated.txt", True)
-    #run_classifier("classification_data/output_for_classification_topic2_annotated.txt")
+    start_classification()
+    
+
     
