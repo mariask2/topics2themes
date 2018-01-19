@@ -45,6 +45,10 @@ def run_classifier(filename, use_synonyms, output_path):
     output_filename = os.path.join(output_path, output_filename_base)
     output_file = open(output_filename, "w")
 
+    output_filename_base_detailed =  "detailed_" + output_filename_base
+    output_filename_detailed = output_filename = os.path.join(output_path, output_filename_base_detailed)
+    output_file_detailed = open(output_filename, "w")
+    
     data_lines = []
 
     count_categories_dict = {}
@@ -89,7 +93,7 @@ def run_classifier(filename, use_synonyms, output_path):
         category_dict[nr] = el
         category_dict_inversed[el] = nr
 
-    print(count_categories_dict)  
+    #print(count_categories_dict)  
     found = {}
     not_found = {}
     found_logr = {}
@@ -108,35 +112,56 @@ def run_classifier(filename, use_synonyms, output_path):
     for current_el in range(0, len(data_lines)):
         unknown_str = data_lines[current_el][1]
         gold_standard_classification = data_lines[current_el][0]
-        training_data_y_x = data_lines[0 : current_el] + data_lines[current_el + 1:]
-        if len(training_data_y_x) != len(data_lines) -1:
-            print("splitting of data incorrect")
-            exit(1)
-            
+        before_current = data_lines[0 : current_el]
+        after_current = data_lines[current_el + 1:]
+        training_data_y_x_unfiltered = before_current + after_current
+        training_data_y_x = []
+        for [y,x] in training_data_y_x_unfiltered:            
+            if x != unknown_str:
+                training_data_y_x.append([y,x])
+                
         most_likely_logr =  classify_data_logisticregression(unknown_str, gold_standard_classification, training_data_y_x, vectorizer, category_dict, category_dict_inversed, count_categories_dict, use_synonyms)
         most_likely = classify_data_nearest_k(unknown_str, gold_standard_classification, training_data_y_x, vectorizer, category_dict, category_dict_inversed, count_categories_dict, use_synonyms)
         most_likely_baseline = baseline_classify(gold_standard_classification, count_categories_dict)
 
         for top_nr in TOP_ELEMENTS_RANGE:
-            was_logr_classification_correct = is_clossification_correct(most_likely_logr[:top_nr], gold_standard_classification)
+            was_logr_classification_correct = is_clossification_correct(most_likely_logr[:top_nr],\
+                gold_standard_classification,\
+                top_nr,\
+                unknown_str,\
+                count_categories_dict,\
+                output_file_detailed,\
+                "logistic regression")
             if was_logr_classification_correct:
                 found_logr[top_nr] = found_logr[top_nr] + 1
             else:
                 not_found_logr[top_nr] = not_found_logr[top_nr] + 1
 
-            was_classification_correct = is_clossification_correct(most_likely[:top_nr], gold_standard_classification)
+            was_classification_correct = is_clossification_correct(most_likely[:top_nr],\
+                gold_standard_classification,\
+                top_nr,\
+                unknown_str,\
+                count_categories_dict,\
+                output_file_detailed)
             if  was_classification_correct:
                 found[top_nr] = found[top_nr] + 1
             else:
                 not_found[top_nr] = not_found[top_nr] + 1
 
-            was_baseline_correct = is_clossification_correct(most_likely_baseline[:top_nr], gold_standard_classification) 
+            was_baseline_correct = is_clossification_correct(most_likely_baseline[:top_nr],\
+                gold_standard_classification,\
+                top_nr,\
+                unknown_str,\
+                count_categories_dict,\
+                output_file_detailed,\
+                "baseline") 
             if  was_baseline_correct:
                 found_baseline[top_nr] = found_baseline[top_nr] + 1
             else:
                 not_found_baseline[top_nr] =  not_found_baseline[top_nr] + 1
 
-    output_file.write("filename: " + " " +  filename  + " " +   "use_synonyms:"  + " " +   str(use_synonyms) + " " + "nr of cat:" +\
+                
+    output_file.write("\nfilename: " + " " +  filename  + " " +   "use_synonyms:"  + " " +   str(use_synonyms) + " " + "nr of cat:" +\
                      " " + str(len(count_categories_dict.keys())) + " " + str(count_categories_dict) + "\n")
     output_file.write("************\n")
     output_file.write("Top nr of elements. \t")
@@ -149,6 +174,9 @@ def run_classifier(filename, use_synonyms, output_path):
         print_found(found_logr[top_nr], not_found_logr[top_nr], "logistic", top_nr,  use_synonyms, output_file)
         print_found(found_baseline[top_nr], not_found_baseline[top_nr], "baseline",  use_synonyms, top_nr, output_file)
         output_file.write("\n\n")
+        
+    output_file.close()
+    output_file_detailed.close()
         
 def print_found(found, not_found, name, top_nr, use_synonyms, output_file):
     try:
@@ -233,15 +261,16 @@ def classify_kneighbor(vectorizer, transformed, training_data_y_filtered_for_inc
     most_likely = sorted([(prob, category_dict[nr]) for (nr, prob) in enumerate(probs)], reverse = True)
     return most_likely
 
-def is_clossification_correct(most_likely, gold_standard_classification):
+def is_clossification_correct(most_likely, gold_standard_classification, top_nr, unknown_str, count_categories_dict, output_file, classification_type = None):
     if gold_standard_classification in [likely for (prob, likely) in most_likely]:
-        #print(gold_standard_classification + " found in " + str( [likely for (prob, likely) in most_likely]))
-        
+        if classification_type:
+            output_file.write("CORRECT"  + "\t" +  gold_standard_classification + "\t" + classification_type + "\t"\
+                              + str(count_categories_dict[gold_standard_classification]) + "\t" + str(top_nr)   + "\t" + str(most_likely) + "\t" + unknown_str + "\n")
         return True
     else:
-        #print("INCORRECT CLASSIFICATION")
-        #print(gold_standard_classification + " should have been " + str( [likely for (prob, likely) in most_likely]))
-        #print("*****")
+        if classification_type:
+            output_file.write("INCORRECT"  + "\t" +  gold_standard_classification + "\t" + classification_type + "\t"\
+                              +  str(count_categories_dict[gold_standard_classification]) + "\t" + str(top_nr)   + "\t" + str(most_likely) + "\t" + unknown_str + "\n")
         return False    
 
 def start_classification():
