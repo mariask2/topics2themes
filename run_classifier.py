@@ -14,7 +14,7 @@ f.close()
 stop_words_set = text.ENGLISH_STOP_WORDS.union(additional_stop_words)
 
 synonym_dict = {}
-synonyms = open("clustered_word_7.txt")
+synonyms = open("clustered_words_machine_learning.txt")
 for line in synonyms.readlines():
     for word in line.strip().split("__"):
         synonym_dict[word] = line.strip()
@@ -89,7 +89,7 @@ def run_classifier(filename, use_synonyms, output_path):
         category_dict[nr] = el
         category_dict_inversed[el] = nr
 
-
+    print(count_categories_dict)  
     found = {}
     not_found = {}
     found_logr = {}
@@ -136,25 +136,25 @@ def run_classifier(filename, use_synonyms, output_path):
             else:
                 not_found_baseline[top_nr] =  not_found_baseline[top_nr] + 1
 
-    output_file.write("filename: " + "\t" +  filename  + "\t" +   "use_synonyms:"  + "\t" +   str(use_synonyms) + "\t" + "nr of cat:" +\
-                     "\t" + str(len(count_categories_dict.keys())) + "\t" + "\t".join(count_categories_dict.keys()) + "\n")
+    output_file.write("filename: " + " " +  filename  + " " +   "use_synonyms:"  + " " +   str(use_synonyms) + " " + "nr of cat:" +\
+                     " " + str(len(count_categories_dict.keys())) + " " + str(count_categories_dict) + "\n")
     output_file.write("************\n")
     output_file.write("Top nr of elements. \t")
-    print_found("found_logr", "not_found_logr", "logistic regression", "top_nr", output_file)
-    print_found("found_base", "not_found_base", "baseline", "top_nr", output_file)
+    print_found("found_logr", "not_found_logr", "logistic regression", "top_nr", "use_synonyms_" + str(use_synonyms), output_file)
+    print_found("found_base", "not_found_base", "baseline", "top_nr", "use_synonyms_"  + str(use_synonyms) , output_file)
     output_file.write("\n----------------------------\n")
     for top_nr in TOP_ELEMENTS_RANGE:
         output_file.write("Top " + str(top_nr) + " elements. \t")
         #print_found(found[top_nr], not_found[top_nr], "knearest", top_nr, output_file)
-        print_found(found_logr[top_nr], not_found_logr[top_nr], "logistic", top_nr, output_file)
-        print_found(found_baseline[top_nr], not_found_baseline[top_nr], "baseline", top_nr, output_file)
+        print_found(found_logr[top_nr], not_found_logr[top_nr], "logistic", top_nr,  use_synonyms, output_file)
+        print_found(found_baseline[top_nr], not_found_baseline[top_nr], "baseline",  use_synonyms, top_nr, output_file)
         output_file.write("\n\n")
         
-def print_found(found, not_found, name, top_nr, output_file):
+def print_found(found, not_found, name, top_nr, use_synonyms, output_file):
     try:
         per_found = found/(found + not_found)
     except TypeError:
-        per_found = "% found " + name
+        per_found = "% found " + name + " " + str(use_synonyms)
     output_file.write(name + "\t" + "    found:" + "\t" + str(found)  + "\t")
     output_file.write(name + "\t" + "not found:" +  "\t"  + str(not_found) + "\t")
     output_file.write(name + "\t" + "% found:" +  "\t"  + str(per_found) + "\t")
@@ -174,9 +174,9 @@ def classify_data_nearest_k(unknown_str,  gold_standard_classification, training
         most_likely =  classify_kneighbor(vectorizer, transformed, training_data_y_filtered_for_included, transformed_test, category_dict, k)
         for prob, likely in most_likely:
             if count_categories_dict[likely] < k:
-                print(k)
+                #print(k)
                 return most_likely
-    print("outside of loop")
+            #print("outside of loop")
     return most_likely
 
 def classify_data_logisticregression(unknown_str,  gold_standard_classification, training_data_y_x, vectorizer, category_dict, category_dict_inversed, count_categories_dict, use_synonyms):
@@ -187,8 +187,8 @@ def classify_data_logisticregression(unknown_str,  gold_standard_classification,
     clf.fit(transformed, training_data_y_filtered_for_included)
 
     probs = clf.predict_proba(transformed_test)[0]
-    print("-------")
-    print(probs)
+    #print("-------")
+    #print(probs)
     most_likely = sorted([(prob, category_dict[nr]) for (nr, prob) in enumerate(probs)], reverse = True)
     return most_likely
 
@@ -215,9 +215,10 @@ def get_transformed_data(unknown_str, training_data_y_x, vectorizer, count_categ
     inversed = vectorizer.inverse_transform(transformed)
     for el in inversed:
         print(el)
-    """
-    print("*********")
+    
     print(unknown_str)
+"""
+
     transformed_test = vectorizer.transform([replace_with_synonym(unknown_str, use_synonyms)])
     
     return transformed, training_data_y_filtered_for_included, transformed_test, categories
@@ -228,26 +229,33 @@ def classify_kneighbor(vectorizer, transformed, training_data_y_filtered_for_inc
 
     #print(inversed_test)
     probs = clf.predict_proba(transformed_test)[0]
-    print("-------")
+    
     most_likely = sorted([(prob, category_dict[nr]) for (nr, prob) in enumerate(probs)], reverse = True)
     return most_likely
 
 def is_clossification_correct(most_likely, gold_standard_classification):
     if gold_standard_classification in [likely for (prob, likely) in most_likely]:
-        print(gold_standard_classification + " found in " + str( [likely for (prob, likely) in most_likely]))
-        print("*****")
+        #print(gold_standard_classification + " found in " + str( [likely for (prob, likely) in most_likely]))
+        
         return True
     else:
-        print("INCORRECT CLASSIFICATION")
-        print(gold_standard_classification + " should have been " + str( [likely for (prob, likely) in most_likely]))
-        print("*****")
+        #print("INCORRECT CLASSIFICATION")
+        #print(gold_standard_classification + " should have been " + str( [likely for (prob, likely) in most_likely]))
+        #print("*****")
         return False    
 
 def start_classification():
-    output_path = "machine_learning_results"
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-    run_classifier("classification_data/output_3_for_classification_topic1_annotated.txt", True, output_path)
+    output_path_base = "machine_learning_results"
+    if not os.path.exists(output_path_base):
+        os.makedirs(output_path_base)
+    for topic_nr in range(0,6):
+        for min_occ in range(2, 4):
+            output_path = os.path.join(output_path_base, "min_occ_" + str(min_occ))
+            if not os.path.exists(output_path):
+                os.makedirs(output_path)
+            for include_clusters in [True, False]:
+                run_classifier("classification_data/output_" + str(min_occ) + "_for_classification_topic" + str(topic_nr) + "_annotated.txt",\
+                               include_clusters, output_path)
 
 
 
