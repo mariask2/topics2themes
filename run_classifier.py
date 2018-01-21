@@ -112,6 +112,9 @@ def run_classifier(filename, use_synonyms, output_path):
     for current_el in range(0, len(data_lines)):
         unknown_str = data_lines[current_el][1]
         gold_standard_classification = data_lines[current_el][0]
+        if count_categories_dict[gold_standard_classification] < 2:
+        # The categories that only occur once can not be included in the evaluation (but still as a category among which to chose from)
+            continue
         before_current = data_lines[0 : current_el]
         after_current = data_lines[current_el + 1:]
         training_data_y_x_unfiltered = before_current + after_current
@@ -189,7 +192,13 @@ def print_found(found, not_found, name, top_nr, use_synonyms, output_file):
     
     
 def baseline_classify(gold_standard_classification, count_categories_dict):
-    most_common = sorted([(item, key) for (key, item) in count_categories_dict.items()], reverse=True)
+    modified_count = [] # The cound for the current class should not be included, since when the evaluation is done, this has not been assigned yet
+    for (key, item) in count_categories_dict.items():
+        item_mod = item
+        if key == gold_standard_classification:
+            item_mod = item_mod - 1
+        modified_count.append((item_mod, key))
+    most_common = sorted(modified_count, reverse=True)
     return most_common
 
     
@@ -278,7 +287,7 @@ def start_classification():
     if not os.path.exists(output_path_base):
         os.makedirs(output_path_base)
     for topic_nr in range(0,6):
-        for min_occ in range(2, 4):
+        for min_occ in range(1, 2):
             output_path = os.path.join(output_path_base, "min_occ_" + str(min_occ))
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
