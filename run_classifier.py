@@ -93,23 +93,19 @@ def run_classifier(filename, use_synonyms, output_path):
         category_dict[nr] = el
         category_dict_inversed[el] = nr
 
-    #print(count_categories_dict)  
-    found = {}
-    not_found = {}
     found_logr = {}
     not_found_logr = {}
     found_baseline = {}
     not_found_baseline = {}
 
     for el in TOP_ELEMENTS_RANGE:
-        found[el] = 0
-        not_found[el] = 0
         found_logr[el] = 0
         not_found_logr[el] = 0
         found_baseline[el] = 0
         not_found_baseline[el] = 0
 
     for current_el in range(0, len(data_lines)):
+        count_categories_dict_training_data_specific = {}
         unknown_str = data_lines[current_el][1]
         gold_standard_classification = data_lines[current_el][0]
         if count_categories_dict[gold_standard_classification] < 2:
@@ -120,12 +116,15 @@ def run_classifier(filename, use_synonyms, output_path):
         training_data_y_x_unfiltered = before_current + after_current
         training_data_y_x = []
         for [y,x] in training_data_y_x_unfiltered:            
-            if x != unknown_str:
+            if x != unknown_str: # Don't use the classifications from the current text in the training.
                 training_data_y_x.append([y,x])
+                if y not in count_categories_dict_training_data_specific:
+                    count_categories_dict_training_data_specific[y] = 0
+                count_categories_dict_training_data_specific[y] = count_categories_dict_training_data_specific[y] + 1
                 
         most_likely_logr =  classify_data_logisticregression(unknown_str, gold_standard_classification, training_data_y_x, vectorizer, category_dict, category_dict_inversed, count_categories_dict, use_synonyms)
-        most_likely = classify_data_nearest_k(unknown_str, gold_standard_classification, training_data_y_x, vectorizer, category_dict, category_dict_inversed, count_categories_dict, use_synonyms)
-        most_likely_baseline = baseline_classify(gold_standard_classification, count_categories_dict)
+
+        most_likely_baseline = baseline_classify(gold_standard_classification, count_categories_dict_training_data_specific)
 
         for top_nr in TOP_ELEMENTS_RANGE:
             was_logr_classification_correct = is_clossification_correct(most_likely_logr[:top_nr],\
@@ -139,17 +138,6 @@ def run_classifier(filename, use_synonyms, output_path):
                 found_logr[top_nr] = found_logr[top_nr] + 1
             else:
                 not_found_logr[top_nr] = not_found_logr[top_nr] + 1
-
-            was_classification_correct = is_clossification_correct(most_likely[:top_nr],\
-                gold_standard_classification,\
-                top_nr,\
-                unknown_str,\
-                count_categories_dict,\
-                output_file_detailed)
-            if  was_classification_correct:
-                found[top_nr] = found[top_nr] + 1
-            else:
-                not_found[top_nr] = not_found[top_nr] + 1
 
             was_baseline_correct = is_clossification_correct(most_likely_baseline[:top_nr],\
                 gold_standard_classification,\
@@ -191,31 +179,11 @@ def print_found(found, not_found, name, top_nr, use_synonyms, output_file):
     output_file.write(name + "\t" + "% found:" +  "\t"  + str(per_found) + "\t")
     
     
-def baseline_classify(gold_standard_classification, count_categories_dict):
-    modified_count = [] # The cound for the current class should not be included, since when the evaluation is done, this has not been assigned yet
-    for (key, item) in count_categories_dict.items():
-        item_mod = item
-        if key == gold_standard_classification:
-            item_mod = item_mod - 1
-        modified_count.append((item_mod, key))
-    most_common = sorted(modified_count, reverse=True)
-    return most_common
+def baseline_classify(gold_standard_classification, count_categories_dict_training_data_specific):
+    most_common_training_data_specific = sorted([(value,key) for (key, value) in count_categories_dict_training_data_specific.items()], reverse=True)
+    return most_common_training_data_specific
 
     
-def classify_data_nearest_k(unknown_str,  gold_standard_classification, training_data_y_x, vectorizer, category_dict, category_dict_inversed, count_categories_dict, use_synonyms):
-    transformed, training_data_y_filtered_for_included, transformed_test, categories = \
-        get_transformed_data(unknown_str, training_data_y_x, vectorizer, count_categories_dict, category_dict_inversed, use_synonyms)
-
-    most_likely = None
-    for k in range(2, 10):
-        most_likely =  classify_kneighbor(vectorizer, transformed, training_data_y_filtered_for_included, transformed_test, category_dict, k)
-        for prob, likely in most_likely:
-            if count_categories_dict[likely] < k:
-                #print(k)
-                return most_likely
-            #print("outside of loop")
-    return most_likely
-
 def classify_data_logisticregression(unknown_str,  gold_standard_classification, training_data_y_x, vectorizer, category_dict, category_dict_inversed, count_categories_dict, use_synonyms):
     transformed, training_data_y_filtered_for_included, transformed_test, categories = \
         get_transformed_data(unknown_str, training_data_y_x, vectorizer, count_categories_dict, category_dict_inversed, use_synonyms)
@@ -260,15 +228,6 @@ def get_transformed_data(unknown_str, training_data_y_x, vectorizer, count_categ
     
     return transformed, training_data_y_filtered_for_included, transformed_test, categories
 
-def classify_kneighbor(vectorizer, transformed, training_data_y_filtered_for_included, transformed_test, category_dict, n_neighbors):
-    clf = KNeighborsClassifier(weights="distance")
-    clf.fit(transformed, training_data_y_filtered_for_included)
-
-    #print(inversed_test)
-    probs = clf.predict_proba(transformed_test)[0]
-    
-    most_likely = sorted([(prob, category_dict[nr]) for (nr, prob) in enumerate(probs)], reverse = True)
-    return most_likely
 
 def is_clossification_correct(most_likely, gold_standard_classification, top_nr, unknown_str, count_categories_dict, output_file, classification_type = None):
     if gold_standard_classification in [likely for (prob, likely) in most_likely]:
