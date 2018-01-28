@@ -81,12 +81,17 @@ def run_classifier(filename, use_synonyms, output_path):
         binary = True)
 
     transformed = vectorizer.fit_transform(data_list_preprocessed)
-    
+
+    feature_set = set()
     inversed = vectorizer.inverse_transform(transformed)
     output_file.write("Features used: \n")
     for el in inversed:
         output_file.write(str(el) + "\n" )
 
+    output_file.write("\n Number of features: " + str(len(vectorizer.get_feature_names())) + "\n")
+    output_file.write("\n Number of stop words used: " + str(len(set(stop_words_set))) + "\n")
+    
+    
     category_dict = {}
     category_dict_inversed = {}
     for (nr, el) in enumerate(sorted(list(count_categories_dict.keys()))):

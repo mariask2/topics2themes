@@ -11,20 +11,19 @@ NUMBER_OF_TOPICS = 10
 Nr of words to display for each topic
 """
 #NR_OF_TOP_WORDS = 50
-NR_OF_TOP_WORDS = 10
+NR_OF_TOP_WORDS = 25
 
 """
 Nr of most typical document to retrieve for each topic
 """
-#NR_OF_TOP_DOCUMENTS = 50
-NR_OF_TOP_DOCUMENTS = 20
+NR_OF_TOP_DOCUMENTS = 50
 
 """
 Number of runs to check the stability of the retrieved topics.
 Only topics that occur in all NUMBER_OF_RUNS runs will be
 considered valid
 """
-NUMBER_OF_RUNS = 5
+NUMBER_OF_RUNS = 10
 
 """
 Mininimum overlap of retrieved terms to considered the retrieved topic as
