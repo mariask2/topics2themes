@@ -15,6 +15,7 @@ import datetime
 from sklearn.feature_extraction import text
 from topic_model_configuration import *
 from topic_model_constants import *
+from mongo_connector import MongoConnector
 
 
 TOPIC_NUMBER = "TOPIC_NUMBER"
@@ -51,7 +52,7 @@ stop_words_set = text.ENGLISH_STOP_WORDS.union(additional_stop_words)
 # Main 
 ####
 
-def run_make_topic_models():
+def run_make_topic_models(mongo_con):
     initialise_dirs()
     
     file_list = read_discussion_documents()
@@ -72,11 +73,11 @@ def run_make_topic_models():
         
         print("Found " + str(len(topic_info)) + " stable topics")
         
-        results = print_and_get_topic_info(topic_info, file_list)
+        result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
-        return results
+        return result_dict, time, post_id
 
 
     if TOPIC_MODEL_ALGORITHM == LDA_NAME:
@@ -90,8 +91,8 @@ def run_make_topic_models():
         topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, NUMBER_OF_TOPICS, NUMBER_OF_RUNS)
 
         print("Found " + str(len(topic_info)) + " stable topics")
-        results = print_and_get_topic_info(topic_info, file_list)
-        return results
+        result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con)
+        return result_dict, time, post_id
 
     
 def get_current_file_name():
@@ -353,7 +354,7 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 # Print output from the model
 #######
 
-def print_and_get_topic_info(topic_info, file_list):
+def print_and_get_topic_info(topic_info, file_list, mongo_con):
     document_dict = {}
     topic_info_list = []
     
@@ -438,7 +439,10 @@ def print_and_get_topic_info(topic_info, file_list):
     f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
     f_json.flush()
     f_json.close()
-    return result_dict
+    time, post_id = mongo_con.insert_new_model(result_dict, NAME + "_" + TOPIC_MODEL_ALGORITHM)
+
+    
+    return result_dict, time, post_id
 
 def initialise_dirs():
     if not os.path.exists(PATH_TOPIC_MODEL_OUTPUT):
@@ -447,7 +451,18 @@ def initialise_dirs():
     if not os.path.exists(PATH_USER_INPUT):
         os.makedirs(PATH_USER_INPUT)
 
-def get_cashed_topic_model():
+def get_cashed_topic_model(mongo_con):
+    els, date, name, id = mongo_con.get_all_model_document_name_date()
+    
+    # For now, just take the first of the created models. Add the selection later.
+    
+    id_to_use = els[-1][id]
+    date_to_use = els[-1][date]
+    print("Use model saved at " + str(date_to_use))
+    save_text = mongo_con.get_topic_model_output_with_id(id_to_use)
+
+    return save_text
+    """
     file_name = get_current_file_name() + ".json"
     if not os.path.isfile(file_name):
         return "No saved model with name " + file_name
@@ -456,13 +471,18 @@ def get_cashed_topic_model():
     f.close()
     json_data = json.loads(data)
     return json_data
+    """
+
 
 ###
 # Start
 ###
 if __name__ == '__main__':
-    run_make_topic_models()
-#print(get_cashed_topic_model())
+    mongo_con = MongoConnector()
+    result_dict, time, post_id = run_make_topic_models(mongo_con)
+    print("Created model saved at " + str(time))
+    get_cashed_topic_model(mongo_con)
+    mongo_con.close_connection()
 
 
 

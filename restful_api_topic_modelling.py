@@ -6,10 +6,12 @@ from datetime import timedelta
 from functools import update_wrapper
 import make_topic_models
 from flask_cors import CORS, cross_origin
+from mongo_connector import MongoConnector
 
 app = Flask(__name__)
 CORS(app)
 
+mongo_con = MongoConnector()
 # To not have a lot of space in the output
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
@@ -78,7 +80,7 @@ def get_new_topic_model_results_options():
 
 @app.route('/topic_modelling/api/v1.0/get_cashed_topic_model_results', methods=['OPTIONS', 'GET', 'POST'])
 def get_cashed_topic_model_results():
-    return get_topic_model_results(make_topic_models.get_cashed_topic_model())
+    return get_topic_model_results(make_topic_models.get_cashed_topic_model(mongo_con))
 
 
 def get_topic_model_results(topic_model_method):

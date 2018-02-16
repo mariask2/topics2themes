@@ -7,19 +7,38 @@ There are, for instance, domain specific vocabularies for the pre-processing. If
 Given that you have a conda environment named topic_modelling where you have installed the following:
 
 conda install numpy
+
 conda install scipy
+
 conda install scikit-learn
+
 conda install gensim
+
+conda install -c anaconda mongodb
+
+conda install -c anaconda pymongo
 
 If you want to use the functionality of running the topic modelling as a flask server, you also need to have the following installed:
 
 pip install Flask
+
 pip install -U flask-cors
+
+
 
 You write the following to run the code:
 
 source activate topic_modelling
+
 python make_topic_models.py
+
+To run the topic modell as a flask server, you write:
+
+python restful_api_topic_modelling.py [port]
+
+for instance:
+
+python restful_api_topic_modelling.py 5000
 
 
 Part of the code is inspired from:
