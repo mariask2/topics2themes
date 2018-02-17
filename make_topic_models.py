@@ -452,16 +452,17 @@ def initialise_dirs():
         os.makedirs(PATH_USER_INPUT)
 
 def get_cashed_topic_model(mongo_con):
-    els, date, name, id = mongo_con.get_all_model_document_name_date()
+    els = mongo_con.get_all_model_document_name_date_id()
     
-    # For now, just take the first of the created models. Add the selection later.
-    
-    id_to_use = els[-1][id]
-    date_to_use = els[-1][date]
+    # For now, just take the last of the created models. Add the selection later.
+    id_to_use = els[-1][mongo_con.ID]
+    date_to_use = els[-1][mongo_con.DATE]
     print("Use model saved at " + str(date_to_use))
-    save_text = mongo_con.get_topic_model_output_with_id(id_to_use)
-
-    return save_text
+    saved_model = mongo_con.get_topic_model_output_with_id(id_to_use)
+    result_with_id = {}
+    result_with_id["id"] = str(id_to_use)
+    result_with_id["saved_model"] = saved_model
+    return result_with_id
     """
     file_name = get_current_file_name() + ".json"
     if not os.path.isfile(file_name):
@@ -481,7 +482,7 @@ if __name__ == '__main__':
     mongo_con = MongoConnector()
     result_dict, time, post_id = run_make_topic_models(mongo_con)
     print("Created model saved at " + str(time))
-    get_cashed_topic_model(mongo_con)
+    print(get_cashed_topic_model(mongo_con).keys())
     mongo_con.close_connection()
 
 

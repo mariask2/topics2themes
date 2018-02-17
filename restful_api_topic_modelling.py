@@ -82,6 +82,16 @@ def get_new_topic_model_results_options():
 def get_cashed_topic_model_results():
     return get_topic_model_results(make_topic_models.get_cashed_topic_model(mongo_con))
 
+@app.route('/topic_modelling/api/v1.0/update_topic_name', methods=['OPTIONS', 'GET', 'POST'])
+def update_topic_name():
+    topic_id = request.values.get("topic_id")
+    topic_name = request.values.get("topic_name")
+    model_id = request.values.get("model_id")
+    print(topic_id, topic_name, model_id)
+    topic_name_update_result =  mongo_con.save_or_update_topic_name(topic_id, topic_name, model_id)
+    resp = make_response(jsonify({"result" : "topic name updated"}))
+    return resp
+
 
 def get_topic_model_results(topic_model_method):
     possible_dataset_names = [VACCINATION_MUMSNET]
@@ -120,3 +130,5 @@ if __name__ == '__main__':
 
     current_port = get_port()
     app.run(port=current_port)
+    print("Closes database connection")
+    mongo_con.close_connection()
