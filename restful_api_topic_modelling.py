@@ -100,6 +100,15 @@ def get_all_topic_names():
     return resp
 
 
+@app.route('/topic_modelling/api/v1.0/create_new_theme', methods=['OPTIONS', 'GET', 'POST'])
+def create_new_theme():
+    model_id = request.values.get("model_id")
+    new_theme_id =  mongo_con.create_new_theme(model_id)
+    resp = make_response(jsonify({"result" : new_theme_id}))
+    print("Created new theme for", model_id)
+    return resp
+
+
 def get_topic_model_results(topic_model_method):
     possible_dataset_names = [VACCINATION_MUMSNET]
     try:
