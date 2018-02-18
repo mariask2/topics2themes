@@ -1,5 +1,6 @@
 import pymongo
 import datetime
+from pymongo.errors import DuplicateKeyError
 from pymongo import MongoClient
 
 
@@ -19,6 +20,12 @@ class MongoConnector:
         self.THEME_NUMBER = "theme_number"
         self.DOCUMENT_IDS = "document_ids"
         self.THEME_NAME = "theme_name"
+        self.THEME_INDEX = "theme_index"
+    
+        self.get_theme_collection().create_index(\
+                        [(self.THEME_NUMBER, pymongo.ASCENDING),\
+                         (self.MODEL_ID, pymongo.ASCENDING)], unique=True)
+    
     
     def get_connection(self):
         maxSevSelDelay = 5 #Check that the server is listening, wait max 5 sec
@@ -72,16 +79,11 @@ class MongoConnector:
         return topic_name_collection
 
     def save_or_update_topic_name(self, topic_id, new_name, model_id):
-        current_post = self.get_topic_name_collection().find_one({self.TOPIC_ID : topic_id,\
-                                                  self.MODEL_ID : model_id})
-        if not current_post:
-            post = {self.TOPIC_ID : topic_id, self.MODEL_ID : model_id, self.TOPIC_NAME : new_name}
-            post_id = self.get_topic_name_collection().insert_one(post).inserted_id
-            return post
-        else:
-            self.get_topic_name_collection().update_one({self.ID : current_post[self.ID]},\
-                                                        {"$set": { self.TOPIC_NAME : new_name }})
-            return self.get_topic_name_collection().find_one({self.TOPIC_ID : topic_id,\
+        self.get_topic_name_collection().update_one(\
+                    {self.TOPIC_ID : topic_id, self.MODEL_ID : model_id},\
+                    {"$set": { self.TOPIC_NAME : new_name }},\
+                    upsert = True)
+        return self.get_topic_name_collection().find_one({self.TOPIC_ID : topic_id,\
                                                         self.MODEL_ID : model_id})
 
     def get_all_topic_names(self, model_id):
@@ -99,35 +101,33 @@ class MongoConnector:
         theme_collection = db["THEME_COLLECTION"]
         return theme_collection
 
+    def get_theme_index_collection(self):
+        db = self.get_database()
+        theme_index_collection = db["THEME_INDEX_COLLECTION"]
+        return theme_index_collection
 
-    def get_new_theme_number(self, model_id):
-        themes_for_model = self.get_theme_collection().find({self.MODEL_ID : model_id})
-        theme_numbers = [theme[self.THEME_NUMBER] for theme in themes_for_model]
-        if len(theme_numbers) == 0:
-            new_theme_number = 1 # The first theme that is created for this model
-        else:
-            new_theme_number = max(theme_numbers) + 1
-        return new_theme_number
 
     def create_new_theme(self, model_id):
-        #TODO: Create an index on theme number and model id
-        for i in range(0, 10): # Try to insert post ten times before giving up
-            new_theme_number = self.get_new_theme_number(model_id)
-            post = {self.THEME_NUMBER : new_theme_number, self.MODEL_ID : model_id, self.DOCUMENT_IDS : [], self.THEME_NAME : ""}
-            post_id = self.get_theme_collection().insert_one(post).inserted_id
-            break
-        return(new_theme_number)
+        # Index for themes are stored in a separate collection
+        result = self.get_theme_index_collection().update_one({self.MODEL_ID : model_id},\
+            {"$inc": {self.THEME_INDEX : 1 }}, upsert=True)
+
+        new_index = self.get_theme_index_collection().find_one({self.MODEL_ID : model_id})[self.THEME_INDEX]
+        print("created theme nr", new_index)
+
+        post = {self.THEME_NUMBER : new_index, self.MODEL_ID : model_id, self.DOCUMENT_IDS : [], self.THEME_NAME : ""}
+        
+        self.get_theme_collection().insert_one(post)
+        return(new_index)
+
 
     def get_saved_themes(self, model_id):
         themes = self.get_theme_collection().find({self.MODEL_ID : model_id})
         all_themes = []
         for post in themes:
-            if self.THEME_NAME in post:
-                name = post[self.THEME_NAME]
-            else:
-                name = ""
-            return_post = {self.THEME_NUMBER : post[self.THEME_NUMBER], self.DOCUMENT_IDS : post[self.DOCUMENT_IDS], self.THEME_NAME : name}
+            return_post = {self.THEME_NUMBER : post[self.THEME_NUMBER], self.DOCUMENT_IDS : post[self.DOCUMENT_IDS], self.THEME_NAME : post[self.THEME_NAME]}
             all_themes.append(return_post)
+
         return all_themes
 ###
 
@@ -150,8 +150,9 @@ if __name__ == '__main__':
         print(mc.get_topic_model_output_with_id(el[mc.ID]))
         print()
       
-    print(mc.save_or_update_topic_name("topc id test", "new name text", "model id test"))
-    print(mc.save_or_update_topic_name("topc id test", "updated name text", "model id test"))
+    print(mc.save_or_update_topic_name("topc id test", "new name text", "model id test 2"))
+    print(mc.save_or_update_topic_name("topc id test", "updated name text", "model id test 2"))
+
     """
         print(p["text_collection_name"])
         print()
@@ -162,10 +163,10 @@ if __name__ == '__main__':
 
     print("*******", mc.get_all_topic_names("model id test"))
 
-    print(mc.create_new_theme("test_theme_2"))
-    print(mc.create_new_theme("test_theme_2"))
+    print(mc.create_new_theme("test_theme_2_2"))
+    print(mc.create_new_theme("test_theme_2_2"))
     
-    print(mc.get_saved_themes("test_theme_2"))
+    print(mc.get_saved_themes("test_theme_2_2"))
     
     mc.close_connection()
     print(mc.get_all_collections())

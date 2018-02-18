@@ -78,11 +78,11 @@ def get_new_topic_model_results_options():
     return res
 """
 
-@app.route('/topic_modelling/api/v1.0/get_cashed_topic_model_results', methods=['OPTIONS', 'GET', 'POST'])
+@app.route('/topic_modelling/api/v1.0/get_cashed_topic_model_results', methods=['GET', 'POST'])
 def get_cashed_topic_model_results():
     return get_topic_model_results(make_topic_models.get_cashed_topic_model(mongo_con))
 
-@app.route('/topic_modelling/api/v1.0/update_topic_name', methods=['OPTIONS', 'GET', 'POST'])
+@app.route('/topic_modelling/api/v1.0/update_topic_name', methods=['GET', 'POST'])
 def update_topic_name():
     topic_id = request.values.get("topic_id")
     topic_name = request.values.get("topic_name")
@@ -91,7 +91,7 @@ def update_topic_name():
     resp = make_response(jsonify({"result" : "topic name updated"}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/get_all_topic_names', methods=['OPTIONS', 'GET', 'POST'])
+@app.route('/topic_modelling/api/v1.0/get_all_topic_names', methods=['GET', 'POST'])
 def get_all_topic_names():
     model_id = request.values.get("model_id")
     print(model_id)
@@ -100,7 +100,7 @@ def get_all_topic_names():
     return resp
 
 
-@app.route('/topic_modelling/api/v1.0/create_new_theme', methods=['OPTIONS', 'GET', 'POST'])
+@app.route('/topic_modelling/api/v1.0/create_new_theme', methods=['GET', 'POST'])
 def create_new_theme():
     model_id = request.values.get("model_id")
     new_theme_id =  mongo_con.create_new_theme(model_id)
@@ -108,12 +108,12 @@ def create_new_theme():
     print("Created new theme for", model_id)
     return resp
 
-@app.route('/topic_modelling/api/v1.0/get_saved_themes', methods=['OPTIONS', 'GET', 'POST'])
+@app.route('/topic_modelling/api/v1.0/get_saved_themes', methods=['GET', 'POST'])
 def get_saved_themes():
     model_id = request.values.get("model_id")
     new_theme_id =  mongo_con.get_saved_themes(model_id)
     resp = make_response(jsonify({"result" : new_theme_id}))
-    print("Created new theme for", model_id)
+    print("Get saved themes for", model_id)
     return resp
 
 

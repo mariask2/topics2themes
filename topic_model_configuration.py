@@ -16,7 +16,8 @@ NR_OF_TOP_WORDS = 25
 """
 Nr of most typical document to retrieve for each topic
 """
-NR_OF_TOP_DOCUMENTS = 50
+#NR_OF_TOP_DOCUMENTS = 50
+NR_OF_TOP_DOCUMENTS = 25
 
 """
 Number of runs to check the stability of the retrieved topics.
