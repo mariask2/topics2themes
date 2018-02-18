@@ -71,18 +71,23 @@ class MongoConnector:
     def save_or_update_topic_name(self, topic_id, new_name, model_id):
         current_post = self.get_topic_name_collection().find_one({self.TOPIC_ID : topic_id,\
                                                   self.MODEL_ID : model_id})
-        print(current_post)
         if not current_post:
             post = {self.TOPIC_ID : topic_id, self.MODEL_ID : model_id, self.TOPIC_NAME : new_name}
             post_id = self.get_topic_name_collection().insert_one(post).inserted_id
             return post
         else:
-            print("exist")
-            
             self.get_topic_name_collection().update_one({self.ID : current_post[self.ID]},\
                                                         {"$set": { self.TOPIC_NAME : new_name }})
             return self.get_topic_name_collection().find_one({self.TOPIC_ID : topic_id,\
                                                         self.MODEL_ID : model_id})
+
+    def get_all_topic_names(self, model_id):
+        topic_names = self.get_topic_name_collection().find({self.MODEL_ID : model_id})
+        all_topic_names = []
+        for post in topic_names:
+            return_post = {self.TOPIC_ID : post[self.TOPIC_ID], self.TOPIC_NAME : post[self.TOPIC_NAME]}
+            all_topic_names.append(return_post)
+        return all_topic_names
 
 
 ###
@@ -116,6 +121,7 @@ if __name__ == '__main__':
      """
 #print(p["topic_model_output"])
 
+    print("*******", mc.get_all_topic_names("model id test"))
 
     mc.close_connection()
     print(mc.get_all_collections())
