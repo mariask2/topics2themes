@@ -18,6 +18,7 @@ class MongoConnector:
         self.TEXT_COLLECTION_NAME = "text_collection_name"
         self.THEME_NUMBER = "theme_number"
         self.DOCUMENT_IDS = "document_ids"
+        self.THEME_NAME = "theme_name"
     
     def get_connection(self):
         maxSevSelDelay = 5 #Check that the server is listening, wait max 5 sec
@@ -106,17 +107,28 @@ class MongoConnector:
             new_theme_number = 1 # The first theme that is created for this model
         else:
             new_theme_number = max(theme_numbers) + 1
-            print(new_theme_number)
         return new_theme_number
 
     def create_new_theme(self, model_id):
         #TODO: Create an index on theme number and model id
         for i in range(0, 10): # Try to insert post ten times before giving up
             new_theme_number = self.get_new_theme_number(model_id)
-            post = {self.THEME_NUMBER : new_theme_number, self.MODEL_ID : model_id, self.DOCUMENT_IDS : []}
+            post = {self.THEME_NUMBER : new_theme_number, self.MODEL_ID : model_id, self.DOCUMENT_IDS : [], self.THEME_NAME : ""}
             post_id = self.get_theme_collection().insert_one(post).inserted_id
             break
         return(new_theme_number)
+
+    def get_saved_themes(self, model_id):
+        themes = self.get_theme_collection().find({self.MODEL_ID : model_id})
+        all_themes = []
+        for post in themes:
+            if self.THEME_NAME in post:
+                name = post[self.THEME_NAME]
+            else:
+                name = ""
+            return_post = {self.THEME_NUMBER : post[self.THEME_NUMBER], self.DOCUMENT_IDS : post[self.DOCUMENT_IDS], self.THEME_NAME : name}
+            all_themes.append(return_post)
+        return all_themes
 ###
 
 ###
@@ -152,6 +164,8 @@ if __name__ == '__main__':
 
     print(mc.create_new_theme("test_theme_2"))
     print(mc.create_new_theme("test_theme_2"))
+    
+    print(mc.get_saved_themes("test_theme_2"))
     
     mc.close_connection()
     print(mc.get_all_collections())

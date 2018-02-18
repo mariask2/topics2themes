@@ -108,6 +108,14 @@ def create_new_theme():
     print("Created new theme for", model_id)
     return resp
 
+@app.route('/topic_modelling/api/v1.0/get_saved_themes', methods=['OPTIONS', 'GET', 'POST'])
+def get_saved_themes():
+    model_id = request.values.get("model_id")
+    new_theme_id =  mongo_con.get_saved_themes(model_id)
+    resp = make_response(jsonify({"result" : new_theme_id}))
+    print("Created new theme for", model_id)
+    return resp
+
 
 def get_topic_model_results(topic_model_method):
     possible_dataset_names = [VACCINATION_MUMSNET]
