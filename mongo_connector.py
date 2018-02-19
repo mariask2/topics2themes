@@ -129,6 +129,14 @@ class MongoConnector:
             all_themes.append(return_post)
 
         return all_themes
+
+    def delete_theme(self, model_id, theme_number):
+        theme_number_int = int(theme_number)
+        # TODO: Check that there are no documents associated with the theme before removing
+        number_of_deleted = self.get_theme_collection().delete_one({self.MODEL_ID : model_id,\
+                                                  self.THEME_NUMBER : theme_number_int}).deleted_count
+        return number_of_deleted
+
 ###
 
 ###
@@ -168,5 +176,7 @@ if __name__ == '__main__':
     
     print(mc.get_saved_themes("test_theme_2_2"))
     
+    print("deleted", mc.delete_theme("test_theme_2_2", "47"))
+          
     mc.close_connection()
     print(mc.get_all_collections())

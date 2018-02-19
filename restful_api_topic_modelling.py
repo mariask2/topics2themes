@@ -108,6 +108,14 @@ def create_new_theme():
     print("Created new theme for", model_id)
     return resp
 
+@app.route('/topic_modelling/api/v1.0/delete_theme', methods=['GET', 'POST'])
+def delete_theme():
+    model_id = request.values.get("model_id")
+    theme_number = request.values.get("theme_number")
+    nr_of_deleted_themes =  mongo_con.delete_theme(model_id, theme_number)
+    resp = make_response(jsonify({"result" : nr_of_deleted_themes}))
+    return resp
+
 @app.route('/topic_modelling/api/v1.0/get_saved_themes', methods=['GET', 'POST'])
 def get_saved_themes():
     model_id = request.values.get("model_id")
