@@ -91,14 +91,6 @@ def update_topic_name():
     resp = make_response(jsonify({"result" : "topic name updated"}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/update_theme_name', methods=['GET', 'POST'])
-def update_theme_name():
-    theme_id = request.values.get("theme_number")
-    theme_name = request.values.get("theme_name")
-    model_id = request.values.get("model_id")
-    theme_name_update_result =  mongo_con.update_theme_name(theme_id, theme_name, model_id)
-    resp = make_response(jsonify({"result" : theme_name_update_result}))
-    return resp
 
 @app.route('/topic_modelling/api/v1.0/get_all_topic_names', methods=['GET', 'POST'])
 def get_all_topic_names():
@@ -131,6 +123,24 @@ def get_saved_themes():
     new_theme_id =  mongo_con.get_saved_themes(model_id)
     resp = make_response(jsonify({"result" : new_theme_id}))
     print("Get saved themes for", model_id)
+    return resp
+
+@app.route('/topic_modelling/api/v1.0/update_theme_name', methods=['GET', 'POST'])
+def update_theme_name():
+    theme_id = request.values.get("theme_number")
+    theme_name = request.values.get("theme_name")
+    model_id = request.values.get("model_id")
+    theme_name_update_result =  mongo_con.update_theme_name(theme_id, theme_name, model_id)
+    resp = make_response(jsonify({"result" : theme_name_update_result}))
+    return resp
+
+@app.route('/topic_modelling/api/v1.0/add_theme_document_connection', methods=['GET', 'POST'])
+def add_theme_document_connection():
+    theme_id = request.values.get("theme_number")
+    document_id = request.values.get("document_id")
+    model_id = request.values.get("model_id")
+    theme_document_connection_result =  mongo_con.add_theme_document_connection(theme_id, document_id, model_id)
+    resp = make_response(jsonify({"result" : theme_document_connection_result}))
     return resp
 
 

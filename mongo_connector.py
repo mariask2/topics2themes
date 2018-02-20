@@ -126,7 +126,7 @@ class MongoConnector:
         all_themes = []
         for post in themes:
             print(post)
-            return_post = {self.THEME_NUMBER : post[self.THEME_NUMBER], self.DOCUMENT_IDS : post[self.DOCUMENT_IDS], self.THEME_NAME : post[self.THEME_NAME]}
+            return_post = {self.THEME_NUMBER : str(post[self.THEME_NUMBER]), self.DOCUMENT_IDS : post[self.DOCUMENT_IDS], self.THEME_NAME : post[self.THEME_NAME]}
             all_themes.append(return_post)
 
         return all_themes
@@ -142,6 +142,7 @@ class MongoConnector:
         theme_number_int = int(theme_number_str)
         current_post = self.get_theme_collection().find_one({self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id})
         if not current_post:
+            print("post not found") # TODO: Better error handling
             return None
         document_ids = current_post[self.DOCUMENT_IDS]
         print("id", document_ids)
@@ -155,6 +156,43 @@ class MongoConnector:
         new_name = updated_theme[self.THEME_NAME]
         print("*********", new_name)
         return new_name
+
+    def add_theme_document_connection(self, theme_number_str, document_id, model_id):
+        theme_number_int = int(theme_number_str)
+        current_post = self.get_theme_collection().find_one({self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id})
+        if not current_post:
+            print("post not found") # TODO: Better error handling
+            return None
+        document_ids = current_post[self.DOCUMENT_IDS]
+        if document_id in document_ids:
+            return None # don't add a connection that is already there
+        document_ids.append(document_id)
+        self.get_theme_collection().update_one(\
+                {self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id},\
+                {"$set": { self.DOCUMENT_IDS : document_ids}})
+                                               
+        new_document_ids = self.get_theme_collection().\
+            find_one({self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id})[self.DOCUMENT_IDS]
+        return new_document_ids
+
+
+    def delete_theme_document_connection(self, theme_number_str, document_id, model_id):
+        theme_number_int = int(theme_number_str)
+        current_post = self.get_theme_collection().find_one({self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id})
+        if not current_post:
+            print("post not found") # TODO: Better error handling
+            return None
+        document_ids = current_post[self.DOCUMENT_IDS]
+        to_delete = document_ids.index(document_id)
+        del document_ids[to_delete]
+        self.get_theme_collection().update_one(\
+                    {self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id},\
+                    {"$set": { self.DOCUMENT_IDS : document_ids}})
+            
+        new_document_ids = self.get_theme_collection().\
+                find_one({self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id})[self.DOCUMENT_IDS]
+        return new_document_ids
+
 
 ###
 
@@ -203,5 +241,11 @@ if __name__ == '__main__':
     
     print("deleted", mc.delete_theme("test_theme_2_4", "5"))
     
+    print(mc.add_theme_document_connection("6", "1", "test_theme_2_4"))
+    print(mc.add_theme_document_connection("6", "2", "test_theme_2_4"))
+    print(mc.delete_theme_document_connection(6, "1", "test_theme_2_4"))
+    print(mc.delete_theme_document_connection(6, "2", "test_theme_2_4"))
+    
+    print(mc.get_saved_themes("test_theme_2_4"))
     mc.close_connection()
     print(mc.get_all_collections())
