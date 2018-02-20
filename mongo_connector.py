@@ -125,6 +125,7 @@ class MongoConnector:
         themes = self.get_theme_collection().find({self.MODEL_ID : model_id})
         all_themes = []
         for post in themes:
+            print(post)
             return_post = {self.THEME_NUMBER : post[self.THEME_NUMBER], self.DOCUMENT_IDS : post[self.DOCUMENT_IDS], self.THEME_NAME : post[self.THEME_NAME]}
             all_themes.append(return_post)
 
@@ -136,6 +137,24 @@ class MongoConnector:
         number_of_deleted = self.get_theme_collection().delete_one({self.MODEL_ID : model_id,\
                                                   self.THEME_NUMBER : theme_number_int}).deleted_count
         return number_of_deleted
+
+    def update_theme_name(self, theme_number_str, new_name, model_id):
+        theme_number_int = int(theme_number_str)
+        current_post = self.get_theme_collection().find_one({self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id})
+        if not current_post:
+            return None
+        document_ids = current_post[self.DOCUMENT_IDS]
+        print("id", document_ids)
+        self.get_theme_collection().update_one(\
+                                                {self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id},\
+                                               {"$set": { self.THEME_NAME : new_name, self.DOCUMENT_IDS : document_ids}},\
+                                                upsert = True)
+        updated_theme =  self.get_theme_collection().find_one({self.THEME_NUMBER : theme_number_int,\
+                                                         self.MODEL_ID : model_id})
+        print(updated_theme)
+        new_name = updated_theme[self.THEME_NAME]
+        print("*********", new_name)
+        return new_name
 
 ###
 
@@ -171,12 +190,18 @@ if __name__ == '__main__':
 
     print("*******", mc.get_all_topic_names("model id test"))
 
-    print(mc.create_new_theme("test_theme_2_2"))
-    print(mc.create_new_theme("test_theme_2_2"))
+    print(mc.create_new_theme("test_theme_2_4"))
+    print(mc.create_new_theme("test_theme_2_4"))
     
-    print(mc.get_saved_themes("test_theme_2_2"))
+    print(mc.get_saved_themes("test_theme_2_4"))
     
-    print("deleted", mc.delete_theme("test_theme_2_2", "47"))
-          
+    #
+    
+    print(mc.update_theme_name(6, "new_name", "test_theme_2_4"))
+    print(mc.update_theme_name(6, "old_name", "test_theme_2_4"))
+    print(mc.update_theme_name(6, "new_name", "test_theme_2_4"))
+    
+    print("deleted", mc.delete_theme("test_theme_2_4", "5"))
+    
     mc.close_connection()
     print(mc.get_all_collections())

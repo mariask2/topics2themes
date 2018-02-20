@@ -91,6 +91,15 @@ def update_topic_name():
     resp = make_response(jsonify({"result" : "topic name updated"}))
     return resp
 
+@app.route('/topic_modelling/api/v1.0/update_theme_name', methods=['GET', 'POST'])
+def update_theme_name():
+    theme_id = request.values.get("theme_number")
+    theme_name = request.values.get("theme_name")
+    model_id = request.values.get("model_id")
+    theme_name_update_result =  mongo_con.update_theme_name(theme_id, theme_name, model_id)
+    resp = make_response(jsonify({"result" : theme_name_update_result}))
+    return resp
+
 @app.route('/topic_modelling/api/v1.0/get_all_topic_names', methods=['GET', 'POST'])
 def get_all_topic_names():
     model_id = request.values.get("model_id")
