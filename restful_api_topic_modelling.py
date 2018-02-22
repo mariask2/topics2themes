@@ -143,6 +143,15 @@ def add_theme_document_connection():
     resp = make_response(jsonify({"result" : theme_document_connection_result}))
     return resp
 
+@app.route('/topic_modelling/api/v1.0/delete_theme_document_connection', methods=['GET', 'POST'])
+def delete_theme_document_connection():
+    theme_id = request.values.get("theme_number")
+    document_id = request.values.get("document_id")
+    model_id = request.values.get("model_id")
+    theme_document_connection_result =  mongo_con.delete_theme_document_connection(theme_id, document_id, model_id)
+    resp = make_response(jsonify({"result" : theme_document_connection_result}))
+    return resp
+
 
 def get_topic_model_results(topic_model_method):
     possible_dataset_names = [VACCINATION_MUMSNET]
