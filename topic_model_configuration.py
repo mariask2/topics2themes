@@ -4,7 +4,7 @@ from topic_model_constants import *
 """
 Nr of topics to retrieve
 """
-NUMBER_OF_TOPICS = 10
+NUMBER_OF_TOPICS = 4
 
 
 """
@@ -35,8 +35,8 @@ OVERLAP_CUT_OFF = 0.7
 """
 Whether to use pre-processing (collocation detection and synonym clustering)
 """
-#PRE_PROCESS = True
-PRE_PROCESS = False
+PRE_PROCESS = True
+#PRE_PROCESS = False
 
 """
 Mininimum occurrence in the corpus for a term to be included in the topic modelling
@@ -76,11 +76,19 @@ The directories in which data is to be found. The data is to be in files with th
 in these directories. For each directory, there should also be a stance-label associated with
 the data
 """
+"""
 DATA_LABEL_LIST = [{DATA_LABEL : "for", DIRECTORY_NAME : "mumsnet_scikitformat/for"},\
-                   {DATA_LABEL : "undecided", DIRECTORY_NAME : "mumsnet_scikitformat/uncertain"},\
-                   {DATA_LABEL : "against", DIRECTORY_NAME : "mumsnet_scikitformat/against"}]
+    {DATA_LABEL : "undecided", DIRECTORY_NAME : "mumsnet_scikitformat/uncertain"},\
+    {DATA_LABEL : "against", DIRECTORY_NAME : "mumsnet_scikitformat/against"}]
+"""
 
-NAME = "mumsnet_vaccination"
+
+DATA_LABEL_LIST = [{DATA_LABEL : "for", DIRECTORY_NAME : "vaccination_constructed_data/for"},\
+                   {DATA_LABEL : "undecided", DIRECTORY_NAME : "vaccination_constructed_data/uncertain"},\
+                   {DATA_LABEL : "against", DIRECTORY_NAME : "vaccination_constructed_data/against"}]
+
+#NAME = "mumsnet_vaccination"
+NAME = "vaccination_constructed_data"
 
 PATH_TOPIC_MODEL_OUTPUT = "topic_modelling_data"
 
