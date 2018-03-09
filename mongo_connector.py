@@ -1,7 +1,9 @@
 import pymongo
 import datetime
+import os
 from pymongo.errors import DuplicateKeyError
 from pymongo import MongoClient
+from topic_model_configuration import *
 
 
 
@@ -194,6 +196,10 @@ class MongoConnector:
         return new_document_ids
 
 
+    def get_sets_in_data_folder(self):
+        return [el for el in os.listdir(DATA_FOLDER) if not el.startswith(".")]
+
+
 ###
 
 ###
@@ -207,6 +213,7 @@ if __name__ == '__main__':
     #print(mc.insert_new_model("test", "name"))
     #print(mc.get_all_collections())
 
+    """
     els = mc.get_all_model_document_name_date_id()
     for el in els:
         print("****************")
@@ -214,17 +221,13 @@ if __name__ == '__main__':
         print(str(el[mc.DATE]))
         print(mc.get_topic_model_output_with_id(el[mc.ID]))
         print()
-      
+     """
+    
+    print(mc.get_sets_in_data_folder())
+    """
     print(mc.save_or_update_topic_name("topc id test", "new name text", "model id test 2"))
     print(mc.save_or_update_topic_name("topc id test", "updated name text", "model id test 2"))
 
-    """
-        print(p["text_collection_name"])
-        print()
-        print(p["date"])
-        print()
-     """
-#print(p["topic_model_output"])
 
     print("*******", mc.get_all_topic_names("model id test"))
 
@@ -249,3 +252,4 @@ if __name__ == '__main__':
     print(mc.get_saved_themes("test_theme_2_4"))
     mc.close_connection()
     print(mc.get_all_collections())
+    """

@@ -97,6 +97,8 @@ PATH_USER_INPUT = PATH_TOPIC_MODEL_OUTPUT
 
 TOPIC_MODEL_ALGORITHM = NMF_NAME
 
+DATA_FOLDER = "data_folder"
+
 def corpus_specific_text_cleaning(text):
     """
     For performing corpus specific cleaning. Added to this file, since it needs to be adapted to the corpus and therefore a kind of configuration
@@ -110,3 +112,5 @@ def corpus_specific_text_cleaning(text):
             no_links.append(word)
     cleaned_text = " ".join(no_links)
     return cleaned_text
+
+

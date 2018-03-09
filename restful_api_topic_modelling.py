@@ -55,6 +55,12 @@ def authenticate():
 
 VACCINATION_MUMSNET = "vaccination_mumsnet"
 
+@app.route('/topic_modelling/api/v1.0/get_data_sets', methods=['GET', 'POST'])
+def get_data_sets():
+    data_sets = mongo_con.get_sets_in_data_folder()
+    resp = make_response(jsonify({"result" : data_sets}))
+    return resp
+
 @app.route('/topic_modelling/api/v1.0/get_topic_model_results', methods=['GET', 'POST'])
 def get_new_topic_model_results():
     res = get_topic_model_results(make_topic_models.run_make_topic_models())
@@ -151,6 +157,7 @@ def delete_theme_document_connection():
     theme_document_connection_result =  mongo_con.delete_theme_document_connection(theme_id, document_id, model_id)
     resp = make_response(jsonify({"result" : theme_document_connection_result}))
     return resp
+
 
 
 def get_topic_model_results(topic_model_method):
