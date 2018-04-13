@@ -38,6 +38,10 @@ To create a new topic model:
 
 python make_topic_models.py
 
+To create a new topic model for the data in the folders data_folder/vaccination_constructed_data
+python make_topic_models.py --project data_folder.vaccination_constructed_data
+
+
 To run the topic modell as a flask server, you write:
 
 python restful_api_topic_modelling.py [port]

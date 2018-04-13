@@ -3,7 +3,7 @@ import datetime
 import os
 from pymongo.errors import DuplicateKeyError
 from pymongo import MongoClient
-from topic_model_configuration import *
+#from topic_model_configuration import *
 
 
 
@@ -11,6 +11,7 @@ class MongoConnector:
     def __init__(self):
         #self.TOPIC_MODEL_DATABASE = "topic_model_database"
         self.TOPIC_MODEL_DATABASE = "text_database"
+        #self.TOPIC_MODEL_DATABASE = "text_database_2"
         self.client = None
         self.DATE = "date"
         self.ID = "_id"
@@ -35,6 +36,7 @@ class MongoConnector:
             self.client = MongoClient('localhost', 27017, serverSelectionTimeoutMS=maxSevSelDelay)
         self.server_info = self.client.server_info()
         return self.client
+
     def close_connection(self):
         if self.client:
             self.client.close()
@@ -43,6 +45,7 @@ class MongoConnector:
     def get_database(self):
         con = self.get_connection()
         db = con[self.TOPIC_MODEL_DATABASE]
+        print("Accessing ", self.TOPIC_MODEL_DATABASE)
         return db
 
     ### Storing and fetching the output of models
@@ -194,10 +197,6 @@ class MongoConnector:
         new_document_ids = self.get_theme_collection().\
                 find_one({self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id})[self.DOCUMENT_IDS]
         return new_document_ids
-
-
-    def get_sets_in_data_folder(self):
-        return [el for el in os.listdir(DATA_FOLDER) if not el.startswith(".")]
 
 
 ###

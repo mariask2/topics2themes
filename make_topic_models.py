@@ -13,9 +13,12 @@ import word2vecwrapper
 from glob import glob
 import datetime
 from sklearn.feature_extraction import text
-from topic_model_configuration import *
+#from topic_model_configuration import *
 from topic_model_constants import *
+import handle_properties
 from mongo_connector import MongoConnector
+import argparse
+
 
 
 TOPIC_NUMBER = "TOPIC_NUMBER"
@@ -42,45 +45,66 @@ MARKED_DOCUMENT_TOK = "marked_document_tok"
 #####
 # Stop word list
 ######
+class StopwordHandler():
+    def __init__(self):
+        self.stop_word_set = None
+    
+    def get_stop_word_set(self, stop_word_file):
+        if self.stop_word_set == None:
+            f = open(stop_word_file)
+            additional_stop_words = [word.strip() for word in f.readlines()]
+            f.close()
+            self.stop_word_set = text.ENGLISH_STOP_WORDS.union(additional_stop_words)
+        return self.stop_word_set
 
-f = open(STOP_WORD_FILE)
-additional_stop_words = [word.strip() for word in f.readlines()]
-f.close()
-stop_words_set = text.ENGLISH_STOP_WORDS.union(additional_stop_words)
+stopword_handler = StopwordHandler()
 
 ####
 # Main 
 ####
 
-def run_make_topic_models(mongo_con):
-    initialise_dirs()
+def run_make_topic_models(mongo_con, properties, path_slash_format):
+    initialise_dirs(properties)
     
-    file_list = read_discussion_documents()
+    file_list = read_discussion_documents(properties)
     
     documents = [el[TEXT] for el in file_list]
 
     print("Make models for "+ str(len(documents)) + " documents.")
     
-    print("Will write topic modelling output to '" + get_current_file_name() + ".json' and '" + get_current_file_name() + ".html'")
+    print("Will write topic modelling output to '" + get_current_file_name(properties.NAME, properties.TOPIC_MODEL_ALGORITHM)\
+          + ".json' and '" + get_current_file_name(properties.NAME, properties.TOPIC_MODEL_ALGORITHM) + ".html'")
     print("WARNING: If output files exists, content will be overwritten")
     
-    if TOPIC_MODEL_ALGORITHM == NMF_NAME:
+    if properties.TOPIC_MODEL_ALGORITHM == NMF_NAME:
         print()
         print("*************")
         print("scikit nmf")
         print()
-        topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, NUMBER_OF_TOPICS,  NUMBER_OF_RUNS)
+        topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, properties.NUMBER_OF_TOPICS,\
+                                                                       properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
+                                                                       properties.COLLOCATION_CUT_OFF,\
+                                                                       properties.STOP_WORD_FILE,\
+                                                                       properties.SPACE_FOR_PATH,\
+                                                                       properties.VECTOR_LENGTH,\
+                                                                       properties.MIN_DOCUMENT_FREQUENCY,\
+                                                                       properties.MAX_DOCUMENT_FREQUENCY,\
+                                                                       properties.NR_OF_TOP_WORDS,\
+                                                                       properties.NR_OF_TOP_DOCUMENTS,\
+                                                                       properties.OVERLAP_CUT_OFF)
         
         print("Found " + str(len(topic_info)) + " stable topics")
         
-        result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con)
+        result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
+                                                              properties.TOPIC_MODEL_ALGORITHM,\
+                                                              properties.NAME)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
         return result_dict, time, post_id
 
 
-    if TOPIC_MODEL_ALGORITHM == LDA_NAME:
+    if properties.TOPIC_MODEL_ALGORITHM == LDA_NAME:
     
         print("*************")
         print("scikit lda")
@@ -88,24 +112,36 @@ def run_make_topic_models(mongo_con):
         print("Will write topic modelling output to '" + file_name_lda + "'")
         print("WARNING: If output file exists, content will be overwritten")
         print()
-        topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, NUMBER_OF_TOPICS, NUMBER_OF_RUNS)
+        topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, properties.NUMBER_OF_TOPICS,\
+                                                                       properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
+                                                                       properties.COLLOCATION_CUT_OFF,\
+                                                                       properties.STOP_WORD_FILE,\
+                                                                       properties.SPACE_FOR_PATH,\
+                                                                       properties.VECTOR_LENGTH,\
+                                                                       properties.MIN_DOCUMENT_FREQUENCY,\
+                                                                       properties.MAX_DOCUMENT_FREQUENCY,\
+                                                                       properties.NR_OF_TOP_WORDS,\
+                                                                       properties.NR_OF_TOP_DOCUMENTS,\
+                                                                       properties.OVERLAP_CUT_OFF)
 
         print("Found " + str(len(topic_info)) + " stable topics")
-        result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con)
+        result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
+                                                              properties.TOPIC_MODEL_ALGORITHM,\
+                                                              properties.NAME)
         return result_dict, time, post_id
 
     
-def get_current_file_name():
-    return os.path.join(PATH_TOPIC_MODEL_OUTPUT, NAME + "_" + TOPIC_MODEL_ALGORITHM)
+def get_current_file_name(name, topic_model_algorithm):
+    return os.path.join(PATH_TOPIC_MODEL_OUTPUT, name + "_" + topic_model_algorithm)
 
 ######
 # Read documents from file
 ######
-def read_discussion_documents():
+def read_discussion_documents(properties):
     file_list = []
 
-    for data_info in DATA_LABEL_LIST:
-        data_dir = data_info[DIRECTORY_NAME]
+    for data_info in properties.DATA_LABEL_LIST:
+        data_dir = data_info[properties.DIRECTORY_NAME]
         
         files = []
 
@@ -114,7 +150,7 @@ def read_discussion_documents():
         for f in files:
             opened = open(f)
             text = opened.read()
-            cleaned_text = corpus_specific_text_cleaning(text)
+            cleaned_text = properties.corpus_specific_text_cleaning(text)
             file_list.append({TEXT: cleaned_text, LABEL: data_info[DATA_LABEL]})
             opened.close()
         
@@ -129,26 +165,34 @@ def read_discussion_documents():
 
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
-def train_scikit_lda_model(documents, number_of_topics, number_of_runs):
-    pre_processed_documents = pre_process(documents)
-    texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, CountVectorizer)
+def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
+                           space_for_path, vector_length, min_document_frequency, max_document_frequency,\
+                           nr_of_top_words, nr_of_to_documents, overlap_cut_off):
+    pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
+                                          space_for_path, vector_length)
+    texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, CountVectorizer,\
+                                              min_document_frequency, max_document_frequency, stop_word_file)
     model_list = []
     for i in range(0, number_of_runs):
         lda = LatentDirichletAllocation(n_components=number_of_topics, max_iter=10, learning_method='online', learning_offset=50.).fit(tf)
         model_list.append(lda)
-    topic_info = get_scikit_topics(model_list, tf_vectorizer, tf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
+    topic_info = get_scikit_topics(model_list, tf_vectorizer, tf, documents, nr_of_top_words, nr_of_to_documents, overlap_cut_off)
     return topic_info, lda, tf_vectorizer
 
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
-def train_scikit_nmf_model(documents, number_of_topics, number_of_runs):
-    pre_processed_documents = pre_process(documents)
-    texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, TfidfVectorizer)
+def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
+                           space_for_path, vector_length, min_document_frequency, max_document_frequency,\
+                           nr_of_top_words, nr_of_to_documents, overlap_cut_off):
+    pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
+                                          space_for_path, vector_length)
+    texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, TfidfVectorizer,\
+                                                    min_document_frequency, max_document_frequency, stop_word_file)
     model_list = []
     for i in range(0, number_of_runs):
         nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='nndsvd').fit(tfidf)
         model_list.append(nmf)
-    topic_info = get_scikit_topics(model_list, tfidf_vectorizer, tfidf, documents, NR_OF_TOP_WORDS, NR_OF_TOP_DOCUMENTS)
+    topic_info = get_scikit_topics(model_list, tfidf_vectorizer, tfidf, documents, nr_of_top_words, nr_of_to_documents, overlap_cut_off)
     return topic_info, nmf, tfidf_vectorizer
 
 
@@ -166,17 +210,17 @@ def untokenize(simple_tokenised):
 # Pre-process and turn the documents into lists of terms to feed to the topic models
 #####
 
-def pre_process(raw_documents):
-    if not PRE_PROCESS:
+def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, space_for_path, vector_length):
+    if not do_pre_process:
         return raw_documents
-    documents = find_frequent_n_grams(raw_documents)
+    documents = find_frequent_n_grams(raw_documents, collocation_cut_off)
         
-    word_vectorizer = CountVectorizer(binary = True, min_df=2, stop_words=stop_words_set)
+    word_vectorizer = CountVectorizer(binary = True, min_df=2, stop_words=stopword_handler.get_stop_word_set(stop_word_file))
     word_vectorizer.fit_transform(documents)
 
     cluster_output = "cluster_output.txt"
     print("The output of word clustering will be written to '"  + cluster_output + "'")
-    word2vec = word2vecwrapper.Word2vecWrapper(SPACE_FOR_PATH, VECTOR_LENGTH)
+    word2vec = word2vecwrapper.Word2vecWrapper(space_for_path, vector_length)
     word2vec.set_vocabulary(word_vectorizer.get_feature_names())
     word2vec.load_clustering(cluster_output)
 
@@ -192,14 +236,14 @@ def pre_process(raw_documents):
     return pre_processed_documents
 
 
-def find_frequent_n_grams(documents):
+def find_frequent_n_grams(documents, collocation_cut_off):
     """
     Frequent collocations are concatenated to one term in the corpus
     (For instance smallpox and small pox are both used, now small_pox will be
     created, which will then show up as a synonym).
     """
     new_documents = []
-    ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 3), min_df=COLLOCATION_CUT_OFF, stop_words='english')
+    ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 3), min_df=collocation_cut_off, stop_words='english')
     ngram_vectorizer.fit_transform(documents)
     for document in documents:
         new_document = document
@@ -211,7 +255,7 @@ def find_frequent_n_grams(documents):
 
     
 
-def get_scikit_bow(documents, vectorizer):
+def get_scikit_bow(documents, vectorizer, min_document_frequency, max_document_frequency, stop_word_file):
     """
     Will tranform the list of documents that are given as input, to a list of terms
     that occurr in these documents
@@ -226,8 +270,6 @@ def get_scikit_bow(documents, vectorizer):
     vaccination_programmes is a collocation and cease__ceased is one word
     """
     
-    min_document_frequency = MIN_DOCUMENT_FREQUENCY
-    max_document_frequency = MAX_DOCUMENT_FREQUENCY
     if len(documents) < 3: # if there is only two documents these parameters are the only that work
                            # but just for debugging, no point of running with only two documents
         min_document_frequency = 1
@@ -235,7 +277,7 @@ def get_scikit_bow(documents, vectorizer):
 
     ngram_length = 1
     tf_vectorizer = vectorizer(max_df= max_document_frequency, min_df=min_document_frequency,\
-                                   ngram_range = (1, ngram_length), stop_words=stop_words_set)
+                                   ngram_range = (1, ngram_length), stop_words=stopword_handler.get_stop_word_set(stop_word_file))
     tf = tf_vectorizer.fit_transform(documents)
     inversed = tf_vectorizer.inverse_transform(tf)
     to_return = []
@@ -250,7 +292,7 @@ def get_scikit_bow(documents, vectorizer):
 # Train the topic models and retrieve info from them
 ######
 
-def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_words, no_top_documents):
+def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_words, no_top_documents, overlap_cut_off):
     """
     Return info from topics that were stable enough to appear in all models in model_list
     """
@@ -264,7 +306,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
             found_match = False
             for previous_topic_list in previous_topic_list_list:
                 # current_topic and previous_topic_list contains a list of terms
-                if is_overlap(current_topic, previous_topic_list, OVERLAP_CUT_OFF):
+                if is_overlap(current_topic, previous_topic_list, overlap_cut_off):
                      previous_topic_list.append(current_topic)
                      found_match = True
                      if nr == len(model_list) - 1: # last iteration in loop
@@ -354,18 +396,18 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 # Print output from the model
 #######
 
-def print_and_get_topic_info(topic_info, file_list, mongo_con):
+def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm, name):
     document_dict = {}
     topic_info_list = []
     
     """
         Prints output from the topic model in html and json format, with topic terms in bold face
     """
-    f = open(get_current_file_name() + ".html", "w")
-    f_json = open(get_current_file_name() + ".json", "w")
+    f = open(get_current_file_name(name, topic_model_algorithm) + ".html", "w")
+    f_json = open(get_current_file_name(name, topic_model_algorithm) + ".json", "w")
 
     f.write('<html><body><font face="times"><div style="width:400px;margin:40px;">\n')
-    f.write("<h1> Results for model type " +  TOPIC_MODEL_ALGORITHM + " </h1>\n")
+    f.write("<h1> Results for model type " + topic_model_algorithm + " </h1>\n")
     for nr, el in enumerate(topic_info):
         
         term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
@@ -439,17 +481,20 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con):
     f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
     f_json.flush()
     f_json.close()
-    time, post_id = mongo_con.insert_new_model(result_dict, NAME + "_" + TOPIC_MODEL_ALGORITHM)
+    time, post_id = mongo_con.insert_new_model(result_dict, name + "_" + topic_model_algorithm)
 
     
     return result_dict, time, post_id
 
-def initialise_dirs():
-    if not os.path.exists(PATH_TOPIC_MODEL_OUTPUT):
-        os.makedirs(PATH_TOPIC_MODEL_OUTPUT)
+def initialise_dirs(properties):
+    if not os.path.exists(properties.PATH_TOPIC_MODEL_OUTPUT):
+        os.makedirs(properties.PATH_TOPIC_MODEL_OUTPUT)
     
-    if not os.path.exists(PATH_USER_INPUT):
-        os.makedirs(PATH_USER_INPUT)
+    if not os.path.exists(properties.PATH_USER_INPUT):
+        os.makedirs(properties.PATH_USER_INPUT)
+
+def get_sets_in_data_folder():
+    return [el for el in os.listdir(DATA_FOLDER) if not el.startswith(".")]
 
 def get_cashed_topic_model(mongo_con):
     els = mongo_con.get_all_model_document_name_date_id()
@@ -479,8 +524,11 @@ def get_cashed_topic_model(mongo_con):
 # Start
 ###
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    properties, path_slash_format, path_dot_format = handle_properties.load_properties(parser)
+    
     mongo_con = MongoConnector()
-    result_dict, time, post_id = run_make_topic_models(mongo_con)
+    result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format)
     print("Created model saved at " + str(time))
     print(get_cashed_topic_model(mongo_con).keys())
     mongo_con.close_connection()

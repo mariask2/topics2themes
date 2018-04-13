@@ -8,6 +8,8 @@ import make_topic_models
 from flask_cors import CORS, cross_origin
 from mongo_connector import MongoConnector
 
+import make_topic_models
+
 app = Flask(__name__)
 CORS(app)
 
@@ -57,10 +59,11 @@ VACCINATION_MUMSNET = "vaccination_mumsnet"
 
 @app.route('/topic_modelling/api/v1.0/get_data_sets', methods=['GET', 'POST'])
 def get_data_sets():
-    data_sets = mongo_con.get_sets_in_data_folder()
+    data_sets = make_topic_models.get_sets_in_data_folder()
     resp = make_response(jsonify({"result" : data_sets}))
     return resp
 
+"""
 @app.route('/topic_modelling/api/v1.0/get_topic_model_results', methods=['GET', 'POST'])
 def get_new_topic_model_results():
     res = get_topic_model_results(make_topic_models.run_make_topic_models())
@@ -69,6 +72,7 @@ def get_new_topic_model_results():
     print("********")
     FILE.write(str(res) + "\n")
     return res
+"""
 
 """
 @app.route('/topic_modelling/api/v1.0/get_topic_model_results', methods=['OPTIONS'])
@@ -83,6 +87,8 @@ def get_new_topic_model_results_options():
     print("********")
     return res
 """
+
+
 
 @app.route('/topic_modelling/api/v1.0/get_cashed_topic_model_results', methods=['GET', 'POST'])
 def get_cashed_topic_model_results():
