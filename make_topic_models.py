@@ -64,9 +64,9 @@ stopword_handler = StopwordHandler()
 ####
 
 def run_make_topic_models(mongo_con, properties, path_slash_format):
-    initialise_dirs(properties)
+    initialise_dirs(properties.PATH_TOPIC_MODEL_OUTPUT, properties.PATH_USER_INPUT)
     
-    file_list = read_discussion_documents(properties)
+    file_list = read_discussion_documents(properties.DATA_LABEL_LIST, properties.DIRECTORY_NAME)
     
     documents = [el[TEXT] for el in file_list]
 
@@ -137,11 +137,11 @@ def get_current_file_name(name, topic_model_algorithm):
 ######
 # Read documents from file
 ######
-def read_discussion_documents(properties):
+def read_discussion_documents(data_label_list, directory_name):
     file_list = []
 
-    for data_info in properties.DATA_LABEL_LIST:
-        data_dir = data_info[properties.DIRECTORY_NAME]
+    for data_info in data_label_list:
+        data_dir = data_info[directory_name]
         
         files = []
 
@@ -486,12 +486,13 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     
     return result_dict, time, post_id
 
-def initialise_dirs(properties):
-    if not os.path.exists(properties.PATH_TOPIC_MODEL_OUTPUT):
-        os.makedirs(properties.PATH_TOPIC_MODEL_OUTPUT)
+def initialise_dirs(output_path, input_path):
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
     
-    if not os.path.exists(properties.PATH_USER_INPUT):
-        os.makedirs(properties.PATH_USER_INPUT)
+    if not os.path.exists(input_path):
+        os.makedirs(input_path)
+
 
 def get_sets_in_data_folder():
     return [el for el in os.listdir(DATA_FOLDER) if not el.startswith(".")]
