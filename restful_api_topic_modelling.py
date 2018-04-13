@@ -63,6 +63,13 @@ def get_data_sets():
     resp = make_response(jsonify({"result" : data_sets}))
     return resp
 
+@app.route('/topic_modelling/api/v1.0/get_all_models_for_collection_with_name', methods=['GET', 'POST'])
+def get_all_models_for_collection_with_name():
+    collection_name = request.values.get("collection_name")
+    all_models_for_collection_with_name = mongo_con.get_all_models_for_collection_with_name(collection_name)
+    resp = make_response(jsonify({"result" : all_models_for_collection_with_name}))
+    return resp
+
 """
 @app.route('/topic_modelling/api/v1.0/get_topic_model_results', methods=['GET', 'POST'])
 def get_new_topic_model_results():

@@ -62,6 +62,16 @@ class MongoConnector:
                          for document in documents]
         return document_spec
     
+    # TODO: Check that it is correct to turn str(document[self.ID]) to a string, to make it serializable
+    # If it is not turned to a string it will not be accepted for http
+    def get_all_models_for_collection_with_name(self, text_collection_name):
+        documents = self.get_model_collection().find({self.TEXT_COLLECTION_NAME: text_collection_name})
+        document_spec = [{self.DATE: str(document['_id'].generation_time),\
+                         self.TEXT_COLLECTION_NAME: document[self.TEXT_COLLECTION_NAME],\
+                         self.ID : str(document[self.ID])}\
+                         for document in documents]
+        return document_spec
+    
     def get_topic_model_output_with_id(self, id):
         document = self.get_model_collection().find_one({ self.ID : id})
         return document[self.TOPIC_MODEL_OUTPUT]
@@ -75,6 +85,7 @@ class MongoConnector:
                 self.TOPIC_MODEL_OUTPUT: topic_model_output}
         post_id = self.get_model_collection().insert_one(post).inserted_id
         return time, post_id
+
 
     ### Storing and fetching names of topics
 
@@ -209,6 +220,10 @@ if __name__ == '__main__':
     print(mc.get_connection())
     print(mc.get_database())
     print(mc.get_all_collections())
+    
+    #print(mc.get_all_model_document_name_date_id())
+    print(mc.get_all_models_for_collection_with_name("vaccination_constructed_data_NMF"))
+    
     #print(mc.insert_new_model("test", "name"))
     #print(mc.get_all_collections())
 
@@ -222,7 +237,7 @@ if __name__ == '__main__':
         print()
      """
     
-    print(mc.get_sets_in_data_folder())
+    
     """
     print(mc.save_or_update_topic_name("topc id test", "new name text", "model id test 2"))
     print(mc.save_or_update_topic_name("topc id test", "updated name text", "model id test 2"))
