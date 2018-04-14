@@ -495,7 +495,7 @@ def initialise_dirs(output_path, input_path):
 
 
 def get_sets_in_data_folder():
-    return [el for el in os.listdir(DATA_FOLDER) if not el.startswith(".")]
+    return [el.replace(" ", "_") for el in os.listdir(DATA_FOLDER) if not el.startswith(".")]
 
 def get_cashed_topic_model(mongo_con):
     els = mongo_con.get_all_model_document_name_date_id()
