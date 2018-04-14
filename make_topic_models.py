@@ -97,7 +97,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format):
         print("Found " + str(len(topic_info)) + " stable topics")
         
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
-                                                              properties.TOPIC_MODEL_ALGORITHM)
+                                                              properties.TOPIC_MODEL_ALGORITHM,\
+                                                              properties.get_properties_in_json())
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
@@ -122,7 +123,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format):
 
         print("Found " + str(len(topic_info)) + " stable topics")
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
-                                                              properties.TOPIC_MODEL_ALGORITHM)
+                                                              properties.TOPIC_MODEL_ALGORITHM,\
+                                                              properties.get_properties_in_json())
         return result_dict, time, post_id
 
     
@@ -392,7 +394,7 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 # Print output from the model
 #######
 
-def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm):
+def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm, json_properties):
     document_dict = {}
     topic_info_list = []
     
@@ -478,7 +480,9 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     #result_dict["themes"] = [{"id": 0, "label": "Click here to add theme label", "theme_topics": [], "theme_documents":[]}]
     result_dict["themes"] = []
     result_dict["documents"] = [value for value in document_dict.values()]
-    result_dict["meta_data"] = {"creation_date" : str(datetime.datetime.now())}
+    result_dict["meta_data"] = {"creation_date" : str(datetime.datetime.now()),\
+                                "configuration" : json_properties, \
+                                    "user" : "dummy_user"}
     #f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
     #f_json.flush()
     #f_json.close()

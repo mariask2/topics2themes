@@ -121,6 +121,44 @@ class PropertiesContainer:
             self.MANUAL_MADE_DICT = {}
             print("No manually added clusters")
 
+    def get_properties_in_json(self):
+        """
+        Returns properties in json format
+        """
+        dict = {}
+        
+        dict["NUMBER_OF_TOPICS"] = self.NUMBER_OF_TOPICS
+        dict["NR_OF_TOP_WORDS"] = self.NR_OF_TOP_WORDS
+        dict["NR_OF_TOP_DOCUMENTS"] = self.NR_OF_TOP_DOCUMENTS
+        dict["NR_OF_TOP_DOCUMENTS"] = self.NR_OF_TOP_DOCUMENTS
+        dict["NUMBER_OF_RUNS"] = self.NUMBER_OF_RUNS
+        dict["OVERLAP_CUT_OFF"] = self.OVERLAP_CUT_OFF
+        dict["PRE_PROCESS"] = self.PRE_PROCESS
+        dict["MIN_DOCUMENT_FREQUENCY"] = self.MIN_DOCUMENT_FREQUENCY
+        dict["MAX_DOCUMENT_FREQUENCY"] = self.MAX_DOCUMENT_FREQUENCY
+        try:
+            dict["SPACE_FOR_PATH"] = self.SPACE_FOR_PATH
+        except AttributeError:
+            pass
+        try:
+             dict["VECTOR_LENGTH"] = self.VECTOR_LENGTH
+        except AttributeError:
+            pass
+
+        dict["DATA_LABEL_LIST"] = self.DATA_LABEL_LIST
+            
+        dict["COLLOCATION_CUT_OFF"] = self.COLLOCATION_CUT_OFF
+
+        dict["TOPIC_MODEL_ALGORITHM"] = self.TOPIC_MODEL_ALGORITHM
+        
+        dict["CLEANING_METHOD"] = str(self.CLEANING_METHOD)
+
+        dict["NO_MATCH"] = list(self.NO_MATCH)
+
+        dict["MANUAL_MADE_DICT"] = self.MANUAL_MADE_DICT
+
+        return dict
+    
 def load_properties(parser):
  
     
