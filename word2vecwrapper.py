@@ -9,14 +9,13 @@ import gc
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 from sklearn.metrics.pairwise import euclidean_distances
-from domain_synonym_dictionary import MANUAL_MADE_DICT
-from domain_synonym_dictionary import NO_MATCH
+from topic_model_constants import *
+#from domain_synonym_dictionary import MANUAL_MADE_DICT
+#from domain_synonym_dictionary import NO_MATCH
 
 ########################
 # To vectorize the data
 #########################
-
-SYNONYM_BINDER = "__"
 
 class Word2vecWrapper:
     """
@@ -24,11 +23,13 @@ class Word2vecWrapper:
     A class for storing the information regarding the distributional semantics space
     """
 
-    def __init__(self, model_path, semantic_vector_length):
+    def __init__(self, model_path, semantic_vector_length, no_match, manual_made_dict):
         self.word2vec_model = None
         self.model_path = model_path
         self.semantic_vector_length = semantic_vector_length
         self._vocabulary_list = None
+        self.no_match = no_match
+        self.manual_made_dict = manual_made_dict
 
         if semantic_vector_length is not None:
             self.default_vector = [0] * self.semantic_vector_length
@@ -105,14 +106,14 @@ class Word2vecWrapper:
         labels = db.labels_
 
         for label, term, vector in zip(labels, cluster_words, X_vectors):
-            if term in NO_MATCH: # User defined to exclude from clustering
+            if term in self.no_match: # User defined to exclude from clustering
                 continue
             if label != -1:                
                 if label not in self.cluster_dict:
                     self.cluster_dict[label] = []
                 self.cluster_dict[label].append(term)
 
-        self.term_similar_dict = MANUAL_MADE_DICT
+        self.term_similar_dict = self.manual_made_dict
         for label, items in self.cluster_dict.items():
             if len(items) > 1:
                 for term in items:

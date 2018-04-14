@@ -32,7 +32,6 @@ TOPIC_INDEX = "topic_index"
 TEXT = "text"
 LABEL = "label"
 COLLOCATION_BINDER = "_"
-SYNONYM_BINDER = "__"
 SYNONYM_JSON_BINDER = " / "
 DOC_ID =  "doc_id"
 DOCUMENT_TOPIC_STRENGTH = "document_topic_strength"
@@ -91,7 +90,9 @@ def run_make_topic_models(mongo_con, properties, path_slash_format):
                                                                        properties.MAX_DOCUMENT_FREQUENCY,\
                                                                        properties.NR_OF_TOP_WORDS,\
                                                                        properties.NR_OF_TOP_DOCUMENTS,\
-                                                                       properties.OVERLAP_CUT_OFF)
+                                                                       properties.OVERLAP_CUT_OFF,\
+                                                                       properties.NO_MATCH,\
+                                                                       properties.MANUAL_MADE_DICT)
         
         print("Found " + str(len(topic_info)) + " stable topics")
         
@@ -105,12 +106,6 @@ def run_make_topic_models(mongo_con, properties, path_slash_format):
 
     if properties.TOPIC_MODEL_ALGORITHM == LDA_NAME:
     
-        print("*************")
-        print("scikit lda")
-        file_name_lda = "testoutput_lda.html"
-        print("Will write topic modelling output to '" + file_name_lda + "'")
-        print("WARNING: If output file exists, content will be overwritten")
-        print()
         topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, properties.NUMBER_OF_TOPICS,\
                                                                        properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
                                                                        properties.COLLOCATION_CUT_OFF,\
@@ -121,7 +116,9 @@ def run_make_topic_models(mongo_con, properties, path_slash_format):
                                                                        properties.MAX_DOCUMENT_FREQUENCY,\
                                                                        properties.NR_OF_TOP_WORDS,\
                                                                        properties.NR_OF_TOP_DOCUMENTS,\
-                                                                       properties.OVERLAP_CUT_OFF)
+                                                                       properties.OVERLAP_CUT_OFF,\
+                                                                       properties.NO_MATCH,\
+                                                                       properties.MANUAL_MADE_DICT)
 
         print("Found " + str(len(topic_info)) + " stable topics")
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
@@ -165,9 +162,9 @@ def read_discussion_documents(data_label_list):
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
                            space_for_path, vector_length, min_document_frequency, max_document_frequency,\
-                           nr_of_top_words, nr_of_to_documents, overlap_cut_off):
+                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, no_match, manual_made_dict):
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                          space_for_path, vector_length)
+                                          space_for_path, vector_length, no_match, manual_made_dict)
     texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, CountVectorizer,\
                                               min_document_frequency, max_document_frequency, stop_word_file)
     model_list = []
@@ -181,9 +178,9 @@ def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_p
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
                            space_for_path, vector_length, min_document_frequency, max_document_frequency,\
-                           nr_of_top_words, nr_of_to_documents, overlap_cut_off):
+                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, no_match, manual_made_dict):
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                          space_for_path, vector_length)
+                                          space_for_path, vector_length, no_match, manual_made_dict)
     texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, TfidfVectorizer,\
                                                     min_document_frequency, max_document_frequency, stop_word_file)
     model_list = []
@@ -208,7 +205,8 @@ def untokenize(simple_tokenised):
 # Pre-process and turn the documents into lists of terms to feed to the topic models
 #####
 
-def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, space_for_path, vector_length):
+def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, space_for_path, vector_length,\
+                no_match, manual_made_dict):
     if not do_pre_process:
         return raw_documents
     documents = find_frequent_n_grams(raw_documents, collocation_cut_off)
@@ -218,7 +216,7 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
 
     cluster_output = "cluster_output.txt"
     print("The output of word clustering will be written to '"  + cluster_output + "'")
-    word2vec = word2vecwrapper.Word2vecWrapper(space_for_path, vector_length)
+    word2vec = word2vecwrapper.Word2vecWrapper(space_for_path, vector_length, no_match, manual_made_dict)
     word2vec.set_vocabulary(word_vectorizer.get_feature_names())
     word2vec.load_clustering(cluster_output)
 

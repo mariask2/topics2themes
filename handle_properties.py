@@ -109,7 +109,17 @@ class PropertiesContainer:
             self.CLEANING_METHOD = default_topic_model_configuration.no_cleaning
             print("Using default CLEANING_METHOD")
 
- 
+        try:
+            self.NO_MATCH = properties.NO_MATCH
+        except AttributeError:
+            self.NO_MATCH = set()
+            print("No exceptsion added for clusters")
+
+        try:
+            self.MANUAL_MADE_DICT = properties.MANUAL_MADE_DICT
+        except AttributeError:
+            self.MANUAL_MADE_DICT = {}
+            print("No manually added clusters")
 
 def load_properties(parser):
  

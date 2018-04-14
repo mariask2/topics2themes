@@ -24,3 +24,6 @@ PATH_TOPIC_MODEL_OUTPUT = "topic_modelling_data"
 
 # The name of the file where the configuration is saved
 CONFIGURATION_FILE_NAME = "topic_model_configuration"
+
+# How to signal that two words are synoyms
+SYNONYM_BINDER = "__"
