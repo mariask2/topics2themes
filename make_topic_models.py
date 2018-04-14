@@ -47,11 +47,16 @@ MARKED_DOCUMENT_TOK = "marked_document_tok"
 class StopwordHandler():
     def __init__(self):
         self.stop_word_set = None
+        self.user_stop_word_list = []
+    
+    def get_user_stop_word_list(self):
+        return self.user_stop_word_list
     
     def get_stop_word_set(self, stop_word_file):
         if self.stop_word_set == None:
             f = open(stop_word_file)
             additional_stop_words = [word.strip() for word in f.readlines()]
+            self.user_stop_word_list = additional_stop_words
             f.close()
             self.stop_word_set = text.ENGLISH_STOP_WORDS.union(additional_stop_words)
         return self.stop_word_set
@@ -397,10 +402,12 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm, json_properties):
     document_dict = {}
     topic_info_list = []
+    json_properties["STOP_WORDS"] = stopword_handler.get_user_stop_word_list()
     
     """
         Prints output from the topic model in html and json format, with topic terms in bold face
-    """
+    
+        """
     
     #f = open(get_current_file_name(name, topic_model_algorithm) + ".html", "w")
     #f_json = open(get_current_file_name(name, topic_model_algorithm) + ".json", "w")
