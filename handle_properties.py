@@ -1,8 +1,115 @@
 import importlib
 import argparse
 import os
+import default_topic_model_configuration
 
 from topic_model_constants import *
+
+#TODO: Test that default properties work
+
+class PropertiesContainer:
+    """
+    PropertiesContainer
+
+    A class containing the properties needed to make a topic model, 
+    and for checking the that properties are given.
+    """
+
+    def __init__(self, properties):
+        """
+        :params properties: a python model including properties (retrieved by importlib.import_module(<PATH>))
+        """
+        
+        try:
+            self.NUMBER_OF_TOPICS = properties.NUMBER_OF_TOPICS
+        except AttributeError:
+            self.NUMBER_OF_TOPICS = default_topic_model_configuration.NUMBER_OF_TOPICS
+            print("Using default NUMBER_OF_TOPICS")
+        try:    
+            self.NR_OF_TOP_WORDS = properties.NR_OF_TOP_WORDS
+        except AttributeError:    
+            self.NR_OF_TOP_WORDS = default_topic_model_configuration.NR_OF_TOP_WORDS
+            print("Using default NR_OF_TOP_WORDS")
+
+        try:    
+            self.NR_OF_TOP_DOCUMENTS = properties.NR_OF_TOP_DOCUMENTS
+        except AttributeError:
+            self.NR_OF_TOP_DOCUMENTS = default_topic_model_configuration.NR_OF_TOP_DOCUMENTS
+            print("Using default NR_OF_TOP_DOCUMENTS")
+
+        try:    
+            self.NUMBER_OF_RUNS = properties.NUMBER_OF_RUNS
+        except AttributeError:
+            self.NUMBER_OF_RUNS = default_topic_model_configuration.NUMBER_OF_RUNS
+            print("Using default NUMBER_OF_RUNS")
+        try:
+            self.OVERLAP_CUT_OFF = properties.OVERLAP_CUT_OFF
+        except AttributeError:
+            self.OVERLAP_CUT_OFF = default_topic_model_configuration.OVERLAP_CUT_OFF
+            print("Using default OVERLAP_CUT_OFF")
+
+        try:    
+            self.PRE_PROCESS = properties.PRE_PROCESS
+        except AttributeError:
+            self.PRE_PROCESS = default_topic_model_configuration.PRE_PROCESS
+            print("Using default PRE_PROCESS")
+
+        try:    
+            self.MIN_DOCUMENT_FREQUENCY = properties.MIN_DOCUMENT_FREQUENCY
+        except AttributeError:
+            self.MIN_DOCUMENT_FREQUENCY = default_topic_model_configuration.MIN_DOCUMENT_FREQUENCY
+            print("Using default MIN_DOCUMENT_FREQUENCY ")
+            
+        try:    
+            self.MAX_DOCUMENT_FREQUENCY = properties.MAX_DOCUMENT_FREQUENCY
+        except AttributeError:
+            self.MAX_DOCUMENT_FREQUENCY = default_topic_model_configuration.MAX_DOCUMENT_FREQUENCY
+            print("Using default MAX_DOCUMENT_FREQUENCY ")
+        
+        try:
+            self.SPACE_FOR_PATH = properties.SPACE_FOR_PATH
+        except AttributeError:
+            if self.PRE_PROCESS:
+                print("The configuration variable SPACE_FOR_PATH is not set. Either give the path to a word2vec space, or set PRE_PROCESS to false")
+                exit(1)
+        try:
+            self.VECTOR_LENGTH = properties.VECTOR_LENGTH
+        except AttributeError:
+            if self.PRE_PROCESS:
+                print("The configuration variable VECTOR_LENGTH is not set. Either give the a word2vec space vectorlengt, or set PRE_PROCESS to false")
+                exit(1)
+
+        try:
+            self.STOP_WORD_FILE = properties.STOP_WORD_FILE
+        except AttributeError:
+            print("No STOP_WORD_FILE is given in the configuration file.")
+            exit(1)
+
+        try:
+            self.DATA_LABEL_LIST = properties.DATA_LABEL_LIST
+        except AttributeError:
+            print("No DATA_LABEL_LIST is given in the configuration file.")
+            exit(1)
+            
+        try:
+            self.COLLOCATION_CUT_OFF = properties.COLLOCATION_CUT_OFF
+        except AttributeError:
+            self.COLLOCATION_CUT_OFF= default_topic_model_configuration.COLLOCATION_CUT_OFF
+            print("Using default COLLOCATION_CUT_OFF")
+
+        try:  
+            self.TOPIC_MODEL_ALGORITHM = properties.TOPIC_MODEL_ALGORITHM
+        except AttributeError: 
+            self.TOPIC_MODEL_ALGORITHM = default_topic_model_configuration.TOPIC_MODEL_ALGORITHM
+            print("Using default TOPIC_MODEL_ALGORITHM")
+
+        try:  
+            self.CLEANING_METHOD = properties.corpus_specific_text_cleaning
+        except AttributeError: 
+            self.CLEANING_METHOD = default_topic_model_configuration.no_cleaning
+            print("Using default CLEANING_METHOD")
+
+ 
 
 def load_properties(parser):
  
@@ -49,6 +156,6 @@ def load_properties_from_parameters(project_path, start_dir = "."):
 
     properties = importlib.import_module(project_path + "." + CONFIGURATION_FILE_NAME)
 
-    #properties_container = PropertiesContainer(properties) # Copied from pal, perhaps this will be needed here also
-    return properties, path_slash_format, project_path
+    properties_container = PropertiesContainer(properties) # Copied from pal, perhaps this will be needed here also
+    return properties_container, path_slash_format, project_path
 

@@ -64,17 +64,17 @@ stopword_handler = StopwordHandler()
 ####
 
 def run_make_topic_models(mongo_con, properties, path_slash_format):
-    initialise_dirs(properties.PATH_TOPIC_MODEL_OUTPUT, properties.PATH_USER_INPUT)
+    #initialise_dirs(properties.PATH_TOPIC_MODEL_OUTPUT, properties.PATH_USER_INPUT)
     
-    file_list = read_discussion_documents(properties.DATA_LABEL_LIST, properties.DIRECTORY_NAME)
+    file_list = read_discussion_documents(properties.DATA_LABEL_LIST)
     
     documents = [el[TEXT] for el in file_list]
 
     print("Make models for "+ str(len(documents)) + " documents.")
     
-    print("Will write topic modelling output to '" + get_current_file_name(properties.NAME, properties.TOPIC_MODEL_ALGORITHM)\
-          + ".json' and '" + get_current_file_name(properties.NAME, properties.TOPIC_MODEL_ALGORITHM) + ".html'")
-    print("WARNING: If output files exists, content will be overwritten")
+    #print("Will write topic modelling output to '" + get_current_file_name(properties.NAME, properties.TOPIC_MODEL_ALGORITHM)\
+        #    + ".json' and '" + get_current_file_name(properties.NAME, properties.TOPIC_MODEL_ALGORITHM) + ".html'")
+    #print("WARNING: If output files exists, content will be overwritten")
     
     if properties.TOPIC_MODEL_ALGORITHM == NMF_NAME:
         print()
@@ -96,8 +96,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format):
         print("Found " + str(len(topic_info)) + " stable topics")
         
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
-                                                              properties.TOPIC_MODEL_ALGORITHM,\
-                                                              properties.NAME)
+                                                              properties.TOPIC_MODEL_ALGORITHM)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
@@ -126,8 +125,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format):
 
         print("Found " + str(len(topic_info)) + " stable topics")
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
-                                                              properties.TOPIC_MODEL_ALGORITHM,\
-                                                              properties.NAME)
+                                                              properties.TOPIC_MODEL_ALGORITHM)
         return result_dict, time, post_id
 
     
@@ -137,11 +135,11 @@ def get_current_file_name(name, topic_model_algorithm):
 ######
 # Read documents from file
 ######
-def read_discussion_documents(data_label_list, directory_name):
+def read_discussion_documents(data_label_list):
     file_list = []
 
     for data_info in data_label_list:
-        data_dir = data_info[directory_name]
+        data_dir = data_info[DIRECTORY_NAME]
         
         files = []
 
@@ -150,7 +148,7 @@ def read_discussion_documents(data_label_list, directory_name):
         for f in files:
             opened = open(f)
             text = opened.read()
-            cleaned_text = properties.corpus_specific_text_cleaning(text)
+            cleaned_text = properties.CLEANING_METHOD(text)
             file_list.append({TEXT: cleaned_text, LABEL: data_info[DATA_LABEL]})
             opened.close()
         
@@ -396,20 +394,21 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 # Print output from the model
 #######
 
-def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm, name):
+def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm):
     document_dict = {}
     topic_info_list = []
     
     """
         Prints output from the topic model in html and json format, with topic terms in bold face
     """
-    f = open(get_current_file_name(name, topic_model_algorithm) + ".html", "w")
-    f_json = open(get_current_file_name(name, topic_model_algorithm) + ".json", "w")
+    
+    #f = open(get_current_file_name(name, topic_model_algorithm) + ".html", "w")
+    #f_json = open(get_current_file_name(name, topic_model_algorithm) + ".json", "w")
 
-    f.write('<html><body><font face="times"><div style="width:400px;margin:40px;">\n')
-    f.write("<h1> Results for model type " + topic_model_algorithm + " </h1>\n")
+    #f.write('<html><body><font face="times"><div style="width:400px;margin:40px;">\n')
+    #f.write("<h1> Results for model type " + topic_model_algorithm + " </h1>\n")
     for nr, el in enumerate(topic_info):
-        
+        """
         term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
         start_label = '"' + " - ".join([term.split(SYNONYM_BINDER)[0] for (term,score) in term_list_sorted_on_score[:3]]) + '"'
         topic_info_object = {}
@@ -429,6 +428,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         f.write("<p>\n")
         f.write(", ".join([term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER) for term in el[TERM_LIST]]))
         f.write("</p>\n")
+        """
+        
         for nr, document in enumerate(el[DOCUMENT_LIST]):
 
             if document[DOC_ID] not in document_dict:
@@ -460,6 +461,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             ###                
 
             document_dict[document[DOC_ID]]["document_topics"].append(document_topic_obj)
+            """
             f.write("<p>\n")
             f.write("<br><p> Document number " + str(nr) + " Strength: " + str(document[DOCUMENT_TOPIC_STRENGTH]) + "</p>\n")
             f.write(document[MARKED_DOCUMENT_TOK])
@@ -471,6 +473,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     f.write("</div></font></body></html>\n")
     f.flush()
     f.close()
+    """
 
     result_dict = {}
     result_dict["topics"] = topic_info_list
@@ -478,11 +481,10 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     result_dict["themes"] = []
     result_dict["documents"] = [value for value in document_dict.values()]
     result_dict["meta_data"] = {"creation_date" : str(datetime.datetime.now())}
-    f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
-    f_json.flush()
-    f_json.close()
-    time, post_id = mongo_con.insert_new_model(result_dict, name + "_" + topic_model_algorithm)
-
+    #f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
+    #f_json.flush()
+    #f_json.close()
+    time, post_id = mongo_con.insert_new_model(result_dict, "dummy_name" + "_" + topic_model_algorithm)
     
     return result_dict, time, post_id
 
