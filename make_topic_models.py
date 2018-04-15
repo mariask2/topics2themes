@@ -71,7 +71,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format):
     #initialise_dirs(properties.PATH_TOPIC_MODEL_OUTPUT, properties.PATH_USER_INPUT)
     data_set_name = os.path.basename(path_slash_format)
     
-    file_list = read_discussion_documents(properties.DATA_LABEL_LIST, properties.CLEANING_METHOD)
+    file_list = read_discussion_documents(properties.DATA_LABEL_LIST, properties.CLEANING_METHOD, data_set_name)
     
     documents = [el[TEXT] for el in file_list]
 
@@ -142,11 +142,11 @@ def get_current_file_name(name, topic_model_algorithm):
 ######
 # Read documents from file
 ######
-def read_discussion_documents(data_label_list, cleaning_method):
+def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
     file_list = []
 
     for data_info in data_label_list:
-        data_dir = data_info[DIRECTORY_NAME]
+        data_dir = os.path.join(data_set_name, data_info[DIRECTORY_NAME])
         
         files = []
 
