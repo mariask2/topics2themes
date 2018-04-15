@@ -70,6 +70,14 @@ def get_all_models_for_collection_with_name():
     resp = make_response(jsonify({"result" : all_models_for_collection_with_name}))
     return resp
 
+@app.route('/topic_modelling/api/v1.0/make_model_for_collection', methods=['GET', 'POST'])
+def make_model_for_collection():
+    collection_name = request.values.get("collection_name")
+    model_result = make_topic_models.make_model_for_collection(collection_name, mongo_con)
+    resp = make_response(jsonify({"result" : model_result}))
+    return resp
+
+
 """
 @app.route('/topic_modelling/api/v1.0/get_topic_model_results', methods=['GET', 'POST'])
 def get_new_topic_model_results():

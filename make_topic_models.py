@@ -69,8 +69,9 @@ stopword_handler = StopwordHandler()
 
 def run_make_topic_models(mongo_con, properties, path_slash_format):
     #initialise_dirs(properties.PATH_TOPIC_MODEL_OUTPUT, properties.PATH_USER_INPUT)
+    data_set_name = os.path.basename(path_slash_format)
     
-    file_list = read_discussion_documents(properties.DATA_LABEL_LIST)
+    file_list = read_discussion_documents(properties.DATA_LABEL_LIST, properties.CLEANING_METHOD)
     
     documents = [el[TEXT] for el in file_list]
 
@@ -103,7 +104,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format):
         
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
                                                               properties.TOPIC_MODEL_ALGORITHM,\
-                                                              properties.get_properties_in_json())
+                                                              properties.get_properties_in_json(),\
+                                                              data_set_name)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
@@ -129,7 +131,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format):
         print("Found " + str(len(topic_info)) + " stable topics")
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
                                                               properties.TOPIC_MODEL_ALGORITHM,\
-                                                              properties.get_properties_in_json())
+                                                              properties.get_properties_in_json(),\
+                                                              data_set_name)
         return result_dict, time, post_id
 
     
@@ -139,7 +142,7 @@ def get_current_file_name(name, topic_model_algorithm):
 ######
 # Read documents from file
 ######
-def read_discussion_documents(data_label_list):
+def read_discussion_documents(data_label_list, cleaning_method):
     file_list = []
 
     for data_info in data_label_list:
@@ -152,7 +155,7 @@ def read_discussion_documents(data_label_list):
         for f in files:
             opened = open(f)
             text = opened.read()
-            cleaned_text = properties.CLEANING_METHOD(text)
+            cleaned_text = cleaning_method(text)
             file_list.append({TEXT: cleaned_text, LABEL: data_info[DATA_LABEL]})
             opened.close()
         
@@ -188,6 +191,8 @@ def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_p
                            nr_of_top_words, nr_of_to_documents, overlap_cut_off, no_match, manual_made_dict):
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
                                           space_for_path, vector_length, no_match, manual_made_dict)
+                                          
+    
     texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, TfidfVectorizer,\
                                                     min_document_frequency, max_document_frequency, stop_word_file)
     model_list = []
@@ -399,7 +404,7 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 # Print output from the model
 #######
 
-def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm, json_properties):
+def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm, json_properties, data_set_name):
     document_dict = {}
     topic_info_list = []
     json_properties["STOP_WORDS"] = stopword_handler.get_user_stop_word_list()
@@ -493,7 +498,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     #f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
     #f_json.flush()
     #f_json.close()
-    time, post_id = mongo_con.insert_new_model(result_dict, "dummy_name" + "_" + topic_model_algorithm)
+    time, post_id = mongo_con.insert_new_model(result_dict, data_set_name)
     
     return result_dict, time, post_id
 
@@ -531,6 +536,11 @@ def get_cashed_topic_model(mongo_con):
     return json_data
     """
 
+
+def make_model_for_collection(collection_name, mongo_con):
+    properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + collection_name, DEFAULT_ROOT_DIRECTORY)
+    result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format)
+    return result_dict
 
 ###
 # Start

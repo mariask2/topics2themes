@@ -31,22 +31,8 @@ def test_get_data_sets(urlbase):
         print(e.__class__)
         return "No classification"
 
-"""
-def test_get_all_model_document_name_date_id(urlbase):
-    params_url = urllib.parse.urlencode({"collection_name": "vaccination_constructed_data_NMF"})
-    url_method = "get_all_models_for_collection_with_name"
-    try:
-        url = urlbase + url_method + "?%s" % params_url
-        with urllib.request.urlopen(url) as f:
-            c = f.read().decode('utf-8')
-            return c
-    except HTTPError as e:
-        print(str(e) + " " + get_exception_info())
-        print(e.__class__)
-        return "No classification"
-"""
 
-def test_get_all_model_document_name_date_id(urlbase):
+def test_get_all_models_for_collection_with_name(urlbase):
     params_text = urllib.parse.urlencode({"collection_name": "vaccination_constructed_data_NMF"})
     text_method = "get_all_models_for_collection_with_name"
     try:
@@ -59,6 +45,20 @@ def test_get_all_model_document_name_date_id(urlbase):
         print(e.__class__)
         return "No classification"
 
+def test_make_model_for_collection(urlbase):
+    params_text = urllib.parse.urlencode({"collection_name": "mumsnet_scikitformat"})
+    text_method = "make_model_for_collection"
+    try:
+        url = urlbase + text_method + "?%s" % params_text
+        with urllib.request.urlopen(url) as f:
+            c = f.read().decode('utf-8')
+            return c
+    except HTTPError as e:
+        print(str(e) + " " + get_exception_info())
+        print(e.__class__)
+        return "No classification"
+
+
 
 if __name__ == '__main__':
     
@@ -70,5 +70,5 @@ if __name__ == '__main__':
     urlbase = url_before_port + port + url_after_port
 
     #print(test_get_data_sets(urlbase))
-    print(test_get_all_model_document_name_date_id(urlbase))
-
+    #print(test_get_all_models_for_collection_with_name(urlbase))
+    print(test_make_model_for_collection(urlbase))
