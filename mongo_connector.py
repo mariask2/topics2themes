@@ -3,7 +3,7 @@ import datetime
 import os
 from pymongo.errors import DuplicateKeyError
 from pymongo import MongoClient
-#from topic_model_configuration import *
+from topic_model_constants import *
 
 
 
@@ -24,6 +24,7 @@ class MongoConnector:
         self.DOCUMENT_IDS = "document_ids"
         self.THEME_NAME = "theme_name"
         self.THEME_INDEX = "theme_index"
+        self.TOPIC_MODEL_OUTPUT = "topic_model_output"
     
         self.get_theme_collection().create_index(\
                         [(self.THEME_NUMBER, pymongo.ASCENDING),\
@@ -65,11 +66,23 @@ class MongoConnector:
     # TODO: Check that it is correct to turn str(document[self.ID]) to a string, to make it serializable
     # If it is not turned to a string it will not be accepted for http
     def get_all_models_for_collection_with_name(self, text_collection_name):
+  
+        
         documents = self.get_model_collection().find({self.TEXT_COLLECTION_NAME: text_collection_name})
-        document_spec = [{self.DATE: str(document['_id'].generation_time),\
-                         self.TEXT_COLLECTION_NAME: document[self.TEXT_COLLECTION_NAME],\
-                         self.ID : str(document[self.ID])}\
-                         for document in documents]
+        document_spec = []
+        
+        for document in documents:
+            try:
+                document_spec.append({self.DATE: str(document['_id'].generation_time),\
+                                     self.TEXT_COLLECTION_NAME: document[self.TEXT_COLLECTION_NAME],\
+                                     self.ID : str(document[self.ID]),\
+                                     MODEL_NAME : document[self.TOPIC_MODEL_OUTPUT][META_DATA][MODEL_NAME]})
+            except KeyError:
+                document_spec.append({self.DATE: str(document['_id'].generation_time),\
+                                     self.TEXT_COLLECTION_NAME: document[self.TEXT_COLLECTION_NAME],\
+                                     self.ID : str(document[self.ID]),\
+                                     MODEL_NAME : "dummyname"})
+
         return document_spec
     
     def get_topic_model_output_with_id(self, id):
@@ -222,7 +235,7 @@ if __name__ == '__main__':
     print(mc.get_all_collections())
     
     #print(mc.get_all_model_document_name_date_id())
-    print(mc.get_all_models_for_collection_with_name("vaccination_constructed_data_NMF"))
+    print(mc.get_all_models_for_collection_with_name("vaccination_constructed_data"))
     
     #print(mc.insert_new_model("test", "name"))
     #print(mc.get_all_collections())

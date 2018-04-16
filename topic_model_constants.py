@@ -31,3 +31,9 @@ CONFIGURATION_FILE_NAME = "topic_model_configuration"
 
 # How to signal that two words are synoyms
 SYNONYM_BINDER = "__"
+
+####
+## Database dictionary keys
+####
+META_DATA = "meta_data"
+MODEL_NAME = "model_name"

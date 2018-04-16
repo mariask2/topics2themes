@@ -492,10 +492,10 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     #result_dict["themes"] = [{"id": 0, "label": "Click here to add theme label", "theme_topics": [], "theme_documents":[]}]
     result_dict["themes"] = []
     result_dict["documents"] = [value for value in document_dict.values()]
-    result_dict["meta_data"] = {"creation_date" : str(datetime.datetime.now()),\
+    result_dict[META_DATA] = {"creation_date" : str(datetime.datetime.now()),\
                                 "configuration" : json_properties, \
                                     "user" : "dummy_user",\
-                                    "model_name" : model_name}
+                                    MODEL_NAME : model_name}
     #f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
     #f_json.flush()
     #f_json.close()
