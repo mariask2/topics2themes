@@ -73,7 +73,8 @@ def get_all_models_for_collection_with_name():
 @app.route('/topic_modelling/api/v1.0/make_model_for_collection', methods=['GET', 'POST'])
 def make_model_for_collection():
     collection_name = request.values.get("collection_name")
-    model_result = make_topic_models.make_model_for_collection(collection_name, mongo_con)
+    model_name = request.values.get("model_name")
+    model_result = make_topic_models.make_model_for_collection(collection_name, model_name, mongo_con)
     resp = make_response(jsonify({"result" : model_result}))
     return resp
 

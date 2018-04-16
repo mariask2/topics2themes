@@ -5,6 +5,7 @@ import json
 import sys
 import linecache
 from urllib.error import HTTPError
+import datetime
 
 url_before_port = "http://127.0.0.1:"
 url_after_port = "/topic_modelling/api/v1.0/"
@@ -46,7 +47,7 @@ def test_get_all_models_for_collection_with_name(urlbase):
         return "No classification"
 
 def test_make_model_for_collection(urlbase):
-    params_text = urllib.parse.urlencode({"collection_name": "mumsnet_scikitformat"})
+    params_text = urllib.parse.urlencode({"collection_name": "mumsnet_scikitformat", "topic_name": datetime.datetime.now()})
     text_method = "make_model_for_collection"
     try:
         url = urlbase + text_method + "?%s" % params_text

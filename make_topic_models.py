@@ -18,7 +18,7 @@ from topic_model_constants import *
 import handle_properties
 from mongo_connector import MongoConnector
 import argparse
-
+import datetime
 
 
 TOPIC_NUMBER = "TOPIC_NUMBER"
@@ -67,7 +67,7 @@ stopword_handler = StopwordHandler()
 # Main 
 ####
 
-def run_make_topic_models(mongo_con, properties, path_slash_format):
+def run_make_topic_models(mongo_con, properties, path_slash_format, model_name):
     #initialise_dirs(properties.PATH_TOPIC_MODEL_OUTPUT, properties.PATH_USER_INPUT)
     data_set_name = os.path.basename(path_slash_format)
     
@@ -105,7 +105,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format):
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
                                                               properties.TOPIC_MODEL_ALGORITHM,\
                                                               properties.get_properties_in_json(),\
-                                                              data_set_name)
+                                                              data_set_name, model_name)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
@@ -132,7 +132,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format):
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
                                                               properties.TOPIC_MODEL_ALGORITHM,\
                                                               properties.get_properties_in_json(),\
-                                                              data_set_name)
+                                                              data_set_name, model_name)
         return result_dict, time, post_id
 
     
@@ -404,7 +404,7 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 # Print output from the model
 #######
 
-def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm, json_properties, data_set_name):
+def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm, json_properties, data_set_name, model_name):
     document_dict = {}
     topic_info_list = []
     json_properties["STOP_WORDS"] = stopword_handler.get_user_stop_word_list()
@@ -494,7 +494,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     result_dict["documents"] = [value for value in document_dict.values()]
     result_dict["meta_data"] = {"creation_date" : str(datetime.datetime.now()),\
                                 "configuration" : json_properties, \
-                                    "user" : "dummy_user"}
+                                    "user" : "dummy_user",\
+                                    "model_name" : model_name}
     #f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
     #f_json.flush()
     #f_json.close()
@@ -537,9 +538,9 @@ def get_cashed_topic_model(mongo_con):
     """
 
 
-def make_model_for_collection(collection_name, mongo_con):
+def make_model_for_collection(collection_name, model_name, mongo_con):
     properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + collection_name, DEFAULT_ROOT_DIRECTORY)
-    result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format)
+    result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format, model_name)
     return result_dict
 
 ###
@@ -550,7 +551,7 @@ if __name__ == '__main__':
     properties, path_slash_format, path_dot_format = handle_properties.load_properties(parser)
     
     mongo_con = MongoConnector()
-    result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format)
+    result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format, datetime.datetime.now())
     print("Created model saved at " + str(time))
     print(get_cashed_topic_model(mongo_con).keys())
     mongo_con.close_connection()
