@@ -3,6 +3,7 @@ import datetime
 import os
 from pymongo.errors import DuplicateKeyError
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 from topic_model_constants import *
 
 
@@ -24,7 +25,7 @@ class MongoConnector:
         self.DOCUMENT_IDS = "document_ids"
         self.THEME_NAME = "theme_name"
         self.THEME_INDEX = "theme_index"
-        self.TOPIC_MODEL_OUTPUT = "topic_model_output"
+
     
         self.get_theme_collection().create_index(\
                         [(self.THEME_NUMBER, pymongo.ASCENDING),\
@@ -55,14 +56,14 @@ class MongoConnector:
         model_collection = db["MODEL_COLLECTION"]
         return model_collection
     
-    def get_all_model_document_name_date_id(self):
-        documents = self.get_model_collection().find()
-        document_spec = [{self.DATE: document['_id'].generation_time,\
-                         self.TEXT_COLLECTION_NAME: document[self.TEXT_COLLECTION_NAME],\
-                         self.ID : document[self.ID]}\
-                         for document in documents]
+    def get_model_for_model_id(self, id):
+        document = self.get_model_collection().find_one({'_id' : ObjectId(id)})
+        document_spec = {self.TOPIC_MODEL_OUTPUT: document[self.TOPIC_MODEL_OUTPUT],\
+                        self.TEXT_COLLECTION_NAME: document[self.TEXT_COLLECTION_NAME],\
+                        self.ID : str(document[self.ID])}
         return document_spec
-    
+        
+
     # TODO: Check that it is correct to turn str(document[self.ID]) to a string, to make it serializable
     # If it is not turned to a string it will not be accepted for http
     def get_all_models_for_collection_with_name(self, text_collection_name):
@@ -235,10 +236,11 @@ if __name__ == '__main__':
     print(mc.get_all_collections())
     
     #print(mc.get_all_model_document_name_date_id())
-    print(mc.get_all_models_for_collection_with_name("vaccination_constructed_data"))
+    #print(mc.get_all_models_for_collection_with_name("vaccination_constructed_data"))
     
-    #print(mc.insert_new_model("test", "name"))
-    #print(mc.get_all_collections())
+    res = mc.get_model_for_model_id("5ad4fb3b99a029a0b5d37c0c")["topic_model_output"]
+    print(res["documents"])
+    print(res["topics"])
 
     """
     els = mc.get_all_model_document_name_date_id()

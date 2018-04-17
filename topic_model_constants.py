@@ -37,3 +37,5 @@ SYNONYM_BINDER = "__"
 ####
 META_DATA = "meta_data"
 MODEL_NAME = "model_name"
+DOCUMENTS = "documents"
+TOPICS    = "topics"

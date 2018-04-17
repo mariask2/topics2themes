@@ -25,7 +25,6 @@ TOPIC_NUMBER = "TOPIC_NUMBER"
 TERM_LIST = "TERM_LIST"
 DOCUMENT_LIST = "DOCUMENT_LIST"
 DOCUMENT = "document"
-TOPICS = "topics"
 TERMS_IN_TOPIC = "terms_in_topic"
 TOPIC_CONFIDENCE = "topic_confidence"
 TOPIC_INDEX = "topic_index"
@@ -420,27 +419,28 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     #f.write('<html><body><font face="times"><div style="width:400px;margin:40px;">\n')
     #f.write("<h1> Results for model type " + topic_model_algorithm + " </h1>\n")
     for nr, el in enumerate(topic_info):
-        """
+        
         term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
         start_label = '"' + " - ".join([term.split(SYNONYM_BINDER)[0] for (term,score) in term_list_sorted_on_score[:3]]) + '"'
         topic_info_object = {}
         topic_info_object["id"] = el[TOPIC_NUMBER]
         topic_info_object["label"] = start_label
         topic_info_object["topic_terms"] = []
-         
-        f.write("<p>\n")
-        f.write("<h2> Topic " + str(nr) + "</h2>\n")
-        f.write("<p>\n")
+        
+        
+        #f.write("<p>\n")
+        #f.write("<h2> Topic " + str(nr) + "</h2>\n")
+        #f.write("<p>\n")
         for term in el[TERM_LIST]:
-            f.write(str(term).replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER) + "<br>\n")
+            #f.write(str(term).replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER) + "<br>\n")
             term_object = {}
             term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
             term_object["score"] = term[1]
             topic_info_object["topic_terms"].append(term_object)
-        f.write("<p>\n")
-        f.write(", ".join([term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER) for term in el[TERM_LIST]]))
-        f.write("</p>\n")
-        """
+        #f.write("<p>\n")
+        #f.write(", ".join([term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER) for term in el[TERM_LIST]]))
+        #f.write("</p>\n")
+        
         
         for nr, document in enumerate(el[DOCUMENT_LIST]):
 
@@ -473,25 +473,25 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             ###                
 
             document_dict[document[DOC_ID]]["document_topics"].append(document_topic_obj)
-            """
-            f.write("<p>\n")
-            f.write("<br><p> Document number " + str(nr) + " Strength: " + str(document[DOCUMENT_TOPIC_STRENGTH]) + "</p>\n")
-            f.write(document[MARKED_DOCUMENT_TOK])
-            f.write("</p>\n")
-        f.write("</p>\n")
-        f.write("</p>\n")
+            
+            #f.write("<p>\n")
+            #f.write("<br><p> Document number " + str(nr) + " Strength: " + str(document[DOCUMENT_TOPIC_STRENGTH]) + "</p>\n")
+            #f.write(document[MARKED_DOCUMENT_TOK])
+            #f.write("</p>\n")
+            #f.write("</p>\n")
+            #f.write("</p>\n")
 
         topic_info_list.append(topic_info_object)
-    f.write("</div></font></body></html>\n")
-    f.flush()
-    f.close()
-    """
+            #f.write("</div></font></body></html>\n")
+            #f.flush()
+            #f.close()
+    
 
     result_dict = {}
-    result_dict["topics"] = topic_info_list
+    result_dict[TOPICS] = topic_info_list
     #result_dict["themes"] = [{"id": 0, "label": "Click here to add theme label", "theme_topics": [], "theme_documents":[]}]
     result_dict["themes"] = []
-    result_dict["documents"] = [value for value in document_dict.values()]
+    result_dict[DOCUMENTS] = [value for value in document_dict.values()]
     result_dict[META_DATA] = {"creation_date" : str(datetime.datetime.now()),\
                                 "configuration" : json_properties, \
                                     "user" : "dummy_user",\
@@ -552,8 +552,11 @@ if __name__ == '__main__':
     
     mongo_con = MongoConnector()
     result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format, datetime.datetime.now())
+    print(result_dict.keys())
+    print(result_dict["topics"])
     print("Created model saved at " + str(time))
-    print(get_cashed_topic_model(mongo_con).keys())
+    #print(result_dict["topic_model_output"])
+    #print(post_id)
     mongo_con.close_connection()
 
 

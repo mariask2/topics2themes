@@ -110,6 +110,7 @@ def get_new_topic_model_results_options():
 def get_cashed_topic_model_results():
     return get_topic_model_results(make_topic_models.get_cashed_topic_model(mongo_con))
 
+
 @app.route('/topic_modelling/api/v1.0/update_topic_name', methods=['GET', 'POST'])
 def update_topic_name():
     topic_id = request.values.get("topic_id")
@@ -117,6 +118,14 @@ def update_topic_name():
     model_id = request.values.get("model_id")
     topic_name_update_result =  mongo_con.save_or_update_topic_name(topic_id, topic_name, model_id)
     resp = make_response(jsonify({"result" : "topic name updated"}))
+    return resp
+
+@app.route('/topic_modelling/api/v1.0/get_model_for_model_id', methods=['GET', 'POST'])
+def get_model_for_model_id():
+    model_id = request.values.get("model_id")
+    print(model_id)
+    model =  mongo_con.get_model_for_model_id(model_id)
+    resp = make_response(jsonify({"result" : model}))
     return resp
 
 
