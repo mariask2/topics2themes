@@ -11,8 +11,8 @@ from topic_model_constants import *
 class MongoConnector:
     def __init__(self):
         #self.TOPIC_MODEL_DATABASE = "topic_model_database"
-        self.TOPIC_MODEL_DATABASE = "text_database"
-        #self.TOPIC_MODEL_DATABASE = "text_database_2"
+        #self.TOPIC_MODEL_DATABASE = "text_database"
+        self.TOPIC_MODEL_DATABASE = "text_database_3"
         self.client = None
         self.DATE = "date"
         self.ID = "_id"
@@ -25,12 +25,14 @@ class MongoConnector:
         self.DOCUMENT_IDS = "document_ids"
         self.THEME_NAME = "theme_name"
         self.THEME_INDEX = "theme_index"
+        self.ANALYSIS_NAME = "analysis_name"
 
     
         self.get_theme_collection().create_index(\
                         [(self.THEME_NUMBER, pymongo.ASCENDING),\
                          (self.MODEL_ID, pymongo.ASCENDING)], unique=True)
     
+        
     
     def get_connection(self):
         maxSevSelDelay = 5 #Check that the server is listening, wait max 5 sec
@@ -56,6 +58,7 @@ class MongoConnector:
         model_collection = db["MODEL_COLLECTION"]
         return model_collection
     
+    
     def get_model_for_model_id(self, id):
         document = self.get_model_collection().find_one({'_id' : ObjectId(id)})
         document_spec = {self.TOPIC_MODEL_OUTPUT: document[self.TOPIC_MODEL_OUTPUT],\
@@ -68,22 +71,14 @@ class MongoConnector:
     # If it is not turned to a string it will not be accepted for http
     def get_all_models_for_collection_with_name(self, text_collection_name):
   
-        
         documents = self.get_model_collection().find({self.TEXT_COLLECTION_NAME: text_collection_name})
-        document_spec = []
         
-        for document in documents:
-            try:
-                document_spec.append({self.DATE: str(document['_id'].generation_time),\
-                                     self.TEXT_COLLECTION_NAME: document[self.TEXT_COLLECTION_NAME],\
-                                     self.ID : str(document[self.ID]),\
-                                     MODEL_NAME : document[self.TOPIC_MODEL_OUTPUT][META_DATA][MODEL_NAME]})
-            except KeyError:
-                document_spec.append({self.DATE: str(document['_id'].generation_time),\
-                                     self.TEXT_COLLECTION_NAME: document[self.TEXT_COLLECTION_NAME],\
-                                     self.ID : str(document[self.ID]),\
-                                     MODEL_NAME : "dummyname"})
-
+        document_spec = [{self.DATE: str(document['_id'].generation_time),\
+                         self.TEXT_COLLECTION_NAME: document[self.TEXT_COLLECTION_NAME],\
+                         self.ID : str(document[self.ID]),\
+                         MODEL_NAME : document[self.TOPIC_MODEL_OUTPUT][META_DATA][MODEL_NAME]}\
+                         for document in documents]
+   
         return document_spec
     
     def get_topic_model_output_with_id(self, id):
@@ -99,6 +94,26 @@ class MongoConnector:
                 self.TOPIC_MODEL_OUTPUT: topic_model_output}
         post_id = self.get_model_collection().insert_one(post).inserted_id
         return time, post_id
+
+    ### Storing and fetching analyses
+    def get_analyses_collection(self):
+        db = self.get_database()
+        model_collection = db["ANALYSIS_COLLECTION"]
+        return model_collection
+
+    def create_new_analysis(self, model_id, analysis_name):
+        print("model_id", model_id)
+        post = {self.MODEL_ID : model_id, self.ANALYSIS_NAME : analysis_name}
+        print("post")
+        post_id = self.get_analyses_collection().insert_one(post).inserted_id
+        return {self.ID : str(post_id)}
+
+    def get_all_analyses_for_model(self, model_id):
+        analyses = self.get_analyses_collection().find({self.MODEL_ID : model_id})
+        analyses_to_return = [{self.MODEL_ID: post[self.MODEL_ID], self.ID : str(post[self.ID]),\
+         self.ANALYSIS_NAME : post[self.ANALYSIS_NAME]} for post in analyses]
+        return analyses_to_return
+
 
 
     ### Storing and fetching names of topics
@@ -238,10 +253,16 @@ if __name__ == '__main__':
     #print(mc.get_all_model_document_name_date_id())
     #print(mc.get_all_models_for_collection_with_name("vaccination_constructed_data"))
     
+    print(mc.create_new_analysis("5ad7859b99a02919bd1b66a2", "test_name"))
+    an = mc.get_all_analyses_for_model("5ad7859b99a02919bd1b66a2")
+    for el in an:
+        print(el)
+    
+    """
     res = mc.get_model_for_model_id("5ad4fb3b99a029a0b5d37c0c")["topic_model_output"]
     print(res["documents"])
     print(res["topics"])
-
+    """
     """
     els = mc.get_all_model_document_name_date_id()
     for el in els:

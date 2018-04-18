@@ -123,7 +123,6 @@ def update_topic_name():
 @app.route('/topic_modelling/api/v1.0/get_model_for_model_id', methods=['GET', 'POST'])
 def get_model_for_model_id():
     model_id = request.values.get("model_id")
-    print(model_id)
     model =  mongo_con.get_model_for_model_id(model_id)
     resp = make_response(jsonify({"result" : model}))
     return resp
@@ -132,10 +131,26 @@ def get_model_for_model_id():
 @app.route('/topic_modelling/api/v1.0/get_all_topic_names', methods=['GET', 'POST'])
 def get_all_topic_names():
     model_id = request.values.get("model_id")
-    print(model_id)
     all_topic_names =  mongo_con.get_all_topic_names(model_id)
     resp = make_response(jsonify({"result" : all_topic_names}))
     return resp
+
+
+@app.route('/topic_modelling/api/v1.0/create_new_analysis', methods=['GET', 'POST'])
+def create_new_analysis():
+    model_id = request.values.get("model_id")
+    analysis_name = request.values.get("analysis_name")
+    created_analysis_id =  mongo_con.create_new_analysis(model_id, analysis_name)
+    resp = make_response(jsonify({"result" : created_analysis_id}))
+    return resp
+
+@app.route('/topic_modelling/api/v1.0/get_all_analyses_for_model', methods=['GET', 'POST'])
+def get_all_analyses_for_model():
+    model_id = request.values.get("model_id")
+    analyses =  mongo_con.get_all_analyses_for_model(model_id)
+    resp = make_response(jsonify({"result" : analyses}))
+    return resp
+
 
 
 @app.route('/topic_modelling/api/v1.0/create_new_theme', methods=['GET', 'POST'])
