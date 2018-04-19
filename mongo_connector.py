@@ -26,7 +26,7 @@ class MongoConnector:
         self.THEME_NAME = "theme_name"
         self.THEME_INDEX = "theme_index"
         self.ANALYSIS_NAME = "analysis_name"
-
+        self.ANALYSIS_ID = "analysis_id"
     
         self.get_theme_collection().create_index(\
                         [(self.THEME_NUMBER, pymongo.ASCENDING),\
@@ -123,20 +123,21 @@ class MongoConnector:
         topic_name_collection = db["TOPIC_NAME_COLLECTION"]
         return topic_name_collection
 
-    def save_or_update_topic_name(self, topic_id, new_name, model_id):
+    def save_or_update_topic_name(self, topic_id, new_name, analysis_id):
         self.get_topic_name_collection().update_one(\
-                    {self.TOPIC_ID : topic_id, self.MODEL_ID : model_id},\
+                    {self.TOPIC_ID : topic_id, self.ANALYSIS_ID : analysis_id},\
                     {"$set": { self.TOPIC_NAME : new_name }},\
                     upsert = True)
         return self.get_topic_name_collection().find_one({self.TOPIC_ID : topic_id,\
-                                                        self.MODEL_ID : model_id})
+                                                        self.ANALYSIS_ID : analysis_id})
 
-    def get_all_topic_names(self, model_id):
-        topic_names = self.get_topic_name_collection().find({self.MODEL_ID : model_id})
+    def get_all_topic_names(self, analysis_id):
+        topic_names = self.get_topic_name_collection().find({self.ANALYSIS_ID : analysis_id})
         all_topic_names = []
         for post in topic_names:
             return_post = {self.TOPIC_ID : post[self.TOPIC_ID], self.TOPIC_NAME : post[self.TOPIC_NAME]}
             all_topic_names.append(return_post)
+        
         return all_topic_names
 
     ### Storing and fetching information related to themes
