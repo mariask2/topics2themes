@@ -12,7 +12,7 @@ class MongoConnector:
     def __init__(self):
         #self.TOPIC_MODEL_DATABASE = "topic_model_database"
         #self.TOPIC_MODEL_DATABASE = "text_database"
-        self.TOPIC_MODEL_DATABASE = "text_database_3"
+        self.TOPIC_MODEL_DATABASE = "text_database_5"
         self.client = None
         self.DATE = "date"
         self.ID = "_id"
@@ -30,7 +30,7 @@ class MongoConnector:
     
         self.get_theme_collection().create_index(\
                         [(self.THEME_NUMBER, pymongo.ASCENDING),\
-                         (self.MODEL_ID, pymongo.ASCENDING)], unique=True)
+                         (self.ANALYSIS_ID, pymongo.ASCENDING)], unique=True)
     
         
     
@@ -132,12 +132,13 @@ class MongoConnector:
                                                         self.ANALYSIS_ID : analysis_id})
 
     def get_all_topic_names(self, analysis_id):
+        print("analysis_id", analysis_id)
         topic_names = self.get_topic_name_collection().find({self.ANALYSIS_ID : analysis_id})
         all_topic_names = []
         for post in topic_names:
             return_post = {self.TOPIC_ID : post[self.TOPIC_ID], self.TOPIC_NAME : post[self.TOPIC_NAME]}
             all_topic_names.append(return_post)
-        
+    
         return all_topic_names
 
     ### Storing and fetching information related to themes
@@ -153,22 +154,24 @@ class MongoConnector:
         return theme_index_collection
 
 
-    def create_new_theme(self, model_id):
+    def create_new_theme(self, analysis_id):
         # Index for themes are stored in a separate collection
-        result = self.get_theme_index_collection().update_one({self.MODEL_ID : model_id},\
+        print("*****")
+        post_id = self.get_theme_index_collection().update_one({self.ANALYSIS_ID : analysis_id},\
             {"$inc": {self.THEME_INDEX : 1 }}, upsert=True)
-
-        new_index = self.get_theme_index_collection().find_one({self.MODEL_ID : model_id})[self.THEME_INDEX]
+        print("post_id", post_id)
+        new_index = self.get_theme_index_collection().find_one({self.ANALYSIS_ID : analysis_id})[self.THEME_INDEX]
         print("created theme nr", new_index)
 
-        post = {self.THEME_NUMBER : new_index, self.MODEL_ID : model_id, self.DOCUMENT_IDS : [], self.THEME_NAME : ""}
+        # TODO: To allow for several users, this must be updated
+        post = {self.THEME_NUMBER : new_index, self.ANALYSIS_ID : analysis_id, self.DOCUMENT_IDS : [], self.THEME_NAME : ""}
         
         self.get_theme_collection().insert_one(post)
         return(new_index)
 
 
-    def get_saved_themes(self, model_id):
-        themes = self.get_theme_collection().find({self.MODEL_ID : model_id})
+    def get_saved_themes(self, analysis_id):
+        themes = self.get_theme_collection().find({self.ANALYSIS_ID : analysis_id})
         all_themes = []
         for post in themes:
             print(post)
@@ -177,35 +180,35 @@ class MongoConnector:
 
         return all_themes
 
-    def delete_theme(self, model_id, theme_number):
+    def delete_theme(self, analysis_id, theme_number):
         theme_number_int = int(theme_number)
         # TODO: Check that there are no documents associated with the theme before removing
-        number_of_deleted = self.get_theme_collection().delete_one({self.MODEL_ID : model_id,\
+        number_of_deleted = self.get_theme_collection().delete_one({self.ANALYSIS_ID : analysis_id,\
                                                   self.THEME_NUMBER : theme_number_int}).deleted_count
         return number_of_deleted
 
-    def update_theme_name(self, theme_number_str, new_name, model_id):
+    def update_theme_name(self, theme_number_str, new_name, analysis_id):
         theme_number_int = int(theme_number_str)
-        current_post = self.get_theme_collection().find_one({self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id})
+        current_post = self.get_theme_collection().find_one({self.THEME_NUMBER : theme_number_int, self.ANALYSIS_ID : analysis_id})
         if not current_post:
             print("post not found") # TODO: Better error handling
             return None
         document_ids = current_post[self.DOCUMENT_IDS]
         print("id", document_ids)
         self.get_theme_collection().update_one(\
-                                                {self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id},\
+                                                {self.THEME_NUMBER : theme_number_int, self.ANALYSIS_ID : analysis_id},\
                                                {"$set": { self.THEME_NAME : new_name, self.DOCUMENT_IDS : document_ids}},\
                                                 upsert = True)
         updated_theme =  self.get_theme_collection().find_one({self.THEME_NUMBER : theme_number_int,\
-                                                         self.MODEL_ID : model_id})
+                                                         self.ANALYSIS_ID : analysis_id})
         print(updated_theme)
         new_name = updated_theme[self.THEME_NAME]
         print("*********", new_name)
         return new_name
 
-    def add_theme_document_connection(self, theme_number_str, document_id, model_id):
+    def add_theme_document_connection(self, theme_number_str, document_id, analysis_id):
         theme_number_int = int(theme_number_str)
-        current_post = self.get_theme_collection().find_one({self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id})
+        current_post = self.get_theme_collection().find_one({self.THEME_NUMBER : theme_number_int, self.ANALYSIS_ID : analysis_id})
         if not current_post:
             print("post not found") # TODO: Better error handling
             return None
@@ -214,17 +217,17 @@ class MongoConnector:
             return None # don't add a connection that is already there
         document_ids.append(document_id)
         self.get_theme_collection().update_one(\
-                {self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id},\
+                {self.THEME_NUMBER : theme_number_int, self.ANALYSIS_ID : analysis_id},\
                 {"$set": { self.DOCUMENT_IDS : document_ids}})
                                                
         new_document_ids = self.get_theme_collection().\
-            find_one({self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id})[self.DOCUMENT_IDS]
+            find_one({self.THEME_NUMBER : theme_number_int, self.ANALYSIS_ID : analysis_id})[self.DOCUMENT_IDS]
         return new_document_ids
 
 
-    def delete_theme_document_connection(self, theme_number_str, document_id, model_id):
+    def delete_theme_document_connection(self, theme_number_str, document_id, analysis_id):
         theme_number_int = int(theme_number_str)
-        current_post = self.get_theme_collection().find_one({self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id})
+        current_post = self.get_theme_collection().find_one({self.THEME_NUMBER : theme_number_int, self.ANALYSIS_ID : analysis_id})
         if not current_post:
             print("post not found") # TODO: Better error handling
             return None
@@ -232,11 +235,11 @@ class MongoConnector:
         to_delete = document_ids.index(document_id)
         del document_ids[to_delete]
         self.get_theme_collection().update_one(\
-                    {self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id},\
+                    {self.THEME_NUMBER : theme_number_int, self.ANALYSIS_ID : analysis_id},\
                     {"$set": { self.DOCUMENT_IDS : document_ids}})
             
         new_document_ids = self.get_theme_collection().\
-                find_one({self.THEME_NUMBER : theme_number_int, self.MODEL_ID : model_id})[self.DOCUMENT_IDS]
+                find_one({self.THEME_NUMBER : theme_number_int, self.ANALYSIS_ID : analysis_id})[self.DOCUMENT_IDS]
         return new_document_ids
 
 
@@ -253,12 +256,17 @@ if __name__ == '__main__':
     
     #print(mc.get_all_model_document_name_date_id())
     #print(mc.get_all_models_for_collection_with_name("vaccination_constructed_data"))
+    print(mc.create_new_theme("5adb865599a029323a4599c1"))
+    #print(mc.get_saved_themes("5adb995c99a029323d4b2b7d"))
+    #print(mc.get_all_analyses_for_model("5adb84c199a02931a1eb1dd5"))
+
     
-    print(mc.create_new_analysis("5ad7859b99a02919bd1b66a2", "test_name"))
-    an = mc.get_all_analyses_for_model("5ad7859b99a02919bd1b66a2")
+    """
+    print(mc.create_new_analysis("5adb84c199a02931a1eb1dd5", "test_name"))
+    an = mc.get_all_analyses_for_model("5adb84c199a02931a1eb1dd5")
     for el in an:
         print(el)
-    
+    """
     """
     res = mc.get_model_for_model_id("5ad4fb3b99a029a0b5d37c0c")["topic_model_output"]
     print(res["documents"])

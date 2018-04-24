@@ -105,11 +105,11 @@ def get_new_topic_model_results_options():
 """
 
 
-
+"""
 @app.route('/topic_modelling/api/v1.0/get_cashed_topic_model_results', methods=['GET', 'POST'])
 def get_cashed_topic_model_results():
     return get_topic_model_results(make_topic_models.get_cashed_topic_model(mongo_con))
-
+"""
 
 @app.route('/topic_modelling/api/v1.0/update_topic_name', methods=['GET', 'POST'])
 def update_topic_name():
@@ -155,34 +155,32 @@ def get_all_analyses_for_model():
 
 @app.route('/topic_modelling/api/v1.0/create_new_theme', methods=['GET', 'POST'])
 def create_new_theme():
-    model_id = request.values.get("model_id")
-    new_theme_id =  mongo_con.create_new_theme(model_id)
+    analysis_id = request.values.get("analysis_id")
+    new_theme_id =  mongo_con.create_new_theme(analysis_id)
     resp = make_response(jsonify({"result" : new_theme_id}))
-    print("Created new theme for", model_id)
     return resp
 
 @app.route('/topic_modelling/api/v1.0/delete_theme', methods=['GET', 'POST'])
 def delete_theme():
-    model_id = request.values.get("model_id")
+    analysis_id = request.values.get("analysis_id")
     theme_number = request.values.get("theme_number")
-    nr_of_deleted_themes =  mongo_con.delete_theme(model_id, theme_number)
+    nr_of_deleted_themes =  mongo_con.delete_theme(analysis_id, theme_number)
     resp = make_response(jsonify({"result" : nr_of_deleted_themes}))
     return resp
 
 @app.route('/topic_modelling/api/v1.0/get_saved_themes', methods=['GET', 'POST'])
 def get_saved_themes():
-    model_id = request.values.get("model_id")
-    new_theme_id =  mongo_con.get_saved_themes(model_id)
+    analysis_id = request.values.get("analysis_id")
+    new_theme_id =  mongo_con.get_saved_themes(analysis_id)
     resp = make_response(jsonify({"result" : new_theme_id}))
-    print("Get saved themes for", model_id)
     return resp
 
 @app.route('/topic_modelling/api/v1.0/update_theme_name', methods=['GET', 'POST'])
 def update_theme_name():
     theme_id = request.values.get("theme_number")
     theme_name = request.values.get("theme_name")
-    model_id = request.values.get("model_id")
-    theme_name_update_result =  mongo_con.update_theme_name(theme_id, theme_name, model_id)
+    analysis_id = request.values.get("analysis_id")
+    theme_name_update_result =  mongo_con.update_theme_name(theme_id, theme_name, analysis_id)
     resp = make_response(jsonify({"result" : theme_name_update_result}))
     return resp
 
@@ -190,8 +188,8 @@ def update_theme_name():
 def add_theme_document_connection():
     theme_id = request.values.get("theme_number")
     document_id = request.values.get("document_id")
-    model_id = request.values.get("model_id")
-    theme_document_connection_result =  mongo_con.add_theme_document_connection(theme_id, document_id, model_id)
+    analysis_id = request.values.get("analysis_id")
+    theme_document_connection_result =  mongo_con.add_theme_document_connection(theme_id, document_id, analysis_id)
     resp = make_response(jsonify({"result" : theme_document_connection_result}))
     return resp
 
@@ -199,13 +197,13 @@ def add_theme_document_connection():
 def delete_theme_document_connection():
     theme_id = request.values.get("theme_number")
     document_id = request.values.get("document_id")
-    model_id = request.values.get("model_id")
-    theme_document_connection_result =  mongo_con.delete_theme_document_connection(theme_id, document_id, model_id)
+    analysis_id = request.values.get("analysis_id")
+    theme_document_connection_result =  mongo_con.delete_theme_document_connection(theme_id, document_id, analysis_id)
     resp = make_response(jsonify({"result" : theme_document_connection_result}))
     return resp
 
 
-
+"""
 def get_topic_model_results(topic_model_method):
     possible_dataset_names = [VACCINATION_MUMSNET]
     try:
@@ -230,7 +228,7 @@ def get_topic_model_results(topic_model_method):
         return resp
     except Exception as e:
         return get_exception_info(e)
-
+"""
 
 
 APPROVED_KEYS = []
