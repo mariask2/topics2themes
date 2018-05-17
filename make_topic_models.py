@@ -144,12 +144,16 @@ def get_current_file_name(name, topic_model_algorithm):
 def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
     file_list = []
 
+    print("data_label_list", data_label_list)
     for data_info in data_label_list:
-        data_dir = os.path.join(data_set_name, data_info[DIRECTORY_NAME])
-        
+        data_dir = os.path.join(DATA_FOLDER, data_set_name, data_info[DIRECTORY_NAME])
+        if not os.path.isdir(data_dir):
+            print(os.path.abspath(data_dir), " does not exist")
         files = []
 
         files.extend(glob(os.path.join(data_dir, "*.txt")))
+
+        print("Reading", os.path.join(data_dir))
 
         for f in files:
             opened = open(f)
