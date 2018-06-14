@@ -66,9 +66,15 @@ stopword_handler = StopwordHandler()
 # Main 
 ####
 
-def run_make_topic_models(mongo_con, properties, path_slash_format, model_name):
+def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, save_in_database = True):
+
     #initialise_dirs(properties.PATH_TOPIC_MODEL_OUTPUT, properties.PATH_USER_INPUT)
     data_set_name = os.path.basename(path_slash_format)
+    
+    if save_in_database:
+        print("Model will be saved in database as: " + data_set_name)
+    else:
+        print("Model will not be saved in database")
     
     file_list = read_discussion_documents(properties.DATA_LABEL_LIST, properties.CLEANING_METHOD, data_set_name)
     
@@ -104,7 +110,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name):
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
                                                               properties.TOPIC_MODEL_ALGORITHM,\
                                                               properties.get_properties_in_json(),\
-                                                              data_set_name, model_name)
+                                                              data_set_name, model_name, save_in_database)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
@@ -131,7 +137,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name):
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
                                                               properties.TOPIC_MODEL_ALGORITHM,\
                                                               properties.get_properties_in_json(),\
-                                                              data_set_name, model_name)
+                                                              data_set_name, model_name, save_in_database)
         return result_dict, time, post_id
 
     
@@ -311,19 +317,24 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     previous_topic_list_list = []
     filtered_ret_list = [] # only include topics that have been stable in this
     for nr, model in enumerate(model_list):
-        ret_list = get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents)    
+        print("***********")
+        for el in previous_topic_list_list:
+            print(el)
+        print("***********")
+        ret_list = get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents)
         for el in ret_list:
             current_topic = [term for term, prob in el[TERM_LIST]]
+            print("current_topic", current_topic)
             found_match = False
             for previous_topic_list in previous_topic_list_list:
                 # current_topic and previous_topic_list contains a list of terms
                 if is_overlap(current_topic, previous_topic_list, overlap_cut_off):
-                     previous_topic_list.append(current_topic)
-                     found_match = True
-                     if nr == len(model_list) - 1: # last iteration in loop
-                         if len(previous_topic_list) ==  len(model_list): # only add if this topic has occurred in all runs
+                    previous_topic_list.append(current_topic) # if an existing similar topic is found, attach to this one
+                    found_match = True
+                    if nr == len(model_list) - 1: # last iteration in loop
+                        if len(previous_topic_list) ==  len(model_list): # only add if this topic has occurred in all runs
                              filtered_ret_list.append(el) 
-            if not found_match:
+            if not found_match: # if there is no existing topic to which to assign the currently searched, create a new one
                 previous_topic_list_list.append([current_topic])
 
     return filtered_ret_list # return results from the last run:
@@ -407,7 +418,8 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 # Print output from the model
 #######
 
-def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm, json_properties, data_set_name, model_name):
+def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
+                             json_properties, data_set_name, model_name, save_in_database):
     document_dict = {}
     topic_info_list = []
     json_properties["STOP_WORDS"] = stopword_handler.get_user_stop_word_list()
@@ -503,8 +515,12 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     #f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
     #f_json.flush()
     #f_json.close()
-    time, post_id = mongo_con.insert_new_model(result_dict, data_set_name)
-    
+
+    if save_in_database:
+        time, post_id = mongo_con.insert_new_model(result_dict, data_set_name)
+    else:
+        time, post_id = None, None
+
     return result_dict, time, post_id
 
 def initialise_dirs(output_path, input_path):
@@ -555,7 +571,8 @@ if __name__ == '__main__':
     properties, path_slash_format, path_dot_format = handle_properties.load_properties(parser)
     
     mongo_con = MongoConnector()
-    result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format, datetime.datetime.now())
+    result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format,\
+                                                       datetime.datetime.now(), save_in_database = False)
     print(result_dict.keys())
     print(result_dict["topics"])
     print("Created model saved at " + str(time))
