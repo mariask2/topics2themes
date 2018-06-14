@@ -316,11 +316,9 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     
     previous_topic_list_list = []
     filtered_ret_list = [] # only include topics that have been stable in this
+    filtered_ret_list_new = [] # only include topics that have been stable in this
     for nr, model in enumerate(model_list):
-        print("***********")
-        for el in previous_topic_list_list:
-            print(el)
-        print("***********")
+
         ret_list = get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents)
         for el in ret_list:
             current_topic = [term for term, prob in el[TERM_LIST]]
@@ -337,6 +335,25 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
             if not found_match: # if there is no existing topic to which to assign the currently searched, create a new one
                 previous_topic_list_list.append([current_topic])
 
+    minimum_found_for_a_topic_to_be_kept = round(len(model_list) * overlap_cut_off)
+    
+    for previous_topic_list in previous_topic_list_list:
+        print(previous_topic_list)
+        if len(previous_topic_list) >= minimum_found_for_a_topic_to_be_kept:
+            minimum_topics_for_a_term_to_be_kept = round(len(previous_topic_list) * overlap_cut_off)
+            final_terms_for_topic = []
+            flattened_uniqe = list(set(np.concatenate(previous_topic_list)))
+            for term in flattened_uniqe:
+                nr_of_models_the_term_occurred_in = 0
+                for previous_topic in previous_topic_list:
+                    if term in previous_topic:
+                        nr_of_models_the_term_occurred_in = nr_of_models_the_term_occurred_in + 1
+                if nr_of_models_the_term_occurred_in >= minimum_topics_for_a_term_to_be_kept:
+                    final_terms_for_topic.append(term)
+            filtered_ret_list_new.append(final_terms_for_topic)
+    print("***********")
+    print(len(filtered_ret_list_new))
+    print("***********")
     return filtered_ret_list # return results from the last run:
 
 
