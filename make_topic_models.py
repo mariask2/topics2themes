@@ -321,10 +321,13 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
 
         ret_list = get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents)
         for el in ret_list:
+            #print(ret_list)
+            #print("ret_list")
             current_topic = {}
+            current_topic[TERM_LIST] = {}
                 #    = [{term : prob} for term, prob in el[TERM_LIST]]
             for term, prob in el[TERM_LIST]:
-                current_topic[term] = prob
+                current_topic[TERM_LIST][term] = prob
             print("current_topic", current_topic)
             found_match = False
             for previous_topic_list in previous_topic_list_list:
@@ -344,15 +347,16 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
         if len(previous_topic_list) >= minimum_found_for_a_topic_to_be_kept:
             minimum_topics_for_a_term_to_be_kept = round(len(previous_topic_list) * overlap_cut_off)
             final_terms_for_topic = {}
-            only_terms = [list(el.keys()) for el in previous_topic_list]
+            only_terms = [list(el[TERM_LIST].keys()) for el in previous_topic_list]
+            print(only_terms)
             flattened_uniqe = list(set(np.concatenate(only_terms)))
             for term in flattened_uniqe:
                 nr_of_models_the_term_occurred_in = 0
                 sum_score_for_term = 0
                 for previous_topic in previous_topic_list:
-                    if term in previous_topic:
+                    if term in previous_topic[TERM_LIST]:
                         nr_of_models_the_term_occurred_in = nr_of_models_the_term_occurred_in + 1
-                        sum_score_for_term = sum_score_for_term + previous_topic[term]
+                        sum_score_for_term = sum_score_for_term + previous_topic[TERM_LIST][term]
                 if nr_of_models_the_term_occurred_in >= minimum_topics_for_a_term_to_be_kept:
                     final_terms_for_topic[term] = sum_score_for_term / nr_of_models_the_term_occurred_in
             filtered_ret_list_new.append(final_terms_for_topic)
@@ -394,46 +398,55 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
         term_list_replace = list(set(term_list_replace))
         term_list_replace.sort(key = len, reverse = True)
    
-        doc_list = []
+   
         doc_strength = sorted(W[:,topic_idx])[::-1]
         top_doc_indices = np.argsort( W[:,topic_idx] )[::-1][0:no_top_documents]
-
-        for doc_i, strength in zip(top_doc_indices, doc_strength):
-            found_concepts = []
-            found_terms = []
-            if strength > 0.000:
-                simple_tokenised = get_very_simple_tokenised(documents[doc_i], lower = False)
-                simple_tokenised_marked = []
-                for el in simple_tokenised:
-                    if el.lower() in term_list_replace:
-                        simple_tokenised_marked.append("<b>" + el + "</b>")
-                        found_concepts.extend(term_preprocessed_dict[el.lower()])
-                        found_terms.append(el.lower())
-                    else:
-                        simple_tokenised_marked.append(el)
-                if len(found_concepts) > 0 : # only include documents where at least on one of the terms is found
-                    doc_list.append(\
-                                    {DOC_ID: doc_i, \
-                                    DOCUMENT_TOPIC_STRENGTH : strength,\
-                                    ORIGINAL_DOCUMENT: documents[doc_i],\
-                                    FOUND_CONCEPTS : set(found_concepts),\
-                                    MARKED_DOCUMENT_TOK : untokenize(simple_tokenised_marked),\
-                                    FOUND_TERMS: list(set(found_terms))})
+        doc_list = construct_document_info(documents, top_doc_indices, doc_strength, term_list_replace, term_preprocessed_dict)
         topic_dict = {TOPIC_NUMBER:topic_idx, TERM_LIST:term_list, DOCUMENT_LIST:doc_list}
         ret_list.append(topic_dict)
     return ret_list
+
+def construct_document_info(documents, top_doc_indices, doc_strength, term_list_replace, term_preprocessed_dict):
+    doc_list = []
+    for doc_i, strength in zip(top_doc_indices, doc_strength):
+        found_concepts = []
+        found_terms = []
+        if strength > 0.000:
+            simple_tokenised = get_very_simple_tokenised(documents[doc_i], lower = False)
+            simple_tokenised_marked = []
+            for el in simple_tokenised:
+                if el.lower() in term_list_replace:
+                    simple_tokenised_marked.append("<b>" + el + "</b>")
+                    found_concepts.extend(term_preprocessed_dict[el.lower()])
+                    found_terms.append(el.lower())
+                else:
+                    simple_tokenised_marked.append(el)
+            if len(found_concepts) > 0 : # only include documents where at least on one of the terms is found
+                doc_list.append(\
+                                {DOC_ID: doc_i, \
+                                DOCUMENT_TOPIC_STRENGTH : strength,\
+                                ORIGINAL_DOCUMENT: documents[doc_i],\
+                                FOUND_CONCEPTS : set(found_concepts),\
+                                MARKED_DOCUMENT_TOK : untokenize(simple_tokenised_marked),\
+                                FOUND_TERMS: list(set(found_terms))})
+    return doc_list
+
+
+
+
+
 
 def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
     """
     Check if the term list for two model overlap, with a cutoff of 'overlap_cut_off'
     """
 
-    current_set = Counter(current_topic.keys())
+    current_set = Counter(current_topic[TERM_LIST].keys())
     for previous_topic in previous_topic_list:
-        previous_set = Counter(previous_topic.keys())
+        previous_set = Counter(previous_topic[TERM_LIST].keys())
         overlap = list((current_set & previous_set).elements())
         if overlap != []:
-            overlap_figure = len(overlap)/((len(previous_topic.keys()) + len(current_topic.keys()))/2)
+            overlap_figure = len(overlap)/((len(previous_topic[TERM_LIST].keys()) + len(current_topic[TERM_LIST].keys()))/2)
             if overlap_figure > overlap_cut_off:
                 return True
     return False
@@ -597,8 +610,12 @@ if __name__ == '__main__':
     mongo_con = MongoConnector()
     result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format,\
                                                        datetime.datetime.now(), save_in_database = False)
-    print(result_dict.keys())
-    print(result_dict["topics"])
+
+    for el in result_dict["topics"]:
+        print(el)
+    print("------")
+    for el in result_dict["documents"]:
+        print(el)
     print("Created model saved at " + str(time))
     #print(result_dict["topic_model_output"])
     #print(post_id)
