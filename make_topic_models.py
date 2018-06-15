@@ -349,12 +349,15 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     minimum_found_for_a_topic_to_be_kept = round(len(model_list) * overlap_cut_off)
 
     average_list = [] # only include topics that have been stable in this, and average the information from each run
+    
+    
     #####
     for nr, previous_topic_list in enumerate(previous_topic_list_list):
-        average_info = {}
+        
         #print("******")
-        print(previous_topic_list)
+        
         if len(previous_topic_list) >= minimum_found_for_a_topic_to_be_kept: # the topic is to be kept
+            average_info = {}
             minimum_topics_for_a_term_to_be_kept = round(len(previous_topic_list) * overlap_cut_off)
             final_terms_for_topic = []
             only_terms = [list(el[TERM_LIST].keys()) for el in previous_topic_list]
@@ -390,8 +393,8 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
                 construct_document_info_average(documents, selected_documents_strength, final_terms_for_topic)
             average_info[DOCUMENT_LIST] = document_info
 
-        average_info[TOPIC_NUMBER] = nr + 1
-        average_list.append(average_info)
+            average_info[TOPIC_NUMBER] = nr + 1
+            average_list.append(average_info)
 
     print("***********")
     for el in average_list:
@@ -566,6 +569,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     #f.write("<h1> Results for model type " + topic_model_algorithm + " </h1>\n")
     for nr, el in enumerate(topic_info):
         
+        print(el)
+        print(nr)
         term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
         start_label = '"' + " - ".join([term.split(SYNONYM_BINDER)[0] for (term,score) in term_list_sorted_on_score[:3]]) + '"'
         topic_info_object = {}
@@ -710,6 +715,7 @@ if __name__ == '__main__':
     for el in result_dict["documents"]:
         print(el)
     print("------")
+    print("created " + str(len(result_dict["topics"])) + " topics.")
     print("Created model saved at " + str(time))
     #print(result_dict["topic_model_output"])
     #print(post_id)
