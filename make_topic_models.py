@@ -321,7 +321,10 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
 
         ret_list = get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents)
         for el in ret_list:
-            current_topic = [term for term, prob in el[TERM_LIST]]
+            current_topic = {}
+                #    = [{term : prob} for term, prob in el[TERM_LIST]]
+            for term, prob in el[TERM_LIST]:
+                current_topic[term] = prob
             print("current_topic", current_topic)
             found_match = False
             for previous_topic_list in previous_topic_list_list:
@@ -338,20 +341,23 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     minimum_found_for_a_topic_to_be_kept = round(len(model_list) * overlap_cut_off)
     
     for previous_topic_list in previous_topic_list_list:
-        print(previous_topic_list)
         if len(previous_topic_list) >= minimum_found_for_a_topic_to_be_kept:
             minimum_topics_for_a_term_to_be_kept = round(len(previous_topic_list) * overlap_cut_off)
-            final_terms_for_topic = []
-            flattened_uniqe = list(set(np.concatenate(previous_topic_list)))
+            final_terms_for_topic = {}
+            only_terms = [list(el.keys()) for el in previous_topic_list]
+            flattened_uniqe = list(set(np.concatenate(only_terms)))
             for term in flattened_uniqe:
                 nr_of_models_the_term_occurred_in = 0
+                sum_score_for_term = 0
                 for previous_topic in previous_topic_list:
                     if term in previous_topic:
                         nr_of_models_the_term_occurred_in = nr_of_models_the_term_occurred_in + 1
+                        sum_score_for_term = sum_score_for_term + previous_topic[term]
                 if nr_of_models_the_term_occurred_in >= minimum_topics_for_a_term_to_be_kept:
-                    final_terms_for_topic.append(term)
+                    final_terms_for_topic[term] = sum_score_for_term / nr_of_models_the_term_occurred_in
             filtered_ret_list_new.append(final_terms_for_topic)
     print("***********")
+    print(filtered_ret_list_new)
     print(len(filtered_ret_list_new))
     print("***********")
     return filtered_ret_list # return results from the last run:
@@ -421,12 +427,13 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
     """
     Check if the term list for two model overlap, with a cutoff of 'overlap_cut_off'
     """
-    current_set = Counter(current_topic)
+
+    current_set = Counter(current_topic.keys())
     for previous_topic in previous_topic_list:
-        previous_set = Counter(previous_topic)
+        previous_set = Counter(previous_topic.keys())
         overlap = list((current_set & previous_set).elements())
         if overlap != []:
-            overlap_figure = len(overlap)/((len(previous_topic) + len(current_topic))/2)
+            overlap_figure = len(overlap)/((len(previous_topic.keys()) + len(current_topic.keys()))/2)
             if overlap_figure > overlap_cut_off:
                 return True
     return False
