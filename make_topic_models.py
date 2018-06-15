@@ -38,6 +38,7 @@ ORIGINAL_DOCUMENT =  "original_document"
 FOUND_TERMS = "found_terms"
 FOUND_CONCEPTS = "found_concepts"
 MARKED_DOCUMENT_TOK = "marked_document_tok"
+MODEL_INFO = "MODEL_INFO"
 
 
 #####
@@ -317,9 +318,11 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     previous_topic_list_list = []
     filtered_ret_list = [] # only include topics that have been stable in this
     filtered_ret_list_new = [] # only include topics that have been stable in this
+    
     for nr, model in enumerate(model_list):
 
         ret_list = get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents)
+        
         for el in ret_list:
             #print(ret_list)
             #print("ret_list")
@@ -328,7 +331,9 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
                 #    = [{term : prob} for term, prob in el[TERM_LIST]]
             for term, prob in el[TERM_LIST]:
                 current_topic[TERM_LIST][term] = prob
-            print("current_topic", current_topic)
+            current_topic[MODEL_INFO] = el
+            #print("current_topic", current_topic)
+            #print("*******")
             found_match = False
             for previous_topic_list in previous_topic_list_list:
                 # current_topic and previous_topic_list contains a list of terms
@@ -343,12 +348,14 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
 
     minimum_found_for_a_topic_to_be_kept = round(len(model_list) * overlap_cut_off)
     
+    #####
     for previous_topic_list in previous_topic_list_list:
-        if len(previous_topic_list) >= minimum_found_for_a_topic_to_be_kept:
+        #print("******")
+        #print(previous_topic_list)
+        if len(previous_topic_list) >= minimum_found_for_a_topic_to_be_kept: # the topic is to be kept
             minimum_topics_for_a_term_to_be_kept = round(len(previous_topic_list) * overlap_cut_off)
-            final_terms_for_topic = {}
+            final_terms_for_topic = []
             only_terms = [list(el[TERM_LIST].keys()) for el in previous_topic_list]
-            print(only_terms)
             flattened_uniqe = list(set(np.concatenate(only_terms)))
             for term in flattened_uniqe:
                 nr_of_models_the_term_occurred_in = 0
@@ -358,12 +365,32 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
                         nr_of_models_the_term_occurred_in = nr_of_models_the_term_occurred_in + 1
                         sum_score_for_term = sum_score_for_term + previous_topic[TERM_LIST][term]
                 if nr_of_models_the_term_occurred_in >= minimum_topics_for_a_term_to_be_kept:
-                    final_terms_for_topic[term] = sum_score_for_term / nr_of_models_the_term_occurred_in
+                    final_terms_for_topic.append((term, sum_score_for_term / nr_of_models_the_term_occurred_in))
             filtered_ret_list_new.append(final_terms_for_topic)
+
+            final_documents = []
+            docs = [el[MODEL_INFO][DOCUMENT_LIST] for el in previous_topic_list]
+            doc_id_occ = {}
+            for doc_list in docs:
+                doc_ids = [doc[DOC_ID] for doc in doc_list]
+                doc_strengths = [doc[DOCUMENT_TOPIC_STRENGTH] for doc in doc_list]
+                for doc_id, doc_strength in zip(doc_ids, doc_strengths):
+                    if doc_id not in doc_id_occ:
+                        doc_id_occ[doc_id] = []
+                    doc_id_occ[doc_id].append(doc_strength)
+            for doc_id in doc_id_occ.keys():
+                if len(doc_id_occ[doc_id]) >= minimum_topics_for_a_term_to_be_kept: # only keep documents that have occurred frequently enough
+                    final_documents.append({DOC_ID : doc_id,\
+                                           DOCUMENT_TOPIC_STRENGTH : sum(doc_id_occ[doc_id])/len(doc_id_occ[doc_id])})
+           
+            print("final_documents", final_documents)
+
     print("***********")
-    print(filtered_ret_list_new)
+    #print(filtered_ret_list_new)
     print(len(filtered_ret_list_new))
     print("***********")
+
+    #####
     return filtered_ret_list # return results from the last run:
 
 
@@ -614,8 +641,8 @@ if __name__ == '__main__':
     for el in result_dict["topics"]:
         print(el)
     print("------")
-    for el in result_dict["documents"]:
-        print(el)
+        #for el in result_dict["documents"]:
+#print(el)
     print("Created model saved at " + str(time))
     #print(result_dict["topic_model_output"])
     #print(post_id)
