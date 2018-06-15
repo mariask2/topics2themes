@@ -317,7 +317,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     
     previous_topic_list_list = []
     filtered_ret_list = [] # only include topics that have been stable in this
-    filtered_ret_list_new = [] # only include topics that have been stable in this
+    
     
     for nr, model in enumerate(model_list):
 
@@ -347,11 +347,13 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
                 previous_topic_list_list.append([current_topic])
 
     minimum_found_for_a_topic_to_be_kept = round(len(model_list) * overlap_cut_off)
-    
+
+    average_list = [] # only include topics that have been stable in this, and average the information from each run
     #####
-    for previous_topic_list in previous_topic_list_list:
+    for nr, previous_topic_list in enumerate(previous_topic_list_list):
+        average_info = {}
         #print("******")
-        #print(previous_topic_list)
+        print(previous_topic_list)
         if len(previous_topic_list) >= minimum_found_for_a_topic_to_be_kept: # the topic is to be kept
             minimum_topics_for_a_term_to_be_kept = round(len(previous_topic_list) * overlap_cut_off)
             final_terms_for_topic = []
@@ -366,9 +368,9 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
                         sum_score_for_term = sum_score_for_term + previous_topic[TERM_LIST][term]
                 if nr_of_models_the_term_occurred_in >= minimum_topics_for_a_term_to_be_kept:
                     final_terms_for_topic.append((term, sum_score_for_term / nr_of_models_the_term_occurred_in))
-            filtered_ret_list_new.append(final_terms_for_topic)
+            average_info[TERM_LIST] = final_terms_for_topic
 
-            final_documents = []
+            selected_documents_strength = []
             docs = [el[MODEL_INFO][DOCUMENT_LIST] for el in previous_topic_list]
             doc_id_occ = {}
             for doc_list in docs:
@@ -380,16 +382,24 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
                     doc_id_occ[doc_id].append(doc_strength)
             for doc_id in doc_id_occ.keys():
                 if len(doc_id_occ[doc_id]) >= minimum_topics_for_a_term_to_be_kept: # only keep documents that have occurred frequently enough
-                    final_documents.append({DOC_ID : doc_id,\
+                    selected_documents_strength.append({DOC_ID : doc_id,\
                                            DOCUMENT_TOPIC_STRENGTH : sum(doc_id_occ[doc_id])/len(doc_id_occ[doc_id])})
            
-            print("final_documents", final_documents)
+            print("selected_documents_strength", selected_documents_strength)
+            document_info = \
+                construct_document_info_average(documents, selected_documents_strength, final_terms_for_topic)
+            average_info[DOCUMENT_LIST] = document_info
+
+        average_info[TOPIC_NUMBER] = nr + 1
+        average_list.append(average_info)
 
     print("***********")
-    #print(filtered_ret_list_new)
-    print(len(filtered_ret_list_new))
+    for el in average_list:
+        print(el)
+        print("----")
+    print(len(average_list))
     print("***********")
-
+    
     #####
     return filtered_ret_list # return results from the last run:
 
@@ -432,6 +442,56 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
         topic_dict = {TOPIC_NUMBER:topic_idx, TERM_LIST:term_list, DOCUMENT_LIST:doc_list}
         ret_list.append(topic_dict)
     return ret_list
+
+def construct_document_info_average(documents, selected_documents_strength, terms_strength):
+    terms = [term for (term, strength) in terms_strength]
+  
+    
+    ###
+    term_list = []
+    term_preprocessed_dict = {} # map collocation/synonym-cluster to the word that is found in the text
+    term_list_replace = []
+    for term in terms:
+        for split_synonym in term.split(word2vecwrapper.SYNONYM_BINDER):
+            for split_collocation in split_synonym.split(COLLOCATION_BINDER):
+                term_list_replace.append(split_collocation)
+                if split_collocation not in term_preprocessed_dict:
+                    term_preprocessed_dict[split_collocation] = []
+                term_preprocessed_dict[split_collocation].append(term)
+
+    term_list_replace = list(set(term_list_replace))
+    term_list_replace.sort(key = len, reverse = True)
+    print(term_list_replace)
+    print(term_preprocessed_dict)
+    
+    ###
+    
+    doc_list = []
+    for selected in selected_documents_strength:
+        doc_i = selected[DOC_ID]
+        strength = selected[DOCUMENT_TOPIC_STRENGTH]
+        found_concepts = []
+        found_terms = []
+        if strength > 0.000:
+            simple_tokenised = get_very_simple_tokenised(documents[doc_i], lower = False)
+            simple_tokenised_marked = []
+            for el in simple_tokenised:
+                if el.lower() in term_list_replace:
+                    simple_tokenised_marked.append("<b>" + el + "</b>")
+                    found_concepts.extend(term_preprocessed_dict[el.lower()])
+                    found_terms.append(el.lower())
+                else:
+                    simple_tokenised_marked.append(el)
+            if len(found_concepts) > 0 : # only include documents where at least on one of the terms is found
+                doc_list.append(\
+                                {DOC_ID: doc_i, \
+                                DOCUMENT_TOPIC_STRENGTH : strength,\
+                                ORIGINAL_DOCUMENT: documents[doc_i],\
+                                FOUND_CONCEPTS : set(found_concepts),\
+                                MARKED_DOCUMENT_TOK : untokenize(simple_tokenised_marked),\
+                                FOUND_TERMS: list(set(found_terms))})
+    return doc_list
+
 
 def construct_document_info(documents, top_doc_indices, doc_strength, term_list_replace, term_preprocessed_dict):
     doc_list = []
