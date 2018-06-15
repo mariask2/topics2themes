@@ -399,9 +399,16 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
         print("----")
     print(len(average_list))
     print("***********")
-    
+
+    print("***********")
+    for el in filtered_ret_list:
+        print(el)
+        print("----")
+    print(len(filtered_ret_list))
+    print("***********")
     #####
-    return filtered_ret_list # return results from the last run:
+    #return filtered_ret_list # return results from the last run:
+    return average_list
 
 
 def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents):
@@ -446,7 +453,6 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
 def construct_document_info_average(documents, selected_documents_strength, terms_strength):
     terms = [term for (term, strength) in terms_strength]
   
-    
     ###
     term_list = []
     term_preprocessed_dict = {} # map collocation/synonym-cluster to the word that is found in the text
@@ -694,19 +700,20 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     properties, path_slash_format, path_dot_format = handle_properties.load_properties(parser)
     
-    mongo_con = MongoConnector()
+    mongo_con = None #MongoConnector()
     result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format,\
                                                        datetime.datetime.now(), save_in_database = False)
 
     for el in result_dict["topics"]:
         print(el)
     print("------")
-        #for el in result_dict["documents"]:
-#print(el)
+    for el in result_dict["documents"]:
+        print(el)
+    print("------")
     print("Created model saved at " + str(time))
     #print(result_dict["topic_model_output"])
     #print(post_id)
-    mongo_con.close_connection()
+    #mongo_con.close_connection()
 
 
 
