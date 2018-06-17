@@ -346,14 +346,14 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     # When the matching between differnt folds has been carried out. Go through the result
     # and decide which topics to keep
     
-    minimum_found_for_a_topic_to_be_kept = round(len(model_list) * overlap_cut_off)
+    minimum_found_for_a_topic_to_be_kept = round(len(model_list))
+    # A topic has to occurr in all folds to be included
+    
     average_list = [] # only include topics that have been stable in this, and average the information from each run
     # that is, only include the terms that have occurred in many of the folds and the documents that have occurred in many of the folds
     
     #####
     for nr, previous_topic_list in enumerate(previous_topic_list_list):
-        
-        #print("******")
         
         if len(previous_topic_list) >= minimum_found_for_a_topic_to_be_kept: # the topic is to be kept
             average_info = {}
@@ -386,26 +386,27 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
                 if len(doc_id_occ[doc_id]) >= minimum_topics_for_a_term_to_be_kept: # only keep documents that have occurred frequently enough
                     selected_documents_strength.append({DOC_ID : doc_id,\
                                            DOCUMENT_TOPIC_STRENGTH : sum(doc_id_occ[doc_id])/len(doc_id_occ[doc_id])})
-           
-           #print("selected_documents_strength", selected_documents_strength)
-
-#print(len(selected_documents_strength))
-#           exit(1)
+        
             document_info = \
                 construct_document_info_average(documents, selected_documents_strength, final_terms_for_topic)
             average_info[DOCUMENT_LIST] = document_info
 
             average_info[TOPIC_NUMBER] = nr + 1
             average_list.append(average_info)
-
+            
+            lst = sorted([(s, term) for (term, s) in average_info[TERM_LIST]])
+            print([term for (s, term) in lst[::-1]])
+            print()
+    print(len(average_list))
+    """
     print("***********")
     for el in average_list:
-        print(el)
+        print(sorted([term for (term, s) in el[TERM_LIST]]))
         print("----")
     print(len(average_list))
     print("***********")
 
-
+    """
     return average_list
 
 
@@ -466,8 +467,8 @@ def construct_document_info_average(documents, selected_documents_strength, term
 
     term_list_replace = list(set(term_list_replace))
     term_list_replace.sort(key = len, reverse = True)
-    print(term_list_replace)
-    print(term_preprocessed_dict)
+    #print(term_list_replace)
+    #print(term_preprocessed_dict)
     
     ###
     
@@ -537,8 +538,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     #f.write("<h1> Results for model type " + topic_model_algorithm + " </h1>\n")
     for nr, el in enumerate(topic_info):
         
-        print(el)
-        print(nr)
         term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
         start_label = '"' + " - ".join([term.split(SYNONYM_BINDER)[0] for (term,score) in term_list_sorted_on_score[:3]]) + '"'
         topic_info_object = {}
@@ -560,7 +559,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         #f.write(", ".join([term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER) for term in el[TERM_LIST]]))
         #f.write("</p>\n")
         
-        
+        # TODO: Now, if the same document belongs to many topics, only the document that appears first
+        # will be marked correctly with bold face
         for nr, document in enumerate(el[DOCUMENT_LIST]):
 
             if document[DOC_ID] not in document_dict:
@@ -677,6 +677,7 @@ if __name__ == '__main__':
     result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format,\
                                                        datetime.datetime.now(), save_in_database = False)
 
+    """
     for el in result_dict["topics"]:
         print(el)
     print("------")
@@ -685,6 +686,7 @@ if __name__ == '__main__':
     print("------")
     print("created " + str(len(result_dict["topics"])) + " topics.")
     print("Created model saved at " + str(time))
+    """
     #print(result_dict["topic_model_output"])
     #print(post_id)
     #mongo_con.close_connection()
