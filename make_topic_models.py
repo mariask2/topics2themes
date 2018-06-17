@@ -334,14 +334,9 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
             current_topic[MODEL_INFO] = el
             #print("current_topic", current_topic)
             #print("*******")
-
             found_match = False
             for previous_topic_list in previous_topic_list_list:
                 # current_topic and previous_topic_list contains a list of terms
-                old_is_overlap = is_overlap(current_topic, previous_topic_list, overlap_cut_off)
-                new_is_overlap = is_overlap_2(current_topic[MODEL_INFO], [el[MODEL_INFO] for el in previous_topic_list], overlap_cut_off)
-                if old_is_overlap != new_is_overlap:
-                    exit(1)
                 if is_overlap(current_topic, previous_topic_list, overlap_cut_off):
                     previous_topic_list.append(current_topic) # if an existing similar topic is found, attach to this one
             if not found_match: # if there is no existing topic to which to assign the currently searched topic result, create a new one
@@ -504,23 +499,6 @@ def construct_document_info_average(documents, selected_documents_strength, term
 
 
 
-def is_overlap_2(current_topic, previous_topic_list, overlap_cut_off):
-    """
-        Check if the term list for two model overlap, with a cutoff of 'overlap_cut_off'
-        """
-
-    current_set = Counter([term for (term, strength) in current_topic[TERM_LIST]])
-    print(current_set, "current_set")
-    for previous_topic in previous_topic_list:
-        
-        previous_set = Counter([term for (term, strength) in previous_topic[TERM_LIST]])
-        print(previous_set, "previous_set")
-        overlap = list((current_set & previous_set).elements())
-        if overlap != []:
-            overlap_figure = len(overlap)/((len(previous_topic[TERM_LIST]) + len(current_topic[TERM_LIST]))/2)
-            if overlap_figure > overlap_cut_off:
-                return True
-    return False
 
 def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
     """
