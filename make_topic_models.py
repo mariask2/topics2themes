@@ -315,9 +315,10 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     Return info from topics that were stable enough to appear in all models in model_list
     """
     
-    previous_topic_list_list = []
-    filtered_ret_list = [] # only include topics that have been stable in this
-    
+    previous_topic_list_list = [] # list in which each element when the code is run will
+    #consist of a list containing the topics that are similar from the different runs
+    #[ [{topic with dog words from fold 1}, {topic with dog words from fold 2} .. ]  [] ]
+    # The following code performs this matching between the different topics created in each run
     
     for nr, model in enumerate(model_list):
 
@@ -328,28 +329,31 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
             #print("ret_list")
             current_topic = {}
             current_topic[TERM_LIST] = {}
-                #    = [{term : prob} for term, prob in el[TERM_LIST]]
             for term, prob in el[TERM_LIST]:
                 current_topic[TERM_LIST][term] = prob
             current_topic[MODEL_INFO] = el
             #print("current_topic", current_topic)
             #print("*******")
+
             found_match = False
             for previous_topic_list in previous_topic_list_list:
                 # current_topic and previous_topic_list contains a list of terms
+                old_is_overlap = is_overlap(current_topic, previous_topic_list, overlap_cut_off)
+                new_is_overlap = is_overlap_2(current_topic[MODEL_INFO], [el[MODEL_INFO] for el in previous_topic_list], overlap_cut_off)
+                if old_is_overlap != new_is_overlap:
+                    exit(1)
                 if is_overlap(current_topic, previous_topic_list, overlap_cut_off):
                     previous_topic_list.append(current_topic) # if an existing similar topic is found, attach to this one
-                    found_match = True
-                    if nr == len(model_list) - 1: # last iteration in loop
-                        if len(previous_topic_list) ==  len(model_list): # only add if this topic has occurred in all runs
-                             filtered_ret_list.append(el) 
-            if not found_match: # if there is no existing topic to which to assign the currently searched, create a new one
+            if not found_match: # if there is no existing topic to which to assign the currently searched topic result, create a new one
                 previous_topic_list_list.append([current_topic])
 
-    minimum_found_for_a_topic_to_be_kept = round(len(model_list) * overlap_cut_off)
 
-    average_list = [] # only include topics that have been stable in this, and average the information from each run
+    # When the matching between differnt folds has been carried out. Go through the result
+    # and decide which topics to keep
     
+    minimum_found_for_a_topic_to_be_kept = round(len(model_list) * overlap_cut_off)
+    average_list = [] # only include topics that have been stable in this, and average the information from each run
+    # that is, only include the terms that have occurred in many of the folds and the documents that have occurred in many of the folds
     
     #####
     for nr, previous_topic_list in enumerate(previous_topic_list_list):
@@ -406,14 +410,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     print(len(average_list))
     print("***********")
 
-    print("***********")
-    for el in filtered_ret_list:
-        print(el)
-        print("----")
-    print(len(filtered_ret_list))
-    print("***********")
-    #####
-    #return filtered_ret_list # return results from the last run:
+
     return average_list
 
 
@@ -507,10 +504,23 @@ def construct_document_info_average(documents, selected_documents_strength, term
 
 
 
+def is_overlap_2(current_topic, previous_topic_list, overlap_cut_off):
+    """
+        Check if the term list for two model overlap, with a cutoff of 'overlap_cut_off'
+        """
 
-
-
-
+    current_set = Counter([term for (term, strength) in current_topic[TERM_LIST]])
+    print(current_set, "current_set")
+    for previous_topic in previous_topic_list:
+        
+        previous_set = Counter([term for (term, strength) in previous_topic[TERM_LIST]])
+        print(previous_set, "previous_set")
+        overlap = list((current_set & previous_set).elements())
+        if overlap != []:
+            overlap_figure = len(overlap)/((len(previous_topic[TERM_LIST]) + len(current_topic[TERM_LIST]))/2)
+            if overlap_figure > overlap_cut_off:
+                return True
+    return False
 
 def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
     """
