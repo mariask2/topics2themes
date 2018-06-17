@@ -388,7 +388,10 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
                     selected_documents_strength.append({DOC_ID : doc_id,\
                                            DOCUMENT_TOPIC_STRENGTH : sum(doc_id_occ[doc_id])/len(doc_id_occ[doc_id])})
            
-            print("selected_documents_strength", selected_documents_strength)
+           #print("selected_documents_strength", selected_documents_strength)
+
+#print(len(selected_documents_strength))
+#           exit(1)
             document_info = \
                 construct_document_info_average(documents, selected_documents_strength, final_terms_for_topic)
             average_info[DOCUMENT_LIST] = document_info
@@ -448,10 +451,11 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
    
         doc_strength = sorted(W[:,topic_idx])[::-1]
         top_doc_indices = np.argsort( W[:,topic_idx] )[::-1][0:no_top_documents]
-        doc_list = construct_document_info(documents, top_doc_indices, doc_strength, term_list_replace, term_preprocessed_dict)
+        doc_list= [{DOC_ID: doc_i, DOCUMENT_TOPIC_STRENGTH : strength} for doc_i, strength in zip(top_doc_indices, doc_strength)]
         topic_dict = {TOPIC_NUMBER:topic_idx, TERM_LIST:term_list, DOCUMENT_LIST:doc_list}
         ret_list.append(topic_dict)
     return ret_list
+
 
 def construct_document_info_average(documents, selected_documents_strength, terms_strength):
     terms = [term for (term, strength) in terms_strength]
@@ -502,30 +506,6 @@ def construct_document_info_average(documents, selected_documents_strength, term
     return doc_list
 
 
-def construct_document_info(documents, top_doc_indices, doc_strength, term_list_replace, term_preprocessed_dict):
-    doc_list = []
-    for doc_i, strength in zip(top_doc_indices, doc_strength):
-        found_concepts = []
-        found_terms = []
-        if strength > 0.000:
-            simple_tokenised = get_very_simple_tokenised(documents[doc_i], lower = False)
-            simple_tokenised_marked = []
-            for el in simple_tokenised:
-                if el.lower() in term_list_replace:
-                    simple_tokenised_marked.append("<b>" + el + "</b>")
-                    found_concepts.extend(term_preprocessed_dict[el.lower()])
-                    found_terms.append(el.lower())
-                else:
-                    simple_tokenised_marked.append(el)
-            if len(found_concepts) > 0 : # only include documents where at least on one of the terms is found
-                doc_list.append(\
-                                {DOC_ID: doc_i, \
-                                DOCUMENT_TOPIC_STRENGTH : strength,\
-                                ORIGINAL_DOCUMENT: documents[doc_i],\
-                                FOUND_CONCEPTS : set(found_concepts),\
-                                MARKED_DOCUMENT_TOK : untokenize(simple_tokenised_marked),\
-                                FOUND_TERMS: list(set(found_terms))})
-    return doc_list
 
 
 
