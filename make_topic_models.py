@@ -382,10 +382,18 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
                     if doc_id not in doc_id_occ:
                         doc_id_occ[doc_id] = []
                     doc_id_occ[doc_id].append(doc_strength)
-            for doc_id in doc_id_occ.keys():
-                if len(doc_id_occ[doc_id]) >= minimum_topics_for_a_term_to_be_kept: # only keep documents that have occurred frequently enough
-                    selected_documents_strength.append({DOC_ID : doc_id,\
-                                           DOCUMENT_TOPIC_STRENGTH : sum(doc_id_occ[doc_id])/len(doc_id_occ[doc_id])})
+
+            # Keept the no_top_documents that have occurred in the most of the folds
+            # If there is a tie between occurrence number, sort on the average document strength
+            documents_to_keep = sorted([(len(occ_list), sum(occ_list)/len(occ_list), doc_id)\
+                                        for (doc_id, occ_list) in doc_id_occ.items()])[::-1][:no_top_documents]
+
+            for (occ, avgstr, doc_id) in documents_to_keep:
+                if avgstr != sum(doc_id_occ[doc_id])/len(doc_id_occ[doc_id]):
+                    exit(1)
+                selected_documents_strength.append({DOC_ID : doc_id,\
+                                           DOCUMENT_TOPIC_STRENGTH : avgstr})
+
         
             document_info = \
                 construct_document_info_average(documents, selected_documents_strength, final_terms_for_topic)
@@ -394,10 +402,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
             average_info[TOPIC_NUMBER] = nr + 1
             average_list.append(average_info)
             
-            lst = sorted([(s, term) for (term, s) in average_info[TERM_LIST]])
-            print([term for (s, term) in lst[::-1]])
-            print()
-    print(len(average_list))
+
     """
     print("***********")
     for el in average_list:
@@ -677,7 +682,7 @@ if __name__ == '__main__':
     result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format,\
                                                        datetime.datetime.now(), save_in_database = False)
 
-    """
+
     for el in result_dict["topics"]:
         print(el)
     print("------")
@@ -686,7 +691,6 @@ if __name__ == '__main__':
     print("------")
     print("created " + str(len(result_dict["topics"])) + " topics.")
     print("Created model saved at " + str(time))
-    """
     #print(result_dict["topic_model_output"])
     #print(post_id)
     #mongo_con.close_connection()
