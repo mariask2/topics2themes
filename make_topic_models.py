@@ -71,7 +71,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
 
     #initialise_dirs(properties.PATH_TOPIC_MODEL_OUTPUT, properties.PATH_USER_INPUT)
     data_set_name = os.path.basename(path_slash_format)
-    
+ 
     if save_in_database:
         print("Model will be saved in database as: " + data_set_name)
     else:
@@ -535,7 +535,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         Prints output from the topic model in html and json format, with topic terms in bold face
     
         """
-    
+
     #f = open(get_current_file_name(name, topic_model_algorithm) + ".html", "w")
     #f_json = open(get_current_file_name(name, topic_model_algorithm) + ".json", "w")
 
@@ -620,6 +620,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                                 "configuration" : json_properties, \
                                     "user" : "dummy_user",\
                                     MODEL_NAME : model_name}
+
     #f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
     #f_json.flush()
     #f_json.close()
@@ -629,7 +630,44 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     else:
         time, post_id = None, None
 
+        # If results are not saved in a database, save to a folder instead
+        # Make a subfolder from folderwhere the program was run:
+        TOPIC_MODEL_EVALUATION_FOLDER = "topic_model_evalutation"
+        if not os.path.exists(TOPIC_MODEL_EVALUATION_FOLDER):
+            os.mkdir(TOPIC_MODEL_EVALUATION_FOLDER)
+        result_file_terms = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, data_set_name + "_terms.txt")
+
+        terms_open = open(result_file_terms, "w")
+
+
+        for el in topic_info:
+            print(str(el[TOPIC_NUMBER]))
+            result_file_csv = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, data_set_name + "_documents_" + str(el[TOPIC_NUMBER]) + ".txt")
+
+            csv_open = open(result_file_csv, "w")
+            terms_open.write(str(el[TOPIC_NUMBER]) + "\n")
+            terms_open.write("----\n")
+            terms_open.write(str(sorted([(strength, term) for (term, strength) in el[TERM_LIST]])[::-1]) + "\n")
+            terms_open.write("********\n\n")
+
+            for (strength, document) in sorted([(doc[DOCUMENT_TOPIC_STRENGTH], doc) for doc in el[DOCUMENT_LIST]], key=get_first_in_tuple)[::-1]:
+                output = [document[DOC_ID], strength, document_dict[document[DOC_ID]][LABEL], document[FOUND_TERMS], document[ORIGINAL_DOCUMENT]]
+                csv_open.write("\t".join([str(el) for el in output]) + "\n")
+            csv_open.flush()
+            csv_open.close()
+
+        terms_open.flush()
+        terms_open.close()
+
+
+
+
+        print("Written to folder " + TOPIC_MODEL_EVALUATION_FOLDER)
+
     return result_dict, time, post_id
+
+def get_first_in_tuple(item):
+    return item[0]
 
 def initialise_dirs(output_path, input_path):
     if not os.path.exists(output_path):
