@@ -677,7 +677,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
         data_set_results_folder = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER_BASE, data_set_name)
         print(data_set_results_folder)
-        
+
         if not os.path.exists(data_set_results_folder):
             os.mkdir(data_set_results_folder)
 
@@ -687,6 +687,19 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         else:
             print(TOPIC_MODEL_EVALUATION_FOLDER  + " already exists. Exists without saving models")
             exit(1)
+
+        label_dict = {}
+        for l in [el[LABEL] for el in file_list]:
+            if l not in label_dict:
+                label_dict[l] = 0
+            label_dict[l] = label_dict[l] + 1
+        print(label_dict)
+
+        result_file_labels = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, data_set_name + "_label_info.txt")
+        result_file_labels_file = open(result_file_labels, "w")
+        result_file_labels_file.write(str(label_dict))
+        result_file_labels_file.close()
+
         result_file_terms = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, data_set_name + "_terms.txt")
 
         terms_open = open(result_file_terms, "w")
