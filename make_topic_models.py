@@ -19,6 +19,7 @@ import handle_properties
 from mongo_connector import MongoConnector
 import argparse
 import datetime
+import time
 
 
 TOPIC_NUMBER = "TOPIC_NUMBER"
@@ -69,7 +70,6 @@ stopword_handler = StopwordHandler()
 
 def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, save_in_database = True):
 
-    #initialise_dirs(properties.PATH_TOPIC_MODEL_OUTPUT, properties.PATH_USER_INPUT)
     data_set_name = os.path.basename(path_slash_format)
  
     if save_in_database:
@@ -648,15 +648,21 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     #f_json.close()
 
     if save_in_database:
-        time, post_id = mongo_con.insert_new_model(result_dict, data_set_name)
+        saved_time, post_id = mongo_con.insert_new_model(result_dict, data_set_name)
     else:
-        time, post_id = None, None
+        saved_time, post_id = None, None
 
         # If results are not saved in a database, save to a folder instead
         # Make a subfolder from folderwhere the program was run:
-        TOPIC_MODEL_EVALUATION_FOLDER = "topic_model_evalutation"
+        TOPIC_MODEL_EVALUATION_FOLDER_BASE = "topic_model_evalutation"
+        if not os.path.exists(TOPIC_MODEL_EVALUATION_FOLDER_BASE):
+            os.mkdir(TOPIC_MODEL_EVALUATION_FOLDER_BASE)
+        
+        TOPIC_MODEL_EVALUATION_FOLDER = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER_BASE, str(time.time()))
         if not os.path.exists(TOPIC_MODEL_EVALUATION_FOLDER):
             os.mkdir(TOPIC_MODEL_EVALUATION_FOLDER)
+        else:
+            print(TOPIC_MODEL_EVALUATION_FOLDER  + " already exists. Exists without saving models")
         result_file_terms = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, data_set_name + "_terms.txt")
 
         terms_open = open(result_file_terms, "w")
@@ -685,17 +691,11 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
         print("Written to folder " + TOPIC_MODEL_EVALUATION_FOLDER)
 
-    return result_dict, time, post_id
+    return result_dict, saved_time, post_id
 
 def get_first_in_tuple(item):
     return item[0]
 
-def initialise_dirs(output_path, input_path):
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-    
-    if not os.path.exists(input_path):
-        os.makedirs(input_path)
 
 
 def get_sets_in_data_folder():
