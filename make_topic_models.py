@@ -72,6 +72,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
 
     data_set_name = os.path.basename(path_slash_format)
  
+    stop_word_file = os.path.join(path_slash_format, properties.STOP_WORD_FILE)
+    
     if save_in_database:
         print("Model will be saved in database as: " + data_set_name)
     else:
@@ -106,7 +108,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
             topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, number_of_topics,\
                                                                        properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
                                                                        properties.COLLOCATION_CUT_OFF,\
-                                                                       properties.STOP_WORD_FILE,\
+                                                                       stop_word_file,\
                                                                        properties.SPACE_FOR_PATH,\
                                                                        properties.VECTOR_LENGTH,\
                                                                        properties.MIN_DOCUMENT_FREQUENCY,\
@@ -138,11 +140,17 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
 
 
     if properties.TOPIC_MODEL_ALGORITHM == LDA_NAME:
-    
-        topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, properties.NUMBER_OF_TOPICS,\
+        number_of_topics = properties.NUMBER_OF_TOPICS
+        
+        for rerun_nr in range(0, MAX_NR_OF_MODEL_SIZE_RERUNS):
+            max_less_than_requested_models_returned = number_of_topics*properties.PROPORTION_OF_LESS_TOPIC_TO_ALLOW
+            print("max_less_than_requested_models_returned", max_less_than_requested_models_returned)
+            
+            print("Training model with " + str(number_of_topics) + " requested topics")
+            topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, properties.NUMBER_OF_TOPICS,\
                                                                        properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
                                                                        properties.COLLOCATION_CUT_OFF,\
-                                                                       properties.STOP_WORD_FILE,\
+                                                                       stop_word_file,\
                                                                        properties.SPACE_FOR_PATH,\
                                                                        properties.VECTOR_LENGTH,\
                                                                        properties.MIN_DOCUMENT_FREQUENCY,\
@@ -153,7 +161,16 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                        properties.NO_MATCH,\
                                                                        properties.MANUAL_MADE_DICT)
 
-        print("Found " + str(len(topic_info)) + " stable topics")
+            print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
+            if number_of_topics - len(topic_info) <= max_less_than_requested_models_returned:
+                break # This topic is okay, use it
+            else:
+                # Try again, with a requested number of topic that is more similar to the number of topics
+                # found in previous run
+                number_of_topics = int(len(topic_info) + max_less_than_requested_models_returned)
+        
+        
+        print("Using model with " + str(len(topic_info)) + " stable topics")
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
                                                               properties.TOPIC_MODEL_ALGORITHM,\
                                                               properties.get_properties_in_json(),\
