@@ -86,13 +86,24 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
     #print("Will write topic modelling output to '" + get_current_file_name(properties.NAME, properties.TOPIC_MODEL_ALGORITHM)\
         #    + ".json' and '" + get_current_file_name(properties.NAME, properties.TOPIC_MODEL_ALGORITHM) + ".html'")
     #print("WARNING: If output files exists, content will be overwritten")
-    
+
+    MAX_NR_OF_MODEL_SIZE_RERUNS = 50
+
+
     if properties.TOPIC_MODEL_ALGORITHM == NMF_NAME:
         print()
         print("*************")
         print("scikit nmf")
         print()
-        topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, properties.NUMBER_OF_TOPICS,\
+        
+        number_of_topics = properties.NUMBER_OF_TOPICS
+        
+        for rerun_nr in range(0, MAX_NR_OF_MODEL_SIZE_RERUNS):
+            max_less_than_requested_models_returned = number_of_topics*properties.PROPORTION_OF_LESS_TOPIC_TO_ALLOW
+            print("max_less_than_requested_models_returned", max_less_than_requested_models_returned)
+            
+            print("Training model with " + str(number_of_topics) + " requested topics")
+            topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, number_of_topics,\
                                                                        properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
                                                                        properties.COLLOCATION_CUT_OFF,\
                                                                        properties.STOP_WORD_FILE,\
@@ -105,8 +116,16 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                        properties.OVERLAP_CUT_OFF,\
                                                                        properties.NO_MATCH,\
                                                                        properties.MANUAL_MADE_DICT)
-        
-        print("Found " + str(len(topic_info)) + " stable topics")
+
+            print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
+            if number_of_topics - len(topic_info) <= max_less_than_requested_models_returned:
+                break # This topic is okay, use it
+            else:
+                # Try again, with a requested number of topic that is more similar to the number of topics
+                # found in previous run
+                number_of_topics = int(len(topic_info) + max_less_than_requested_models_returned)
+
+        print("Using model with " + str(len(topic_info)) + " stable topics")
         
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
                                                               properties.TOPIC_MODEL_ALGORITHM,\
@@ -310,7 +329,10 @@ def get_scikit_bow(documents, vectorizer, min_document_frequency, max_document_f
 # Train the topic models and retrieve info from them
 ######
 
+
+    
 def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_words, no_top_documents, overlap_cut_off):
+    
     """
     Return info from topics that were stable enough to appear in all models in model_list
     """
@@ -641,7 +663,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
 
         for el in topic_info:
-            print(str(el[TOPIC_NUMBER]))
             result_file_csv = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, data_set_name + "_documents_" + str(el[TOPIC_NUMBER]) + ".txt")
 
             csv_open = open(result_file_csv, "w")
@@ -720,13 +741,14 @@ if __name__ == '__main__':
     result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format,\
                                                        datetime.datetime.now(), save_in_database = False)
 
-
+    """
     for el in result_dict["topics"]:
         print(el)
     print("------")
     for el in result_dict["documents"]:
         print(el)
     print("------")
+    """
     print("created " + str(len(result_dict["topics"])) + " topics.")
     print("Created model saved at " + str(time))
     #print(result_dict["topic_model_output"])

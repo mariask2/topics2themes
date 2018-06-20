@@ -6,6 +6,14 @@ Nr of topics to retrieve
 """
 NUMBER_OF_TOPICS = 10
 
+"""
+    The topic modelling algorithm is rerun with a decrease number of requested topics
+    until the number of found stable topics are similar to the ones requested
+    The amont of similarity is set here. 1 means that no re-runs to find the right amount of
+    topics are carried out (resutling in that more and less stable topics are found). 0 means that the number of requested topics has to be the same as
+    the number of found topics, and that the requested topics are increased until that happends (resulting in fewer and more stable topics).
+    """
+PROPORTION_OF_LESS_TOPIC_TO_ALLOW = 1
 
 """
 Nr of words to display for each topic
@@ -55,6 +63,8 @@ COLLOCATION_CUT_OFF = 0.005
 
 
 TOPIC_MODEL_ALGORITHM = NMF_NAME
+
+
 
 
 def no_cleaning(text):

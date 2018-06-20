@@ -121,6 +121,11 @@ class PropertiesContainer:
             self.MANUAL_MADE_DICT = {}
             print("No manually added clusters")
 
+        try:
+            self.PROPORTION_OF_LESS_TOPIC_TO_ALLOW = properties.PROPORTION_OF_LESS_TOPIC_TO_ALLOW
+        except AttributeError:
+            self.PROPORTION_OF_LESS_TOPIC_TO_ALLOW = default_topic_model_configuration.PROPORTION_OF_LESS_TOPIC_TO_ALLOW
+
     def get_properties_in_json(self):
         """
         Returns properties in json format
