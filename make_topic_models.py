@@ -674,12 +674,19 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         TOPIC_MODEL_EVALUATION_FOLDER_BASE = "topic_model_evalutation"
         if not os.path.exists(TOPIC_MODEL_EVALUATION_FOLDER_BASE):
             os.mkdir(TOPIC_MODEL_EVALUATION_FOLDER_BASE)
+
+        data_set_results_folder = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER_BASE, data_set_name)
+        print(data_set_results_folder)
         
-        TOPIC_MODEL_EVALUATION_FOLDER = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER_BASE, str(time.time()))
+        if not os.path.exists(data_set_results_folder):
+            os.mkdir(data_set_results_folder)
+
+        TOPIC_MODEL_EVALUATION_FOLDER = os.path.join(data_set_results_folder, str(time.time()))
         if not os.path.exists(TOPIC_MODEL_EVALUATION_FOLDER):
             os.mkdir(TOPIC_MODEL_EVALUATION_FOLDER)
         else:
             print(TOPIC_MODEL_EVALUATION_FOLDER  + " already exists. Exists without saving models")
+            exit(1)
         result_file_terms = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, data_set_name + "_terms.txt")
 
         terms_open = open(result_file_terms, "w")
