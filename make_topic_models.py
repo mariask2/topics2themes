@@ -360,7 +360,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     # The following code performs this matching between the different topics created in each run
     
     for nr, model in enumerate(model_list):
-
+        print(nr)
         ret_list = get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents)
         
         for el in ret_list:
@@ -551,14 +551,17 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
     """
 
     current_set = Counter(current_topic[TERM_LIST].keys())
+
     for previous_topic in previous_topic_list:
         previous_set = Counter(previous_topic[TERM_LIST].keys())
         overlap = list((current_set & previous_set).elements())
-        if overlap != []:
-            overlap_figure = len(overlap)/((len(previous_topic[TERM_LIST].keys()) + len(current_topic[TERM_LIST].keys()))/2)
-            if overlap_figure > overlap_cut_off:
-                return True
-    return False
+        if overlap == []:
+            return False
+        
+        overlap_figure = len(overlap)/((len(previous_topic[TERM_LIST].keys()) + len(current_topic[TERM_LIST].keys()))/2)
+        if overlap_figure < overlap_cut_off:
+            return False
+    return True
 
 #######
 # Print output from the model
