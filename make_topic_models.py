@@ -359,10 +359,35 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     #[ [{topic with dog words from fold 1}, {topic with dog words from fold 2} .. ]  [] ]
     # The following code performs this matching between the different topics created in each run
     
+    model_results = []
     for nr, model in enumerate(model_list):
         print(nr)
         ret_list = get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents)
-        
+        model_results.append(ret_list)
+    
+    term_results = []
+    for ret_list in model_results:
+        term_set = set()
+        for el in ret_list:
+            for term, prob in el[TERM_LIST]:
+                term_set.add(term)
+
+        term_results.append(term_set)
+
+    overlap_averages = []
+    for nr, terms in enumerate(term_results):
+        set_size = len(terms)
+        overlap_prop_sum = 0
+        for inner_nr, inner_terms in enumerate(term_results):
+            if nr != inner_nr:
+                overlap_prop = len(terms & inner_terms)/set_size
+                overlap_prop_sum = overlap_prop_sum + overlap_prop
+        overlap_prop_avg = overlap_prop_sum/len(term_results)
+        overlap_averages.append((overlap_prop_avg, nr))
+    overlap_averages_sorted = sorted(overlap_averages, reverse=True)
+    print(overlap_averages_sorted)
+
+    for ret_list in model_results:
         for el in ret_list:
             #print(ret_list)
             #print("ret_list")
