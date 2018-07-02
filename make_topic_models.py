@@ -364,7 +364,9 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
         print(nr)
         ret_list = get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents)
         model_results.append(ret_list)
-    
+
+    # Code for removing the model re-runs with an output with the smallest overlap with other model re-runs
+    # Remove the 5% most outlier re-runs
     term_results = []
     for ret_list in model_results:
         term_set = set()
@@ -385,9 +387,17 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
         overlap_prop_avg = overlap_prop_sum/len(term_results)
         overlap_averages.append((overlap_prop_avg, nr))
     overlap_averages_sorted = sorted(overlap_averages, reverse=True)
-    print(overlap_averages_sorted)
+    overlap_averages_sorted_removed_outliers = [nr for (overl, nr) in overlap_averages_sorted[:int(len(overlap_averages_sorted)*0.95)]]
 
-    for ret_list in model_results:
+
+    model_results_filtered = []
+    for nr, el in enumerate(model_results):
+        if nr in overlap_averages_sorted_removed_outliers:
+            model_results_filtered.append(el)
+
+
+
+    for ret_list in model_results_filtered:
         for el in ret_list:
             #print(ret_list)
             #print("ret_list")
@@ -410,7 +420,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     # When the matching between differnt folds has been carried out. Go through the result
     # and decide which topics to keep
     
-    minimum_found_for_a_topic_to_be_kept = round(len(model_list))
+    minimum_found_for_a_topic_to_be_kept = round(len(model_results_filtered))
     # A topic has to occurr in all folds to be included
     
     average_list = [] # only include topics that have been stable in this, and average the information from each run
