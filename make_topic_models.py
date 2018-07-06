@@ -377,7 +377,6 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
 
     overlap_averages = []
     for nr, terms in enumerate(term_results):
-        print(nr)
         set_size = len(terms)
         overlap_prop_sum = 0
         for inner_nr, inner_terms in enumerate(term_results):
@@ -428,6 +427,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     
     #####
     for nr, previous_topic_list in enumerate(previous_topic_list_list):
+        print("Potential topic nr ", nr)
         
         if len(previous_topic_list) >= minimum_found_for_a_topic_to_be_kept: # the topic is to be kept
             average_info = {}
