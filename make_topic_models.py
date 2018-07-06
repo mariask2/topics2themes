@@ -205,8 +205,13 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
     previous_texts = set()
     filtered_file_list = []
     for file in file_list:
-        text_gist = file[TEXT].lower().replace(" ", "").replace(".", "").replace(",", "").replace("\n", "").replace("\t", "").replace(":", "")\
-            .replace("-","").replace("<","").replace(">","")
+        text_gist_list = []
+        for ch in file[TEXT]:
+            # TODO: check that this works for japanese
+            if ch.isalpha():
+                text_gist_list.append(ch.lower())
+        text_gist = "".join(text_gist_list)
+        
         if text_gist not in previous_texts:
             previous_texts.add(text_gist)
             filtered_file_list.append(file)
