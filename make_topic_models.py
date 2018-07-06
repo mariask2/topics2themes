@@ -84,10 +84,6 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
     documents = [el[TEXT] for el in file_list]
 
     print("Make models for "+ str(len(documents)) + " documents.")
-    
-    #print("Will write topic modelling output to '" + get_current_file_name(properties.NAME, properties.TOPIC_MODEL_ALGORITHM)\
-        #    + ".json' and '" + get_current_file_name(properties.NAME, properties.TOPIC_MODEL_ALGORITHM) + ".html'")
-    #print("WARNING: If output files exists, content will be overwritten")
 
     MAX_NR_OF_MODEL_SIZE_RERUNS = 50
 
@@ -209,7 +205,7 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
     previous_texts = set()
     filtered_file_list = []
     for file in file_list:
-        text_gist = file[TEXT].lower().replace(" ", "").replace(".", "").replace(",", "").replace("\n", "").replace("\t", "")
+        text_gist = file[TEXT].lower().replace(" ", "").replace(".", "").replace(",", "").replace("\n", "").replace("\t", "").replace(":", "")
         if text_gist not in previous_texts:
             previous_texts.add(text_gist)
             filtered_file_list.append(file)
@@ -440,6 +436,8 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
         
         if len(previous_topic_list) >= minimum_found_for_a_topic_to_be_kept: # the topic is to be kept
             average_info = {}
+            
+            #TERM
             minimum_topics_for_a_term_to_be_kept = round(len(previous_topic_list) * overlap_cut_off)
             final_terms_for_topic = []
             only_terms = [list(el[TERM_LIST].keys()) for el in previous_topic_list]
@@ -453,8 +451,9 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
                         sum_score_for_term = sum_score_for_term + previous_topic[TERM_LIST][term]
                 if nr_of_models_the_term_occurred_in >= minimum_topics_for_a_term_to_be_kept:
                     final_terms_for_topic.append((term, sum_score_for_term / nr_of_models_the_term_occurred_in))
-            average_info[TERM_LIST] = final_terms_for_topic
+        
 
+            #DOCUMENTS
             selected_documents_strength = []
             docs = [el[MODEL_INFO][DOCUMENT_LIST] for el in previous_topic_list]
             doc_id_occ = {}
@@ -478,9 +477,12 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
                                            DOCUMENT_TOPIC_STRENGTH : avgstr})
 
         
-            document_info = \
+            document_info,  = \
                 construct_document_info_average(documents, selected_documents_strength, final_terms_for_topic)
             average_info[DOCUMENT_LIST] = document_info
+
+
+            average_info[TERM_LIST] = final_terms_for_topic
 
             average_info[TOPIC_NUMBER] = nr + 1
             average_list.append(average_info)
@@ -622,11 +624,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     
         """
 
-    #f = open(get_current_file_name(name, topic_model_algorithm) + ".html", "w")
-    #f_json = open(get_current_file_name(name, topic_model_algorithm) + ".json", "w")
 
-    #f.write('<html><body><font face="times"><div style="width:400px;margin:40px;">\n')
-    #f.write("<h1> Results for model type " + topic_model_algorithm + " </h1>\n")
     for nr, el in enumerate(topic_info):
         
         term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
@@ -636,19 +634,12 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_info_object["label"] = start_label
         topic_info_object["topic_terms"] = []
         
-        
-        #f.write("<p>\n")
-        #f.write("<h2> Topic " + str(nr) + "</h2>\n")
-        #f.write("<p>\n")
         for term in el[TERM_LIST]:
-            #f.write(str(term).replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER) + "<br>\n")
             term_object = {}
             term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
             term_object["score"] = term[1]
             topic_info_object["topic_terms"].append(term_object)
-        #f.write("<p>\n")
-        #f.write(", ".join([term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER) for term in el[TERM_LIST]]))
-        #f.write("</p>\n")
+
         
         # TODO: Now, if the same document belongs to many topics, only the document that appears first
         # will be marked correctly with bold face
@@ -683,23 +674,14 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             ###                
 
             document_dict[document[DOC_ID]]["document_topics"].append(document_topic_obj)
-            
-            #f.write("<p>\n")
-            #f.write("<br><p> Document number " + str(nr) + " Strength: " + str(document[DOCUMENT_TOPIC_STRENGTH]) + "</p>\n")
-            #f.write(document[MARKED_DOCUMENT_TOK])
-            #f.write("</p>\n")
-            #f.write("</p>\n")
-            #f.write("</p>\n")
+        
 
         topic_info_list.append(topic_info_object)
-            #f.write("</div></font></body></html>\n")
-            #f.flush()
-            #f.close()
-    
+
 
     result_dict = {}
     result_dict[TOPICS] = topic_info_list
-    #result_dict["themes"] = [{"id": 0, "label": "Click here to add theme label", "theme_topics": [], "theme_documents":[]}]
+
     result_dict["themes"] = []
     result_dict[DOCUMENTS] = [value for value in document_dict.values()]
     result_dict[META_DATA] = {"creation_date" : str(datetime.datetime.now()),\
@@ -707,9 +689,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                                     "user" : "dummy_user",\
                                     MODEL_NAME : model_name}
 
-    #f_json.write(json.dumps(result_dict, indent=4, sort_keys=True))
-    #f_json.flush()
-    #f_json.close()
+
 
     if save_in_database:
         saved_time, post_id = mongo_con.insert_new_model(result_dict, data_set_name)
