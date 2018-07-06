@@ -361,7 +361,6 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     
     model_results = []
     for nr, model in enumerate(model_list):
-        print(nr)
         ret_list = get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents)
         model_results.append(ret_list)
 
@@ -378,6 +377,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
 
     overlap_averages = []
     for nr, terms in enumerate(term_results):
+        print(nr)
         set_size = len(terms)
         overlap_prop_sum = 0
         for inner_nr, inner_terms in enumerate(term_results):
