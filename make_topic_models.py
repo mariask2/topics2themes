@@ -477,7 +477,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
                                            DOCUMENT_TOPIC_STRENGTH : avgstr})
 
         
-            document_info,  = \
+            document_info, final_terms_for_topic_filtered_for_document_occurrence = \
                 construct_document_info_average(documents, selected_documents_strength, final_terms_for_topic)
             average_info[DOCUMENT_LIST] = document_info
 
@@ -541,13 +541,18 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
 
 
 def construct_document_info_average(documents, selected_documents_strength, terms_strength):
-    terms = [term for (term, strength) in terms_strength]
+    
+    # Only retain terms that are found in any of the selected documents
+    terms_strength_filtered = set()
+    
   
     ###
     term_list = []
     term_preprocessed_dict = {} # map collocation/synonym-cluster to the word that is found in the text
+    term_strength_dict = {} # map the term to its stength, so that a new terms_strength list can be created with the terms found in the documents
     term_list_replace = []
-    for term in terms:
+    for term, strength in terms_strength:
+        term_strength_dict[term] = strength
         for split_synonym in term.split(word2vecwrapper.SYNONYM_BINDER):
             for split_collocation in split_synonym.split(COLLOCATION_BINDER):
                 term_list_replace.append(split_collocation)
@@ -561,7 +566,7 @@ def construct_document_info_average(documents, selected_documents_strength, term
     #print(term_preprocessed_dict)
     
     ###
-    
+
     doc_list = []
     for selected in selected_documents_strength:
         doc_i = selected[DOC_ID]
@@ -586,7 +591,14 @@ def construct_document_info_average(documents, selected_documents_strength, term
                                 FOUND_CONCEPTS : set(found_concepts),\
                                 MARKED_DOCUMENT_TOK : untokenize(simple_tokenised_marked),\
                                 FOUND_TERMS: list(set(found_terms))})
-    return doc_list
+        for t in set(found_concepts):
+            ts = (term_strength_dict[t], t)
+            if ts not in terms_strength_filtered:
+                terms_strength_filtered.add(ts)
+
+    terms_strength_filtered_sorted = [(t,s) for (s,t) in sorted(terms_strength_filtered, reverse = True)]
+
+    return  doc_list, terms_strength_filtered_sorted
 
 
 
