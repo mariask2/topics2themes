@@ -397,7 +397,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
 
 
     for nr, ret_list in enumerate(model_results_filtered):
-        print("Analysing output from model nr: ", nr)
+        print("Analysing output from fold nr: ", nr)
         for el in ret_list:
             #print(ret_list)
             #print("ret_list")
