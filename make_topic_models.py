@@ -205,7 +205,8 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
     previous_texts = set()
     filtered_file_list = []
     for file in file_list:
-        text_gist = file[TEXT].lower().replace(" ", "").replace(".", "").replace(",", "").replace("\n", "").replace("\t", "").replace(":", "")
+        text_gist = file[TEXT].lower().replace(" ", "").replace(".", "").replace(",", "").replace("\n", "").replace("\t", "").replace(":", "")\
+            .replace("-","").replace("<","").replace(">","")
         if text_gist not in previous_texts:
             previous_texts.add(text_gist)
             filtered_file_list.append(file)
@@ -482,7 +483,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
             average_info[DOCUMENT_LIST] = document_info
 
 
-            average_info[TERM_LIST] = final_terms_for_topic
+            average_info[TERM_LIST] = final_terms_for_topic_filtered_for_document_occurrence
 
             average_info[TOPIC_NUMBER] = nr + 1
             average_list.append(average_info)
