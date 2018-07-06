@@ -204,8 +204,17 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
             cleaned_text = cleaning_method(text)
             file_list.append({TEXT: cleaned_text, LABEL: data_info[DATA_LABEL]})
             opened.close()
-        
-    return file_list
+
+    #remove duplicates. Just keep the first occurrence, and remove the once comming after
+    previous_texts = set()
+    filtered_file_list = []
+    for file in file_list:
+        text_gist = file[TEXT].lower().replace(" ", "").replace(".", "").replace(",", "").replace("\n", "").replace("\t", "")
+        if text_gist not in previous_texts:
+            previous_texts.add(text_gist)
+            filtered_file_list.append(file)
+    
+    return filtered_file_list
 
 
     
