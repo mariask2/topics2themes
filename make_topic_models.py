@@ -205,8 +205,18 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
     previous_texts = set()
     filtered_file_list = []
     for file in file_list:
+
+        # remove hashtag
+        tokens_to_keep = []
+        sp = file[TEXT].strip().split(" ")
+        for word in sp:
+            if len(word) > 0:
+                if not word[0] == "#":
+                    tokens_to_keep.append(word)
+        text = " ".join(tokens_to_keep)
+ 
         text_gist_list = []
-        for ch in file[TEXT]:
+        for ch in text:
             # TODO: check that this works for japanese
             if ch.isalpha():
                 text_gist_list.append(ch.lower())
