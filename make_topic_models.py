@@ -386,7 +386,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
         overlap_prop_avg = overlap_prop_sum/len(term_results)
         overlap_averages.append((overlap_prop_avg, nr))
     overlap_averages_sorted = sorted(overlap_averages, reverse=True)
-    overlap_averages_sorted_removed_outliers = [nr for (overl, nr) in overlap_averages_sorted[:int(len(overlap_averages_sorted)*0.95)]]
+    overlap_averages_sorted_removed_outliers = [nr for (overl, nr) in overlap_averages_sorted[:int(len(overlap_averages_sorted)*0.90)]]
 
 
     model_results_filtered = []
