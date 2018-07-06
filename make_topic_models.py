@@ -396,7 +396,8 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
 
 
 
-    for ret_list in model_results_filtered:
+    for nr, ret_list in enumerate(model_results_filtered):
+        print("Analysing output from model nr: ", nr)
         for el in ret_list:
             #print(ret_list)
             #print("ret_list")
@@ -427,7 +428,6 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     
     #####
     for nr, previous_topic_list in enumerate(previous_topic_list_list):
-        print("Potential topic nr ", nr)
         
         if len(previous_topic_list) >= minimum_found_for_a_topic_to_be_kept: # the topic is to be kept
             average_info = {}
