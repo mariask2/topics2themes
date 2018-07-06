@@ -746,8 +746,11 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
         for el in topic_info:
             result_file_csv = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, data_set_name + "_documents_" + str(el[TOPIC_NUMBER]) + ".txt")
-
+            result_file_csv_no_classification = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, "no_class_" + data_set_name + "_documents_" + str(el[TOPIC_NUMBER]) + ".txt")
+            
             csv_open = open(result_file_csv, "w")
+            csv_open_no_class = open(result_file_csv_no_classification, "w")
+            
             terms_open.write(str(el[TOPIC_NUMBER]) + "\n")
             terms_open.write("----\n")
             terms_open.write(str(sorted([(strength, term) for (term, strength) in el[TERM_LIST]])[::-1]) + "\n")
@@ -756,8 +759,15 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             for (strength, document) in sorted([(doc[DOCUMENT_TOPIC_STRENGTH], doc) for doc in el[DOCUMENT_LIST]], key=get_first_in_tuple)[::-1]:
                 output = [document[DOC_ID], strength, document_dict[document[DOC_ID]][LABEL], document[FOUND_TERMS], document[ORIGINAL_DOCUMENT]]
                 csv_open.write("\t".join([str(el) for el in output]) + "\n")
+            
+                output_no_class = [document[DOC_ID], strength, document[FOUND_TERMS], document[ORIGINAL_DOCUMENT]]
+                csv_open_no_class.write("\t".join([str(el) for el in output_no_class]) + "\n")
+            
             csv_open.flush()
             csv_open.close()
+
+            csv_open_no_class.flush()
+            csv_open_no_class.close()
 
         terms_open.flush()
         terms_open.close()
