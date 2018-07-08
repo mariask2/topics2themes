@@ -494,18 +494,12 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
                         doc_id_occ[doc_id] = []
                     doc_id_occ[doc_id].append(doc_strength)
 
-            # Keept the no_top_documents that have occurred in the most of the folds
-            # If there is a tie between occurrence number, sort on the average document strength
-            documents_to_keep = sorted([(len(occ_list), sum(occ_list)/len(occ_list), doc_id)\
-                                        for (doc_id, occ_list) in doc_id_occ.items()])[::-1][:no_top_documents]
-
-            for (occ, avgstr, doc_id) in documents_to_keep:
-                if avgstr != sum(doc_id_occ[doc_id])/len(doc_id_occ[doc_id]):
-                    exit(1)
+            # Keept the no_top_documents have the larged summed topic-document association
+            sum_association = sorted([(sum(occ_list), doc_id) for (doc_id, occ_list) in doc_id_occ.items()], reverse = True)[:no_top_documents]
+            for (sumstr, doc_id) in sum_association:
                 selected_documents_strength.append({DOC_ID : doc_id,\
-                                           DOCUMENT_TOPIC_STRENGTH : avgstr})
-
-        
+                                           DOCUMENT_TOPIC_STRENGTH : sumstr})
+            
             document_info, final_terms_for_topic_filtered_for_document_occurrence = \
                 construct_document_info_average(documents, selected_documents_strength, final_terms_for_topic)
             average_info[DOCUMENT_LIST] = document_info
