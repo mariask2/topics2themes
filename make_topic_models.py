@@ -206,17 +206,16 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
     filtered_file_list = []
     for file in file_list:
 
-        # remove hashtag, re-tweet signal, if first word ends with colon,that word
+        # remove the first word, hashtag, re-tweet signal, if second word ends with colon,that word
         tokens_to_keep = []
         sp = file[TEXT].strip().split(" ")
-        for nr, word in enumerate(sp):
+        for nr, word in enumerate(sp[1:]):
             if len(word) > 0:
                 if not word[0] == "#" and not word.lower() ==  "rt" and not "retw" in word.lower() and not (nr == 0 and word[-1] == ":"):
                     tokens_to_keep.append(word)
         text = " ".join(tokens_to_keep)
 
 
-        
         text_gist_list = []
         # Only keept the beginning of the text when compare if they are similar.
         #If the 100 first characters are the same, consider all the text to be the same
@@ -228,7 +227,7 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
         
         # Also try text with hashtags (but with the #-char removed, and see if that version has occurred before)
         text_gist_list_all_tokens = []
-        for ch in file[TEXT]:
+        for ch in file[TEXT][:100]:
             # TODO: check that this works for japanese
             if ch.isalpha():
                 text_gist_list_all_tokens.append(ch.lower())
