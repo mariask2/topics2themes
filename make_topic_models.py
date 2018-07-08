@@ -215,7 +215,7 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
                     tokens_to_keep.append(word)
         text = " ".join(tokens_to_keep)
 
-        # Also try with hastags
+
         
         text_gist_list = []
         # Only keept the beginning of the text when compare if they are similar.
@@ -225,9 +225,19 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
             if ch.isalpha():
                 text_gist_list.append(ch.lower())
         text_gist = "".join(text_gist_list)
+        
+        # Also try text with hashtags (but with the #-char removed, and see if that version has occurred before)
+        text_gist_list_all_tokens = []
+        for ch in file[TEXT]:
+            # TODO: check that this works for japanese
+            if ch.isalpha():
+                text_gist_list_all_tokens.append(ch.lower())
+        text_gist_all_tokens = "".join(text_gist_list_all_tokens)
 
-        if text_gist not in previous_texts:
+        
+        if text_gist not in previous_texts and text_gist_all_tokens not in previous_texts:
             previous_texts.add(text_gist)
+            previous_texts.add(text_gist_all_tokens)
             filtered_file_list.append(file)
     
     return filtered_file_list
