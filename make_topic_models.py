@@ -211,7 +211,7 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
         sp = file[TEXT].strip().split(" ")
         for nr, word in enumerate(sp):
             if len(word) > 0:
-                if not word[0] == "#" and not word ==  "RT" and not (nr == 0 and word[-1] == ":"):
+                if not word[0] == "#" and not word.lower() ==  "rt" and not "retw" in word.lower() and not (nr == 0 and word[-1] == ":"):
                     tokens_to_keep.append(word)
         text = " ".join(tokens_to_keep)
 
