@@ -212,7 +212,10 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
         sp = file[TEXT].strip().split(" ")
         
         n_gram_length = 7
-        if len(sp) < n_gram_length:
+        # For short texts, use other n-gram than configured n_gram_lenth
+        if len(sp) < n_gram_length  and len(sp) > 5:
+            n_gram_length = len(sp) - 2
+        elif len(sp) < n_gram_length:
             n_gram_length = len(sp) - 1
         if True:
             add_this_file = True
