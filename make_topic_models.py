@@ -224,7 +224,7 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
         """
         n_gram_length = 6
         if len(sp) < n_gram_length:
-            n_gram_length = len(sp)
+            n_gram_length = len(sp) - 1 
         if True:
             add_this_file = True
             sub_tokens = []
@@ -243,7 +243,6 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
                         previous_sub_texts.add(sub_text_gist_text)
                     else: # this subtext has appeared before
                         add_this_file = False
-
                         break
             
             if add_this_file:
@@ -273,7 +272,7 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
                 previous_texts.add(text_gist)
                 previous_texts.add(text_gist_all_tokens)
                 filtered_file_list.append(file)
-    
+
     return filtered_file_list
 
 
