@@ -204,40 +204,70 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
     #remove duplicates. Just keep the first occurrence, and remove the once comming after
     previous_texts = set()
     filtered_file_list = []
+    
+    previous_sub_texts = set()
+    
     for file in file_list:
 
         # remove the first word, hashtag, re-tweet signal, if second word ends with colon,that word
         tokens_to_keep = []
+  
         sp = file[TEXT].strip().split(" ")
-        for nr, word in enumerate(sp[1:]):
+        for nr, word in enumerate(sp):
             if len(word) > 0:
                 if not word[0] == "#" and not word.lower() ==  "rt" and not "retw" in word.lower() and not (nr == 0 and word[-1] == ":"):
                     tokens_to_keep.append(word)
         text = " ".join(tokens_to_keep)
 
+        n_gram_length = 6
+        if True:
+            add_this_file = True
+            sub_tokens = []
+            for token in tokens_to_keep:
+                sub_tokens.append(token)
+                if len(sub_tokens) > n_gram_length:
+                    del sub_tokens[0]
+                    sub_text = "".join(sub_tokens)
+                    sub_text_gist = []
+                    for ch in sub_text:
+                    # TODO: check that this works for japanese
+                        if ch.isalpha():
+                            sub_text_gist.append(ch.lower())
+                    sub_text_gist_text = "".join(sub_text_gist)
+                    if sub_text_gist_text not in previous_sub_texts:
+                        previous_sub_texts.add(sub_text_gist_text)
+                    else: # this subtext has appeared before
+                        add_this_file = False
 
-        text_gist_list = []
-        # Only keept the beginning of the text when compare if they are similar.
-        #If the 100 first characters are the same, consider all the text to be the same
-        for ch in text[:100]:
-            # TODO: check that this works for japanese
-            if ch.isalpha():
-                text_gist_list.append(ch.lower())
-        text_gist = "".join(text_gist_list)
+                        break
+            
+            if add_this_file:
+                filtered_file_list.append(file)
+
+    
+    
+        if False:
+            text_gist_list = []
+
+            for ch in text:
+                # TODO: check that this works for japanese
+                if ch.isalpha():
+                    text_gist_list.append(ch.lower())
+            text_gist = "".join(text_gist_list)
         
-        # Also try text with hashtags (but with the #-char removed, and see if that version has occurred before)
-        text_gist_list_all_tokens = []
-        for ch in file[TEXT][:100]:
-            # TODO: check that this works for japanese
-            if ch.isalpha():
-                text_gist_list_all_tokens.append(ch.lower())
-        text_gist_all_tokens = "".join(text_gist_list_all_tokens)
+            # Also try text with hashtags (but with the #-char removed, and see if that version has occurred before)
+            text_gist_list_all_tokens = []
+            for ch in file[TEXT]:
+                # TODO: check that this works for japanese
+                if ch.isalpha():
+                    text_gist_list_all_tokens.append(ch.lower())
+            text_gist_all_tokens = "".join(text_gist_list_all_tokens)
 
         
-        if text_gist not in previous_texts and text_gist_all_tokens not in previous_texts:
-            previous_texts.add(text_gist)
-            previous_texts.add(text_gist_all_tokens)
-            filtered_file_list.append(file)
+            if text_gist not in previous_texts and text_gist_all_tokens not in previous_texts:
+                previous_texts.add(text_gist)
+                previous_texts.add(text_gist_all_tokens)
+                filtered_file_list.append(file)
     
     return filtered_file_list
 
