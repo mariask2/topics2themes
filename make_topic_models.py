@@ -209,7 +209,13 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
     
     file_list_len_sorted = sorted(file_list, key=lambda x: len(x[TEXT]))
     for file in file_list_len_sorted:
-        sp = file[TEXT].strip().split(" ")
+        filtered_text = []
+        for ch in file[TEXT].strip():
+            if ch.isalpha() or ch == " ":
+                filtered_text.append(ch.lower())
+        filtered_text_text = "".join(filtered_text)
+        sp = filtered_text_text.split(" ")
+        
         
         n_gram_length = 7
         # For short texts, use other n-gram than configured n_gram_lenth
@@ -227,14 +233,8 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
                 if len(sub_tokens) > n_gram_length:
                     del sub_tokens[0]
                     sub_text = "".join(sub_tokens)
-                    sub_text_gist = []
-                    for ch in sub_text:
-                    # TODO: check that this works for japanese
-                        if ch.isalpha():
-                            sub_text_gist.append(ch.lower())
-                    sub_text_gist_text = "".join(sub_text_gist)
-                    if sub_text_gist_text not in previous_sub_texts:
-                        previous_sub_texts.add(sub_text_gist_text)
+                    if sub_text not in previous_sub_texts:
+                        previous_sub_texts.add(sub_text)
                     else: # this subtext has appeared before
                         add_this_file = False
                         break
