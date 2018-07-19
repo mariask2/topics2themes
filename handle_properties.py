@@ -126,6 +126,17 @@ class PropertiesContainer:
         except AttributeError:
             self.PROPORTION_OF_LESS_TOPIC_TO_ALLOW = default_topic_model_configuration.PROPORTION_OF_LESS_TOPIC_TO_ALLOW
 
+        try:
+            self.REMOVE_DUPLICATES = properties.REMOVE_DUPLICATES
+        except AttributeError:
+            self.REMOVE_DUPLICATES = default_topic_model_configuration.REMOVE_DUPLICATES
+
+        # TODO: Make an int and float conversion for all propoerties, to get type control for user input properies
+        try:
+            self.MIN_NGRAM_LENGTH_FOR_DUPLICATE = int(properties.MIN_NGRAM_LENGTH_FOR_DUPLICATE)
+        except AttributeError:
+            self.MIN_NGRAM_LENGTH_FOR_DUPLICATE = int(default_topic_model_configuration.MIN_NGRAM_LENGTH_FOR_DUPLICATE)
+
     def get_properties_in_json(self):
         """
         Returns properties in json format
@@ -161,6 +172,8 @@ class PropertiesContainer:
         dict["NO_MATCH"] = list(self.NO_MATCH)
 
         dict["MANUAL_MADE_DICT"] = self.MANUAL_MADE_DICT
+        
+        # TODO: This is not complete
 
         return dict
     

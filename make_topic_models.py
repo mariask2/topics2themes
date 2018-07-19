@@ -79,7 +79,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
     else:
         print("Model will not be saved in database")
     
-    file_list = read_discussion_documents(properties.DATA_LABEL_LIST, properties.CLEANING_METHOD, data_set_name)
+    file_list = read_discussion_documents(properties.DATA_LABEL_LIST, properties.CLEANING_METHOD, data_set_name, \
+                                          properties.REMOVE_DUPLICATES, properties.MIN_NGRAM_LENGTH_FOR_DUPLICATE)
     
     documents = [el[TEXT] for el in file_list]
 
@@ -180,7 +181,7 @@ def get_current_file_name(name, topic_model_algorithm):
 ######
 # Read documents from file
 ######
-def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
+def read_discussion_documents(data_label_list, cleaning_method, data_set_name, whether_to_remove_duplicates, n_gram_length_conf):
     file_list = []
 
     print("data_label_list", data_label_list)
@@ -217,13 +218,14 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name):
         sp = filtered_text_text.split(" ")
         
         
-        n_gram_length = 7
-        # For short texts, use other n-gram than configured n_gram_lenth
-        if len(sp) <= n_gram_length  and len(sp) > 5:
+        n_gram_length = n_gram_length_conf
+        
+        # For short texts, use other n-gram than configured by n_gram_lenth
+        if len(sp) <= n_gram_length + 2  and len(sp) > 5:
             n_gram_length = len(sp) - 2
-        elif len(sp) <= n_gram_length:
+        elif len(sp) <= n_gram_length + 1:
             n_gram_length = len(sp) - 1
-        if True:
+        if whether_to_remove_duplicates:
             add_this_file = True
             sub_tokens = []
             for token in sp:

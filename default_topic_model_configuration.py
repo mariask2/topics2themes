@@ -62,9 +62,23 @@ Minimum proportion of documents that are to contain a term sequence for it to be
 COLLOCATION_CUT_OFF = 0.005
 
 
+
 TOPIC_MODEL_ALGORITHM = NMF_NAME
 
 
+"""
+Whether to remove document duplicates (and near-duplicates) in the data.
+Recommended to do that, otherwise there is a risk that the topic modelling algorithm will find
+these as topics
+"""
+
+REMOVE_DUPLICATES = True
+
+"""
+If two documents have a series of MIN_NGRAM_LENGTH_FOR_DUPLICATE tokens that are identical, these
+documents are then cosidered as duplicates, and the longest one of these two documents is removed
+"""
+MIN_NGRAM_LENGTH_FOR_DUPLICATE = 7
 
 
 def no_cleaning(text):
