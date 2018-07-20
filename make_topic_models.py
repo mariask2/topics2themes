@@ -212,12 +212,11 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name, w
     for file in file_list_len_sorted:
         filtered_text = []
         for ch in file[TEXT].strip():
-            if ch.isalpha() or ch == " ":
+            if ch.isalpha() or (ch == " " and (len(filtered_text) > 0 and filtered_text[-1] != " ")): #don't add several white space in a row
                 filtered_text.append(ch.lower())
-        filtered_text_text = "".join(filtered_text)
+        filtered_text_text = "".join(filtered_text).strip()
         sp = filtered_text_text.split(" ")
-        
-        
+
         n_gram_length = n_gram_length_conf
         
         # For short texts, use other n-gram than configured by n_gram_lenth
