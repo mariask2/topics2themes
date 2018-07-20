@@ -208,6 +208,7 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name, w
     
     previous_sub_texts = set()
     
+    nr_of_removed_files = 0
     file_list_len_sorted = sorted(file_list, key=lambda x: len(x[TEXT]))
     for file in file_list_len_sorted:
         filtered_text = []
@@ -238,6 +239,7 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name, w
                         previous_sub_texts.add(sub_text)
                     else: # this subtext has appeared before
                         add_this_file = False
+                        nr_of_removed_files = nr_of_removed_files + 1
                         break
             
             if add_this_file:
@@ -245,7 +247,7 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name, w
         else:
             filtered_file_list.append(file)
 
-
+    print("The number of removed files is: ", nr_of_removed_files, " Adjust the parameter 'MIN_NGRAM_LENGTH_FOR_DUPLICATE' for more or less strict duplicate removal." )
     return filtered_file_list
 
 

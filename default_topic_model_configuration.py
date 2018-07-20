@@ -78,7 +78,7 @@ REMOVE_DUPLICATES = True
 If two documents have a series of MIN_NGRAM_LENGTH_FOR_DUPLICATE tokens that are identical, these
 documents are then cosidered as duplicates, and the longest one of these two documents is removed
 """
-MIN_NGRAM_LENGTH_FOR_DUPLICATE = 7
+MIN_NGRAM_LENGTH_FOR_DUPLICATE = 9
 
 
 def no_cleaning(text):
