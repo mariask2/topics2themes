@@ -220,11 +220,6 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name, w
 
         n_gram_length = n_gram_length_conf
         
-        # For short texts, use other n-gram than configured by n_gram_lenth
-        if len(sp) <= n_gram_length + 3:
-            n_gram_length = len(sp) - len(sp)/2
-            #elif len(sp) <= n_gram_length + 1:
-            #n_gram_length = len(sp) - 1
         if whether_to_remove_duplicates:
             add_this_file = True
             sub_tokens = []
@@ -242,6 +237,25 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name, w
                         nr_of_removed_files = nr_of_removed_files + 1
                         break
             
+            # For short texts, also check with other n-gram length than configured by n_gram_lenth
+            if add_this_file and len(sp) <= n_gram_length + 3:
+
+                n_gram_length_short = int(len(sp) - len(sp)/4)
+                sub_tokens = []
+                for token in sp:
+                    if token.strip() == "":
+                        continue
+                    sub_tokens.append(token)
+                    if len(sub_tokens) > n_gram_length_short:
+                        del sub_tokens[0]
+                        sub_text = "".join(sub_tokens)
+                        if sub_text not in previous_sub_texts:
+                            previous_sub_texts.add(sub_text)
+                        else: # this subtext has appeared before
+                            add_this_file = False
+                            nr_of_removed_files = nr_of_removed_files + 1
+                            break
+  
             if add_this_file:
                 filtered_file_list.append(file)
         else:
