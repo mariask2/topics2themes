@@ -216,55 +216,43 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name, w
             if ch.isalpha() or (ch == " " and (len(filtered_text) > 0 and filtered_text[-1] != " ")): #don't add several white space in a row
                 filtered_text.append(ch.lower())
         filtered_text_text = "".join(filtered_text).strip()
-        sp = filtered_text_text.split(" ")
-
-        n_gram_length = n_gram_length_conf
         
         if whether_to_remove_duplicates:
-            add_this_file = True
-            sub_tokens = []
-            for token in sp:
-                if token.strip() == "":
-                    continue
-                sub_tokens.append(token)
-                if len(sub_tokens) > n_gram_length:
-                    del sub_tokens[0]
-                    sub_text = "".join(sub_tokens)
-                    if sub_text not in previous_sub_texts:
-                        previous_sub_texts.add(sub_text)
-                    else: # this subtext has appeared before
-                        add_this_file = False
-                        nr_of_removed_files = nr_of_removed_files + 1
-                        break
-            
+            sp = filtered_text_text.split(" ")
+            add_this_file = is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
             # For short texts, also check with other n-gram length than configured by n_gram_lenth
-            if add_this_file and len(sp) <= n_gram_length + 3:
-
+            if add_this_file and len(sp) <= n_gram_length_conf + 3:
                 n_gram_length_short = int(len(sp) - len(sp)/4)
-                sub_tokens = []
-                for token in sp:
-                    if token.strip() == "":
-                        continue
-                    sub_tokens.append(token)
-                    if len(sub_tokens) > n_gram_length_short:
-                        del sub_tokens[0]
-                        sub_text = "".join(sub_tokens)
-                        if sub_text not in previous_sub_texts:
-                            previous_sub_texts.add(sub_text)
-                        else: # this subtext has appeared before
-                            add_this_file = False
-                            nr_of_removed_files = nr_of_removed_files + 1
-                            break
+                add_this_file = is_duplicate(filtered_text_text, sp, n_gram_length_short, previous_sub_texts)
   
             if add_this_file:
                 filtered_file_list.append(file)
-        else:
+            else:
+                nr_of_removed_files = nr_of_removed_files + 1
+        else: # no dupblicate_remove
             filtered_file_list.append(file)
 
     print("The number of removed files is: ", nr_of_removed_files, " Adjust the parameter 'MIN_NGRAM_LENGTH_FOR_DUPLICATE' for more or less strict duplicate removal." )
     return filtered_file_list
 
-
+def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts):
+    n_gram_length = n_gram_length_conf
+        
+    add_this_file = True
+    sub_tokens = []
+    for token in sp:
+        if token.strip() == "":
+            continue
+        sub_tokens.append(token)
+        if len(sub_tokens) > n_gram_length:
+            del sub_tokens[0]
+            sub_text = "".join(sub_tokens)
+            if sub_text not in previous_sub_texts:
+                previous_sub_texts.add(sub_text)
+            else: # this subtext has appeared before
+                add_this_file = False
+                break
+    return add_this_file
     
 ###########
 # Overall functionality for pre-processing, training models and printing output
