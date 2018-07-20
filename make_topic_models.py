@@ -219,12 +219,16 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name, w
         
         if whether_to_remove_duplicates:
             sp = filtered_text_text.split(" ")
-            add_this_file = is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
+            add_this_file, found_duplicate = is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
+    
             # For short texts, also check with other n-gram length than configured by n_gram_lenth
-            if add_this_file and len(sp) <= n_gram_length_conf + 3:
+            if add_this_file and len(sp) <= n_gram_length_conf + 2:
                 n_gram_length_short = int(len(sp) - len(sp)/4)
-                add_this_file = is_duplicate(filtered_text_text, sp, n_gram_length_short, previous_sub_texts)
-  
+                add_this_file_exact = is_duplicate(filtered_text_text, sp, n_gram_length_short, previous_sub_texts)
+                for j in range(n_gram_length_short, len(sp) + 1):
+                    add_this_file, found_duplicate = is_duplicate(filtered_text_text, sp, j, previous_sub_texts)
+                    if not add_this_file:
+                        break
             if add_this_file:
                 filtered_file_list.append(file)
             else:
@@ -236,6 +240,7 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name, w
     return filtered_file_list
 
 def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts):
+    found_duplicate = None
     n_gram_length = n_gram_length_conf
         
     add_this_file = True
@@ -251,8 +256,9 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
                 previous_sub_texts.add(sub_text)
             else: # this subtext has appeared before
                 add_this_file = False
+                found_duplicate = sub_text
                 break
-    return add_this_file
+    return add_this_file, found_duplicate
     
 ###########
 # Overall functionality for pre-processing, training models and printing output
