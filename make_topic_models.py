@@ -221,10 +221,10 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name, w
         n_gram_length = n_gram_length_conf
         
         # For short texts, use other n-gram than configured by n_gram_lenth
-        if len(sp) <= n_gram_length + 2  and len(sp) > 5:
-            n_gram_length = len(sp) - 2
-        elif len(sp) <= n_gram_length + 1:
-            n_gram_length = len(sp) - 1
+        if len(sp) <= n_gram_length + 3:
+            n_gram_length = len(sp) - len(sp)/2
+            #elif len(sp) <= n_gram_length + 1:
+            #n_gram_length = len(sp) - 1
         if whether_to_remove_duplicates:
             add_this_file = True
             sub_tokens = []
