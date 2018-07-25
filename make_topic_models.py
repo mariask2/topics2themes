@@ -5,6 +5,10 @@ For performing topic modelling. The main file of the package
 from pprint import pprint
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import NMF, LatentDirichletAllocation
+
+from gensim.models.word2vec import Text8Corpus
+from gensim.models.phrases import Phrases
+
 import os
 import numpy as np
 import json
@@ -54,6 +58,8 @@ class StopwordHandler():
         return self.user_stop_word_list
     
     def get_stop_word_set(self, stop_word_file):
+        if stop_word_file == None:
+            return None
         if self.stop_word_set == None:
             f = open(stop_word_file)
             additional_stop_words = [word.strip() for word in f.readlines()]
@@ -68,6 +74,18 @@ stopword_handler = StopwordHandler()
 # Main 
 ####
 
+def get_collocations_from_documents(documents):
+    sentences = [get_very_simple_tokenised(doc, lower=False) for doc in documents]
+    threshold=len(sentences)/10
+    phrases = Phrases(sentences, min_count=properties.MIN_DOCUMENT_FREQUENCY, threshold=threshold)
+    collocation_set = set()
+    
+    for phrase, score in phrases.export_phrases(sentences):
+        collocation_set.add(phrase)
+
+    return collocation_set
+
+
 def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, save_in_database = True):
 
     data_set_name = os.path.basename(path_slash_format)
@@ -81,8 +99,9 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
     
     file_list = read_discussion_documents(properties.DATA_LABEL_LIST, properties.CLEANING_METHOD, data_set_name, \
                                           properties.REMOVE_DUPLICATES, properties.MIN_NGRAM_LENGTH_FOR_DUPLICATE)
-    
+
     documents = [el[TEXT] for el in file_list]
+
 
     print("Make models for "+ str(len(documents)) + " documents.")
 
