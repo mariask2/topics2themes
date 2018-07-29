@@ -38,7 +38,7 @@ def get_document_files(dir_to_inv):
         print("Reading from file ", file_name)
         topic_nr = int(file_name.split("_")[-1].replace(".txt", ""))
         print("topic_nr", topic_nr)
-        for line in f.readlines()[:20]: # Only investigate the top 20 documents
+        for line in f.readlines()[:100]: # Only investigate the top 20/100 documents
             sp = line.strip().split("\t")
             if sp[2] == "undecided":
                 undecided = undecided + 1
@@ -66,8 +66,8 @@ def get_document_files(dir_to_inv):
 # Start
 ###
 if __name__ == '__main__':
-    #DIRECTORY_TO_INVESTIGATE = "topic_model_evalutation/duetaltopicmodellingformat/1531055938.824244_standardstopwords"
-    DIRECTORY_TO_INVESTIGATE = "topic_model_evalutation/mumsnet_scikitformat/1531055600.957539_standardstopwords"
     
+    #DIRECTORY_TO_INVESTIGATE = "evaluation22jul/1532099139.812608_duetal"
+    DIRECTORY_TO_INVESTIGATE = "evaluation22jul/1532174860.201563_mumsnet"
 
     get_document_files(DIRECTORY_TO_INVESTIGATE)

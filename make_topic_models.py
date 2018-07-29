@@ -23,7 +23,7 @@ import handle_properties
 from mongo_connector import MongoConnector
 import argparse
 import datetime
-import time
+import time#
 
 
 TOPIC_NUMBER = "TOPIC_NUMBER"
@@ -74,17 +74,69 @@ stopword_handler = StopwordHandler()
 # Main 
 ####
 
+def get_collocations_from_documents(documents, extracted_term_set):
+    cutoff = 2
+    documents_with_collocation_marked, ngrams = find_frequent_n_grams(documents, collocation_cut_off=cutoff,\
+                                                                      nr_of_words_that_have_occurred_outside_n_gram_cutoff = 1,\
+                                                                      allowed_n_gram_components = extracted_term_set,\
+                                                                      max_occurrence_outside_collocation = 0)
+    ngrams.sort(key = lambda s: len(s), reverse = True)
+    ngram_subpart_filtered = []
+    for gram in ngrams:
+        add = True
+        for already_added in ngram_subpart_filtered:
+            if gram in already_added: # if it is a substring of something already there, don't use this ngram
+                add = False
+        if add:
+            ngram_subpart_filtered.append(gram)
+
+
+    return ngram_subpart_filtered
+"""
 def get_collocations_from_documents(documents):
-    sentences = [get_very_simple_tokenised(doc, lower=False) for doc in documents]
-    threshold=len(sentences)/10
+    sentences = [get_very_simple_tokenised(doc, lower=True) for doc in documents]
+    threshold=len(sentences)/100 #TODO: Perhaps this should be configurable
     phrases = Phrases(sentences, min_count=properties.MIN_DOCUMENT_FREQUENCY, threshold=threshold)
     collocation_set = set()
+    collocation_components_key_first_col_token = {}
+    collocation_components_key_second_col_token = {}
     
+    collocation_occurrences = {}
     for phrase, score in phrases.export_phrases(sentences):
-        collocation_set.add(phrase)
+        ph = phrase.decode("utf-8", errors="ignore")
+        sp = ph.split(" ")
+        if sp[0] not in collocation_occurrences:
+            collocation_occurrences[sp[0]] = 0
+        if sp[1] not in collocation_occurrences:
+            collocation_occurrences[sp[1]] = 0
+        collocation_occurrences[sp[0]] = collocation_occurrences[sp[0]] + 1
+        collocation_occurrences[sp[1]] = collocation_occurrences[sp[1]] + 1
 
+
+    for phrase, score in phrases.export_phrases(sentences):
+        ph = phrase.decode("utf-8", errors="ignore")
+        sp = ph.split(" ")
+        if collocation_occurrences[sp[0]] < 5 and collocation_occurrences[sp[1]] < 5:
+            collocation_set.add(ph)
+
+            collocation_components_key_first_col_token[sp[0]] = sp[1]
+            collocation_components_key_second_col_token[sp[1]] = sp[0]
+
+    #print(collocation_components_key_first_col_token)
+    #print(collocation_components_key_second_col_token)
+  
+    print(sorted(list(collocation_set)))
+  
+    for sent in sentences:
+        for tok1, tok2 in zip(sent[:-1], sent[1:]):
+            if tok1 in collocation_components_key_first_col_token:
+                if collocation_components_key_first_col_token[tok1] != tok2:
+                    collocation_set = collocation_set - {tok1 + " " + collocation_components_key_first_col_token[tok1]} # remove a collocation, where a token occurs somewhere else
+
+    print(sorted(list(collocation_set)))
+    exit(1)
     return collocation_set
-
+"""
 
 def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, save_in_database = True):
 
@@ -337,7 +389,7 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
                 no_match, manual_made_dict):
     if not do_pre_process:
         return raw_documents
-    documents = find_frequent_n_grams(raw_documents, collocation_cut_off)
+    documents, n_grams = find_frequent_n_grams(raw_documents, collocation_cut_off)
         
     word_vectorizer = CountVectorizer(binary = True, min_df=2, stop_words=stopword_handler.get_stop_word_set(stop_word_file))
     word_vectorizer.fit_transform(documents)
@@ -360,22 +412,61 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
     return pre_processed_documents
 
 
-def find_frequent_n_grams(documents, collocation_cut_off):
+def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_occurred_outside_n_gram_cutoff = 0,\
+                          allowed_n_gram_components = None, max_occurrence_outside_collocation=1):
     """
     Frequent collocations are concatenated to one term in the corpus
     (For instance smallpox and small pox are both used, now small_pox will be
     created, which will then show up as a synonym).
     """
     new_documents = []
-    ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 3), min_df=collocation_cut_off, stop_words='english')
+    ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 4), min_df=collocation_cut_off, stop_words='english')
     ngram_vectorizer.fit_transform(documents)
+    
+    if allowed_n_gram_components == None:
+        allowed_ngrams = ngram_vectorizer.get_feature_names()
+    else:
+        allowed_ngrams = []
+        for el in ngram_vectorizer.get_feature_names():
+            sp = el.split(" ")
+            add_ngram = True
+            for gram in sp:
+                if gram not in allowed_n_gram_components:
+                    add_ngram = False
+            if add_ngram:
+                allowed_ngrams.append(el)
+
+
     for document in documents:
         new_document = document
-        for el in ngram_vectorizer.get_feature_names():
+        for el in allowed_ngrams:
             if el in document:
                 new_document = new_document.replace(el, el.replace(" ", COLLOCATION_BINDER))
         new_documents.append(new_document)
-    return new_documents
+
+    token_vectorizer = CountVectorizer(binary = True, ngram_range = (1, 1), min_df= 1 + max_occurrence_outside_collocation, stop_words='english')
+    token_vectorizer.fit_transform(new_documents)
+    no_ngrams_features = set([token for token in token_vectorizer.get_feature_names() if " " not in token])
+    filtered_ngram_list = [] # Only ngrams where the constituent ouccrs a maximum of one time outside the ngram
+    for ngram in ngram_vectorizer.get_feature_names():
+        sp = ngram.split(" ")
+        nr_of_words_that_have_occurred_outside_n_gram = 0
+        for word in sp:
+            if word in no_ngrams_features:
+                nr_of_words_that_have_occurred_outside_n_gram = nr_of_words_that_have_occurred_outside_n_gram + 1
+        if nr_of_words_that_have_occurred_outside_n_gram <= nr_of_words_that_have_occurred_outside_n_gram_cutoff: # only one word is allowed to occurr in other
+            filtered_ngram_list.append(ngram)
+
+
+    new_filtered_documents = []
+    for document in documents:
+        new_document = document
+        for el in filtered_ngram_list:
+            if el in document:
+                new_document = new_document.replace(el, el.replace(" ", COLLOCATION_BINDER))
+        new_filtered_documents.append(new_document)
+
+    return new_filtered_documents, filtered_ngram_list
 
     
 
@@ -705,6 +796,34 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_info_object["label"] = start_label
         topic_info_object["topic_terms"] = []
         
+        conflated_term_list = []
+        
+        term_set = set([t[0] for t in el[TERM_LIST]])
+
+        collocation_dict = {}
+        topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
+        collocations = get_collocations_from_documents(topic_texts, term_set)
+        
+        print("collocations", collocations)
+    
+        """
+        for col in collocations:
+            print(col)
+            sp = (col).split(" ")
+            if sp[0] in term_set and sp[1] in term_set:
+                collocation_dict[sp[0]] = sp[0] + COLLOCATION_BINDER + sp[1]
+                collocation_dict[sp[1]] = sp[0] + COLLOCATION_BINDER + sp[1]
+        print(collocation_dict.keys())
+        exit(1)
+        tf_vectorizer = CountVectorizer(min_df=3, ngram_range = (2, 4))
+        tf = tf_vectorizer.fit_transform(topic_texts)
+        print(tf)
+        print(tf_vectorizer.get_feature_names())
+        exit(1)
+        #HERE
+            """
+
+        
         for term in el[TERM_LIST]:
             term_object = {}
             term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
@@ -713,7 +832,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
         
         # TODO: Now, if the same document belongs to many topics, only the document that appears first
-        # will be marked correctly with bold face
+        # will be marked correctly with bold face for important terms
         for nr, document in enumerate(el[DOCUMENT_LIST]):
 
             if document[DOC_ID] not in document_dict:
