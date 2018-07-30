@@ -74,12 +74,19 @@ stopword_handler = StopwordHandler()
 # Main 
 ####
 
-def get_collocations_from_documents(documents, extracted_term_set):
+def get_collocations_from_documents(documents, term_set):
+    
+    original_term_dict = {}
+    for t in term_set:
+        original_term_dict[t[0]] = t[1]
+    extracted_term_set = original_term_dict.keys() #  set([t[0] for t in term_set])
     cutoff = 2
     documents_with_collocation_marked, ngrams, final_features = find_frequent_n_grams(documents, collocation_cut_off=cutoff,\
                                                                       nr_of_words_that_have_occurred_outside_n_gram_cutoff = 1,\
                                                                       allowed_n_gram_components = extracted_term_set,\
                                                                       max_occurrence_outside_collocation = 0)
+
+    #print(len(original_term_dict.keys()))
     # No collocation sub-part-check, allow subparts
     """
     ngrams.sort(key = lambda s: len(s), reverse = True)
@@ -92,9 +99,17 @@ def get_collocations_from_documents(documents, extracted_term_set):
         if add:
             ngram_subpart_filtered.append(gram)
     """
+    new_terms_with_score = []
+    for term in final_features:
+        score_sum = 0
+        sp = term.split(COLLOCATION_BINDER)
+        for t in sp:
+            score_sum = score_sum + original_term_dict[t]
+        new_terms_with_score.append((term, score_sum/len(sp)))
 
-
-    return ngrams
+    print(ngrams)
+    #print(len(new_terms_with_score))
+    return new_terms_with_score
 
 
 def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, save_in_database = True):
@@ -380,10 +395,7 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
     """
     new_documents = []
     
-    if stopword_handler.get_entire_used_stop_word_list() == None:
-        stopwords_to_use = 'english'
-    else:
-        stopwords_to_use = stopword_handler.get_entire_used_stop_word_list()
+
     ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 4), min_df=collocation_cut_off)
     ngram_vectorizer.fit_transform(documents)
     
@@ -402,7 +414,7 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
 
     allowed_ngrams.sort(key = lambda s: len(s.split(" ")), reverse = True)
     for document in documents:
-        new_document = document
+        new_document = document.replace(COLLOCATION_BINDER, " ") # If there are words already in the corpus containing "_" remove this so the are not interpreted as an n-gram
         for el in allowed_ngrams:
             if el in document:
                 new_document = new_document.replace(el, el.replace(" ", COLLOCATION_BINDER))
@@ -425,7 +437,7 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
 
     new_filtered_documents = []
     for document in documents:
-        new_document = document
+        new_document = document.replace(COLLOCATION_BINDER, " ") # If there are words already in the corpus containing "_" remove this so the are not interpreted as an n-gram
         for el in filtered_ngram_list:
             if el in document:
                 new_document = new_document.replace(el, el.replace(" ", COLLOCATION_BINDER))
@@ -441,7 +453,11 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
         filtered_final_feautures = set()
         # Add n-grams and the terms in the documents that are not included in the n-grams
         for el in final_documents_vectorizer.get_feature_names():
-            if (COLLOCATION_BINDER in el) or (el in allowed_n_gram_components):
+            add = True
+            for sub_part in el.split(COLLOCATION_BINDER):
+                if sub_part not in allowed_n_gram_components:
+                    add = False
+            if add:
                 filtered_final_feautures.add(el)
 
     return new_filtered_documents, filtered_ngram_list, filtered_final_feautures
@@ -797,17 +813,16 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         
         conflated_term_list = el[TERM_LIST].copy()
         
-        term_set = set([t[0] for t in el[TERM_LIST]])
 
         collocation_dict = {}
 
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
-        collocations = get_collocations_from_documents(topic_texts, term_set)
+        terms_scores_with_colloctations = get_collocations_from_documents(topic_texts, el[TERM_LIST])
         
-        print("collocations", collocations)
+        #print("collocations", collocations)
     
         
-        for term in el[TERM_LIST]:
+        for term in terms_scores_with_colloctations:
             term_object = {}
             term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
             term_object["score"] = term[1]
@@ -838,8 +853,12 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
             # It is only the terms that are actually included in the document that are added here
             document_topic_obj["terms_in_topic"] = []
-            for term in el[TERM_LIST]:
-                if term[0] in document[FOUND_CONCEPTS]:
+            for term in terms_scores_with_colloctations:
+                add_term = True
+                for sub_part in term[0].split(COLLOCATION_BINDER):
+                    if sub_part not in document[FOUND_CONCEPTS]: # All parts of a collocation must have been found in the document for it to be associated
+                        add_term = False
+                if add_term:
                     term_object = {}
                     term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
                     term_object["score"] = term[1]
@@ -914,7 +933,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             
             terms_open.write(str(el[TOPIC_NUMBER]) + "\n")
             terms_open.write("----\n")
-            terms_open.write(str(sorted([(strength, term) for (term, strength) in el[TERM_LIST]])[::-1]) + "\n")
+            terms_open.write(str(sorted([(strength, term) for (term, strength) in terms_scores_with_colloctations])[::-1]) + "\n")
             terms_open.write("********\n\n")
 
             for (strength, document) in sorted([(doc[DOCUMENT_TOPIC_STRENGTH], doc) for doc in el[DOCUMENT_LIST]], key=get_first_in_tuple)[::-1]:
