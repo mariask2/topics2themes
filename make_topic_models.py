@@ -6,9 +6,6 @@ from pprint import pprint
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import NMF, LatentDirichletAllocation
 
-from gensim.models.word2vec import Text8Corpus
-from gensim.models.phrases import Phrases
-
 import os
 import numpy as np
 import json
@@ -56,6 +53,9 @@ class StopwordHandler():
     
     def get_user_stop_word_list(self):
         return self.user_stop_word_list
+    
+    def get_entire_used_stop_word_list(self):
+        return self.stop_word_set
     
     def get_stop_word_set(self, stop_word_file):
         if stop_word_file == None:
@@ -376,7 +376,12 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
     created, which will then show up as a synonym).
     """
     new_documents = []
-    ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 4), min_df=collocation_cut_off, stop_words='english')
+    
+    if stopword_handler.get_entire_used_stop_word_list() == None:
+        stopwords_to_use = 'english'
+    else:
+        stopwords_to_use = stopword_handler.get_entire_used_stop_word_list()
+    ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 4), min_df=collocation_cut_off, stop_words=stopwords_to_use)
     ngram_vectorizer.fit_transform(documents)
     
     if allowed_n_gram_components == None:
