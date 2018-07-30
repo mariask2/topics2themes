@@ -92,51 +92,7 @@ def get_collocations_from_documents(documents, extracted_term_set):
 
 
     return ngram_subpart_filtered
-"""
-def get_collocations_from_documents(documents):
-    sentences = [get_very_simple_tokenised(doc, lower=True) for doc in documents]
-    threshold=len(sentences)/100 #TODO: Perhaps this should be configurable
-    phrases = Phrases(sentences, min_count=properties.MIN_DOCUMENT_FREQUENCY, threshold=threshold)
-    collocation_set = set()
-    collocation_components_key_first_col_token = {}
-    collocation_components_key_second_col_token = {}
-    
-    collocation_occurrences = {}
-    for phrase, score in phrases.export_phrases(sentences):
-        ph = phrase.decode("utf-8", errors="ignore")
-        sp = ph.split(" ")
-        if sp[0] not in collocation_occurrences:
-            collocation_occurrences[sp[0]] = 0
-        if sp[1] not in collocation_occurrences:
-            collocation_occurrences[sp[1]] = 0
-        collocation_occurrences[sp[0]] = collocation_occurrences[sp[0]] + 1
-        collocation_occurrences[sp[1]] = collocation_occurrences[sp[1]] + 1
 
-
-    for phrase, score in phrases.export_phrases(sentences):
-        ph = phrase.decode("utf-8", errors="ignore")
-        sp = ph.split(" ")
-        if collocation_occurrences[sp[0]] < 5 and collocation_occurrences[sp[1]] < 5:
-            collocation_set.add(ph)
-
-            collocation_components_key_first_col_token[sp[0]] = sp[1]
-            collocation_components_key_second_col_token[sp[1]] = sp[0]
-
-    #print(collocation_components_key_first_col_token)
-    #print(collocation_components_key_second_col_token)
-  
-    print(sorted(list(collocation_set)))
-  
-    for sent in sentences:
-        for tok1, tok2 in zip(sent[:-1], sent[1:]):
-            if tok1 in collocation_components_key_first_col_token:
-                if collocation_components_key_first_col_token[tok1] != tok2:
-                    collocation_set = collocation_set - {tok1 + " " + collocation_components_key_first_col_token[tok1]} # remove a collocation, where a token occurs somewhere else
-
-    print(sorted(list(collocation_set)))
-    exit(1)
-    return collocation_set
-"""
 
 def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, save_in_database = True):
 
@@ -775,6 +731,25 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 # Print output from the model
 #######
 
+def get_collocations_from_all_topics(topic_info):
+    """
+        Currently not used as the collocations are searched for one topic at a time, but code retained for possible future use
+    """
+
+    topic_texts = set()
+    for document_list in [topic[DOCUMENT_LIST] for topic in topic_info]:
+        for doc in document_list:
+            topic_texts.add(doc[ORIGINAL_DOCUMENT])
+
+    term_set = set()
+    for term_list in [topic[TERM_LIST] for topic in topic_info]:
+        for t in term_list:
+            term_set.add(t[0])
+    
+    return get_collocations_from_documents(topic_texts, term_set)
+
+
+
 def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
                              json_properties, data_set_name, model_name, save_in_database):
     document_dict = {}
@@ -785,8 +760,10 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         Prints output from the topic model in html and json format, with topic terms in bold face
     
         """
+  
 
-
+    #print(get_collocations_from_all_topics(topic_info))
+    
     for nr, el in enumerate(topic_info):
         
         term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
@@ -801,28 +778,12 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         term_set = set([t[0] for t in el[TERM_LIST]])
 
         collocation_dict = {}
+
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
         collocations = get_collocations_from_documents(topic_texts, term_set)
         
         print("collocations", collocations)
     
-        """
-        for col in collocations:
-            print(col)
-            sp = (col).split(" ")
-            if sp[0] in term_set and sp[1] in term_set:
-                collocation_dict[sp[0]] = sp[0] + COLLOCATION_BINDER + sp[1]
-                collocation_dict[sp[1]] = sp[0] + COLLOCATION_BINDER + sp[1]
-        print(collocation_dict.keys())
-        exit(1)
-        tf_vectorizer = CountVectorizer(min_df=3, ngram_range = (2, 4))
-        tf = tf_vectorizer.fit_transform(topic_texts)
-        print(tf)
-        print(tf_vectorizer.get_feature_names())
-        exit(1)
-        #HERE
-            """
-
         
         for term in el[TERM_LIST]:
             term_object = {}
