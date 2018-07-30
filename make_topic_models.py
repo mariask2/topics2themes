@@ -719,21 +719,16 @@ def construct_document_info_average(documents, selected_documents_strength, term
         found_terms = []
         if strength > 0.000:
             simple_tokenised = get_very_simple_tokenised(documents[doc_i], lower = False)
-            simple_tokenised_marked = []
             for el in simple_tokenised:
                 if el.lower() in term_list_replace:
-                    simple_tokenised_marked.append("<b>" + el + "</b>")
                     found_concepts.extend(term_preprocessed_dict[el.lower()])
-                    found_terms.append(el.lower())
-                else:
-                    simple_tokenised_marked.append(el)
+
             if len(found_concepts) > 0 : # only include documents where at least on one of the terms is found
                 doc_list.append(\
                                 {DOC_ID: doc_i, \
                                 DOCUMENT_TOPIC_STRENGTH : strength,\
                                 ORIGINAL_DOCUMENT: documents[doc_i],\
                                 FOUND_CONCEPTS : set(found_concepts),\
-                                MARKED_DOCUMENT_TOK : untokenize(simple_tokenised_marked),\
                                 FOUND_TERMS: list(set(found_terms))})
         for t in set(found_concepts):
             ts = (term_strength_dict[t], t)
@@ -811,11 +806,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_info_object["label"] = start_label
         topic_info_object["topic_terms"] = []
         
-        conflated_term_list = el[TERM_LIST].copy()
-        
-
-        collocation_dict = {}
-
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
         terms_scores_with_colloctations = get_collocations_from_documents(topic_texts, el[TERM_LIST])
         
@@ -837,7 +827,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 document_obj = {}
                 document_obj["text"] = document[ORIGINAL_DOCUMENT]
                 document_obj["id"] = int(str(document[DOC_ID]))
-                document_obj["marked_text_tok"] = document[MARKED_DOCUMENT_TOK]
+                document_obj["marked_text_tok"] = add_markings_for_terms(document[ORIGINAL_DOCUMENT], el[TERM_LIST], el[TOPIC_NUMBER])
                 document_obj["id_source"] = int(str(document[DOC_ID]))
                 document_obj["timestamp"] = int(str(document[DOC_ID]))
                 document_obj["document_topics"] = []
@@ -845,6 +835,14 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 document_dict[document[DOC_ID]] = document_obj
                 if document_obj["text"] != file_list[document[DOC_ID]][TEXT]:
                     print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(file_list[document[DOC_ID]][TEXT]))
+        
+            else:
+                document_dict[document[DOC_ID]]["marked_text_tok"] = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
+                                                                                            el[TERM_LIST], el[TOPIC_NUMBER])
+
+
+            #print(document_dict[document[DOC_ID]]["marked_text_tok"])
+            
             document_topic_obj = {}
             document_topic_obj["topic_index"] = el[TOPIC_NUMBER]
             document_topic_obj["topic_confidence"] = document[DOCUMENT_TOPIC_STRENGTH]
@@ -958,6 +956,19 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         print("Written to folder " + TOPIC_MODEL_EVALUATION_FOLDER)
 
     return result_dict, saved_time, post_id
+
+
+def add_markings_for_terms(text, term_list, topic_number):
+    term_list_replace = [t[0] for t in term_list]
+    
+    simple_tokenised = get_very_simple_tokenised(text, lower = False)
+    simple_tokenised_marked = []
+    for el in simple_tokenised:
+        if el.lower() in term_list_replace:
+            simple_tokenised_marked.append('<b class="bold-' +str(topic_number) + '">' + el + "</b>")
+        else:
+            simple_tokenised_marked.append(el)
+    return untokenize(simple_tokenised_marked)
 
 def get_first_in_tuple(item):
     return item[0]
