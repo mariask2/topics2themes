@@ -76,22 +76,25 @@ stopword_handler = StopwordHandler()
 
 def get_collocations_from_documents(documents, extracted_term_set):
     cutoff = 2
-    documents_with_collocation_marked, ngrams = find_frequent_n_grams(documents, collocation_cut_off=cutoff,\
+    documents_with_collocation_marked, ngrams, final_features = find_frequent_n_grams(documents, collocation_cut_off=cutoff,\
                                                                       nr_of_words_that_have_occurred_outside_n_gram_cutoff = 1,\
                                                                       allowed_n_gram_components = extracted_term_set,\
                                                                       max_occurrence_outside_collocation = 0)
+    # No collocation sub-part-check, allow subparts
+    """
     ngrams.sort(key = lambda s: len(s), reverse = True)
     ngram_subpart_filtered = []
     for gram in ngrams:
         add = True
         for already_added in ngram_subpart_filtered:
-            if gram in already_added: # if it is a substring of something already there, don't use this ngram
+            if gram in already_added: # if it is a substring of something already in the collocation list, don't use this ngram
                 add = False
         if add:
             ngram_subpart_filtered.append(gram)
+    """
 
 
-    return ngram_subpart_filtered
+    return ngrams
 
 
 def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, save_in_database = True):
@@ -345,7 +348,7 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
                 no_match, manual_made_dict):
     if not do_pre_process:
         return raw_documents
-    documents, n_grams = find_frequent_n_grams(raw_documents, collocation_cut_off)
+    documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off)
         
     word_vectorizer = CountVectorizer(binary = True, min_df=2, stop_words=stopword_handler.get_stop_word_set(stop_word_file))
     word_vectorizer.fit_transform(documents)
@@ -381,7 +384,7 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
         stopwords_to_use = 'english'
     else:
         stopwords_to_use = stopword_handler.get_entire_used_stop_word_list()
-    ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 4), min_df=collocation_cut_off, stop_words=stopwords_to_use)
+    ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 4), min_df=collocation_cut_off)
     ngram_vectorizer.fit_transform(documents)
     
     if allowed_n_gram_components == None:
@@ -397,7 +400,7 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
             if add_ngram:
                 allowed_ngrams.append(el)
 
-
+    allowed_ngrams.sort(key = lambda s: len(s.split(" ")), reverse = True)
     for document in documents:
         new_document = document
         for el in allowed_ngrams:
@@ -405,18 +408,19 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
                 new_document = new_document.replace(el, el.replace(" ", COLLOCATION_BINDER))
         new_documents.append(new_document)
 
-    token_vectorizer = CountVectorizer(binary = True, ngram_range = (1, 1), min_df= 1 + max_occurrence_outside_collocation, stop_words='english')
+    token_vectorizer = CountVectorizer(binary = True, ngram_range = (1, 1), min_df= 1 + max_occurrence_outside_collocation)
     token_vectorizer.fit_transform(new_documents)
     no_ngrams_features = set([token for token in token_vectorizer.get_feature_names() if " " not in token])
     filtered_ngram_list = [] # Only ngrams where the constituent ouccrs a maximum of one time outside the ngram
-    for ngram in ngram_vectorizer.get_feature_names():
+    for ngram in allowed_ngrams:
         sp = ngram.split(" ")
         nr_of_words_that_have_occurred_outside_n_gram = 0
         for word in sp:
             if word in no_ngrams_features:
                 nr_of_words_that_have_occurred_outside_n_gram = nr_of_words_that_have_occurred_outside_n_gram + 1
-        if nr_of_words_that_have_occurred_outside_n_gram <= nr_of_words_that_have_occurred_outside_n_gram_cutoff: # only one word is allowed to occurr in other
+        if nr_of_words_that_have_occurred_outside_n_gram <= len(sp) - nr_of_words_that_have_occurred_outside_n_gram_cutoff: # at least one of the words most not have occurred in another context than the ngram
             filtered_ngram_list.append(ngram)
+
 
 
     new_filtered_documents = []
@@ -427,7 +431,20 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
                 new_document = new_document.replace(el, el.replace(" ", COLLOCATION_BINDER))
         new_filtered_documents.append(new_document)
 
-    return new_filtered_documents, filtered_ngram_list
+    final_documents_vectorizer = CountVectorizer(binary = True, ngram_range = (1, 1), min_df = 1)
+    final_documents_vectorizer.fit_transform(new_filtered_documents)
+    final_features = set(final_documents_vectorizer.get_feature_names())
+
+    if allowed_n_gram_components == None:
+        filtered_final_feautures = set(final_documents_vectorizer.get_feature_names())
+    else:
+        filtered_final_feautures = set()
+        # Add n-grams and the terms in the documents that are not included in the n-grams
+        for el in final_documents_vectorizer.get_feature_names():
+            if (COLLOCATION_BINDER in el) or (el in allowed_n_gram_components):
+                filtered_final_feautures.add(el)
+
+    return new_filtered_documents, filtered_ngram_list, filtered_final_feautures
 
     
 
@@ -778,7 +795,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_info_object["label"] = start_label
         topic_info_object["topic_terms"] = []
         
-        conflated_term_list = []
+        conflated_term_list = el[TERM_LIST].copy()
         
         term_set = set([t[0] for t in el[TERM_LIST]])
 
