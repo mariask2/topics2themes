@@ -790,23 +790,6 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 # Print output from the model
 #######
 
-def get_collocations_from_all_topics(topic_info):
-    """
-        Currently not used as the collocations are searched for one topic at a time, but code retained for possible future use
-    """
-
-    topic_texts = set()
-    for document_list in [topic[DOCUMENT_LIST] for topic in topic_info]:
-        for doc in document_list:
-            topic_texts.add(doc[ORIGINAL_DOCUMENT])
-
-    term_set = set()
-    for term_list in [topic[TERM_LIST] for topic in topic_info]:
-        for t in term_list:
-            term_set.add(t[0])
-    
-    return get_collocations_from_documents(topic_texts, term_set)
-
 
 
 def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
@@ -821,7 +804,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         """
   
 
-    #print(get_collocations_from_all_topics(topic_info))
+
     
     for nr, el in enumerate(topic_info):
         
@@ -835,9 +818,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
         terms_scores_with_colloctations = get_collocations_from_documents(topic_texts, el[TERM_LIST])
         
-
-    
-        
+            
         for term in terms_scores_with_colloctations:
             term_object = {}
             term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
@@ -880,14 +861,15 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             for term in terms_scores_with_colloctations:
                 add_term = True
                 for sub_part in term[0].split(COLLOCATION_BINDER):
-                    if remove_par(sub_part) not in document[FOUND_CONCEPTS]: # All parts of a collocation must have been found in the document for it to be associated
+                    if remove_par(sub_part.lower()) not in document[FOUND_CONCEPTS]: # All parts of a collocation must have been found in the document for it to be associated
                         add_term = False
                 if add_term:
                     term_object = {}
                     term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
                     term_object["score"] = term[1]
                     document_topic_obj["terms_in_topic"].append(term_object)
-            ###                
+            ###
+
 
             document_dict[document[DOC_ID]]["document_topics"].append(document_topic_obj)
         
