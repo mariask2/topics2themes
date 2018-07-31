@@ -131,7 +131,7 @@ def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_
         c = c.replace("/", ",")
         for already_added in final_features:
             if (already_added.replace(COLLOCATION_BINDER,"") == c or already_added == c.replace(COLLOCATION_BINDER,"")\
-                or are_these_two_terms_to_be_considered_the_same(already_added, c))\
+                or are_these_two_terms_to_be_considered_the_same(remove_par(already_added), remove_par(c)))\
                 and add:
                 final_features.remove(already_added)
                 already_added_modified = already_added + SYNONYM_JSON_BINDER + c
