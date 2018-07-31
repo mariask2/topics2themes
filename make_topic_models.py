@@ -351,7 +351,7 @@ def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_p
                            space_for_path, vector_length, min_document_frequency, max_document_frequency,\
                            nr_of_top_words, nr_of_to_documents, overlap_cut_off, no_match, manual_made_dict):
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                          space_for_path, vector_length, no_match, manual_made_dict)
+                                          space_for_path, vector_length, no_match, manual_made_dict, min_document_frequency)
     texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, CountVectorizer,\
                                               min_document_frequency, max_document_frequency, stop_word_file)
     model_list = []
@@ -367,7 +367,7 @@ def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_p
                            space_for_path, vector_length, min_document_frequency, max_document_frequency,\
                            nr_of_top_words, nr_of_to_documents, overlap_cut_off, no_match, manual_made_dict):
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                          space_for_path, vector_length, no_match, manual_made_dict)
+                                          space_for_path, vector_length, no_match, manual_made_dict, min_document_frequency)
                                           
     
     texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, TfidfVectorizer,\
@@ -395,11 +395,14 @@ def untokenize(simple_tokenised):
 #####
 
 def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, space_for_path, vector_length,\
-                no_match, manual_made_dict):
+                no_match, manual_made_dict, min_document_frequency):
     if not do_pre_process:
         return raw_documents
-    documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off)
-        
+    documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off, max_occurrence_outside_collocation=min_document_frequency)
+
+    pre_processed_documents = documents
+
+    """
     word_vectorizer = CountVectorizer(binary = True, min_df=2, stop_words=stopword_handler.get_stop_word_set(stop_word_file))
     word_vectorizer.fit_transform(documents)
 
@@ -418,10 +421,11 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
         pre_processed_documents.append(" ".join(pre_processed_document))
 
     word2vec.end()
+    """
     return pre_processed_documents
 
 
-def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_occurred_outside_n_gram_cutoff = 0,\
+def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_occurred_outside_n_gram_cutoff = None,\
                           allowed_n_gram_components = None, max_occurrence_outside_collocation=1):
     """
     Frequent collocations are concatenated to one term in the corpus
@@ -461,11 +465,16 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
     filtered_ngram_list = [] # Only ngrams where the constituent ouccrs a maximum of one time outside the ngram
     for ngram in allowed_ngrams:
         sp = ngram.split(" ")
+        if nr_of_words_that_have_occurred_outside_n_gram_cutoff != None:
+            nr_of_words_that_have_occurred_outside_n_gram_cutoff_to_use = nr_of_words_that_have_occurred_outside_n_gram_cutoff
+        else:
+            nr_of_words_that_have_occurred_outside_n_gram_cutoff_to_use = len(sp)
+
         nr_of_words_that_have_occurred_outside_n_gram = 0
         for word in sp:
             if word in no_ngrams_features:
                 nr_of_words_that_have_occurred_outside_n_gram = nr_of_words_that_have_occurred_outside_n_gram + 1
-        if nr_of_words_that_have_occurred_outside_n_gram <= len(sp) - nr_of_words_that_have_occurred_outside_n_gram_cutoff: # at least one of the words most not have occurred in another context than the ngram
+        if nr_of_words_that_have_occurred_outside_n_gram <= len(sp) - nr_of_words_that_have_occurred_outside_n_gram_cutoff_to_use: # at least one of the words most not have occurred in another context than the ngram
             filtered_ngram_list.append(ngram)
 
 
