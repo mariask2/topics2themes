@@ -80,6 +80,24 @@ documents are then cosidered as duplicates, and the longest one of these two doc
 """
 MIN_NGRAM_LENGTH_FOR_DUPLICATE = 8
 
+def no_term_clustering(x, y):
+    return False
+
+def dummy(x, y): #only for debugging
+    if x[0] == y[0]:
+        return True
+    else:
+        return False
+
+def simple_english(x, y):
+    if x[:-1] == y[:-1] or x[:-1] == y or x == y[:-1]:
+        return True
+    else:
+        return False
+
+ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME = dummy
+
+
 
 def no_cleaning(text):
 

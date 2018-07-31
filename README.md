@@ -34,13 +34,11 @@ You write the following to run the code:
 
 source activate topic_modelling
 
-To create a new topic model:
 
-python make_topic_models.py
 
 To create a new topic model for the data in the folders data_folder/vaccination_constructed_data
 python make_topic_models.py --project data_folder.vaccination_constructed_data
-
+(This will not be save to the database, only written to a file)
 
 To run the topic modell as a flask server, you write:
 
@@ -49,6 +47,8 @@ python restful_api_topic_modelling.py [port]
 for instance:
 
 python restful_api_topic_modelling.py 5000
+
+You will need a file in the same directory from which it is run, which is called "approved_keys.txt" (which at the moment is not used, but which will be used in a later version).
 
 
 

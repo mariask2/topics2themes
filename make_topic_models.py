@@ -79,7 +79,7 @@ stopword_handler = StopwordHandler()
 def remove_par(txt):
     return txt.replace(PAR_START, "").replace(PAR_END, "")
 
-def get_collocations_from_documents(documents, term_set):
+def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_be_considered_the_same):
     
     original_term_dict = {}
     for t in term_set:
@@ -96,7 +96,7 @@ def get_collocations_from_documents(documents, term_set):
     all_features.sort(key = lambda s: (len(s.split(COLLOCATION_BINDER)), get_summed_score(s, original_term_dict)), reverse = True)
 
 
-    final_features = set()
+    collocation_features = set()
     
     for f in all_features:
         if False: # keep this code, if needed later
@@ -106,35 +106,52 @@ def get_collocations_from_documents(documents, term_set):
         else:
 
             add = True
-            for already_added_orig in final_features:
+            for already_added_orig in collocation_features:
                 already_added = remove_par(already_added_orig)
    
                 if f + COLLOCATION_BINDER in already_added or COLLOCATION_BINDER + f in already_added:
                     # if it is a substring of something already in the collocation list, don't add this ngram, but modify the original instead
-                    final_features.remove(already_added_orig)
+                    collocation_features.remove(already_added_orig)
                     already_added_without_f = already_added.replace(f,"")
                     replace_with = PAR_START + already_added_without_f + PAR_END
                     already_added_modified = already_added.replace(already_added_without_f, replace_with)
 
 
-                    final_features.add(already_added_modified)
+                    collocation_features.add(already_added_modified)
                     add = False
             
             if add:
-                final_features.add(f)
+                collocation_features.add(f)
 
 
+    final_features = set()
+    
+    for c in collocation_features:
+        add = True
+        c = c.replace("/", ",")
+        for already_added in final_features:
+            if (already_added.replace(COLLOCATION_BINDER,"") == c or already_added == c.replace(COLLOCATION_BINDER,"")\
+                or are_these_two_terms_to_be_considered_the_same(already_added, c))\
+                and add:
+                final_features.remove(already_added)
+                already_added_modified = already_added + SYNONYM_JSON_BINDER + c
+                final_features.add(already_added_modified)
+                add = False
+        if add:
+            final_features.add(c)
+
+    
     new_terms_with_score = []
     for term in final_features:
         best_score = 0
-        sp = term.split(COLLOCATION_BINDER)
-        for t in sp:
-            if original_term_dict[remove_par(t)] > best_score:
-                best_score = original_term_dict[remove_par(t)] # user the highest score among its included parts
+        for c in term.split(COLLOCATION_BINDER):
+            for t in c.split(SYNONYM_JSON_BINDER):
+                if original_term_dict[remove_par(t)] > best_score:
+                    best_score = original_term_dict[remove_par(t)] # use the highest score among its included parts
         term_with_ordered_paran = term.replace("_]", "]_").replace("[_", "_[")
         new_terms_with_score.append((term_with_ordered_paran, best_score))
 
-
+    print(new_terms_with_score)
     return new_terms_with_score
 
 def get_summed_score(s, original_term_dict):
@@ -209,7 +226,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
                                                               properties.TOPIC_MODEL_ALGORITHM,\
                                                               properties.get_properties_in_json(),\
-                                                              data_set_name, model_name, save_in_database)
+                                                              data_set_name, model_name, save_in_database,\
+                                                              properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
@@ -251,7 +269,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
         result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
                                                               properties.TOPIC_MODEL_ALGORITHM,\
                                                               properties.get_properties_in_json(),\
-                                                              data_set_name, model_name, save_in_database)
+                                                              data_set_name, model_name, save_in_database,\
+                                                              properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME)
         return result_dict, time, post_id
 
     
@@ -401,6 +420,7 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
     documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off, max_occurrence_outside_collocation=min_document_frequency)
 
     pre_processed_documents = documents
+
 
     """
     word_vectorizer = CountVectorizer(binary = True, min_df=2, stop_words=stopword_handler.get_stop_word_set(stop_word_file))
@@ -814,7 +834,7 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 
 
 def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
-                             json_properties, data_set_name, model_name, save_in_database):
+                             json_properties, data_set_name, model_name, save_in_database, are_these_two_terms_to_be_considered_the_same):
     document_dict = {}
     topic_info_list = []
     json_properties["STOP_WORDS"] = stopword_handler.get_user_stop_word_list()
@@ -837,7 +857,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_info_object["topic_terms"] = []
         
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
-        terms_scores_with_colloctations = get_collocations_from_documents(topic_texts, el[TERM_LIST])
+        terms_scores_with_colloctations = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
         
         
         for term in terms_scores_with_colloctations:
@@ -879,34 +899,41 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
             # It is only the terms that are actually included in the document that are added here
             document_topic_obj["terms_in_topic"] = []
+
             for term in terms_scores_with_colloctations:
-                add_term = True
-                inside_paranthesis = False
-                for sub_part in term[0].split(COLLOCATION_BINDER):
-                    if PAR_START in sub_part and PAR_END not in sub_part:
-                        #print("A subpart of the tokens have started, which don't have to be found among th contexts")
-                        #print(sub_part)
-                        inside_paranthesis = True
+                for synonym_sub_part in term[0].split(SYNONYM_JSON_BINDER):
+                    add_term = True # Each synonym should hava a new fresh chanse of being tested for if it occurs in the document
+    
+                    inside_paranthesis = False
+                    for sub_part in synonym_sub_part.split(COLLOCATION_BINDER):
+                        if PAR_START in sub_part and PAR_END not in sub_part:
+                            #print("A subpart of the tokens have started, which don't have to be found among th contexts")
+                            # print(sub_part)
+                            inside_paranthesis = True
                     
-                    elif PAR_START in sub_part and PAR_END  in sub_part:
-                        #print("This particular word does not have to be included, but that is not true for those that follow")
-                        #print(sub_part)
-                        # but state does not have to be changed here, as inside paranthesis negates itself
-                        pass
+                        elif PAR_START in sub_part and PAR_END  in sub_part:
+                            #print("This particular word does not have to be included, but that is not true for those that follow")
+                            #print(sub_part)
+                            # but state does not have to be changed here, as inside paranthesis negates itself
+                            pass
                 
-                    elif PAR_END  in sub_part:
-                        #print("This word does not have to be included, but what comes after")
-                        #print(sub_part)
-                        inside_paranthesis = False
+                        elif PAR_END  in sub_part:
+                            #print("This word does not have to be included, but what comes after")
+                            #print(sub_part)
+                                inside_paranthesis = False
 
-                    elif inside_paranthesis:
-                        #print("Does not have to be included, as it is within an paranthesis")
-                        #print(sub_part)
-                        pass
+                        elif inside_paranthesis:
+                            #print("Does not have to be included, as it is within an paranthesis")
+                            #print(sub_part)
+                            pass
 
-                    elif remove_par(sub_part.lower()) not in document[FOUND_CONCEPTS]: # All parts of a collocation must have been found in the document for it to be associated
-                        add_term = False
+                        elif remove_par(sub_part.lower()) not in document[FOUND_CONCEPTS]: # All parts of a collocation must have been found in the document for it to be associated
+                            add_term = False
                 if add_term:
+                    print("*******")
+                    print(document[FOUND_CONCEPTS])
+                    print(term[0])
+                    print()
                     term_object = {}
                     term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
                     term_object["score"] = term[1]

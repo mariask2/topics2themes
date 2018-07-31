@@ -137,6 +137,10 @@ class PropertiesContainer:
         except AttributeError:
             self.MIN_NGRAM_LENGTH_FOR_DUPLICATE = int(default_topic_model_configuration.MIN_NGRAM_LENGTH_FOR_DUPLICATE)
 
+        try:
+            self.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME = properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME
+        except AttributeError:
+            self.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME = default_topic_model_configuration.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME
     def get_properties_in_json(self):
         """
         Returns properties in json format
