@@ -34,6 +34,8 @@ TEXT = "text"
 LABEL = "label"
 COLLOCATION_BINDER = "_"
 SYNONYM_JSON_BINDER = " / "
+PAR_START = "["
+PAR_END = "]"
 DOC_ID =  "doc_id"
 DOCUMENT_TOPIC_STRENGTH = "document_topic_strength"
 ORIGINAL_DOCUMENT =  "original_document"
@@ -74,6 +76,9 @@ stopword_handler = StopwordHandler()
 # Main 
 ####
 
+def remove_par(txt):
+    return txt.replace(PAR_START, "").replace(PAR_END, "")
+
 def get_collocations_from_documents(documents, term_set):
     
     original_term_dict = {}
@@ -81,34 +86,52 @@ def get_collocations_from_documents(documents, term_set):
         original_term_dict[t[0]] = t[1]
     extracted_term_set = original_term_dict.keys() #  set([t[0] for t in term_set])
     cutoff = 2
-    documents_with_collocation_marked, ngrams, final_features = find_frequent_n_grams(documents, collocation_cut_off=cutoff,\
+    documents_with_collocation_marked, ngrams, all_features = find_frequent_n_grams(documents, collocation_cut_off=cutoff,\
                                                                       nr_of_words_that_have_occurred_outside_n_gram_cutoff = 1,\
                                                                       allowed_n_gram_components = extracted_term_set,\
                                                                       max_occurrence_outside_collocation = 0)
 
-    #print(len(original_term_dict.keys()))
-    # No collocation sub-part-check, allow subparts
-    """
-    ngrams.sort(key = lambda s: len(s), reverse = True)
-    ngram_subpart_filtered = []
-    for gram in ngrams:
-        add = True
-        for already_added in ngram_subpart_filtered:
-            if gram in already_added: # if it is a substring of something already in the collocation list, don't use this ngram
-                add = False
-        if add:
-            ngram_subpart_filtered.append(gram)
-    """
+
+
+    all_features.sort(key = lambda s: len(s.split(COLLOCATION_BINDER)), reverse = True)
+
+
+    final_features = set()
+    
+    for f in all_features:
+        if COLLOCATION_BINDER not in f:
+            final_features.add(f)
+        else:
+
+            add = True
+            for already_added_orig in final_features:
+                already_added = remove_par(already_added_orig)
+   
+                if f in already_added: # if it is a substring of something already in the collocation list, don't add this ngram, but modify the original instead
+                    final_features.remove(already_added_orig)
+                    already_added_without_f = already_added.replace(f,"")
+                    replace_with = PAR_START + already_added_without_f + PAR_END
+                    already_added_modified = already_added.replace(already_added_without_f, replace_with)
+
+
+                    final_features.add(already_added_modified)
+                    add = False
+            
+            if add:
+                final_features.add(f)
+
+    
+
     new_terms_with_score = []
     for term in final_features:
         score_sum = 0
         sp = term.split(COLLOCATION_BINDER)
         for t in sp:
-            score_sum = score_sum + original_term_dict[t]
-        new_terms_with_score.append((term, score_sum/len(sp)))
+            score_sum = score_sum + original_term_dict[remove_par(t)]
+        term_with_ordered_paran = term.replace("_]", "]_").replace("[_", "_[")
+        new_terms_with_score.append((term_with_ordered_paran, score_sum/len(sp)))
 
-    print(ngrams)
-    #print(len(new_terms_with_score))
+
     return new_terms_with_score
 
 
@@ -450,7 +473,7 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
     if allowed_n_gram_components == None:
         filtered_final_feautures = set(final_documents_vectorizer.get_feature_names())
     else:
-        filtered_final_feautures = set()
+        filtered_final_feautures = []
         # Add n-grams and the terms in the documents that are not included in the n-grams
         for el in final_documents_vectorizer.get_feature_names():
             add = True
@@ -458,9 +481,11 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
                 if sub_part not in allowed_n_gram_components:
                     add = False
             if add:
-                filtered_final_feautures.add(el)
-
-    return new_filtered_documents, filtered_ngram_list, filtered_final_feautures
+                filtered_final_feautures.append(el)
+    # remove e.g. bigrams that only occur in the context of a three-gram
+    filtered_ngram_list_that_occurs_as_feature = [f for f in filtered_ngram_list if f in filtered_final_feautures]
+    removed_ngrams = [f.replace(" ", COLLOCATION_BINDER) for f in filtered_ngram_list if f not in filtered_final_feautures]
+    return new_filtered_documents, filtered_ngram_list_that_occurs_as_feature, filtered_final_feautures
 
     
 
@@ -790,7 +815,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     json_properties["STOP_WORDS"] = stopword_handler.get_user_stop_word_list()
     
     """
-        Prints output from the topic model in html and json format, with topic terms in bold face
+        Prints output from the topic model in txt and json format (depending on whether it is run as server or as a program), with topic terms in bold face
     
         """
   
