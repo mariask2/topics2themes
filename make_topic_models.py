@@ -872,8 +872,30 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             document_topic_obj["terms_in_topic"] = []
             for term in terms_scores_with_colloctations:
                 add_term = True
+                inside_paranthesis = False
                 for sub_part in term[0].split(COLLOCATION_BINDER):
-                    if remove_par(sub_part.lower()) not in document[FOUND_CONCEPTS]: # All parts of a collocation must have been found in the document for it to be associated
+                    if PAR_START in sub_part and PAR_END not in sub_part:
+                        #print("A subpart of the tokens have started, which don't have to be found among th contexts")
+                        #print(sub_part)
+                        inside_paranthesis = True
+                    
+                    elif PAR_START in sub_part and PAR_END  in sub_part:
+                        #print("This particular word does not have to be included, but that is not true for those that follow")
+                        #print(sub_part)
+                        # but state does not have to be changed here, as inside paranthesis negates itself
+                        pass
+                
+                    elif PAR_END  in sub_part:
+                        #print("This word does not have to be included, but what comes after")
+                        #print(sub_part)
+                        inside_paranthesis = False
+
+                    elif inside_paranthesis:
+                        #print("Does not have to be included, as it is within an paranthesis")
+                        #print(sub_part)
+                        pass
+
+                    elif remove_par(sub_part.lower()) not in document[FOUND_CONCEPTS]: # All parts of a collocation must have been found in the document for it to be associated
                         add_term = False
                 if add_term:
                     term_object = {}
