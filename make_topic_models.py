@@ -93,21 +93,24 @@ def get_collocations_from_documents(documents, term_set):
 
 
 
-    all_features.sort(key = lambda s: len(s.split(COLLOCATION_BINDER)), reverse = True)
+    all_features.sort(key = lambda s: (len(s.split(COLLOCATION_BINDER)), get_summed_score(s, original_term_dict)), reverse = True)
 
 
     final_features = set()
     
     for f in all_features:
-        if COLLOCATION_BINDER not in f:
-            final_features.add(f)
+        if False: # keep this code, if needed later
+            pass
+        #if COLLOCATION_BINDER not in f:
+        #    final_features.add(f)
         else:
 
             add = True
             for already_added_orig in final_features:
                 already_added = remove_par(already_added_orig)
    
-                if f in already_added: # if it is a substring of something already in the collocation list, don't add this ngram, but modify the original instead
+                if f + COLLOCATION_BINDER in already_added or COLLOCATION_BINDER + f in already_added:
+                    # if it is a substring of something already in the collocation list, don't add this ngram, but modify the original instead
                     final_features.remove(already_added_orig)
                     already_added_without_f = already_added.replace(f,"")
                     replace_with = PAR_START + already_added_without_f + PAR_END
@@ -120,20 +123,29 @@ def get_collocations_from_documents(documents, term_set):
             if add:
                 final_features.add(f)
 
-    
 
     new_terms_with_score = []
     for term in final_features:
-        score_sum = 0
+        best_score = 0
         sp = term.split(COLLOCATION_BINDER)
         for t in sp:
-            score_sum = score_sum + original_term_dict[remove_par(t)]
+            if original_term_dict[remove_par(t)] > best_score:
+                best_score = original_term_dict[remove_par(t)] # user the highest score among its included parts
         term_with_ordered_paran = term.replace("_]", "]_").replace("[_", "_[")
-        new_terms_with_score.append((term_with_ordered_paran, score_sum/len(sp)))
+        new_terms_with_score.append((term_with_ordered_paran, best_score))
 
 
     return new_terms_with_score
 
+def get_summed_score(s, original_term_dict):
+    """
+        Used in get_collocations_from_documents for sorting collocations according to their summed term value
+        """
+    sum = 0
+    sp = s.split(COLLOCATION_BINDER)
+    for word in sp:
+        sum = sum + original_term_dict[word]
+    return word
 
 def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, save_in_database = True):
 
@@ -818,7 +830,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
         terms_scores_with_colloctations = get_collocations_from_documents(topic_texts, el[TERM_LIST])
         
-            
+        
         for term in terms_scores_with_colloctations:
             term_object = {}
             term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
