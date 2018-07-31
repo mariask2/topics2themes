@@ -762,6 +762,7 @@ def construct_document_info_average(documents, selected_documents_strength, term
 
     terms_strength_filtered_sorted = [(t,s) for (s,t) in sorted(terms_strength_filtered, reverse = True)]
 
+    
     return  doc_list, terms_strength_filtered_sorted
 
 
@@ -834,7 +835,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
         terms_scores_with_colloctations = get_collocations_from_documents(topic_texts, el[TERM_LIST])
         
-        #print("collocations", collocations)
+
     
         
         for term in terms_scores_with_colloctations:
@@ -879,7 +880,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             for term in terms_scores_with_colloctations:
                 add_term = True
                 for sub_part in term[0].split(COLLOCATION_BINDER):
-                    if sub_part not in document[FOUND_CONCEPTS]: # All parts of a collocation must have been found in the document for it to be associated
+                    if remove_par(sub_part) not in document[FOUND_CONCEPTS]: # All parts of a collocation must have been found in the document for it to be associated
                         add_term = False
                 if add_term:
                     term_object = {}
