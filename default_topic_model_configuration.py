@@ -89,13 +89,15 @@ def dummy(x, y): #only for debugging
     else:
         return False
 
-def simple_english(x, y):
-    if x[:-1] == y[:-1] or x[:-1] == y or x == y[:-1]:
+def simple_english_are_these_two_terms_considered_to_be_the_same(x, y):
+    if (x[:-1] == y[:-1] or x[:-1] == y or x == y[:-1]) and len(x) > 3 and len(y) > 3:
+        return True
+    elif ((x[:-2] == y[:-2] and len(x) > 4 and len(y) > 4) or (x[:-2] == y and len(x) > 4) or (x == y[:-2]) and len(y) > 4) :
         return True
     else:
         return False
 
-ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME = dummy
+ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME = simple_english_are_these_two_terms_considered_to_be_the_same
 
 
 
@@ -103,4 +105,15 @@ def no_cleaning(text):
 
     return text
 
+###
+# Testing the default functionality
+###
+if __name__ == '__main__':
+    print('simple_english_are_these_two_terms_considered_to_be_the_same("boat", "boats")', simple_english_are_these_two_terms_considered_to_be_the_same("boat", "boats"))
+    print('simple_english_are_these_two_terms_considered_to_be_the_same("boats", "boat")', simple_english_are_these_two_terms_considered_to_be_the_same("boats", "boat"))
+    print('simple_english_are_these_two_terms_considered_to_be_the_same("coats", "boat")', simple_english_are_these_two_terms_considered_to_be_the_same("coats", "boat"))
+    print('simple_english_are_these_two_terms_considered_to_be_the_same("oat", "oats")', simple_english_are_these_two_terms_considered_to_be_the_same("oat", "oats"))
+    print('simple_english_are_these_two_terms_considered_to_be_the_same("oats", "oat")', simple_english_are_these_two_terms_considered_to_be_the_same("oats", "oat"))
+    print('simple_english_are_these_two_terms_considered_to_be_the_same("box", "boxes")', simple_english_are_these_two_terms_considered_to_be_the_same("box", "boxes"))
+    print('simple_english_are_these_two_terms_considered_to_be_the_same("boxes", "box")', simple_english_are_these_two_terms_considered_to_be_the_same("boxes", "box"))
 

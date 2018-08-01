@@ -151,7 +151,6 @@ def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_
         term_with_ordered_paran = term.replace("_]", "]_").replace("[_", "_[")
         new_terms_with_score.append((term_with_ordered_paran, best_score))
 
-    print(new_terms_with_score)
     return new_terms_with_score
 
 def get_summed_score(s, original_term_dict):
@@ -935,10 +934,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                     if is_collocation_in_document(synonym_sub_part, document):
                         add_term = True
                 if add_term:
-                    print("*******")
-                    print(document[FOUND_CONCEPTS])
-                    print(term[0])
-                    print()
+
                     term_object = {}
                     term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
                     term_object["score"] = term[1]
