@@ -140,8 +140,8 @@ def get_all_topic_names():
 def create_new_analysis():
     model_id = request.values.get("model_id")
     analysis_name = request.values.get("analysis_name")
-    created_analysis_id =  mongo_con.create_new_analysis(model_id, analysis_name)
-    resp = make_response(jsonify({"result" : created_analysis_id}))
+    created_analysis =  mongo_con.create_new_analysis(model_id, analysis_name)
+    resp = make_response(jsonify({"result" : created_analysis}))
     return resp
 
 @app.route('/topic_modelling/api/v1.0/get_all_analyses_for_model', methods=['GET', 'POST'])

@@ -1044,7 +1044,7 @@ def add_markings_for_terms(text, term_list, topic_number):
     simple_tokenised_marked = []
     for el in simple_tokenised:
         if el.lower() in term_list_replace:
-            simple_tokenised_marked.append('<b class="bold-' +str(topic_number) + '">' + el + "</b>")
+            simple_tokenised_marked.append('<b class="bold-' +str(topic_number) + '">' + " " + el + "</b>")
         else:
             simple_tokenised_marked.append(el)
     return untokenize(simple_tokenised_marked)

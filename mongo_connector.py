@@ -103,10 +103,11 @@ class MongoConnector:
 
     def create_new_analysis(self, model_id, analysis_name):
         print("model_id", model_id)
-        post = {self.MODEL_ID : model_id, self.ANALYSIS_NAME : analysis_name}
+        name_with_time = analysis_name + " " + str(datetime.datetime.now())
+        post = {self.MODEL_ID : model_id, self.ANALYSIS_NAME : name_with_time}
         print("post")
         post_id = self.get_analyses_collection().insert_one(post).inserted_id
-        return {self.ID : str(post_id)}
+        return {self.ID : str(post_id), self.ANALYSIS_NAME : name_with_time}
 
     def get_all_analyses_for_model(self, model_id):
         analyses = self.get_analyses_collection().find({self.MODEL_ID : model_id})
