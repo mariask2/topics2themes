@@ -39,3 +39,13 @@ META_DATA = "meta_data"
 MODEL_NAME = "model_name"
 DOCUMENTS = "documents"
 TOPICS    = "topics"
+
+###
+# To display the labels
+####
+LABEL_COLOR = "label_color"
+
+RED = "#8A0808"
+GREEN = "#0B6121"
+SILVER = "#C0C0C0"
+

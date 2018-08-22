@@ -895,8 +895,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             topic_info_object["topic_terms"].append(term_object)
 
         
-        # TODO: Now, if the same document belongs to many topics, only the document that appears first
-        # will be marked correctly with bold face for important terms
+        # TODO: Perhaps add some strength indication to the marking
         for nr, document in enumerate(el[DOCUMENT_LIST]):
 
             if document[DOC_ID] not in document_dict:
