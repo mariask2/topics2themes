@@ -39,7 +39,6 @@ PAR_END = "]"
 DOC_ID =  "doc_id"
 DOCUMENT_TOPIC_STRENGTH = "document_topic_strength"
 ORIGINAL_DOCUMENT =  "original_document"
-FOUND_TERMS = "found_terms"
 FOUND_CONCEPTS = "found_concepts"
 MARKED_DOCUMENT_TOK = "marked_document_tok"
 MODEL_INFO = "MODEL_INFO"
@@ -781,20 +780,20 @@ def construct_document_info_average(documents, selected_documents_strength, term
         doc_i = selected[DOC_ID]
         strength = selected[DOCUMENT_TOPIC_STRENGTH]
         found_concepts = []
-        found_terms = []
         if strength > 0.000:
             simple_tokenised = get_very_simple_tokenised(documents[doc_i], lower = False)
             for el in simple_tokenised:
                 if el.lower() in term_list_replace:
                     found_concepts.extend(term_preprocessed_dict[el.lower()])
 
+
             if len(found_concepts) > 0 : # only include documents where at least on one of the terms is found
                 doc_list.append(\
                                 {DOC_ID: doc_i, \
                                 DOCUMENT_TOPIC_STRENGTH : strength,\
                                 ORIGINAL_DOCUMENT: documents[doc_i],\
-                                FOUND_CONCEPTS : set(found_concepts),\
-                                FOUND_TERMS: list(set(found_terms))})
+                                FOUND_CONCEPTS : list(set(found_concepts))})
+
         for t in set(found_concepts):
             ts = (term_strength_dict[t], t)
             if ts not in terms_strength_filtered:
@@ -921,9 +920,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             document_topic_obj = {}
             document_topic_obj["topic_index"] = el[TOPIC_NUMBER]
             document_topic_obj["topic_confidence"] = document[DOCUMENT_TOPIC_STRENGTH]
-            document_topic_obj["terms_found_in_text"] = document[FOUND_TERMS]
+            document_topic_obj["terms_found_in_text"] = document[FOUND_CONCEPTS]
             
-
             # It is only the terms that are actually included in the document that are added here
             document_topic_obj["terms_in_topic"] = []
 
@@ -971,7 +969,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             os.mkdir(TOPIC_MODEL_EVALUATION_FOLDER_BASE)
 
         data_set_results_folder = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER_BASE, data_set_name)
-        print(data_set_results_folder)
 
         if not os.path.exists(data_set_results_folder):
             os.mkdir(data_set_results_folder)
@@ -988,7 +985,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             if l not in label_dict:
                 label_dict[l] = 0
             label_dict[l] = label_dict[l] + 1
-        print(label_dict)
 
         result_file_labels = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, data_set_name + "_label_info.txt")
         result_file_labels_file = open(result_file_labels, "w")
@@ -1007,16 +1003,19 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             csv_open = open(result_file_csv, "w")
             csv_open_no_class = open(result_file_csv_no_classification, "w")
             
+            topic_texts_write_to_file = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
+            terms_scores_with_colloctations_write_to_file = \
+                get_collocations_from_documents(topic_texts_write_to_file, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
             terms_open.write(str(el[TOPIC_NUMBER]) + "\n")
             terms_open.write("----\n")
-            terms_open.write(str(sorted([(strength, term) for (term, strength) in terms_scores_with_colloctations])[::-1]) + "\n")
+            terms_open.write(str(sorted([(strength, term) for (term, strength) in terms_scores_with_colloctations_write_to_file])[::-1]) + "\n")
             terms_open.write("********\n\n")
 
             for (strength, document) in sorted([(doc[DOCUMENT_TOPIC_STRENGTH], doc) for doc in el[DOCUMENT_LIST]], key=get_first_in_tuple)[::-1]:
-                output = [document[DOC_ID], strength, document_dict[document[DOC_ID]][LABEL], document[FOUND_TERMS], document[ORIGINAL_DOCUMENT]]
+                output = [document[DOC_ID], strength, document_dict[document[DOC_ID]][LABEL], document[FOUND_CONCEPTS], document[ORIGINAL_DOCUMENT]]
                 csv_open.write("\t".join([str(el) for el in output]) + "\n")
             
-                output_no_class = [document[DOC_ID], strength, document[FOUND_TERMS], document[ORIGINAL_DOCUMENT]]
+                output_no_class = [document[DOC_ID], strength, document[FOUND_CONCEPTS], document[ORIGINAL_DOCUMENT]]
                 csv_open_no_class.write("\t".join([str(el) for el in output_no_class]) + "\n")
             
             csv_open.flush()
@@ -1027,10 +1026,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
         terms_open.flush()
         terms_open.close()
-
-
-
-
         print("Written to folder " + TOPIC_MODEL_EVALUATION_FOLDER)
 
     return result_dict, saved_time, post_id
@@ -1096,18 +1091,10 @@ if __name__ == '__main__':
     result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format,\
                                                        datetime.datetime.now(), save_in_database = False)
 
-    """
-    for el in result_dict["topics"]:
-        print(el)
-    print("------")
-    for el in result_dict["documents"]:
-        print(el)
-    print("------")
-    """
+
     print("created " + str(len(result_dict["topics"])) + " topics.")
     print("Created model saved at " + str(time))
-    #print(result_dict["topic_model_output"])
-    #print(post_id)
+
     #mongo_con.close_connection()
 
 
