@@ -916,7 +916,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 marked_document = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
                                                          el[TERM_LIST], el[TOPIC_NUMBER])
             
-            snippet_text, first_sentences = get_snippet_text(marked_document, most_typical_model, tf_vectorizer,\
+            marked_text_transformed = marked_document.replace(".", ". ").replace("(", " (").replace(")", ") ").replace("!", "! ").replace("?", "? ").replace(":", ": ").replace(";", "; ")
+            snippet_text, first_sentences = get_snippet_text(marked_text_transformed, most_typical_model, tf_vectorizer,\
                                             stop_word_file,\
                                             min_document_frequency,\
                                             max_document_frequency)
@@ -926,7 +927,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 document_obj["text"] = document[ORIGINAL_DOCUMENT]
                 document_obj["snippet"] = snippet_text
                 document_obj["id"] = int(str(document[DOC_ID]))
-                document_obj["marked_text_tok"] = marked_document
+                document_obj["marked_text_tok"] = marked_text_transformed
                 document_obj["id_source"] = int(str(document[DOC_ID]))
                 document_obj["timestamp"] = int(str(document[DOC_ID]))
                 document_obj["document_topics"] = []
@@ -1150,7 +1151,7 @@ def get_cashed_topic_model(mongo_con):
 
 def make_model_for_collection(collection_name, model_name, mongo_con):
     properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + collection_name, DEFAULT_ROOT_DIRECTORY)
-    result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format, model_name)
+    result_dict, time, post_id, most_typical_model = run_make_topic_models(mongo_con, properties, path_slash_format, model_name)
     return result_dict
 
 ###
