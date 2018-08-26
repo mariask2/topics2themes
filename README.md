@@ -16,6 +16,8 @@ conda install -c anaconda mongodb
 
 conda install -c anaconda pymongo
 
+conda install nltk
+
 If you want to use the functionality of running the topic modelling as a flask server, you also need to have the following installed:
 
 pip install Flask

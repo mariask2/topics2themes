@@ -5,6 +5,7 @@ For performing topic modelling. The main file of the package
 from pprint import pprint
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import NMF, LatentDirichletAllocation
+from nltk.tokenize import sent_tokenize
 
 import os
 import numpy as np
@@ -906,14 +907,20 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             term_object["score"] = term[1]
             topic_info_object["topic_terms"].append(term_object)
 
-        
+
         # TODO: Perhaps add some strength indication to the marking
         for nr, document in enumerate(el[DOCUMENT_LIST]):
-            marked_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT], el[TERM_LIST], el[TOPIC_NUMBER])
-            snippet_text = get_snippet_text(marked_document, most_typical_model, tf_vectorizer,\
+            if document[DOC_ID] not in document_dict:
+                marked_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT], el[TERM_LIST], el[TOPIC_NUMBER])
+            else:
+                marked_document = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
+                                                         el[TERM_LIST], el[TOPIC_NUMBER])
+            
+            snippet_text, first_sentences = get_snippet_text(marked_document, most_typical_model, tf_vectorizer,\
                                             stop_word_file,\
                                             min_document_frequency,\
                                             max_document_frequency)
+            
             if document[DOC_ID] not in document_dict:
                 document_obj = {}
                 document_obj["text"] = document[ORIGINAL_DOCUMENT]
@@ -928,10 +935,10 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 if document_obj["text"] != file_list[document[DOC_ID]][TEXT]:
                     print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(file_list[document[DOC_ID]][TEXT]))
         
-            else:
-                document_dict[document[DOC_ID]]["marked_text_tok"] = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
-                                                                                            el[TERM_LIST], el[TOPIC_NUMBER])
 
+            else:
+                document_dict[document[DOC_ID]]["marked_text_tok"] = marked_document
+                document_obj["snippet"] = snippet_text
 
             #print(document_dict[document[DOC_ID]]["marked_text_tok"])
             
@@ -961,6 +968,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         
 
         topic_info_list.append(topic_info_object)
+
 
 
     result_dict = {}
@@ -1054,10 +1062,10 @@ def get_snippet_text(text, most_typical_model, tf_vectorizer,\
                      min_document_frequency,\
                      max_document_frequency):
     SNIPPET_SENTENCE_LENGTH = 2
-    
-    # TODO: Add a better sentence splitting
-    sentence_list = text.split(".")
-    # texts, tf_vectorizer, tf = get_scikit_bow(sentences, tf_vectorizer, min_document_frequency, max_document_frequency, stop_word_file)
+    SENTENCE_HIDDEN_MARKER = "."
+
+    # TODO: This is not language independent
+    sentence_list = sent_tokenize(text)
     
     
     transformed_sentences, result = apply_trained_model_on_sentences(sentence_list, most_typical_model, tf_vectorizer)
@@ -1073,15 +1081,20 @@ def get_snippet_text(text, most_typical_model, tf_vectorizer,\
     for nr, (sent, scored) in enumerate(zip(sentence_list, result)):
         max_scores_for_sentences.append((max(scored), nr))
     max_scores_for_sentences.sort(reverse = True)
-    indices_to_keep = [index for (score, index) in max_scores_for_sentences[:SNIPPET_SENTENCE_LENGTH + 1]]
-    
+    indices_to_keep = [index for (score, index) in max_scores_for_sentences[:SNIPPET_SENTENCE_LENGTH]]
+
+    first_sentences = ""
     text_snippet = ""
+
     for nr, sent in enumerate(sentence_list):
         if nr in indices_to_keep:
-            text_snippet = text_snippet + sent.strip() + ". "
+            text_snippet = text_snippet.strip() + " " + sent.strip()
         else:
-            text_snippet = text_snippet + " .. "
-    return text_snippet
+            text_snippet = text_snippet.strip() + " " + SENTENCE_HIDDEN_MARKER
+
+        if nr < SNIPPET_SENTENCE_LENGTH:
+            first_sentences = first_sentences.strip() + " " + sent.strip()
+    return text_snippet.strip(), first_sentences.strip() + " " + SENTENCE_HIDDEN_MARKER
 
 
 def apply_trained_model_on_sentences(sentence_list, model, tf_vectorizer):
