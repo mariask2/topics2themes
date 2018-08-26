@@ -42,6 +42,7 @@ ORIGINAL_DOCUMENT =  "original_document"
 FOUND_CONCEPTS = "found_concepts"
 MARKED_DOCUMENT_TOK = "marked_document_tok"
 MODEL_INFO = "MODEL_INFO"
+MODEL = "MODEL"
 
 
 #####
@@ -197,7 +198,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
             print("max_less_than_requested_models_returned", max_less_than_requested_models_returned)
             
             print("Training model with " + str(number_of_topics) + " requested topics")
-            topic_info, scikit_nmf, tf_vectorizer = train_scikit_nmf_model(documents, number_of_topics,\
+            topic_info, most_typical_model, tf_vectorizer = train_scikit_nmf_model(documents, number_of_topics,\
                                                                        properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
                                                                        properties.COLLOCATION_CUT_OFF,\
                                                                        stop_word_file,\
@@ -225,11 +226,16 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               properties.TOPIC_MODEL_ALGORITHM,\
                                                               properties.get_properties_in_json(),\
                                                               data_set_name, model_name, save_in_database,\
-                                                              properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME)
+                                                              properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME,\
+                                                              most_typical_model,\
+                                                              tf_vectorizer,\
+                                                              stop_word_file,\
+                                                              properties.MIN_DOCUMENT_FREQUENCY,\
+                                                              properties.MAX_DOCUMENT_FREQUENCY)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
-        return result_dict, time, post_id
+        return result_dict, time, post_id, most_typical_model
 
 
     if properties.TOPIC_MODEL_ALGORITHM == LDA_NAME:
@@ -240,7 +246,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
             print("max_less_than_requested_models_returned", max_less_than_requested_models_returned)
             
             print("Training model with " + str(number_of_topics) + " requested topics")
-            topic_info, scikit_lda, tf_vectorizer = train_scikit_lda_model(documents, properties.NUMBER_OF_TOPICS,\
+            topic_info, most_typical_model, tf_vectorizer = train_scikit_lda_model(documents, properties.NUMBER_OF_TOPICS,\
                                                                        properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
                                                                        properties.COLLOCATION_CUT_OFF,\
                                                                        stop_word_file,\
@@ -268,8 +274,13 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               properties.TOPIC_MODEL_ALGORITHM,\
                                                               properties.get_properties_in_json(),\
                                                               data_set_name, model_name, save_in_database,\
-                                                              properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME)
-        return result_dict, time, post_id
+                                                              properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME,\
+                                                              most_typical_model, \
+                                                              tf_vectorizer,\
+                                                              stop_word_file,\
+                                                              properties.MIN_DOCUMENT_FREQUENCY,\
+                                                              properties.MAX_DOCUMENT_FREQUENCY)
+        return result_dict, time, post_id, most_typical_model
 
     
 def get_current_file_name(name, topic_model_algorithm):
@@ -375,8 +386,8 @@ def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_p
     for i in range(0, number_of_runs):
         lda = LatentDirichletAllocation(n_components=number_of_topics, max_iter=10, learning_method='online', learning_offset=50.).fit(tf)
         model_list.append(lda)
-    topic_info = get_scikit_topics(model_list, tf_vectorizer, tf, documents, nr_of_top_words, nr_of_to_documents, overlap_cut_off)
-    return topic_info, lda, tf_vectorizer
+    topic_info, most_typical_model = get_scikit_topics(model_list, tf_vectorizer, tf, documents, nr_of_top_words, nr_of_to_documents, overlap_cut_off)
+    return topic_info, most_typical_model, tf_vectorizer
 
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
@@ -393,8 +404,8 @@ def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_p
     for i in range(0, number_of_runs):
         nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='nndsvd').fit(tfidf)
         model_list.append(nmf)
-    topic_info = get_scikit_topics(model_list, tfidf_vectorizer, tfidf, documents, nr_of_top_words, nr_of_to_documents, overlap_cut_off)
-    return topic_info, nmf, tfidf_vectorizer
+    topic_info, most_typical_model = get_scikit_topics(model_list, tfidf_vectorizer, tfidf, documents, nr_of_top_words, nr_of_to_documents, overlap_cut_off)
+    return topic_info, most_typical_model, tfidf_vectorizer
 
 
 def get_very_simple_tokenised(document, lower = True):
@@ -584,7 +595,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
         model_results.append(ret_list)
 
     # Code for removing the model re-runs with an output with the smallest overlap with other model re-runs
-    # Remove the 5% most outlier re-runs
+    # Remove the 10% most outlier re-runs
     term_results = []
     for ret_list in model_results:
         term_set = set()
@@ -607,12 +618,13 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     overlap_averages_sorted = sorted(overlap_averages, reverse=True)
     overlap_averages_sorted_removed_outliers = [nr for (overl, nr) in overlap_averages_sorted[:int(len(overlap_averages_sorted)*0.90)]]
 
-
+    most_typical_model = None
     model_results_filtered = []
     for nr, el in enumerate(model_results):
         if nr in overlap_averages_sorted_removed_outliers:
             model_results_filtered.append(el)
-
+        if nr == overlap_averages_sorted_removed_outliers[0]:
+            most_typical_model = model_list[nr]
 
 
     for nr, ret_list in enumerate(model_results_filtered):
@@ -705,7 +717,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     print("***********")
 
     """
-    return average_list
+    return average_list, most_typical_model
 
 
 def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents):
@@ -861,18 +873,19 @@ def is_collocation_in_document(synonym_sub_part, document):
 
 
 def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
-                             json_properties, data_set_name, model_name, save_in_database, are_these_two_terms_to_be_considered_the_same):
+                             json_properties, data_set_name, model_name, save_in_database,\
+                             are_these_two_terms_to_be_considered_the_same,\
+                             most_typical_model, tf_vectorizer, stop_word_file,\
+                             min_document_frequency,\
+                             max_document_frequency):
+    """
+        Prints output/returns from the topic model in txt and json format (depending on whether it is run as server or as a program), with topic terms in bold face
+        
+        """
+    
     document_dict = {}
     topic_info_list = []
     json_properties["STOP_WORDS"] = stopword_handler.get_user_stop_word_list()
-    
-    """
-        Prints output from the topic model in txt and json format (depending on whether it is run as server or as a program), with topic terms in bold face
-    
-        """
-  
-
-
     
     for nr, el in enumerate(topic_info):
         
@@ -896,10 +909,14 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         
         # TODO: Perhaps add some strength indication to the marking
         for nr, document in enumerate(el[DOCUMENT_LIST]):
-
+            snippet_text = get_snippet_text(document[ORIGINAL_DOCUMENT], most_typical_model, tf_vectorizer,\
+                                            stop_word_file,\
+                                            min_document_frequency,\
+                                            max_document_frequency)
             if document[DOC_ID] not in document_dict:
                 document_obj = {}
                 document_obj["text"] = document[ORIGINAL_DOCUMENT]
+                document_obj["snippet"] = snippet_text
                 document_obj["id"] = int(str(document[DOC_ID]))
                 document_obj["marked_text_tok"] = add_markings_for_terms(document[ORIGINAL_DOCUMENT], el[TERM_LIST], el[TOPIC_NUMBER])
                 document_obj["id_source"] = int(str(document[DOC_ID]))
@@ -1031,6 +1048,35 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     return result_dict, saved_time, post_id
 
 
+def get_snippet_text(text, most_typical_model, tf_vectorizer,\
+                     stop_word_file,\
+                     min_document_frequency,\
+                     max_document_frequency):
+    
+    # TODO: Add a better sentence splitting
+    sentence_list = text.split(".")
+    # texts, tf_vectorizer, tf = get_scikit_bow(sentences, tf_vectorizer, min_document_frequency, max_document_frequency, stop_word_file)
+    
+    
+    transformed_sentences, result = apply_trained_model_on_sentences(sentence_list, most_typical_model, tf_vectorizer)
+    print(result)
+    
+    inversed = tf_vectorizer.inverse_transform(transformed_sentences)
+    inversed_transformed_sentences = []
+    for el in inversed:
+        inversed_transformed_sentences.append(list(el))
+    
+    print(inversed_transformed_sentences)
+    print("****")
+   
+
+def apply_trained_model_on_sentences(sentence_list, model, tf_vectorizer):
+    transformed_sentences = tf_vectorizer.transform(sentence_list)
+    result = model.inverse_transform(model.transform(transformed_sentences))
+    return transformed_sentences, result
+
+
+
 def add_markings_for_terms(text, term_list, topic_number):
     term_list_replace = [t[0] for t in term_list]
     
@@ -1088,7 +1134,7 @@ if __name__ == '__main__':
     properties, path_slash_format, path_dot_format = handle_properties.load_properties(parser)
     
     mongo_con = None #MongoConnector()
-    result_dict, time, post_id = run_make_topic_models(mongo_con, properties, path_slash_format,\
+    result_dict, time, post_id, most_typical_model = run_make_topic_models(mongo_con, properties, path_slash_format,\
                                                        datetime.datetime.now(), save_in_database = False)
 
 
