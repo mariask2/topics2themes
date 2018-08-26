@@ -229,10 +229,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               data_set_name, model_name, save_in_database,\
                                                               properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME,\
                                                               most_typical_model,\
-                                                              tf_vectorizer,\
-                                                              stop_word_file,\
-                                                              properties.MIN_DOCUMENT_FREQUENCY,\
-                                                              properties.MAX_DOCUMENT_FREQUENCY)
+                                                              tf_vectorizer)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
@@ -277,10 +274,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               data_set_name, model_name, save_in_database,\
                                                               properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME,\
                                                               most_typical_model, \
-                                                              tf_vectorizer,\
-                                                              stop_word_file,\
-                                                              properties.MIN_DOCUMENT_FREQUENCY,\
-                                                              properties.MAX_DOCUMENT_FREQUENCY)
+                                                              tf_vectorizer)
         return result_dict, time, post_id, most_typical_model
 
     
@@ -876,9 +870,7 @@ def is_collocation_in_document(synonym_sub_part, document):
 def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
                              json_properties, data_set_name, model_name, save_in_database,\
                              are_these_two_terms_to_be_considered_the_same,\
-                             most_typical_model, tf_vectorizer, stop_word_file,\
-                             min_document_frequency,\
-                             max_document_frequency):
+                             most_typical_model, tf_vectorizer):
     """
         Prints output/returns from the topic model in txt and json format (depending on whether it is run as server or as a program), with topic terms in bold face
         
@@ -916,18 +908,28 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 marked_document = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
                                                          el[TERM_LIST], el[TOPIC_NUMBER])
             
-            marked_text_transformed = marked_document.replace(".", ". ").replace("(", " (").replace(")", ") ").replace("!", "! ").replace("?", "? ").replace(":", ": ").replace(";", "; ")
-            snippet_text, first_sentences = get_snippet_text(marked_text_transformed, most_typical_model, tf_vectorizer,\
-                                            stop_word_file,\
-                                            min_document_frequency,\
-                                            max_document_frequency)
+            # TODO Perhpas concatnating with lists is faster
+            marked_text_transformed = marked_document.replace("!", "! ").replace("?", "? ").replace(":", ": ").replace(";", "; ")
+            marked_text_inserted_spaces = ""
+            ch_nr = 0
+            for c in marked_text_transformed:
+                if c == "." and ch_nr < len(marked_text_transformed) - 1 and marked_text_transformed[ch_nr + 1] != " ":
+                    if marked_text_transformed[ch_nr + 1].isupper():
+                        marked_text_inserted_spaces = marked_text_inserted_spaces + c + " "
+                    else:
+                        marked_text_inserted_spaces = marked_text_inserted_spaces + c
+                else:
+                    marked_text_inserted_spaces = marked_text_inserted_spaces + c
+                ch_nr = ch_nr + 1
+            
+            snippet_text, first_sentences = get_snippet_text(marked_text_inserted_spaces, most_typical_model, tf_vectorizer)
             
             if document[DOC_ID] not in document_dict:
                 document_obj = {}
                 document_obj["text"] = document[ORIGINAL_DOCUMENT]
                 document_obj["snippet"] = snippet_text
                 document_obj["id"] = int(str(document[DOC_ID]))
-                document_obj["marked_text_tok"] = marked_text_transformed
+                document_obj["marked_text_tok"] = marked_text_inserted_spaces
                 document_obj["id_source"] = int(str(document[DOC_ID]))
                 document_obj["timestamp"] = int(str(document[DOC_ID]))
                 document_obj["document_topics"] = []
@@ -1058,10 +1060,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     return result_dict, saved_time, post_id
 
 
-def get_snippet_text(text, most_typical_model, tf_vectorizer,\
-                     stop_word_file,\
-                     min_document_frequency,\
-                     max_document_frequency):
+def get_snippet_text(text, most_typical_model, tf_vectorizer):
     SNIPPET_SENTENCE_LENGTH = 2
     SENTENCE_HIDDEN_MARKER = "."
 
