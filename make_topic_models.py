@@ -909,7 +909,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         
         # TODO: Perhaps add some strength indication to the marking
         for nr, document in enumerate(el[DOCUMENT_LIST]):
-            snippet_text = get_snippet_text(document[ORIGINAL_DOCUMENT], most_typical_model, tf_vectorizer,\
+            marked_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT], el[TERM_LIST], el[TOPIC_NUMBER])
+            snippet_text = get_snippet_text(marked_document, most_typical_model, tf_vectorizer,\
                                             stop_word_file,\
                                             min_document_frequency,\
                                             max_document_frequency)
@@ -918,7 +919,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 document_obj["text"] = document[ORIGINAL_DOCUMENT]
                 document_obj["snippet"] = snippet_text
                 document_obj["id"] = int(str(document[DOC_ID]))
-                document_obj["marked_text_tok"] = add_markings_for_terms(document[ORIGINAL_DOCUMENT], el[TERM_LIST], el[TOPIC_NUMBER])
+                document_obj["marked_text_tok"] = marked_document
                 document_obj["id_source"] = int(str(document[DOC_ID]))
                 document_obj["timestamp"] = int(str(document[DOC_ID]))
                 document_obj["document_topics"] = []
@@ -1052,6 +1053,7 @@ def get_snippet_text(text, most_typical_model, tf_vectorizer,\
                      stop_word_file,\
                      min_document_frequency,\
                      max_document_frequency):
+    SNIPPET_SENTENCE_LENGTH = 2
     
     # TODO: Add a better sentence splitting
     sentence_list = text.split(".")
@@ -1059,16 +1061,28 @@ def get_snippet_text(text, most_typical_model, tf_vectorizer,\
     
     
     transformed_sentences, result = apply_trained_model_on_sentences(sentence_list, most_typical_model, tf_vectorizer)
-    print(result)
     
     inversed = tf_vectorizer.inverse_transform(transformed_sentences)
     inversed_transformed_sentences = []
     for el in inversed:
         inversed_transformed_sentences.append(list(el))
     
-    print(inversed_transformed_sentences)
-    print("****")
-   
+    # TODO: Now a topic-independent socring of sentences is performed, so sentences are ranked according to the topic
+    # for which they are most typical. Perhaps a topic-specific ranking ought to be carried out as well in the future
+    max_scores_for_sentences = []
+    for nr, (sent, scored) in enumerate(zip(sentence_list, result)):
+        max_scores_for_sentences.append((max(scored), nr))
+    max_scores_for_sentences.sort(reverse = True)
+    indices_to_keep = [index for (score, index) in max_scores_for_sentences[:SNIPPET_SENTENCE_LENGTH + 1]]
+    
+    text_snippet = ""
+    for nr, sent in enumerate(sentence_list):
+        if nr in indices_to_keep:
+            text_snippet = text_snippet + sent.strip() + ". "
+        else:
+            text_snippet = text_snippet + " .. "
+    return text_snippet
+
 
 def apply_trained_model_on_sentences(sentence_list, model, tf_vectorizer):
     transformed_sentences = tf_vectorizer.transform(sentence_list)
