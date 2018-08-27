@@ -1097,16 +1097,22 @@ def get_snippet_text(text, most_typical_model, tf_vectorizer):
             indices_to_keep.append(i)
 
 
-    text_snippet = ""
+    text_snippet = []
 
     for nr, sent in enumerate(sentence_list):
         if nr in indices_to_keep:
-            text_snippet = text_snippet.strip() + " " + sent.strip()
+            if nr - 1 not in indices_to_keep and nr != 0: # Going from hidden to shown text and it is not first sentence
+                text_snippet.append("] ")
+            text_snippet.append(sent + " ")
         else:
-            text_snippet = text_snippet.strip() + " " + SENTENCE_HIDDEN_MARKER
-
-
-    return text_snippet.strip()
+            if nr - 1 in indices_to_keep or nr == 0: # Going from shown to hidden (or being the first sentence)
+                text_snippet.append("[")
+            text_snippet.append(SENTENCE_HIDDEN_MARKER)
+            if nr == len(sentence_list) - 1: # the last sentence
+                text_snippet.append("] ")
+    text_snippet_text = "".join(text_snippet).strip().replace(".]", "..]") # Add one extra dot to make it clearer
+    print(text_snippet_text)
+    return text_snippet_text
 
 
 def apply_trained_model_on_sentences(sentence_list, model, tf_vectorizer):
