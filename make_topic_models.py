@@ -909,7 +909,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                                                          el[TERM_LIST], el[TOPIC_NUMBER])
             
             # TODO Perhpas concatnating with lists is faster
-            marked_text_transformed = marked_document.replace("!", "! ").replace("?", "? ").replace(":", ": ").replace(";", "; ")
+            marked_text_transformed = marked_document.replace("!", "! ").replace("?", "? ").replace(":", ": ").replace(";", "; ").replace("(", " (")
             marked_text_inserted_spaces = ""
             ch_nr = 0
             for c in marked_text_transformed:
@@ -922,7 +922,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                     marked_text_inserted_spaces = marked_text_inserted_spaces + c
                 ch_nr = ch_nr + 1
             
-            snippet_text, first_sentences = get_snippet_text(marked_text_inserted_spaces, most_typical_model, tf_vectorizer)
+            snippet_text = get_snippet_text(marked_text_inserted_spaces, most_typical_model, tf_vectorizer)
             
             if document[DOC_ID] not in document_dict:
                 document_obj = {}
@@ -1061,12 +1061,12 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
 
 def get_snippet_text(text, most_typical_model, tf_vectorizer):
-    SNIPPET_SENTENCE_LENGTH = 2
+    MAX_SNIPPET_SENTENCE_LENGTH = 300
     SENTENCE_HIDDEN_MARKER = "."
 
     # TODO: This is not language independent
     sentence_list = sent_tokenize(text)
-    
+
     
     transformed_sentences, result = apply_trained_model_on_sentences(sentence_list, most_typical_model, tf_vectorizer)
     
@@ -1077,13 +1077,26 @@ def get_snippet_text(text, most_typical_model, tf_vectorizer):
     
     # TODO: Now a topic-independent socring of sentences is performed, so sentences are ranked according to the topic
     # for which they are most typical. Perhaps a topic-specific ranking ought to be carried out as well in the future
+    
+    # Decide which sentences to keep for the snippet
     max_scores_for_sentences = []
     for nr, (sent, scored) in enumerate(zip(sentence_list, result)):
         max_scores_for_sentences.append((max(scored), nr))
     max_scores_for_sentences.sort(reverse = True)
-    indices_to_keep = [index for (score, index) in max_scores_for_sentences[:SNIPPET_SENTENCE_LENGTH]]
+    sorted_indices_according_to_sentence_importance = [index for (score, index) in max_scores_for_sentences]
+    indices_to_keep = []
+    chars_used_so_far = 0
+    for nr, i in enumerate(sorted_indices_according_to_sentence_importance):
+        chars_used_before_this_round = chars_used_so_far
+        chars_used_so_far = chars_used_so_far + len((sentence_list[i]))
+        # Always keep the most important sentence, but otherwise, break if the snippet gets too long
+        # If the text alreday added to the snippet before this round was very short, also add the text
+        if chars_used_so_far > MAX_SNIPPET_SENTENCE_LENGTH and nr > 0 and chars_used_before_this_round > MAX_SNIPPET_SENTENCE_LENGTH/2:
+            break
+        else:
+            indices_to_keep.append(i)
 
-    first_sentences = ""
+
     text_snippet = ""
 
     for nr, sent in enumerate(sentence_list):
@@ -1092,9 +1105,8 @@ def get_snippet_text(text, most_typical_model, tf_vectorizer):
         else:
             text_snippet = text_snippet.strip() + " " + SENTENCE_HIDDEN_MARKER
 
-        if nr < SNIPPET_SENTENCE_LENGTH:
-            first_sentences = first_sentences.strip() + " " + sent.strip()
-    return text_snippet.strip(), first_sentences.strip() + " " + SENTENCE_HIDDEN_MARKER
+
+    return text_snippet.strip()
 
 
 def apply_trained_model_on_sentences(sentence_list, model, tf_vectorizer):
