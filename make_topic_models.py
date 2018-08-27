@@ -941,7 +941,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
             else:
                 document_dict[document[DOC_ID]]["marked_text_tok"] = marked_document
-                document_obj["snippet"] = snippet_text
+                document_dict[document[DOC_ID]]["snippet"] = snippet_text
 
             #print(document_dict[document[DOC_ID]]["marked_text_tok"])
             
@@ -1061,7 +1061,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
 
 def get_snippet_text(text, most_typical_model, tf_vectorizer):
-    MAX_SNIPPET_SENTENCE_LENGTH = 300
+    MAX_SNIPPET_SENTENCE_LENGTH = 360
     SENTENCE_HIDDEN_MARKER = "."
 
     # TODO: This is not language independent
