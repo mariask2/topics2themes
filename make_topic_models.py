@@ -80,13 +80,21 @@ stopword_handler = StopwordHandler()
 def remove_par(txt):
     return txt.replace(PAR_START, "").replace(PAR_END, "")
 
-def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_be_considered_the_same):
+def get_collocations_from_documents(orig_documents, term_set, are_these_two_terms_to_be_considered_the_same):
     
     original_term_dict = {}
     for t in term_set:
         original_term_dict[t[0]] = t[1]
     extracted_term_set = original_term_dict.keys() #  set([t[0] for t in term_set])
     cutoff = 2
+
+
+
+    documents = []
+    for doc in orig_documents:
+        documents.append(doc.replace(COLLOCATION_BINDER, "|")) # If there already is a collocation binder (through a collocation found early, or if it was in the document, replace it
+    # so it doesnt interfer
+
     documents_with_collocation_marked, ngrams, all_features = find_frequent_n_grams(documents, collocation_cut_off=cutoff,\
                                                                       nr_of_words_that_have_occurred_outside_n_gram_cutoff = 1,\
                                                                       allowed_n_gram_components = extracted_term_set,\
@@ -110,7 +118,9 @@ def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_
             for already_added_orig in collocation_features:
                 already_added = remove_par(already_added_orig)
    
-                if f + COLLOCATION_BINDER in already_added or COLLOCATION_BINDER + f in already_added:
+                if COLLOCATION_BINDER + f + COLLOCATION_BINDER in already_added \
+                    or already_added.endswith(COLLOCATION_BINDER + f) \
+                    or already_added.startswith(f + COLLOCATION_BINDER):
                     # if it is a substring of something already in the collocation list, don't add this ngram, but modify the original instead
                     collocation_features.remove(already_added_orig)
                     already_added_without_f = already_added.replace(f,"")
@@ -143,16 +153,25 @@ def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_
 
     
     new_terms_with_score = []
+    original_terms_with_combined_dict = {}
     for term in final_features:
         best_score = 0
+        original_terms_for_combined_term = []
         for c in term.split(COLLOCATION_BINDER):
             for t in c.split(SYNONYM_JSON_BINDER):
+                original_terms_for_combined_term.append(remove_par(t))
                 if original_term_dict[remove_par(t)] > best_score:
                     best_score = original_term_dict[remove_par(t)] # use the highest score among its included parts
-        term_with_ordered_paran = term.replace("_]", "]_").replace("[_", "_[")
+        term_with_ordered_paran = term.replace(COLLOCATION_BINDER + PAR_END, PAR_END + COLLOCATION_BINDER)\
+            .replace(PAR_START + COLLOCATION_BINDER, COLLOCATION_BINDER + PAR_START)
         new_terms_with_score.append((term_with_ordered_paran, best_score))
 
-    return new_terms_with_score
+        for original in original_terms_for_combined_term:
+            if original not in original_terms_with_combined_dict:
+                original_terms_with_combined_dict[original] = [term_with_ordered_paran]
+            else:
+                original_terms_with_combined_dict[original].append(term_with_ordered_paran)
+    return new_terms_with_score, original_terms_with_combined_dict
 
 def get_summed_score(s, original_term_dict):
     """
@@ -880,6 +899,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     topic_info_list = []
     json_properties["STOP_WORDS"] = stopword_handler.get_user_stop_word_list()
     
+    all_terms_for_all_topics = [el[TERM_LIST] for el in topic_info]
+
     for nr, el in enumerate(topic_info):
         
         term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
@@ -887,19 +908,44 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_info_object = {}
         topic_info_object["id"] = el[TOPIC_NUMBER]
         topic_info_object["label"] = start_label
+        topic_info_object["topic_terms_previous"] = []
         topic_info_object["topic_terms"] = []
         
-        topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
-        terms_scores_with_colloctations = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
         
+        topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
+        terms_scores_with_colloctations, original_terms_with_combined_dict = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
         
         for term in terms_scores_with_colloctations:
             term_object = {}
-            term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
+            term_object["term"] = term[0].replace(SYNONYM_BINDER, SYNONYM_JSON_BINDER).strip()
             term_object["score"] = term[1]
+            topic_info_object["topic_terms_previous"].append(term_object)
+
+        #print("terms_scores_with_colloctations", terms_scores_with_colloctations)
+        print()
+        print("original_terms_with_combined_dict", original_terms_with_combined_dict)
+        term_combination_score_dict = {}
+        for term in el[TERM_LIST]:
+            combined_terms = original_terms_with_combined_dict[term[0]]
+            for combined_term in combined_terms:
+                if combined_term not in term_combination_score_dict:
+                    term_combination_score_dict[combined_term] = term[1]
+                else:
+                    if term[1] > term_combination_score_dict[combined_term]: #use the score from the included original terms that is highest
+                        term_combination_score_dict[combined_term] = term[1]
+
+        for key, item in term_combination_score_dict.items():
+            term_object = {}
+            term_object["term"] = key.replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
+            term_object["score"] = item
             topic_info_object["topic_terms"].append(term_object)
-
-
+        
+        print("**********")
+        print("topic_terms_previous", len(topic_info_object["topic_terms_previous"]))
+        print("-----")
+        print("topic_terms", len(topic_info_object["topic_terms"]))
+        print()
+        
         # TODO: Perhaps add some strength indication to the marking
         for nr, document in enumerate(el[DOCUMENT_LIST]):
             if document[DOC_ID] not in document_dict:
@@ -1033,7 +1079,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             csv_open_no_class = open(result_file_csv_no_classification, "w")
             
             topic_texts_write_to_file = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
-            terms_scores_with_colloctations_write_to_file = \
+            terms_scores_with_colloctations_write_to_file, original_terms_with_combined = \
                 get_collocations_from_documents(topic_texts_write_to_file, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
             terms_open.write(str(el[TOPIC_NUMBER]) + "\n")
             terms_open.write("----\n")
@@ -1111,7 +1157,6 @@ def get_snippet_text(text, most_typical_model, tf_vectorizer):
             if nr == len(sentence_list) - 1: # the last sentence
                 text_snippet.append("] ")
     text_snippet_text = "".join(text_snippet).strip().replace(".]", "..]") # Add one extra dot to make it clearer
-    print(text_snippet_text)
     return text_snippet_text
 
 
