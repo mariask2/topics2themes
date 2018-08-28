@@ -34,6 +34,7 @@ TOPIC_INDEX = "topic_index"
 TEXT = "text"
 LABEL = "label"
 COLLOCATION_BINDER = "_"
+COLLOCATION_JSON_BINDER = " _ "
 SYNONYM_JSON_BINDER = " / "
 PAR_START = "["
 PAR_END = "]"
@@ -154,6 +155,7 @@ def get_collocations_from_documents(orig_documents, term_set, are_these_two_term
     
     new_terms_with_score = []
     original_terms_with_combined_dict = {}
+
     for term in final_features:
         best_score = 0
         original_terms_for_combined_term = []
@@ -915,6 +917,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         get_collocations_from_documents(all_documents_for_all_topics_flatten,\
                                         all_terms_for_all_topics_flatten, are_these_two_terms_to_be_considered_the_same)
 
+
     for nr, el in enumerate(topic_info):
         
         term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
@@ -929,14 +932,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
         terms_scores_with_colloctations_old, original_terms_with_combined_dict_old = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
         
-        for term in terms_scores_with_colloctations_old:
-            term_object = {}
-            term_object["term"] = term[0].replace(SYNONYM_BINDER, SYNONYM_JSON_BINDER).strip()
-            term_object["score"] = term[1]
-            topic_info_object["topic_terms_previous"].append(term_object)
-
-        #print("terms_scores_with_colloctations", terms_scores_with_colloctations)
-     
         term_combination_score_dict = {}
         for term in el[TERM_LIST]:
             combined_terms = original_terms_with_combined_dict[term[0]]
@@ -949,27 +944,20 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
         for key, item in term_combination_score_dict.items():
             term_object = {}
-            term_object["term"] = key.replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
+            term_object["term"] = key.replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).replace(COLLOCATION_BINDER,COLLOCATION_JSON_BINDER).strip()
             term_object["score"] = item
             topic_info_object["topic_terms"].append(term_object)
         
-        print("**********")
-        print("topic_terms_previous", len(topic_info_object["topic_terms_previous"]))
-        print("-----")
-        print("topic_terms", topic_info_object["topic_terms"])
-        print("topic_terms_previous", topic_info_object["topic_terms_previous"])
-        print("-----")
-        print("topic_terms", len(topic_info_object["topic_terms"]))
-        print()
         
         # TODO: Perhaps add some strength indication to the marking
         for nr, document in enumerate(el[DOCUMENT_LIST]):
             if document[DOC_ID] not in document_dict:
-                marked_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT], el[TERM_LIST], el[TOPIC_NUMBER])
+                marked_document, terms_found_in_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT], el[TERM_LIST], el[TOPIC_NUMBER])
             else:
-                marked_document = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
+                marked_document, terms_found_in_document = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
                                                          el[TERM_LIST], el[TOPIC_NUMBER])
-            
+
+
             # TODO Perhpas concatnating with lists is faster
             marked_text_transformed = marked_document.replace("!", "! ").replace("?", "? ").replace(":", ": ").replace(";", "; ").replace("(", " (")
             marked_text_inserted_spaces = ""
@@ -999,13 +987,11 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 document_dict[document[DOC_ID]] = document_obj
                 if document_obj["text"] != file_list[document[DOC_ID]][TEXT]:
                     print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(file_list[document[DOC_ID]][TEXT]))
-        
 
             else:
                 document_dict[document[DOC_ID]]["marked_text_tok"] = marked_document
                 document_dict[document[DOC_ID]]["snippet"] = snippet_text
 
-            #print(document_dict[document[DOC_ID]]["marked_text_tok"])
             
             document_topic_obj = {}
             document_topic_obj["topic_index"] = el[TOPIC_NUMBER]
@@ -1015,15 +1001,17 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             # It is only the terms that are actually included in the document that are added here
             document_topic_obj["terms_in_topic"] = []
 
+
             for term in terms_scores_with_colloctations:
+            
                 add_term = False
                 for synonym_sub_part in term[0].split(SYNONYM_JSON_BINDER):
                     if is_collocation_in_document(synonym_sub_part, document):
                         add_term = True
                 if add_term:
-
                     term_object = {}
-                    term_object["term"] = term[0].replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
+                    term_object["term"] = term[0].replace(SYNONYM_BINDER, SYNONYM_JSON_BINDER).\
+                        replace(COLLOCATION_BINDER, COLLOCATION_JSON_BINDER).strip()
                     term_object["score"] = term[1]
                     document_topic_obj["terms_in_topic"].append(term_object)
             ###
@@ -1184,6 +1172,7 @@ def apply_trained_model_on_sentences(sentence_list, model, tf_vectorizer):
 
 
 def add_markings_for_terms(text, term_list, topic_number):
+    found_terms = []
     term_list_replace = [t[0] for t in term_list]
     
     simple_tokenised = get_very_simple_tokenised(text, lower = False)
@@ -1191,9 +1180,10 @@ def add_markings_for_terms(text, term_list, topic_number):
     for el in simple_tokenised:
         if el.lower() in term_list_replace:
             simple_tokenised_marked.append('<b class="bold-' +str(topic_number) + '">' + " " + el + "</b>")
+            found_terms.append(el.lower())
         else:
             simple_tokenised_marked.append(el)
-    return untokenize(simple_tokenised_marked)
+    return untokenize(simple_tokenised_marked), found_terms
 
 def get_first_in_tuple(item):
     return item[0]
