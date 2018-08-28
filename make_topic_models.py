@@ -900,6 +900,20 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     json_properties["STOP_WORDS"] = stopword_handler.get_user_stop_word_list()
     
     all_terms_for_all_topics = [el[TERM_LIST] for el in topic_info]
+    all_terms_for_all_topics_flatten = []
+    for term_list in all_terms_for_all_topics:
+        for term in term_list:
+            all_terms_for_all_topics_flatten.append(term)
+    
+    all_documents_for_all_topics = [el[DOCUMENT_LIST] for el in topic_info]
+    all_documents_for_all_topics_flatten = []
+    for document_list in all_documents_for_all_topics:
+        for document in document_list:
+            all_documents_for_all_topics_flatten.append(document[ORIGINAL_DOCUMENT])
+
+    terms_scores_with_colloctations, original_terms_with_combined_dict = \
+        get_collocations_from_documents(all_documents_for_all_topics_flatten,\
+                                        all_terms_for_all_topics_flatten, are_these_two_terms_to_be_considered_the_same)
 
     for nr, el in enumerate(topic_info):
         
@@ -913,17 +927,16 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         
         
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
-        terms_scores_with_colloctations, original_terms_with_combined_dict = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
+        terms_scores_with_colloctations_old, original_terms_with_combined_dict_old = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
         
-        for term in terms_scores_with_colloctations:
+        for term in terms_scores_with_colloctations_old:
             term_object = {}
             term_object["term"] = term[0].replace(SYNONYM_BINDER, SYNONYM_JSON_BINDER).strip()
             term_object["score"] = term[1]
             topic_info_object["topic_terms_previous"].append(term_object)
 
         #print("terms_scores_with_colloctations", terms_scores_with_colloctations)
-        print()
-        print("original_terms_with_combined_dict", original_terms_with_combined_dict)
+     
         term_combination_score_dict = {}
         for term in el[TERM_LIST]:
             combined_terms = original_terms_with_combined_dict[term[0]]
@@ -942,6 +955,9 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         
         print("**********")
         print("topic_terms_previous", len(topic_info_object["topic_terms_previous"]))
+        print("-----")
+        print("topic_terms", topic_info_object["topic_terms"])
+        print("topic_terms_previous", topic_info_object["topic_terms_previous"])
         print("-----")
         print("topic_terms", len(topic_info_object["topic_terms"]))
         print()
