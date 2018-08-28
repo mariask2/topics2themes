@@ -102,12 +102,12 @@ def get_collocations_from_documents(orig_documents, term_set, are_these_two_term
                                                                       max_occurrence_outside_collocation = 0)
 
 
-
+    """
+        # This should probably not be kept, since it gets to complicated, both to program and for the user
     all_features.sort(key = lambda s: (len(s.split(COLLOCATION_BINDER)), get_summed_score(s, original_term_dict)), reverse = True)
 
 
     collocation_features = set()
-    
     for f in all_features:
         if False: # keep this code, if needed later
             pass
@@ -134,7 +134,8 @@ def get_collocations_from_documents(orig_documents, term_set, are_these_two_term
             
             if add:
                 collocation_features.add(f)
-
+        """
+    collocation_features = all_features
 
     final_features = set()
     
@@ -142,7 +143,6 @@ def get_collocations_from_documents(orig_documents, term_set, are_these_two_term
         add = True
         c = c.replace(SYNONYM_BINDER, ",")
         for already_added in final_features:
-            print(already_added)
             if (already_added.replace(COLLOCATION_BINDER,"") == c or already_added == c.replace(COLLOCATION_BINDER,"")\
                 or are_these_two_terms_to_be_considered_the_same(remove_par(already_added), remove_par(c))\
                 or should_this_be_added_to_synonyms_cluster(already_added, c, are_these_two_terms_to_be_considered_the_same)
@@ -930,6 +930,14 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         get_collocations_from_documents(all_documents_for_all_topics_flatten,\
                                         all_terms_for_all_topics_flatten, are_these_two_terms_to_be_considered_the_same)
 
+    expanded_term_set_from_all_topics = set()
+    for otal in [ot[1] for ot in original_terms_with_combined_dict.items()]:
+        for otal_el in otal:
+            otal_el_splitted = otal_el.split(SYNONYM_JSON_BINDER)
+            for splitted in otal_el_splitted:
+                expanded_term_set_from_all_topics.add(splitted)
+
+
 
     for nr, el in enumerate(topic_info):
         
@@ -941,22 +949,34 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_info_object["topic_terms_previous"] = []
         topic_info_object["topic_terms"] = []
         
-        
+        # Also check if there are topic specific collocations (or non-collocations) that should be added
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
-        terms_scores_with_colloctations_old, original_terms_with_combined_dict_old = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
+        terms_scores_with_colloctations_topic_specific, original_terms_with_combined_dict_topic_specific = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
         
-        for term in terms_scores_with_colloctations_old:
-            term_object = {}
-            term_object["term"] = term[0].replace(SYNONYM_BINDER, SYNONYM_JSON_BINDER).strip()
-            term_object["score"] = term[1]
-            topic_info_object["topic_terms_previous"].append(term_object)
+        topic_specific_terms_not_in_topic_general_dict = {}
+        for topic_specific_original_term, topic_specific_expanded_term_list in original_terms_with_combined_dict_topic_specific.items():
+            for topic_specific_expanded_term in topic_specific_expanded_term_list:
+                splitted_topic_specific_list = topic_specific_expanded_term.split(SYNONYM_JSON_BINDER)
+                found_topic_specific = []
+                for splitted_topic_specific in splitted_topic_specific_list:
+                    if splitted_topic_specific not in expanded_term_set_from_all_topics:
+                        found_topic_specific.append(splitted_topic_specific)
+                # if a topic_specific collocation is found
+                if found_topic_specific:
+                    if topic_specific_original_term not in topic_specific_terms_not_in_topic_general_dict:
+                        topic_specific_terms_not_in_topic_general_dict[topic_specific_original_term] = []
+                    topic_specific_terms_not_in_topic_general_dict[topic_specific_original_term].append(SYNONYM_JSON_BINDER.join(found_topic_specific))
 
-        #print("terms_scores_with_colloctations", terms_scores_with_colloctations)
      
         term_combination_score_dict = {}
         for term in el[TERM_LIST]:
             combined_terms = original_terms_with_combined_dict[term[0]]
-            for combined_term in combined_terms:
+            if term[0] in topic_specific_terms_not_in_topic_general_dict:
+                topic_specific_combined_terms = topic_specific_terms_not_in_topic_general_dict[term[0]]
+            #print(topic_specific_combined_terms)
+            else:
+                topic_specific_combined_terms = []
+            for combined_term in combined_terms + topic_specific_combined_terms:
                 if combined_term not in term_combination_score_dict:
                     term_combination_score_dict[combined_term] = term[1]
                 else:
