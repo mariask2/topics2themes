@@ -140,10 +140,13 @@ def get_collocations_from_documents(orig_documents, term_set, are_these_two_term
     
     for c in collocation_features:
         add = True
-        c = c.replace("/", ",")
+        c = c.replace(SYNONYM_BINDER, ",")
         for already_added in final_features:
+            print(already_added)
             if (already_added.replace(COLLOCATION_BINDER,"") == c or already_added == c.replace(COLLOCATION_BINDER,"")\
-                or are_these_two_terms_to_be_considered_the_same(remove_par(already_added), remove_par(c)))\
+                or are_these_two_terms_to_be_considered_the_same(remove_par(already_added), remove_par(c))\
+                or should_this_be_added_to_synonyms_cluster(already_added, c, are_these_two_terms_to_be_considered_the_same)
+                )\
                 and add:
                 final_features.remove(already_added)
                 already_added_modified = already_added + SYNONYM_JSON_BINDER + c
@@ -174,6 +177,16 @@ def get_collocations_from_documents(orig_documents, term_set, are_these_two_term
             else:
                 original_terms_with_combined_dict[original].append(term_with_ordered_paran)
     return new_terms_with_score, original_terms_with_combined_dict
+
+def should_this_be_added_to_synonyms_cluster(already_added, c, are_these_two_terms_to_be_considered_the_same):
+    for syn in already_added.split(SYNONYM_JSON_BINDER):
+        if are_these_two_terms_to_be_considered_the_same(syn, c):
+            return True
+        if are_these_two_terms_to_be_considered_the_same(remove_par(syn), c):
+            return True
+        if are_these_two_terms_to_be_considered_the_same(syn, remove_par(c)):
+            return True
+    return False
 
 def get_summed_score(s, original_term_dict):
     """
@@ -932,6 +945,14 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
         terms_scores_with_colloctations_old, original_terms_with_combined_dict_old = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
         
+        for term in terms_scores_with_colloctations_old:
+            term_object = {}
+            term_object["term"] = term[0].replace(SYNONYM_BINDER, SYNONYM_JSON_BINDER).strip()
+            term_object["score"] = term[1]
+            topic_info_object["topic_terms_previous"].append(term_object)
+
+        #print("terms_scores_with_colloctations", terms_scores_with_colloctations)
+     
         term_combination_score_dict = {}
         for term in el[TERM_LIST]:
             combined_terms = original_terms_with_combined_dict[term[0]]
@@ -948,6 +969,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             term_object["score"] = item
             topic_info_object["topic_terms"].append(term_object)
         
+
         
         # TODO: Perhaps add some strength indication to the marking
         for nr, document in enumerate(el[DOCUMENT_LIST]):
@@ -956,6 +978,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             else:
                 marked_document, terms_found_in_document = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
                                                          el[TERM_LIST], el[TOPIC_NUMBER])
+
+
 
 
             # TODO Perhpas concatnating with lists is faster
@@ -987,11 +1011,13 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 document_dict[document[DOC_ID]] = document_obj
                 if document_obj["text"] != file_list[document[DOC_ID]][TEXT]:
                     print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(file_list[document[DOC_ID]][TEXT]))
+        
 
             else:
                 document_dict[document[DOC_ID]]["marked_text_tok"] = marked_document
                 document_dict[document[DOC_ID]]["snippet"] = snippet_text
 
+            #print(document_dict[document[DOC_ID]]["marked_text_tok"])
             
             document_topic_obj = {}
             document_topic_obj["topic_index"] = el[TOPIC_NUMBER]
@@ -1015,7 +1041,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                     term_object["score"] = term[1]
                     document_topic_obj["terms_in_topic"].append(term_object)
             ###
-
 
             document_dict[document[DOC_ID]]["document_topics"].append(document_topic_obj)
         
