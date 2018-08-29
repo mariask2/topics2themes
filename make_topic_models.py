@@ -990,6 +990,15 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 expanded_term_set_from_all_topics.add(splitted)
 
     """
+    collocation_features_list_list = []
+    original_term_weight_dict_list = []
+    
+    for nr, el in enumerate(topic_info):
+        topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
+        collocation_features, original_term_weight_dict =  get_collocations_from_documents_before_synonyms(topic_texts, el[TERM_LIST])
+        collocation_features_list_list.append(collocation_features)
+        original_term_weight_dict_list.append(original_term_weight_dict)
+    
     
     for nr, el in enumerate(topic_info):
         
@@ -1003,7 +1012,18 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         
         # Also check if there are topic specific collocations (or non-collocations) that should be added
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
-        terms_scores_with_colloctations_topic_specific, original_terms_with_combined_dict_topic_specific = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same) # no synonymdetection here
+        
+        
+        ####
+        
+    #collocation_features_list_list = [collocation_features, collocation_features]
+    #   original_term_weight_dict_list = [original_term_weight_dict, original_term_weight_dict]
+
+        terms_scores_with_colloctations_topic_specific, original_terms_with_combined_dict_topic_specific = find_synonyms_from_collocation_features(collocation_features_list_list, original_term_weight_dict_list, are_these_two_terms_to_be_considered_the_same)
+        
+        
+        ###
+        #terms_scores_with_colloctations_topic_specific, original_terms_with_combined_dict_topic_specific = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same) # no synonymdetection here
         
         #print("original_terms_with_combined_dict_topic_specific", original_terms_with_combined_dict_topic_specific)
  
