@@ -120,6 +120,9 @@ def find_synonyms_from_collocation_features(collocation_features_list, original_
                 if term_score > original_term_dict[term_key]:
                     original_term_dict[term_key] = term_score
 
+    for key, item in original_term_dict.items():
+        print(key, item)
+
     final_features = set()
 
     for c in collocation_features:
@@ -140,11 +143,13 @@ def find_synonyms_from_collocation_features(collocation_features_list, original_
     for term in final_features:
         best_score = 0
         original_terms_for_combined_term = []
-        for c in term.split(COLLOCATION_BINDER):
-            for t in c.split(SYNONYM_JSON_BINDER):
-                original_terms_for_combined_term.append(t)
-                if original_term_dict[t] > best_score:
-                    best_score = original_term_dict[t] # use the highest score among its included parts
+        for synonym in term.split(SYNONYM_JSON_BINDER):
+            score_for_synonoym = get_min_score_for_collocation_part(synonym, original_term_dict) # If the synonym is a collocation, use the lowest score for the collocation component
+            for collocation_part in synonym.split(COLLOCATION_BINDER):
+                original_terms_for_combined_term.append(collocation_part)
+            # but use the highest score for the synonym
+            if score_for_synonoym > best_score:
+                best_score = score_for_synonoym # use the highest score among its included parts
         new_terms_with_score.append((term, best_score))
 
         for original in original_terms_for_combined_term:
@@ -159,6 +164,14 @@ def should_this_be_added_to_synonyms_cluster(already_added, c, are_these_two_ter
         if are_these_two_terms_to_be_considered_the_same(syn, c):
             return True
     return False
+
+def get_min_score_for_collocation_part(synonym, original_term_dict):
+    for syn in synonym.split(COLLOCATION_BINDER):
+        if syn not in original_term_dict:
+            print("Not found")
+            return False # if not all subparts are in the dictionary, return False
+    scores = [original_term_dict[collocation_part] for collocation_part in synonym.split(COLLOCATION_BINDER)]
+    return min(scores)
 
 
 def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, save_in_database = True):
@@ -885,6 +898,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         
         # Here it is a term-topic object that is constucted, so it's important to use the term strength that the terms have for the topic,
         # not the max term strength from
+        """
         term_combination_score_dict = {}
         for term in el[TERM_LIST]:
             combined_terms = original_terms_with_combined_dict[term[0]]
@@ -895,6 +909,29 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 else:
                     if term[1] > term_combination_score_dict[combined_term]: #use the score from the included original terms that is highest
                         term_combination_score_dict[combined_term] = term[1]
+           """
+        topic_terms_score_dict = {}
+        for term in el[TERM_LIST]:
+            topic_terms_score_dict[term[0]] = term[1]
+
+        print(topic_terms_score_dict)
+        term_combination_score_dict = {}
+        for term_combo in [t[0] for t in terms_scores_with_colloctations]:
+            best_score = 0
+        
+            for synonym in term_combo.split(SYNONYM_JSON_BINDER):
+                # Returns None is the subpart is not a term for this topic
+                score_for_synonoym = get_min_score_for_collocation_part(synonym, topic_terms_score_dict) # If the synonym is a collocation, use the lowest score for the collocation component
+            # but use the highest score for the synonym
+                if score_for_synonoym:
+                    if score_for_synonoym > best_score:
+                        best_score = score_for_synonoym # use the highest score among its included parts
+
+            if best_score != 0:
+                term_combination_score_dict[term_combo] = best_score
+
+        print(term_combination_score_dict)
+        #exit(1)
 
         for key, item in term_combination_score_dict.items():
             term_object = {}
@@ -971,6 +1008,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             ###
 
             document_dict[document[DOC_ID]]["document_topics"].append(document_topic_obj)
+
 
         topic_info_list.append(topic_info_object)
 
@@ -1061,8 +1099,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
     return result_dict, saved_time, post_id
 
-def return_false(term1, term2):
-    return False
+
 
 def get_snippet_text(text, most_typical_model, tf_vectorizer):
     MAX_SNIPPET_SENTENCE_LENGTH = 360
