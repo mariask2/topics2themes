@@ -83,7 +83,14 @@ def remove_par(txt):
     return txt.replace(PAR_START, "").replace(PAR_END, "")
 
 def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_be_considered_the_same):
-    
+    collocation_features, original_term_weigth_dict =  get_collocations_from_documents_before_synonyms(documents, term_set)
+
+    collocation_features_list_list = [collocation_features, collocation_features]
+    original_term_weigth_dict_list = [original_term_weigth_dict, original_term_weigth_dict]
+
+    return find_synonyms_from_collocation_features(collocation_features_list_list, original_term_weigth_dict_list, are_these_two_terms_to_be_considered_the_same)
+
+def get_collocations_from_documents_before_synonyms(documents, term_set):
     original_term_dict = {}
     for t in term_set:
         original_term_dict[t[0]] = t[1]
@@ -131,9 +138,27 @@ def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_
             if add:
                 collocation_features.add(f)
         """
-    collocation_features = all_features
+    return all_features, original_term_dict
+
+def find_synonyms_from_collocation_features(collocation_features_list, original_term_dict_list, are_these_two_terms_to_be_considered_the_same):
+    #collocation_features = all_features
 
 
+    collocation_features = set() # Features are combined from each element in collocation_features_list
+    for feature_list in  collocation_features_list:
+        for feature in feature_list:
+            collocation_features.add(feature)
+
+    original_term_dict = {}
+    for dict in original_term_dict_list:
+        for term_key, term_score in dict.items():
+            if term_key not in original_term_dict:
+                original_term_dict[term_key] = term_score
+            else:
+                if term_score > original_term_dict[term_key]:
+                    original_term_dict[term_key] = term_score
+
+    print(original_term_dict)
     final_features = set()
 
 
