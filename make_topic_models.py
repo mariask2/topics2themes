@@ -34,7 +34,7 @@ TOPIC_INDEX = "topic_index"
 TEXT = "text"
 LABEL = "label"
 COLLOCATION_BINDER = "_"
-COLLOCATION_JSON_BINDER = " _ "
+#COLLOCATION_JSON_BINDER = " _ "
 SYNONYM_JSON_BINDER = " / "
 PAR_START = "["
 PAR_END = "]"
@@ -45,6 +45,7 @@ FOUND_CONCEPTS = "found_concepts"
 MARKED_DOCUMENT_TOK = "marked_document_tok"
 MODEL_INFO = "MODEL_INFO"
 MODEL = "MODEL"
+PRE_PROCESS_COLLOCATION_MARKER = "PREPROCESSCOLLOCATIONMARKER"
 
 
 #####
@@ -81,7 +82,7 @@ stopword_handler = StopwordHandler()
 def remove_par(txt):
     return txt.replace(PAR_START, "").replace(PAR_END, "")
 
-def get_collocations_from_documents(orig_documents, term_set, are_these_two_terms_to_be_considered_the_same):
+def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_be_considered_the_same):
     
     original_term_dict = {}
     for t in term_set:
@@ -90,16 +91,11 @@ def get_collocations_from_documents(orig_documents, term_set, are_these_two_term
     cutoff = 2
 
 
-
-    documents = []
-    for doc in orig_documents:
-        documents.append(doc.replace(COLLOCATION_BINDER, "|")) # If there already is a collocation binder (through a collocation found early, or if it was in the document, replace it
-    # so it doesnt interfer
-
     documents_with_collocation_marked, ngrams, all_features = find_frequent_n_grams(documents, collocation_cut_off=cutoff,\
                                                                       nr_of_words_that_have_occurred_outside_n_gram_cutoff = 1,\
                                                                       allowed_n_gram_components = extracted_term_set,\
-                                                                      max_occurrence_outside_collocation = 0)
+                                                                      max_occurrence_outside_collocation = 0,\
+                                                                                    collocation_marker = COLLOCATION_BINDER)
 
 
     """
@@ -137,8 +133,11 @@ def get_collocations_from_documents(orig_documents, term_set, are_these_two_term
         """
     collocation_features = all_features
 
+
     final_features = set()
-    
+
+
+    """
     for c in collocation_features:
         add = True
         c = c.replace(SYNONYM_BINDER, ",")
@@ -154,8 +153,19 @@ def get_collocations_from_documents(orig_documents, term_set, are_these_two_term
                 add = False
         if add:
             final_features.add(c)
+      """
+    for c in collocation_features:
+        add = True
+        c = c.replace(SYNONYM_BINDER, ",")
+        for already_added in final_features:
+            if should_this_be_added_to_synonyms_cluster(already_added, c, are_these_two_terms_to_be_considered_the_same) and add:
+                final_features.remove(already_added)
+                already_added_modified = already_added + SYNONYM_JSON_BINDER + c
+                final_features.add(already_added_modified)
+                add = False
+        if add:
+            final_features.add(c)
 
-    
     new_terms_with_score = []
     original_terms_with_combined_dict = {}
 
@@ -455,7 +465,9 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
                 no_match, manual_made_dict, min_document_frequency):
     if not do_pre_process:
         return raw_documents
-    documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off, max_occurrence_outside_collocation=min_document_frequency)
+    documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off,\
+                                                               max_occurrence_outside_collocation=min_document_frequency,\
+                                                               collocation_marker = PRE_PROCESS_COLLOCATION_MARKER)
 
     pre_processed_documents = documents
 
@@ -484,7 +496,7 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
 
 
 def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_occurred_outside_n_gram_cutoff = None,\
-                          allowed_n_gram_components = None, max_occurrence_outside_collocation=1):
+                          allowed_n_gram_components = None, max_occurrence_outside_collocation=1, collocation_marker=COLLOCATION_BINDER):
     """
     Frequent collocations are concatenated to one term in the corpus
     (For instance smallpox and small pox are both used, now small_pox will be
@@ -511,10 +523,10 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
 
     allowed_ngrams.sort(key = lambda s: len(s.split(" ")), reverse = True)
     for document in documents:
-        new_document = document.replace(COLLOCATION_BINDER, " ") # If there are words already in the corpus containing "_" remove this so the are not interpreted as an n-gram
+        new_document = document.replace(collocation_marker, " ") # If there are words already in the corpus containing "_" remove this so the are not interpreted as an n-gram
         for el in allowed_ngrams:
             if el in document:
-                new_document = new_document.replace(el, el.replace(" ", COLLOCATION_BINDER))
+                new_document = new_document.replace(el, el.replace(" ", collocation_marker))
         new_documents.append(new_document)
 
     token_vectorizer = CountVectorizer(binary = True, ngram_range = (1, 1), min_df= 1 + max_occurrence_outside_collocation)
@@ -539,10 +551,10 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
 
     new_filtered_documents = []
     for document in documents:
-        new_document = document.replace(COLLOCATION_BINDER, " ") # If there are words already in the corpus containing "_" remove this so the are not interpreted as an n-gram
+        new_document = document.replace(collocation_marker, " ") # If there are words already in the corpus containing "_" remove this so the are not interpreted as an n-gram
         for el in filtered_ngram_list:
             if el in document:
-                new_document = new_document.replace(el, el.replace(" ", COLLOCATION_BINDER))
+                new_document = new_document.replace(el, el.replace(" ", collocation_marker))
         new_filtered_documents.append(new_document)
 
     final_documents_vectorizer = CountVectorizer(binary = True, ngram_range = (1, 1), min_df = 1)
@@ -556,14 +568,14 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
         # Add n-grams and the terms in the documents that are not included in the n-grams
         for el in final_documents_vectorizer.get_feature_names():
             add = True
-            for sub_part in el.split(COLLOCATION_BINDER):
+            for sub_part in el.split(collocation_marker):
                 if sub_part not in allowed_n_gram_components:
                     add = False
             if add:
                 filtered_final_feautures.append(el)
     # remove e.g. bigrams that only occur in the context of a three-gram
     filtered_ngram_list_that_occurs_as_feature = [f for f in filtered_ngram_list if f in filtered_final_feautures]
-    removed_ngrams = [f.replace(" ", COLLOCATION_BINDER) for f in filtered_ngram_list if f not in filtered_final_feautures]
+    removed_ngrams = [f.replace(" ", collocation_marker) for f in filtered_ngram_list if f not in filtered_final_feautures]
     return new_filtered_documents, filtered_ngram_list_that_occurs_as_feature, filtered_final_feautures
 
     
@@ -811,9 +823,7 @@ def construct_document_info_average(documents, selected_documents_strength, term
 
     term_list_replace = list(set(term_list_replace))
     term_list_replace.sort(key = len, reverse = True)
-    #print(term_list_replace)
-    #print(term_preprocessed_dict)
-    
+
     ###
 
     doc_list = []
@@ -869,6 +879,20 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 #######
 # Print output from the model
 #######
+
+# All collocation subparts must be found in the doucment
+def is_collocation_in_document(synonym_sub_part, document):
+    splitted = synonym_sub_part.split(COLLOCATION_BINDER)
+    for collocation in splitted:
+        if collocation not in document[FOUND_CONCEPTS]:
+            return False
+    return True
+
+#print(synonym_sub_part, document)
+#   print("document[FOUND_CONCEPTS]", document[FOUND_CONCEPTS])
+#   return False
+
+"""
 def is_collocation_in_document(synonym_sub_part, document):
     add_term = True
     inside_paranthesis = False
@@ -899,7 +923,7 @@ def is_collocation_in_document(synonym_sub_part, document):
             add_term = False
 
     return add_term
-
+"""
 
 def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
                              json_properties, data_set_name, model_name, save_in_database,\
@@ -914,6 +938,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     topic_info_list = []
     json_properties["STOP_WORDS"] = stopword_handler.get_user_stop_word_list()
     
+    """
     all_terms_for_all_topics = [el[TERM_LIST] for el in topic_info]
     all_terms_for_all_topics_flatten = []
     for term_list in all_terms_for_all_topics:
@@ -929,7 +954,9 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     terms_scores_with_colloctations, original_terms_with_combined_dict = \
         get_collocations_from_documents(all_documents_for_all_topics_flatten,\
                                         all_terms_for_all_topics_flatten, are_these_two_terms_to_be_considered_the_same)
-
+      
+    #print("original_terms_with_combined_dict", original_terms_with_combined_dict)
+    
     expanded_term_set_from_all_topics = set()
     for otal in [ot[1] for ot in original_terms_with_combined_dict.items()]:
         for otal_el in otal:
@@ -937,8 +964,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             for splitted in otal_el_splitted:
                 expanded_term_set_from_all_topics.add(splitted)
 
-
-
+    """
+    
     for nr, el in enumerate(topic_info):
         
         term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
@@ -951,32 +978,37 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         
         # Also check if there are topic specific collocations (or non-collocations) that should be added
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
-        terms_scores_with_colloctations_topic_specific, original_terms_with_combined_dict_topic_specific = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
+        terms_scores_with_colloctations_topic_specific, original_terms_with_combined_dict_topic_specific = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same) # no synonymdetection here
         
+        #print("original_terms_with_combined_dict_topic_specific", original_terms_with_combined_dict_topic_specific)
+ 
+        """
         topic_specific_terms_not_in_topic_general_dict = {}
-        for topic_specific_original_term, topic_specific_expanded_term_list in original_terms_with_combined_dict_topic_specific.items():
+        terms_scores_with_colloctations_topic_specific_not_in_topic_general_dict = []
+        for (topic_specific_original_term, s_score) in terms_scores_with_colloctations_topic_specific:
+            topic_specific_expanded_term_list = original_terms_with_combined_dict_topic_specific[topic_specific_original_term]
             for topic_specific_expanded_term in topic_specific_expanded_term_list:
-                splitted_topic_specific_list = topic_specific_expanded_term.split(SYNONYM_JSON_BINDER)
                 found_topic_specific = []
-                for splitted_topic_specific in splitted_topic_specific_list:
-                    if splitted_topic_specific not in expanded_term_set_from_all_topics:
-                        found_topic_specific.append(splitted_topic_specific)
+                if topic_specific_expanded_term not in expanded_term_set_from_all_topics:
+                    found_topic_specific.append(topic_specific_expanded_term)
                 # if a topic_specific collocation is found
                 if found_topic_specific:
-                    if topic_specific_original_term not in topic_specific_terms_not_in_topic_general_dict:
-                        topic_specific_terms_not_in_topic_general_dict[topic_specific_original_term] = []
-                    topic_specific_terms_not_in_topic_general_dict[topic_specific_original_term].append(SYNONYM_JSON_BINDER.join(found_topic_specific))
+                    topic_specific_terms_not_in_topic_general_dict[topic_specific_original_term] = found_topic_specific
+                """
+        #print("topic_specific_terms_not_in_topic_general_dict", topic_specific_terms_not_in_topic_general_dict)
 
      
         term_combination_score_dict = {}
         for term in el[TERM_LIST]:
-            combined_terms = original_terms_with_combined_dict[term[0]]
+            combined_terms = original_terms_with_combined_dict_topic_specific[term[0]]
+            """
             if term[0] in topic_specific_terms_not_in_topic_general_dict:
                 topic_specific_combined_terms = topic_specific_terms_not_in_topic_general_dict[term[0]]
             #print(topic_specific_combined_terms)
             else:
                 topic_specific_combined_terms = []
-            for combined_term in combined_terms + topic_specific_combined_terms:
+                """
+            for combined_term in combined_terms:
                 if combined_term not in term_combination_score_dict:
                     term_combination_score_dict[combined_term] = term[1]
                 else:
@@ -985,11 +1017,10 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
         for key, item in term_combination_score_dict.items():
             term_object = {}
-            term_object["term"] = key.replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).replace(COLLOCATION_BINDER,COLLOCATION_JSON_BINDER).strip()
+            term_object["term"] = key.replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
             term_object["score"] = item
             topic_info_object["topic_terms"].append(term_object)
         
-
         
         # TODO: Perhaps add some strength indication to the marking
         for nr, document in enumerate(el[DOCUMENT_LIST]):
@@ -1048,7 +1079,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             document_topic_obj["terms_in_topic"] = []
 
 
-            for term in terms_scores_with_colloctations:
+            for term in terms_scores_with_colloctations_topic_specific:
             
                 add_term = False
                 for synonym_sub_part in term[0].split(SYNONYM_JSON_BINDER):
@@ -1056,14 +1087,13 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                         add_term = True
                 if add_term:
                     term_object = {}
-                    term_object["term"] = term[0].replace(SYNONYM_BINDER, SYNONYM_JSON_BINDER).\
-                        replace(COLLOCATION_BINDER, COLLOCATION_JSON_BINDER).strip()
+                    term_object["term"] = term[0].replace(SYNONYM_BINDER, SYNONYM_JSON_BINDER).strip()
                     term_object["score"] = term[1]
                     document_topic_obj["terms_in_topic"].append(term_object)
             ###
 
             document_dict[document[DOC_ID]]["document_topics"].append(document_topic_obj)
-        
+            print("document_dict", document_dict[document[DOC_ID]]["document_topics"] )
 
         topic_info_list.append(topic_info_object)
 
@@ -1154,6 +1184,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
     return result_dict, saved_time, post_id
 
+def return_false(term1, term2):
+    return False
 
 def get_snippet_text(text, most_typical_model, tf_vectorizer):
     MAX_SNIPPET_SENTENCE_LENGTH = 360
