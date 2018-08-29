@@ -79,9 +79,8 @@ stopword_handler = StopwordHandler()
 # Main 
 ####
 
-def remove_par(txt):
-    return txt.replace(PAR_START, "").replace(PAR_END, "")
 
+# This function is only kept for the writing to file functionality. Should perhaps be removed in the future
 def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_be_considered_the_same):
     collocation_features, original_term_weigth_dict =  get_collocations_from_documents_before_synonyms(documents, term_set)
 
@@ -97,53 +96,16 @@ def get_collocations_from_documents_before_synonyms(documents, term_set):
     extracted_term_set = original_term_dict.keys() #  set([t[0] for t in term_set])
     cutoff = 2
 
-
     documents_with_collocation_marked, ngrams, all_features = find_frequent_n_grams(documents, collocation_cut_off=cutoff,\
                                                                       nr_of_words_that_have_occurred_outside_n_gram_cutoff = 1,\
                                                                       allowed_n_gram_components = extracted_term_set,\
                                                                       max_occurrence_outside_collocation = 0,\
                                                                                     collocation_marker = COLLOCATION_BINDER)
-
-
-    """
-        # This should probably not be kept, since it gets to complicated, both to program and for the user
-    all_features.sort(key = lambda s: (len(s.split(COLLOCATION_BINDER)), get_summed_score(s, original_term_dict)), reverse = True)
-
-
-    collocation_features = set()
-    for f in all_features:
-        if False: # keep this code, if needed later
-            pass
-        #if COLLOCATION_BINDER not in f:
-        #    final_features.add(f)
-        else:
-
-            add = True
-            for already_added_orig in collocation_features:
-                already_added = remove_par(already_added_orig)
-   
-                if COLLOCATION_BINDER + f + COLLOCATION_BINDER in already_added \
-                    or already_added.endswith(COLLOCATION_BINDER + f) \
-                    or already_added.startswith(f + COLLOCATION_BINDER):
-                    # if it is a substring of something already in the collocation list, don't add this ngram, but modify the original instead
-                    collocation_features.remove(already_added_orig)
-                    already_added_without_f = already_added.replace(f,"")
-                    replace_with = PAR_START + already_added_without_f + PAR_END
-                    already_added_modified = already_added.replace(already_added_without_f, replace_with)
-
-
-                    collocation_features.add(already_added_modified)
-                    add = False
-            
-            if add:
-                collocation_features.add(f)
-        """
     return all_features, original_term_dict
 
+
 def find_synonyms_from_collocation_features(collocation_features_list, original_term_dict_list, are_these_two_terms_to_be_considered_the_same):
-    #collocation_features = all_features
-
-
+    
     collocation_features = set() # Features are combined from each element in collocation_features_list
     for feature_list in  collocation_features_list:
         for feature in feature_list:
@@ -158,27 +120,8 @@ def find_synonyms_from_collocation_features(collocation_features_list, original_
                 if term_score > original_term_dict[term_key]:
                     original_term_dict[term_key] = term_score
 
-    print(original_term_dict)
     final_features = set()
 
-
-    """
-    for c in collocation_features:
-        add = True
-        c = c.replace(SYNONYM_BINDER, ",")
-        for already_added in final_features:
-            if (already_added.replace(COLLOCATION_BINDER,"") == c or already_added == c.replace(COLLOCATION_BINDER,"")\
-                or are_these_two_terms_to_be_considered_the_same(remove_par(already_added), remove_par(c))\
-                or should_this_be_added_to_synonyms_cluster(already_added, c, are_these_two_terms_to_be_considered_the_same)
-                )\
-                and add:
-                final_features.remove(already_added)
-                already_added_modified = already_added + SYNONYM_JSON_BINDER + c
-                final_features.add(already_added_modified)
-                add = False
-        if add:
-            final_features.add(c)
-      """
     for c in collocation_features:
         add = True
         c = c.replace(SYNONYM_BINDER, ",")
@@ -199,39 +142,24 @@ def find_synonyms_from_collocation_features(collocation_features_list, original_
         original_terms_for_combined_term = []
         for c in term.split(COLLOCATION_BINDER):
             for t in c.split(SYNONYM_JSON_BINDER):
-                original_terms_for_combined_term.append(remove_par(t))
-                if original_term_dict[remove_par(t)] > best_score:
-                    best_score = original_term_dict[remove_par(t)] # use the highest score among its included parts
-        term_with_ordered_paran = term.replace(COLLOCATION_BINDER + PAR_END, PAR_END + COLLOCATION_BINDER)\
-            .replace(PAR_START + COLLOCATION_BINDER, COLLOCATION_BINDER + PAR_START)
-        new_terms_with_score.append((term_with_ordered_paran, best_score))
+                original_terms_for_combined_term.append(t)
+                if original_term_dict[t] > best_score:
+                    best_score = original_term_dict[t] # use the highest score among its included parts
+        new_terms_with_score.append((term, best_score))
 
         for original in original_terms_for_combined_term:
             if original not in original_terms_with_combined_dict:
-                original_terms_with_combined_dict[original] = [term_with_ordered_paran]
+                original_terms_with_combined_dict[original] = [term]
             else:
-                original_terms_with_combined_dict[original].append(term_with_ordered_paran)
+                original_terms_with_combined_dict[original].append(term)
     return new_terms_with_score, original_terms_with_combined_dict
 
 def should_this_be_added_to_synonyms_cluster(already_added, c, are_these_two_terms_to_be_considered_the_same):
     for syn in already_added.split(SYNONYM_JSON_BINDER):
         if are_these_two_terms_to_be_considered_the_same(syn, c):
             return True
-        if are_these_two_terms_to_be_considered_the_same(remove_par(syn), c):
-            return True
-        if are_these_two_terms_to_be_considered_the_same(syn, remove_par(c)):
-            return True
     return False
 
-def get_summed_score(s, original_term_dict):
-    """
-        Used in get_collocations_from_documents for sorting collocations according to their summed term value
-        """
-    sum = 0
-    sp = s.split(COLLOCATION_BINDER)
-    for word in sp:
-        sum = sum + original_term_dict[word]
-    return word
 
 def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, save_in_database = True):
 
@@ -913,42 +841,6 @@ def is_collocation_in_document(synonym_sub_part, document):
             return False
     return True
 
-#print(synonym_sub_part, document)
-#   print("document[FOUND_CONCEPTS]", document[FOUND_CONCEPTS])
-#   return False
-
-"""
-def is_collocation_in_document(synonym_sub_part, document):
-    add_term = True
-    inside_paranthesis = False
-    for sub_part in synonym_sub_part.split(COLLOCATION_BINDER):
-        if PAR_START in sub_part and PAR_END not in sub_part:
-            #print("A subpart of the tokens have started, which don't have to be found among th contexts")
-            # print(sub_part)
-            inside_paranthesis = True
-                
-        elif PAR_START in sub_part and PAR_END  in sub_part:
-            #print("This particular word does not have to be included, but that is not true for those that follow")
-            #print(sub_part)
-            # but state does not have to be changed here, as inside paranthesis negates itself
-            pass
-                        
-        elif PAR_END  in sub_part:
-            #print("This word does not have to be included, but what comes after")
-            #print(sub_part)
-            inside_paranthesis = False
-                        
-        elif inside_paranthesis:
-            #print("Does not have to be included, as it is within an paranthesis")
-            #print(sub_part)
-            pass
-
-        # All parts of a collocation must have been found in the document for it to be associated (except those in paranthesis
-        elif remove_par(sub_part.lower()) not in document[FOUND_CONCEPTS]:
-            add_term = False
-
-    return add_term
-"""
 
 def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
                              json_properties, data_set_name, model_name, save_in_database,\
@@ -963,36 +855,10 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     topic_info_list = []
     json_properties["STOP_WORDS"] = stopword_handler.get_user_stop_word_list()
     
-    """
-    all_terms_for_all_topics = [el[TERM_LIST] for el in topic_info]
-    all_terms_for_all_topics_flatten = []
-    for term_list in all_terms_for_all_topics:
-        for term in term_list:
-            all_terms_for_all_topics_flatten.append(term)
-    
-    all_documents_for_all_topics = [el[DOCUMENT_LIST] for el in topic_info]
-    all_documents_for_all_topics_flatten = []
-    for document_list in all_documents_for_all_topics:
-        for document in document_list:
-            all_documents_for_all_topics_flatten.append(document[ORIGINAL_DOCUMENT])
-
-    terms_scores_with_colloctations, original_terms_with_combined_dict = \
-        get_collocations_from_documents(all_documents_for_all_topics_flatten,\
-                                        all_terms_for_all_topics_flatten, are_these_two_terms_to_be_considered_the_same)
-      
-    #print("original_terms_with_combined_dict", original_terms_with_combined_dict)
-    
-    expanded_term_set_from_all_topics = set()
-    for otal in [ot[1] for ot in original_terms_with_combined_dict.items()]:
-        for otal_el in otal:
-            otal_el_splitted = otal_el.split(SYNONYM_JSON_BINDER)
-            for splitted in otal_el_splitted:
-                expanded_term_set_from_all_topics.add(splitted)
-
-    """
     collocation_features_list_list = []
     original_term_weight_dict_list = []
     
+    # Construct collocation lists for all topics
     for nr, el in enumerate(topic_info):
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
         collocation_features, original_term_weight_dict =  get_collocations_from_documents_before_synonyms(topic_texts, el[TERM_LIST])
@@ -1010,49 +876,19 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_info_object["topic_terms_previous"] = []
         topic_info_object["topic_terms"] = []
         
-        # Also check if there are topic specific collocations (or non-collocations) that should be added
+        
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
         
-        
-        ####
-        
-    #collocation_features_list_list = [collocation_features, collocation_features]
-    #   original_term_weight_dict_list = [original_term_weight_dict, original_term_weight_dict]
-
-        terms_scores_with_colloctations_topic_specific, original_terms_with_combined_dict_topic_specific = find_synonyms_from_collocation_features(collocation_features_list_list, original_term_weight_dict_list, are_these_two_terms_to_be_considered_the_same)
+        # Combine the collocation lists from different topics, and also collapse into synonym clusters
+        terms_scores_with_colloctations, original_terms_with_combined_dict = find_synonyms_from_collocation_features(collocation_features_list_list, original_term_weight_dict_list, are_these_two_terms_to_be_considered_the_same)
         
         
-        ###
-        #terms_scores_with_colloctations_topic_specific, original_terms_with_combined_dict_topic_specific = get_collocations_from_documents(topic_texts, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same) # no synonymdetection here
-        
-        #print("original_terms_with_combined_dict_topic_specific", original_terms_with_combined_dict_topic_specific)
- 
-        """
-        topic_specific_terms_not_in_topic_general_dict = {}
-        terms_scores_with_colloctations_topic_specific_not_in_topic_general_dict = []
-        for (topic_specific_original_term, s_score) in terms_scores_with_colloctations_topic_specific:
-            topic_specific_expanded_term_list = original_terms_with_combined_dict_topic_specific[topic_specific_original_term]
-            for topic_specific_expanded_term in topic_specific_expanded_term_list:
-                found_topic_specific = []
-                if topic_specific_expanded_term not in expanded_term_set_from_all_topics:
-                    found_topic_specific.append(topic_specific_expanded_term)
-                # if a topic_specific collocation is found
-                if found_topic_specific:
-                    topic_specific_terms_not_in_topic_general_dict[topic_specific_original_term] = found_topic_specific
-                """
-        #print("topic_specific_terms_not_in_topic_general_dict", topic_specific_terms_not_in_topic_general_dict)
-
-     
+        # Here it is a term-topic object that is constucted, so it's important to use the term strength that the terms have for the topic,
+        # not the max term strength from
         term_combination_score_dict = {}
         for term in el[TERM_LIST]:
-            combined_terms = original_terms_with_combined_dict_topic_specific[term[0]]
-            """
-            if term[0] in topic_specific_terms_not_in_topic_general_dict:
-                topic_specific_combined_terms = topic_specific_terms_not_in_topic_general_dict[term[0]]
-            #print(topic_specific_combined_terms)
-            else:
-                topic_specific_combined_terms = []
-                """
+            combined_terms = original_terms_with_combined_dict[term[0]]
+
             for combined_term in combined_terms:
                 if combined_term not in term_combination_score_dict:
                     term_combination_score_dict[combined_term] = term[1]
@@ -1074,8 +910,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             else:
                 marked_document, terms_found_in_document = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
                                                          el[TERM_LIST], el[TOPIC_NUMBER])
-
-
 
 
             # TODO Perhpas concatnating with lists is faster
@@ -1107,7 +941,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 document_dict[document[DOC_ID]] = document_obj
                 if document_obj["text"] != file_list[document[DOC_ID]][TEXT]:
                     print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(file_list[document[DOC_ID]][TEXT]))
-        
 
             else:
                 document_dict[document[DOC_ID]]["marked_text_tok"] = marked_document
@@ -1123,8 +956,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             # It is only the terms that are actually included in the document that are added here
             document_topic_obj["terms_in_topic"] = []
 
-
-            for term in terms_scores_with_colloctations_topic_specific:
+            # The document-term association score is based on the max score among the terms that belong to that concept
+            for term in terms_scores_with_colloctations:
             
                 add_term = False
                 for synonym_sub_part in term[0].split(SYNONYM_JSON_BINDER):
@@ -1138,7 +971,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             ###
 
             document_dict[document[DOC_ID]]["document_topics"].append(document_topic_obj)
-            print("document_dict", document_dict[document[DOC_ID]]["document_topics"] )
 
         topic_info_list.append(topic_info_object)
 
@@ -1327,16 +1159,7 @@ def get_cashed_topic_model(mongo_con):
     result_with_id["id"] = str(id_to_use)
     result_with_id["saved_model"] = saved_model
     return result_with_id
-    """
-    file_name = get_current_file_name() + ".json"
-    if not os.path.isfile(file_name):
-        return "No saved model with name " + file_name
-    f = open(file_name)
-    data = f.read()
-    f.close()
-    json_data = json.loads(data)
-    return json_data
-    """
+
 
 
 def make_model_for_collection(collection_name, model_name, mongo_con):
