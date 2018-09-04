@@ -120,8 +120,6 @@ def find_synonyms_from_collocation_features(collocation_features_list, original_
                 if term_score > original_term_dict[term_key]:
                     original_term_dict[term_key] = term_score
 
-    for key, item in original_term_dict.items():
-        print(key, item)
 
     final_features = set()
 
@@ -138,6 +136,7 @@ def find_synonyms_from_collocation_features(collocation_features_list, original_
             final_features.add(c)
 
     new_terms_with_score = []
+    new_terms_with_score_dict = {}
     original_terms_with_combined_dict = {}
 
     for term in final_features:
@@ -151,13 +150,14 @@ def find_synonyms_from_collocation_features(collocation_features_list, original_
             if score_for_synonoym > best_score:
                 best_score = score_for_synonoym # use the highest score among its included parts
         new_terms_with_score.append((term, best_score))
+        new_terms_with_score_dict[term] = best_score
 
         for original in original_terms_for_combined_term:
             if original not in original_terms_with_combined_dict:
                 original_terms_with_combined_dict[original] = [term]
             else:
                 original_terms_with_combined_dict[original].append(term)
-    return new_terms_with_score, original_terms_with_combined_dict
+    return new_terms_with_score, original_terms_with_combined_dict, new_terms_with_score_dict
 
 def should_this_be_added_to_synonyms_cluster(already_added, c, are_these_two_terms_to_be_considered_the_same):
     for syn in already_added.split(SYNONYM_JSON_BINDER):
@@ -168,7 +168,6 @@ def should_this_be_added_to_synonyms_cluster(already_added, c, are_these_two_ter
 def get_min_score_for_collocation_part(synonym, original_term_dict):
     for syn in synonym.split(COLLOCATION_BINDER):
         if syn not in original_term_dict:
-            print("Not found")
             return False # if not all subparts are in the dictionary, return False
     scores = [original_term_dict[collocation_part] for collocation_part in synonym.split(COLLOCATION_BINDER)]
     return min(scores)
@@ -872,13 +871,28 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     original_term_weight_dict_list = []
     
     # Construct collocation lists for all topics
+    # And find out the max weight (for the different topics, if a term would be included in several topics) for each term
+    max_weight_dict = {}
     for nr, el in enumerate(topic_info):
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
         collocation_features, original_term_weight_dict =  get_collocations_from_documents_before_synonyms(topic_texts, el[TERM_LIST])
         collocation_features_list_list.append(collocation_features)
         original_term_weight_dict_list.append(original_term_weight_dict)
+        for term, score in el[TERM_LIST]:
+            if term not in max_weight_dict:
+                max_weight_dict[term] = 0
+            if score > max_weight_dict[term]:
+                   max_weight_dict[term] = score
+
+
+
+    # Combine the collocation lists from different topics, and also collapse into synonym clusters
+    terms_scores_with_colloctations, original_terms_with_combined_dict, new_terms_with_score_dict = find_synonyms_from_collocation_features(collocation_features_list_list, original_term_weight_dict_list, are_these_two_terms_to_be_considered_the_same)
+
+    #print("terms_scores_with_colloctations, original_terms_with_combined_dict", terms_scores_with_colloctations, original_terms_with_combined_dict)
     
-    
+
+
     for nr, el in enumerate(topic_info):
         
         term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
@@ -892,24 +906,9 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
         
-        # Combine the collocation lists from different topics, and also collapse into synonym clusters
-        terms_scores_with_colloctations, original_terms_with_combined_dict = find_synonyms_from_collocation_features(collocation_features_list_list, original_term_weight_dict_list, are_these_two_terms_to_be_considered_the_same)
-        
-        
         # Here it is a term-topic object that is constucted, so it's important to use the term strength that the terms have for the topic,
         # not the max term strength from
-        """
-        term_combination_score_dict = {}
-        for term in el[TERM_LIST]:
-            combined_terms = original_terms_with_combined_dict[term[0]]
 
-            for combined_term in combined_terms:
-                if combined_term not in term_combination_score_dict:
-                    term_combination_score_dict[combined_term] = term[1]
-                else:
-                    if term[1] > term_combination_score_dict[combined_term]: #use the score from the included original terms that is highest
-                        term_combination_score_dict[combined_term] = term[1]
-           """
         topic_terms_score_dict = {}
         for term in el[TERM_LIST]:
             topic_terms_score_dict[term[0]] = term[1]
@@ -930,8 +929,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             if best_score != 0:
                 term_combination_score_dict[term_combo] = best_score
 
-        print(term_combination_score_dict)
-        #exit(1)
+    #print(term_combination_score_dict)
+
 
         for key, item in term_combination_score_dict.items():
             term_object = {}
@@ -943,10 +942,12 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         # TODO: Perhaps add some strength indication to the marking
         for nr, document in enumerate(el[DOCUMENT_LIST]):
             if document[DOC_ID] not in document_dict:
-                marked_document, terms_found_in_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT], el[TERM_LIST], el[TOPIC_NUMBER])
+                marked_document, terms_found_in_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT],\
+                                                                                  el[TERM_LIST], el[TOPIC_NUMBER], original_terms_with_combined_dict, new_terms_with_score_dict, max_weight_dict)
             else:
                 marked_document, terms_found_in_document = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
-                                                         el[TERM_LIST], el[TOPIC_NUMBER])
+                                                         el[TERM_LIST], el[TOPIC_NUMBER],\
+                                                                                  original_terms_with_combined_dict, new_terms_with_score_dict, max_weight_dict)
 
 
             # TODO Perhpas concatnating with lists is faster
@@ -1073,7 +1074,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             csv_open_no_class = open(result_file_csv_no_classification, "w")
             
             topic_texts_write_to_file = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
-            terms_scores_with_colloctations_write_to_file, original_terms_with_combined = \
+            terms_scores_with_colloctations_write_to_file, original_terms_with_combined, new_terms_with_score_dict = \
                 get_collocations_from_documents(topic_texts_write_to_file, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
             terms_open.write(str(el[TOPIC_NUMBER]) + "\n")
             terms_open.write("----\n")
@@ -1161,8 +1162,23 @@ def apply_trained_model_on_sentences(sentence_list, model, tf_vectorizer):
     return transformed_sentences, result
 
 
+def get_hex_for_term(score, max_score):
+    h =  str(hex(int(score/max_score*238)))[2:]
+    if len(h) < 2:
+        h = h + "0"
+    return h.upper()
 
-def add_markings_for_terms(text, term_list, topic_number):
+def add_markings_for_terms(text, term_list, topic_number, original_terms_with_combined_dict, new_terms_with_score_dict, max_weight_dict):
+    
+    all_scores = list(set([score for key, score in max_weight_dict.items()]))
+
+    max_score = max(all_scores)
+
+
+    #print([str(hex(int(l/max_score*100))) for l in all_scores])
+    #print([get_hex_for_term(term, original_terms_with_combined, new_terms_with_score, max_score) for l in all_scores)])
+    #exit(1)
+    
     found_terms = []
     term_list_replace = [t[0] for t in term_list]
     
@@ -1170,7 +1186,15 @@ def add_markings_for_terms(text, term_list, topic_number):
     simple_tokenised_marked = []
     for el in simple_tokenised:
         if el.lower() in term_list_replace:
-            simple_tokenised_marked.append('<b class="bold-' +str(topic_number) + '">' + " " + el + "</b>")
+            print(el.lower())
+            print("******")
+            best_score_for_el = max_weight_dict[el.lower()]
+            print(best_score_for_el)
+            transparancy = get_hex_for_term(best_score_for_el, max_score)
+            print(transparancy)
+            #transparancy = "FF"
+            #  #C6E3FF
+            simple_tokenised_marked.append('<span style="background-color: #E6F3FF' + str(transparancy) + ';font-weight: 600;">' + " " + el + "</span>")
             found_terms.append(el.lower())
         else:
             simple_tokenised_marked.append(el)
