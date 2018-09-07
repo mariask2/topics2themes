@@ -46,6 +46,7 @@ MARKED_DOCUMENT_TOK = "marked_document_tok"
 MODEL_INFO = "MODEL_INFO"
 MODEL = "MODEL"
 PRE_PROCESS_COLLOCATION_MARKER = "PREPROCESSCOLLOCATIONMARKER"
+NO_TOPIC_CHOSEN = "NOTOPIC"
 
 
 #####
@@ -903,7 +904,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         topic_info_object["topic_terms_previous"] = []
         topic_info_object["topic_terms"] = []
         
-        
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
         
         # Here it is a term-topic object that is constucted, so it's important to use the term strength that the terms have for the topic,
@@ -942,36 +942,31 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         # TODO: Perhaps add some strength indication to the marking
         for nr, document in enumerate(el[DOCUMENT_LIST]):
             if document[DOC_ID] not in document_dict:
+                marked_document_for_snippet, terms_found_in_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT],\
+                                                                                  el[TERM_LIST], NO_TOPIC_CHOSEN, original_terms_with_combined_dict, new_terms_with_score_dict, max_weight_dict)
+
                 marked_document, terms_found_in_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT],\
-                                                                                  el[TERM_LIST], el[TOPIC_NUMBER], original_terms_with_combined_dict, new_terms_with_score_dict, max_weight_dict)
+                                                                  el[TERM_LIST], el[TOPIC_NUMBER], original_terms_with_combined_dict, new_terms_with_score_dict, topic_terms_score_dict)
+            
+                snippet_text = get_snippet_text(marked_document_for_snippet, most_typical_model, tf_vectorizer)
+
             else:
                 marked_document, terms_found_in_document = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
-                                                         el[TERM_LIST], el[TOPIC_NUMBER],\
-                                                                                  original_terms_with_combined_dict, new_terms_with_score_dict, max_weight_dict)
+                                                                                  el[TERM_LIST], NO_TOPIC_CHOSEN,\
+                                                                                  original_terms_with_combined_dict, \
+                                                                                  new_terms_with_score_dict, max_weight_dict)
 
+                
 
-            # TODO Perhpas concatnating with lists is faster
-            marked_text_transformed = marked_document.replace("!", "! ").replace("?", "? ").replace(":", ": ").replace(";", "; ").replace("(", " (")
-            marked_text_inserted_spaces = ""
-            ch_nr = 0
-            for c in marked_text_transformed:
-                if c == "." and ch_nr < len(marked_text_transformed) - 1 and marked_text_transformed[ch_nr + 1] != " ":
-                    if marked_text_transformed[ch_nr + 1].isupper():
-                        marked_text_inserted_spaces = marked_text_inserted_spaces + c + " "
-                    else:
-                        marked_text_inserted_spaces = marked_text_inserted_spaces + c
-                else:
-                    marked_text_inserted_spaces = marked_text_inserted_spaces + c
-                ch_nr = ch_nr + 1
             
-            snippet_text = get_snippet_text(marked_text_inserted_spaces, most_typical_model, tf_vectorizer)
+
             
             if document[DOC_ID] not in document_dict:
                 document_obj = {}
                 document_obj["text"] = document[ORIGINAL_DOCUMENT]
                 document_obj["snippet"] = snippet_text
                 document_obj["id"] = int(str(document[DOC_ID]))
-                document_obj["marked_text_tok"] = marked_text_inserted_spaces
+                document_obj["marked_text_tok"] = marked_document
                 document_obj["id_source"] = int(str(document[DOC_ID]))
                 document_obj["timestamp"] = int(str(document[DOC_ID]))
                 document_obj["document_topics"] = []
@@ -982,7 +977,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
             else:
                 document_dict[document[DOC_ID]]["marked_text_tok"] = marked_document
-                document_dict[document[DOC_ID]]["snippet"] = snippet_text
 
             #print(document_dict[document[DOC_ID]]["marked_text_tok"])
             
@@ -1168,7 +1162,9 @@ def get_hex_for_term(score, max_score):
         h = h + "0"
     return h.upper()
 
-def add_markings_for_terms(text, term_list, topic_number, original_terms_with_combined_dict, new_terms_with_score_dict, max_weight_dict):
+def add_markings_for_terms(text, term_list, topic_number, original_terms_with_combined_dict,\
+                           new_terms_with_score_dict, max_weight_dict):
+    
     
     all_scores = list(set([score for key, score in max_weight_dict.items()]))
 
@@ -1186,19 +1182,35 @@ def add_markings_for_terms(text, term_list, topic_number, original_terms_with_co
     simple_tokenised_marked = []
     for el in simple_tokenised:
         if el.lower() in term_list_replace:
-            print(el.lower())
-            print("******")
+
             best_score_for_el = max_weight_dict[el.lower()]
-            print(best_score_for_el)
             transparancy = get_hex_for_term(best_score_for_el, max_score)
-            print(transparancy)
+            #print(transparancy)
             #transparancy = "FF"
             #  #C6E3FF
-            simple_tokenised_marked.append('<span style="background-color: #E6F3FF' + str(transparancy) + ';font-weight: 600;">' + " " + el + "</span>")
+            simple_tokenised_marked.append('<span class="topic_' + str(topic_number) + \
+                                           '"  style="background-color: #E6F3FF' + str(transparancy) + ';font-weight: 600;">' + " " + el + " </span>")
             found_terms.append(el.lower())
         else:
             simple_tokenised_marked.append(el)
-    return untokenize(simple_tokenised_marked), found_terms
+
+    marked_document = untokenize(simple_tokenised_marked)
+    
+    # TODO Perhpas concatnating with lists is faster
+    marked_text_transformed = marked_document.replace("!", "! ").replace("?", "? ").replace(":", ": ").replace(";", "; ").replace("(", " (")
+    marked_text_inserted_spaces = ""
+    ch_nr = 0
+    for c in marked_text_transformed:
+        if c == "." and ch_nr < len(marked_text_transformed) - 1 and marked_text_transformed[ch_nr + 1] != " ":
+            if marked_text_transformed[ch_nr + 1].isupper():
+                marked_text_inserted_spaces = marked_text_inserted_spaces + c + " "
+            else:
+                marked_text_inserted_spaces = marked_text_inserted_spaces + c
+        else:
+            marked_text_inserted_spaces = marked_text_inserted_spaces + c
+        ch_nr = ch_nr + 1
+
+    return marked_text_inserted_spaces, found_terms
 
 def get_first_in_tuple(item):
     return item[0]
