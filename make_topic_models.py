@@ -21,7 +21,8 @@ import handle_properties
 from mongo_connector import MongoConnector
 import argparse
 import datetime
-import time#
+import time
+import math
 
 
 TOPIC_NUMBER = "TOPIC_NUMBER"
@@ -1157,7 +1158,11 @@ def apply_trained_model_on_sentences(sentence_list, model, tf_vectorizer):
 
 
 def get_hex_for_term(score, max_score):
-    h =  str(hex(int(score/max_score*238)))[2:]
+    # B scales so that terms with very low score still get some marking. If this can be changed if more marking want to be given to those with very low score
+    b = 0.3
+    normalizer = 1/(max_score + b)
+    dec_score = (score + b)*normalizer
+    h =  str(hex(int(dec_score*238)))[2:]
     if len(h) < 2:
         h = h + "0"
     return h.upper()
@@ -1185,17 +1190,17 @@ def add_markings_for_terms(text, term_list, topic_number, original_terms_with_co
 
             best_score_for_el = max_weight_dict[el.lower()]
             transparancy = get_hex_for_term(best_score_for_el, max_score)
-            #print(transparancy)
-            #transparancy = "FF"
-            #  #C6E3FF
             #color = '#E6F3FF'
-            color = '#A6B3EF'
+            color = '#D7E9FF'
+            #color = '#A6B3EF'
+            """
             if topic_number == 2:
-                color = '#A7B3F0'
+                color = '#A2B3EF'
             if topic_number == 3:
-                color = '#A8B3F1'
+                color = '#A1B3EF'
             if topic_number == 4:
-                color = '#A9B3F2'
+                color = '#A0B3EF'
+            """
             simple_tokenised_marked.append('<span class="topic_' + str(topic_number) + \
                                            '"  style="background-color:' + color + str(transparancy) + ';font-weight: 500; color: black;">' + " " + el + " </span>")
             found_terms.append(el.lower())
