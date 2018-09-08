@@ -1188,8 +1188,16 @@ def add_markings_for_terms(text, term_list, topic_number, original_terms_with_co
             #print(transparancy)
             #transparancy = "FF"
             #  #C6E3FF
+            #color = '#E6F3FF'
+            color = '#A6B3EF'
+            if topic_number == 2:
+                color = '#A7B3F0'
+            if topic_number == 3:
+                color = '#A8B3F1'
+            if topic_number == 4:
+                color = '#A9B3F2'
             simple_tokenised_marked.append('<span class="topic_' + str(topic_number) + \
-                                           '"  style="background-color: #E6F3FF' + str(transparancy) + ';font-weight: 600;">' + " " + el + " </span>")
+                                           '"  style="background-color:' + color + str(transparancy) + ';font-weight: 500; color: black;">' + " " + el + " </span>")
             found_terms.append(el.lower())
         else:
             simple_tokenised_marked.append(el)
