@@ -953,7 +953,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
             else:
                 marked_document, terms_found_in_document = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
-                                                                                  el[TERM_LIST], NO_TOPIC_CHOSEN,\
+                                                                                  el[TERM_LIST], el[TOPIC_NUMBER],\
                                                                                   original_terms_with_combined_dict, \
                                                                                   new_terms_with_score_dict, max_weight_dict)
 
