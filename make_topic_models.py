@@ -240,7 +240,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               data_set_name, model_name, save_in_database,\
                                                               properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME,\
                                                               most_typical_model,\
-                                                              tf_vectorizer)
+                                                              tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
@@ -285,7 +285,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               data_set_name, model_name, save_in_database,\
                                                               properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME,\
                                                               most_typical_model, \
-                                                              tf_vectorizer)
+                                                              tf_vectorizer, properties.additional_labels_method)
         return result_dict, time, post_id, most_typical_model
 
     
@@ -860,7 +860,7 @@ def is_collocation_in_document(synonym_sub_part, document):
 def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
                              json_properties, data_set_name, model_name, save_in_database,\
                              are_these_two_terms_to_be_considered_the_same,\
-                             most_typical_model, tf_vectorizer):
+                             most_typical_model, tf_vectorizer, additional_labels_method):
     """
         Prints output/returns from the topic model in txt and json format (depending on whether it is run as server or as a program), with topic terms in bold face
         
@@ -972,6 +972,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 document_obj["timestamp"] = int(str(document[DOC_ID]))
                 document_obj["document_topics"] = []
                 document_obj["label"] = file_list[document[DOC_ID]][LABEL]
+                document_obj["additional_labels"] = additional_labels_method(document[DOC_ID])
                 document_dict[document[DOC_ID]] = document_obj
                 if document_obj["text"] != file_list[document[DOC_ID]][TEXT]:
                     print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(file_list[document[DOC_ID]][TEXT]))

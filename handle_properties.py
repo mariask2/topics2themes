@@ -141,6 +141,12 @@ class PropertiesContainer:
             self.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME = properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME
         except AttributeError:
             self.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME = default_topic_model_configuration.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME
+
+        try:
+            self.ADDITIONAL_LABELS_METHOD = properties.ADDITIONAL_LABELS_METHOD
+        except AttributeError:
+            self.ADDITIONAL_LABELS_METHOD = default_topic_model_configuration.ADDITIONAL_LABELS_METHOD
+                
     def get_properties_in_json(self):
         """
         Returns properties in json format

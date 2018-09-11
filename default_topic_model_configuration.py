@@ -97,9 +97,12 @@ def simple_english_are_these_two_terms_considered_to_be_the_same(x, y):
     else:
         return False
 
+def no_additiona_labels(doc_id):
+    return []
+
 ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME = simple_english_are_these_two_terms_considered_to_be_the_same
 
-
+ADDITIONAL_LABELS_METHOD = no_additiona_labels
 
 def no_cleaning(text):
 
