@@ -422,7 +422,11 @@ def get_very_simple_tokenised(document, lower = True):
     return very_simple_tok
 
 def untokenize(simple_tokenised):
-    return " ".join(simple_tokenised).replace(" .", ".").replace(' " ', '"').replace(" ,", ",").\
+    text =  " ".join(simple_tokenised)
+    return replace_spaces(text)
+
+def replace_spaces(text):
+    return text.replace(" .", ".").replace(' " ', '"').replace(" ,", ",").\
         replace(" :", ":").replace(" ;", ";").replace(" !", "!").replace(" ?", "?").replace(" ( ", "(").replace(" ) ", ")")
 #####
 # Pre-process and turn the documents into lists of terms to feed to the topic models
@@ -638,15 +642,12 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     for nr, ret_list in enumerate(model_results_filtered):
         print("Analysing output from fold nr: ", nr)
         for el in ret_list:
-            #print(ret_list)
-            #print("ret_list")
             current_topic = {}
             current_topic[TERM_LIST] = {}
             for term, prob in el[TERM_LIST]:
                 current_topic[TERM_LIST][term] = prob
             current_topic[MODEL_INFO] = el
-            #print("current_topic", current_topic)
-            #print("*******")
+
             found_match = False
             for previous_topic_list in previous_topic_list_list:
                 # current_topic and previous_topic_list contains a list of terms
@@ -914,7 +915,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         for term in el[TERM_LIST]:
             topic_terms_score_dict[term[0]] = term[1]
 
-        print(topic_terms_score_dict)
         term_combination_score_dict = {}
         for term_combo in [t[0] for t in terms_scores_with_colloctations]:
             best_score = 0
@@ -1174,11 +1174,6 @@ def add_markings_for_terms(text, term_list, topic_number, original_terms_with_co
     all_scores = list(set([score for key, score in max_weight_dict.items()]))
 
     max_score = max(all_scores)
-
-
-    #print([str(hex(int(l/max_score*100))) for l in all_scores])
-    #print([get_hex_for_term(term, original_terms_with_combined, new_terms_with_score, max_score) for l in all_scores)])
-    #exit(1)
     
     found_terms = []
     term_list_replace = [t[0] for t in term_list]
@@ -1210,7 +1205,7 @@ def add_markings_for_terms(text, term_list, topic_number, original_terms_with_co
     marked_document = untokenize(simple_tokenised_marked)
     
     # TODO Perhpas concatnating with lists is faster
-    marked_text_transformed = marked_document.replace("!", "! ").replace("?", "? ").replace(":", ": ").replace(";", "; ").replace("(", " (")
+    marked_text_transformed = replace_spaces(marked_document.replace("span> ","span>").replace(" </span>","</span> "))
     marked_text_inserted_spaces = ""
     ch_nr = 0
     for c in marked_text_transformed:
