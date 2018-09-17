@@ -418,7 +418,7 @@ def get_very_simple_tokenised(document, lower = True):
     if lower:
         document = document.lower()
     very_simple_tok = document.replace(".", " .").replace('"', ' " ').replace(",", " ,").\
-        replace(":", " :").replace("\t", ".\t").replace("..", ".").replace("...", ".").replace("\t", " ").replace(";", " ;").replace("!", " !").replace("?", " ?").replace("(", " ( ").replace(")", " ) ").replace("  ", " ").replace("   ", " ").split(" ")
+        replace(":", " :").replace("\t", ".\t").replace("..", ".").replace("...", ".").replace("\t", " ").replace(";", " ;").replace("!", " !").replace("?", " ?").replace("(", " ( ").replace(")", " ) ").replace(">", "> ").replace("<", " <").replace("  ", " ").replace("   ", " ").split(" ")
     return very_simple_tok
 
 def untokenize(simple_tokenised):
@@ -972,7 +972,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 document_obj["timestamp"] = int(str(document[DOC_ID]))
                 document_obj["document_topics"] = []
                 document_obj["label"] = file_list[document[DOC_ID]][LABEL]
-                document_obj["additional_labels"] = additional_labels_method(document[DOC_ID])
+                document_obj["additional_labels"] = sorted(additional_labels_method(document[DOC_ID]))
                 document_dict[document[DOC_ID]] = document_obj
                 if document_obj["text"] != file_list[document[DOC_ID]][TEXT]:
                     print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(file_list[document[DOC_ID]][TEXT]))
@@ -1206,7 +1206,7 @@ def add_markings_for_terms(text, term_list, topic_number, original_terms_with_co
     marked_document = untokenize(simple_tokenised_marked)
     
     # TODO Perhpas concatnating with lists is faster
-    marked_text_transformed = replace_spaces(marked_document.replace("span> ","span>").replace(" </span>","</span> "))
+    marked_text_transformed = replace_spaces(marked_document.replace(" </span>","</span> "))
     marked_text_inserted_spaces = ""
     ch_nr = 0
     for c in marked_text_transformed:
