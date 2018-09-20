@@ -1227,7 +1227,7 @@ def get_first_in_tuple(item):
 
 
 def get_sets_in_data_folder():
-    return [el.replace(" ", "_") for el in os.listdir(DATA_FOLDER) if not el.startswith(".")]
+    return [el for el in os.listdir(DATA_FOLDER) if (not el.startswith(".")) and os.path.isdir(os.path.join(DATA_FOLDER, el))]
 
 def get_cashed_topic_model(mongo_con):
     els = mongo_con.get_all_model_document_name_date_id()
