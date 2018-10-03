@@ -27,6 +27,8 @@ class MongoConnector:
         self.THEME_INDEX = "theme_index"
         self.ANALYSIS_NAME = "analysis_name"
         self.ANALYSIS_ID = "analysis_id"
+        self.TEXT_ID = "text_id"
+        self.USER_DEFINED_LABEL = "user_defined_label"
     
         self.get_theme_collection().create_index(\
                         [(self.THEME_NUMBER, pymongo.ASCENDING),\
@@ -131,7 +133,8 @@ class MongoConnector:
                     upsert = True)
         return self.get_topic_name_collection().find_one({self.TOPIC_ID : topic_id,\
                                                         self.ANALYSIS_ID : analysis_id})
-
+    
+                                                
     def get_all_topic_names(self, analysis_id):
         print("analysis_id", analysis_id)
         topic_names = self.get_topic_name_collection().find({self.ANALYSIS_ID : analysis_id})
@@ -142,6 +145,34 @@ class MongoConnector:
     
         return all_topic_names
 
+    ### Storing and fetching user-defined text labels
+    
+    def get_user_defined_label_collection(self):
+        db = self.get_database()
+        user_defined_label_collection = db["USER_DEFINED_LABEL_COLLECTION"]
+        return user_defined_label_collection
+    
+    def save_or_update_user_defined_label(self, text_id, user_defined_label, analysis_id):
+        self.get_user_defined_label_collection().update_one(\
+                            {self.TEXT_ID : text_id, self.ANALYSIS_ID : analysis_id},\
+                            {"$set": { self.USER_DEFINED_LABEL : user_defined_label}},\
+                            upsert = True)
+        post = self.get_user_defined_label_collection().find_one({self.TEXT_ID : text_id,\
+                                                                self.ANALYSIS_ID : analysis_id})
+    
+        print(post)
+        return_post = {self.TEXT_ID : post[self.TEXT_ID], self.USER_DEFINED_LABEL : post[self.USER_DEFINED_LABEL]}
+        return return_post
+
+    def get_all_user_defined_labels(self, analysis_id):
+        user_defined_labels = self.get_user_defined_label_collection().find({self.ANALYSIS_ID : analysis_id})
+        all_user_defined_labels = []
+        for post in user_defined_labels:
+            return_post = {self.TEXT_ID : post[self.TEXT_ID], self.USER_DEFINED_LABEL : post[self.USER_DEFINED_LABEL]}
+            all_user_defined_labels.append(return_post)
+        
+        return all_user_defined_labels
+    
     ### Storing and fetching information related to themes
 
     def get_theme_collection(self):

@@ -120,6 +120,16 @@ def update_topic_name():
     resp = make_response(jsonify({"result" : "topic name updated"}))
     return resp
 
+@app.route('/topic_modelling/api/v1.0/update_user_defined_label', methods=['GET', 'POST'])
+def update_user_defined_label():
+    text_id = request.values.get("text_id")
+    user_defined_label = request.values.get("user_defined_label")
+    analysis_id = request.values.get("analysis_id")
+    user_defined_label_result =  mongo_con.save_or_update_user_defined_label(text_id, user_defined_label, analysis_id)
+    resp = make_response(jsonify({"result" : user_defined_label_result}))
+    return resp
+
+
 @app.route('/topic_modelling/api/v1.0/get_model_for_model_id', methods=['GET', 'POST'])
 def get_model_for_model_id():
     model_id = request.values.get("model_id")
@@ -134,6 +144,14 @@ def get_all_topic_names():
     all_topic_names =  mongo_con.get_all_topic_names(analysis_id)
     resp = make_response(jsonify({"result" : all_topic_names}))
     return resp
+
+@app.route('/topic_modelling/api/v1.0/get_all_user_defined_labels', methods=['GET', 'POST'])
+def get_all_user_defined_labels():
+    analysis_id = request.values.get("analysis_id")
+    all_user_defined_labels =  mongo_con.get_all_user_defined_labels(analysis_id)
+    resp = make_response(jsonify({"result" : all_user_defined_labels}))
+    return resp
+
 
 
 @app.route('/topic_modelling/api/v1.0/create_new_analysis', methods=['GET', 'POST'])
