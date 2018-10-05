@@ -117,8 +117,10 @@ class MongoConnector:
          self.ANALYSIS_NAME : post[self.ANALYSIS_NAME]} for post in analyses]
         return analyses_to_return
 
-
-
+    def get_model_for_analysis(self, analysis_id):
+        analysis = self.get_analyses_collection().find_one({self.ID : ObjectId(analysis_id)})
+        return analysis[self.MODEL_ID]
+    
     ### Storing and fetching names of topics
 
     def get_topic_name_collection(self):
@@ -274,7 +276,16 @@ class MongoConnector:
                 find_one({self.THEME_NUMBER : theme_number_int, self.ANALYSIS_ID : analysis_id})[self.DOCUMENT_IDS]
         return new_document_ids
 
+    ## For retrieving theme document connections
+    def get_documents_for_analysis(self, analysis_id):
+        model_id = self.get_model_for_analysis(analysis_id)
+        topic_model_output = self.get_model_for_model_id(model_id)[self.TOPIC_MODEL_OUTPUT]
+        text_dict = {}
+        for el in topic_model_output[DOCUMENTS]:
+            text_dict[el[ID_SOURCE]] = el[TEXT]
+        return text_dict
 
+###
 ###
 
 ###

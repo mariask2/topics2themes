@@ -6,9 +6,13 @@ class ThemeSorter:
 
     def retrain_model(self, analysis_id):
         print("Retrain model for " + str(analysis_id))
+        print(self.mongo_connector.get_saved_themes(analysis_id))
+        print("model id",  self.mongo_connector.get_model_for_analysis(analysis_id))
+        for key, item in self.mongo_connector.get_documents_for_analysis(analysis_id).items():
+            print(key, item)
         return None
 
 if __name__ == '__main__':
     mc = MongoConnector()
     ts = ThemeSorter(mc)
-    print(ts.retrain_model("Retrain model for 5ba3977599a029238042ecf3"))
+    ts.retrain_model("5ba3977599a029238042ecf3")

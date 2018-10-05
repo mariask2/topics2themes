@@ -39,6 +39,8 @@ META_DATA = "meta_data"
 MODEL_NAME = "model_name"
 DOCUMENTS = "documents"
 TOPICS    = "topics"
+TEXT = "text"
+ID_SOURCE = "id_source"
 
 ###
 # To display the labels
