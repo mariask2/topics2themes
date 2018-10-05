@@ -7,6 +7,7 @@ from functools import update_wrapper
 import make_topic_models
 from flask_cors import CORS, cross_origin
 from mongo_connector import MongoConnector
+from theme_sorter import ThemeSorter
 
 import make_topic_models
 
@@ -14,6 +15,8 @@ app = Flask(__name__)
 CORS(app)
 
 mongo_con = MongoConnector()
+theme_sort = ThemeSorter(mongo_con)
+
 # To not have a lot of space in the output
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
@@ -208,6 +211,7 @@ def add_theme_document_connection():
     document_id = request.values.get("document_id")
     analysis_id = request.values.get("analysis_id")
     theme_document_connection_result =  mongo_con.add_theme_document_connection(theme_id, document_id, analysis_id)
+    theme_sort.retrain_model(analysis_id)
     resp = make_response(jsonify({"result" : theme_document_connection_result}))
     return resp
 
