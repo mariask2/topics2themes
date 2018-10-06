@@ -41,7 +41,9 @@ DOCUMENTS = "documents"
 TOPICS    = "topics"
 TEXT = "text"
 ID_SOURCE = "id_source"
-
+THEME_NAME = "theme_name"
+DOCUMENT_ID = "document_ids"
+THEME_NUMBER = "theme_number"
 ###
 # To display the labels
 ####
