@@ -57,7 +57,6 @@ class ThemeSorter:
                 if theme[THEME_NUMBER] not in categories_list:
                     categories_list.append(theme[THEME_NUMBER])
 
-        # TODO: Use stopwords
         vectorizer = CountVectorizer(min_df=2,\
                                      stop_words=stop_words,\
                                      ngram_range = (1, 1),\
@@ -74,6 +73,8 @@ class ThemeSorter:
         joblib.dump(vectorizer, self.get_vectorizer_file(analysis_id))
         joblib.dump(categories_list, self.get_class_list_file(analysis_id))
 
+        # TODO: It might be possible to speed up the training by using a recently trained model to start with
+        # investigate if training is slow
         return None
 
     def rank_themes_for_document(self, analysis_id, document_id):
