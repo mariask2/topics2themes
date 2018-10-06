@@ -285,6 +285,11 @@ class MongoConnector:
             text_dict[el[ID_SOURCE]] = el[TEXT]
         return text_dict
 
+    def get_collection_name_for_analysis(self, analysis_id):
+        model_id = self.get_model_for_analysis(analysis_id)
+        text_collection_name = self.get_model_for_model_id(model_id)[self.TEXT_COLLECTION_NAME]
+        return text_collection_name
+
 ###
 ###
 

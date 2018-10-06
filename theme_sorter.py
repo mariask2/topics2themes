@@ -3,8 +3,10 @@ from topic_model_constants import *
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.externals import joblib
+from make_topic_models import StopwordHandler
 
 import os
+import handle_properties
 
 MODEL_FOLDER = "trained_machine_learning_models"
 MODEL_PREFIX = "model_"
@@ -14,7 +16,8 @@ CLASS_LIST_PREFIX = "class_list_"
 class ThemeSorter:
     def __init__(self, mongo_connector):
         self.mongo_connector = mongo_connector
-    
+        self.stopword_handler = StopwordHandler()
+        
         if not os.path.isdir(MODEL_FOLDER):
             os.mkdir(MODEL_FOLDER)
 
@@ -30,15 +33,18 @@ class ThemeSorter:
     def retrain_model(self, analysis_id):
         print("Retrain model for " + str(analysis_id))
         themes = self.mongo_connector.get_saved_themes(analysis_id)
-        #print("model id",  self.mongo_connector.get_model_for_analysis(analysis_id))
         document_dict = self.mongo_connector.get_documents_for_analysis(analysis_id)
 
+        text_collection_name = self.mongo_connector.get_collection_name_for_analysis(analysis_id)
+        properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + text_collection_name, DEFAULT_ROOT_DIRECTORY)
+        
+        stop_word_file = os.path.join(path_slash_format, properties.STOP_WORD_FILE)
+        stop_words=self.stopword_handler.get_stop_word_set(stop_word_file)
+        
         data_list = []
         y = []
         categories_list = []
         for theme in themes:
-            print(theme[THEME_NUMBER])
-            print(theme[THEME_NAME])
             for doc in theme[DOCUMENT_ID]:
                 data_list.append(document_dict[int(doc)])
                 y.append(theme[THEME_NUMBER])
@@ -53,6 +59,7 @@ class ThemeSorter:
 
         # TODO: Use stopwords
         vectorizer = CountVectorizer(min_df=2,\
+                                     stop_words=stop_words,\
                                      ngram_range = (1, 1),\
                                      binary = True)
         transformed = vectorizer.fit_transform(data_list)
@@ -66,9 +73,7 @@ class ThemeSorter:
         joblib.dump(clf, self.get_model_file(analysis_id))
         joblib.dump(vectorizer, self.get_vectorizer_file(analysis_id))
         joblib.dump(categories_list, self.get_class_list_file(analysis_id))
-        #for res, gold in zip(y, res_on_training):
-        #print(res,gold, max(res))
-        print(categories_list)
+
         return None
 
     def rank_themes_for_document(self, analysis_id, document_id):
