@@ -224,6 +224,14 @@ def delete_theme_document_connection():
     resp = make_response(jsonify({"result" : theme_document_connection_result}))
     return resp
 
+@app.route('/topic_modelling/api/v1.0/get_theme_ranking_for_document', methods=['GET', 'POST'])
+def get_theme_ranking_for_document():
+    document_id = request.values.get("document_id")
+    analysis_id = request.values.get("analysis_id")
+    ranked_themes = theme_sort.rank_themes_for_document(analysis_id, document_id)
+    resp = make_response(jsonify({"result" : ranked_themes}))
+    return resp
+
 
 """
 def get_topic_model_results(topic_model_method):
