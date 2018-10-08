@@ -89,35 +89,12 @@ class ThemeSorter:
         # TODO: It might be possible to speed up the training by using a recently trained model to start with
         # investigate if training is slow
         return None
-
-    def rank_themes_for_document(self, analysis_id, document_id):
-        themes = self.mongo_connector.get_saved_themes(analysis_id)
-        all_theme_nrs = sorted([int(theme[THEME_NUMBER]) for theme in themes])
-        
-        # No trained model available, return themes sorted according to theme number
-        if not os.path.exists(self.get_model_file(analysis_id)) or \
-                not os.path.exists(self.get_vectorizer_file(analysis_id)) or \
-                    not os.path.exists(self.get_class_list_file(analysis_id)):
-            default_themes_str = [str(theme) for theme in all_theme_nrs]
-            print("no classifier trained for " + str(analysis_id))
-            return default_themes_str
-        
-        clf = joblib.load(self.get_model_file(analysis_id))
-        vectorizer = joblib.load(self.get_vectorizer_file(analysis_id))
-        classes = joblib.load(self.get_class_list_file(analysis_id))
-
-        # Get the themes which other documents that belong to the same topic as the current document belong to
-        document_dict, potential_theme_dict = self.mongo_connector.get_documents_for_analysis(analysis_id)
-        potiential_themes_given_topic_connections = set(potential_theme_dict[int(document_id)])
-
-        #print("potiential_themes_given_topic_connections", potiential_themes_given_topic_connections)
     
-        data = [document_dict[int(document_id)]]
-        transformed = vectorizer.transform(data)
-        classifications = clf.predict_proba(transformed)
-        sorted_prob_themes = sorted([(prob, theme_nr) for prob, theme_nr in zip(classifications[0], classes)], reverse = True)
-        sorted_themes = [int(theme_nr) for (prob, theme_nr) in sorted_prob_themes]
+    def rank_according_to_topic_connection(self, document_id, sorted_themes, potential_theme_dict):
+        # Get the themes which other documents that belong to the same topic as the current document belong to
         
+        potiential_themes_given_topic_connections = set(potential_theme_dict[int(document_id)])
+        #print("potiential_themes_given_topic_connections", potiential_themes_given_topic_connections)
         
         # Rank those which have a connection to other documents with the same topic first
         ranked_according_to_topic_connection = []
@@ -131,8 +108,37 @@ class ThemeSorter:
         #print("ranked_only_machine_learning", ranked_only_machine_learning)
         sorted_themes_using_topic_connection = ranked_according_to_topic_connection + ranked_only_machine_learning
 
-        #print("sorted_themes", sorted_themes)
-        #print("sorted_themes_using_topic_connection", sorted_themes_using_topic_connection)
+        print("sorted_themes", sorted_themes)
+        print("sorted_themes_using_topic_connection", sorted_themes_using_topic_connection)
+        return sorted_themes_using_topic_connection
+
+    def rank_themes_for_document(self, analysis_id, document_id):
+        themes = self.mongo_connector.get_saved_themes(analysis_id)
+        all_theme_nrs = sorted([int(theme[THEME_NUMBER]) for theme in themes])
+        
+        document_dict, potential_theme_dict = self.mongo_connector.get_documents_for_analysis(analysis_id)
+        
+        # No trained model available, return themes sorted according to theme number
+        if not os.path.exists(self.get_model_file(analysis_id)) or \
+                not os.path.exists(self.get_vectorizer_file(analysis_id)) or \
+                    not os.path.exists(self.get_class_list_file(analysis_id)):
+            sorted_themes_using_topic_connection = self.rank_according_to_topic_connection(document_id, all_theme_nrs, potential_theme_dict)
+            default_themes_str = [str(theme) for theme in sorted_themes_using_topic_connection]
+            print("no classifier trained for " + str(analysis_id))
+            return default_themes_str
+        
+        clf = joblib.load(self.get_model_file(analysis_id))
+        vectorizer = joblib.load(self.get_vectorizer_file(analysis_id))
+        classes = joblib.load(self.get_class_list_file(analysis_id))
+    
+        data = [document_dict[int(document_id)]]
+        transformed = vectorizer.transform(data)
+        classifications = clf.predict_proba(transformed)
+        sorted_prob_themes = sorted([(prob, theme_nr) for prob, theme_nr in zip(classifications[0], classes)], reverse = True)
+        sorted_themes = [int(theme_nr) for (prob, theme_nr) in sorted_prob_themes]
+        
+        sorted_themes_using_topic_connection = self.rank_according_to_topic_connection(document_id, sorted_themes, potential_theme_dict)
+
         for theme in all_theme_nrs: # themes that have no associate documents or description, and therefore aren't classifier ranked, are ranked as last
             if theme not in sorted_themes_using_topic_connection:
                 sorted_themes_using_topic_connection.append(theme)
