@@ -221,6 +221,7 @@ def delete_theme_document_connection():
     document_id = request.values.get("document_id")
     analysis_id = request.values.get("analysis_id")
     theme_document_connection_result =  mongo_con.delete_theme_document_connection(theme_id, document_id, analysis_id)
+    theme_sort.retrain_model(analysis_id)
     resp = make_response(jsonify({"result" : theme_document_connection_result}))
     return resp
 

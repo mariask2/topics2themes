@@ -303,12 +303,12 @@ class MongoConnector:
                     topic_theme_dict[topic] = []
                 topic_theme_dict[topic].append(theme[THEME_NUMBER])
 
-        
-        
+
         for document, topics in document_topic_dict.items():
             potential_themes_for_document = []
             for topic in topics:
-                potential_themes_for_document.extend(topic_theme_dict[topic])
+                if topic in topic_theme_dict:
+                    potential_themes_for_document.extend(topic_theme_dict[topic])
             potential_themes_for_document = list(set(potential_themes_for_document))
             document__themes_that_other_documents_with_the_same_topic_has__dict[document] = sorted(potential_themes_for_document)
         

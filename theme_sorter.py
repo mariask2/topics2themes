@@ -34,6 +34,9 @@ class ThemeSorter:
         print("Retrain model for " + str(analysis_id))
         themes = self.mongo_connector.get_saved_themes(analysis_id)
         document_dict, potential_theme_dict = self.mongo_connector.get_documents_for_analysis(analysis_id)
+        
+        if (len(themes)) < 2 or (len(document_dict.keys()) < 5):
+            return # No point of training a model when there very little data
 
         text_collection_name = self.mongo_connector.get_collection_name_for_analysis(analysis_id)
         properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + text_collection_name, DEFAULT_ROOT_DIRECTORY)
@@ -61,9 +64,19 @@ class ThemeSorter:
                                      stop_words=stop_words,\
                                      ngram_range = (1, 1),\
                                      binary = True)
-        transformed = vectorizer.fit_transform(data_list)
+        try:
+            transformed = vectorizer.fit_transform(data_list)
+        except ValueError:
+            print("Vectorization failed")
+            return # If there is very little data, don't do any machine learning training
+        
         feature_set = set()
         inversed = vectorizer.inverse_transform(transformed)
+        for feature in inversed:
+            for f in list(feature):
+                feature_set.add(f)
+        if len(feature_set) < 5:
+            return # No point of training a model when there very features
         clf = LogisticRegression(C=10)
         clf.fit(transformed, y)
         
@@ -96,6 +109,8 @@ class ThemeSorter:
         # Get the themes which other documents that belong to the same topic as the current document belong to
         document_dict, potential_theme_dict = self.mongo_connector.get_documents_for_analysis(analysis_id)
         potiential_themes_given_topic_connections = set(potential_theme_dict[int(document_id)])
+
+        #print("potiential_themes_given_topic_connections", potiential_themes_given_topic_connections)
     
         data = [document_dict[int(document_id)]]
         transformed = vectorizer.transform(data)
