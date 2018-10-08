@@ -33,7 +33,7 @@ class ThemeSorter:
     def retrain_model(self, analysis_id):
         print("Retrain model for " + str(analysis_id))
         themes = self.mongo_connector.get_saved_themes(analysis_id)
-        document_dict = self.mongo_connector.get_documents_for_analysis(analysis_id)
+        document_dict, potential_theme_dict = self.mongo_connector.get_documents_for_analysis(analysis_id)
 
         text_collection_name = self.mongo_connector.get_collection_name_for_analysis(analysis_id)
         properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + text_collection_name, DEFAULT_ROOT_DIRECTORY)
@@ -93,17 +93,35 @@ class ThemeSorter:
         vectorizer = joblib.load(self.get_vectorizer_file(analysis_id))
         classes = joblib.load(self.get_class_list_file(analysis_id))
 
-        document_dict = self.mongo_connector.get_documents_for_analysis(analysis_id)
+        # Get the themes which other documents that belong to the same topic as the current document belong to
+        document_dict, potential_theme_dict = self.mongo_connector.get_documents_for_analysis(analysis_id)
+        potiential_themes_given_topic_connections = set(potential_theme_dict[int(document_id)])
+    
         data = [document_dict[int(document_id)]]
         transformed = vectorizer.transform(data)
         classifications = clf.predict_proba(transformed)
         sorted_prob_themes = sorted([(prob, theme_nr) for prob, theme_nr in zip(classifications[0], classes)], reverse = True)
         sorted_themes = [int(theme_nr) for (prob, theme_nr) in sorted_prob_themes]
         
+        
+        # Rank those which have a connection to other documents with the same topic first
+        ranked_according_to_topic_connection = []
+        ranked_only_machine_learning = []
+        for theme in sorted_themes:
+            if str(theme) in potiential_themes_given_topic_connections:
+                ranked_according_to_topic_connection.append(theme)
+            else:
+                ranked_only_machine_learning.append(theme)
+        #print("ranked_according_to_topic_connection", ranked_according_to_topic_connection)
+        #print("ranked_only_machine_learning", ranked_only_machine_learning)
+        sorted_themes_using_topic_connection = ranked_according_to_topic_connection + ranked_only_machine_learning
+
+        #print("sorted_themes", sorted_themes)
+        #print("sorted_themes_using_topic_connection", sorted_themes_using_topic_connection)
         for theme in all_theme_nrs: # themes that have no associate documents or description, and therefore aren't classifier ranked, are ranked as last
-            if theme not in sorted_themes:
-                sorted_themes.append(theme)
-        themes_str = [str(theme) for theme in sorted_themes]
+            if theme not in sorted_themes_using_topic_connection:
+                sorted_themes_using_topic_connection.append(theme)
+        themes_str = [str(theme) for theme in sorted_themes_using_topic_connection]
         return themes_str
 
 if __name__ == '__main__':
@@ -111,4 +129,7 @@ if __name__ == '__main__':
     ts = ThemeSorter(mc)
     ts.retrain_model("5ba3977599a029238042ecf3")
     print(ts.rank_themes_for_document("5ba3977599a029238042ecf3", "682"))
-
+    print(ts.rank_themes_for_document("5ba3977599a029238042ecf3", "480"))
+    print(ts.rank_themes_for_document("5ba3977599a029238042ecf3", "1033"))
+    print(ts.rank_themes_for_document("5ba3977599a029238042ecf3", "627"))
+    print(ts.rank_themes_for_document("5ba3977599a029238042ecf3", "14"))

@@ -208,7 +208,6 @@ class MongoConnector:
         themes = self.get_theme_collection().find({self.ANALYSIS_ID : analysis_id})
         all_themes = []
         for post in themes:
-            print(post)
             return_post = {self.THEME_NUMBER : str(post[self.THEME_NUMBER]), self.DOCUMENT_IDS : post[self.DOCUMENT_IDS], self.THEME_NAME : post[self.THEME_NAME]}
             all_themes.append(return_post)
 
@@ -281,9 +280,39 @@ class MongoConnector:
         model_id = self.get_model_for_analysis(analysis_id)
         topic_model_output = self.get_model_for_model_id(model_id)[self.TOPIC_MODEL_OUTPUT]
         text_dict = {}
+        document_theme_dict = {}
+        document_topic_dict = {}
+        topic_theme_dict = {}
+        document__themes_that_other_documents_with_the_same_topic_has__dict = {}
+        
         for el in topic_model_output[DOCUMENTS]:
+            topics = [topic[TOPIC_INDEX] for topic in el[DOCUMENT_TOPICS]]
+            document_topic_dict[el[ID_SOURCE]] = topics
             text_dict[el[ID_SOURCE]] = el[TEXT]
-        return text_dict
+            
+        themes_for_analysis = self.get_saved_themes(analysis_id)
+        
+        for theme in themes_for_analysis:
+            topics_associated_with_theme = []
+            for document_id in theme[DOCUMENT_ID]:
+                document_id = int(document_id)
+                topics_associated_with_document = document_topic_dict[document_id]
+                topics_associated_with_theme.extend(topics_associated_with_document)
+            for topic in topics_associated_with_theme:
+                if topic not in topic_theme_dict:
+                    topic_theme_dict[topic] = []
+                topic_theme_dict[topic].append(theme[THEME_NUMBER])
+
+        
+        
+        for document, topics in document_topic_dict.items():
+            potential_themes_for_document = []
+            for topic in topics:
+                potential_themes_for_document.extend(topic_theme_dict[topic])
+            potential_themes_for_document = list(set(potential_themes_for_document))
+            document__themes_that_other_documents_with_the_same_topic_has__dict[document] = sorted(potential_themes_for_document)
+        
+        return text_dict, document__themes_that_other_documents_with_the_same_topic_has__dict
 
     def get_collection_name_for_analysis(self, analysis_id):
         model_id = self.get_model_for_analysis(analysis_id)
