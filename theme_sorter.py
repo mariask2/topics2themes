@@ -60,6 +60,9 @@ class ThemeSorter:
                 if theme[THEME_NUMBER] not in categories_list:
                     categories_list.append(theme[THEME_NUMBER])
 
+        if len(categories_list) < 2:
+            return # If the categories list is small, but nr of themes is >= 2, this means that the classifier only has one class to work with. No point training the classifier.
+    
         vectorizer = CountVectorizer(min_df=2,\
                                      stop_words=stop_words,\
                                      ngram_range = (1, 1),\
