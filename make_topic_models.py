@@ -943,24 +943,21 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         # TODO: Perhaps add some strength indication to the marking
         for nr, document in enumerate(el[DOCUMENT_LIST]):
             if document[DOC_ID] not in document_dict:
-                marked_document_for_snippet, terms_found_in_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT],\
-                                                                                  el[TERM_LIST], NO_TOPIC_CHOSEN, original_terms_with_combined_dict, new_terms_with_score_dict, max_weight_dict)
+                #marked_document_for_snippet, terms_found_in_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT],\
+                    #                                                             el[TERM_LIST], NO_TOPIC_CHOSEN, original_terms_with_combined_dict, new_terms_with_score_dict, max_weight_dict)
 
                 marked_document, terms_found_in_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT],\
                                                                   el[TERM_LIST], el[TOPIC_NUMBER], original_terms_with_combined_dict, new_terms_with_score_dict, topic_terms_score_dict)
             
-                snippet_text = get_snippet_text(marked_document_for_snippet, most_typical_model, tf_vectorizer)
+                #snippet_text = get_snippet_text(marked_document_for_snippet, most_typical_model, tf_vectorizer)
 
             else:
                 marked_document, terms_found_in_document = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
                                                                                   el[TERM_LIST], el[TOPIC_NUMBER],\
                                                                                   original_terms_with_combined_dict, \
                                                                                   new_terms_with_score_dict, max_weight_dict)
-
-                
-
             
-
+            snippet_text = get_snippet_text(marked_document)
             
             if document[DOC_ID] not in document_dict:
                 document_obj = {}
@@ -979,9 +976,9 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
             else:
                 document_dict[document[DOC_ID]]["marked_text_tok"] = marked_document
-
+                document_dict[document[DOC_ID]]["snippet"] = marked_document
             #print(document_dict[document[DOC_ID]]["marked_text_tok"])
-            
+
             document_topic_obj = {}
             document_topic_obj["topic_index"] = el[TOPIC_NUMBER]
             document_topic_obj["topic_confidence"] = document[DOCUMENT_TOPIC_STRENGTH]
@@ -1097,8 +1094,21 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     return result_dict, saved_time, post_id
 
 
+def get_snippet_text(marked_document):
+    
+    # Keep sentences which include a term marking
+    sentences_to_keep = []
+    # TODO: This is not language independent
+    sentence_list = sent_tokenize(marked_document)
+    for sent in sentence_list:
+        if '<span class="topic' in sent:
+            sentences_to_keep.append(sent)
+        else:
+            sentences_to_keep.append("[..]")
+    return " ".join(sentences_to_keep)
 
-def get_snippet_text(text, most_typical_model, tf_vectorizer):
+# This is not used in the moment, but could be useful in the future if short summaries are to be created
+def get_snippet_text_short_snippet(text, most_typical_model, tf_vectorizer):
     MAX_SNIPPET_SENTENCE_LENGTH = 360
     SENTENCE_HIDDEN_MARKER = "."
 
