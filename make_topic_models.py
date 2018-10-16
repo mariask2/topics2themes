@@ -436,7 +436,7 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
 
     pre_processed_documents = documents
 
-
+    print("***************")
     return pre_processed_documents
 
 
@@ -444,12 +444,14 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
                           allowed_n_gram_components = None, max_occurrence_outside_collocation=1, collocation_marker=COLLOCATION_BINDER):
     """
     Frequent collocations are concatenated to one term in the corpus
-    (For instance smallpox and small pox are both used, now small_pox will be
+    (For instance if smallpox and small pox are both used, now small_pox will be
     created, which will then show up as a synonym).
     """
+    
+    
     new_documents = []
     
-
+    # Construct a list of potential n-grams
     ngram_vectorizer = CountVectorizer(binary = True, ngram_range = (2, 4), min_df=collocation_cut_off)
     ngram_vectorizer.fit_transform(documents)
     
@@ -466,39 +468,48 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
             if add_ngram:
                 allowed_ngrams.append(el)
 
+    # Mark these potential n-grams in the documents
     allowed_ngrams.sort(key = lambda s: len(s.split(" ")), reverse = True)
     for document in documents:
-        new_document = document.replace(collocation_marker, " ") # If there are words already in the corpus containing "_" remove this so the are not interpreted as an n-gram
+        new_document = document.lower()
+        #new_document = document.replace(collocation_marker, " ") # If there are words already in the corpus containing "_" remove this so the are not interpreted as an n-gram
         for el in allowed_ngrams:
-            if el in document:
-                new_document = new_document.replace(el, el.replace(" ", collocation_marker))
+            if el in new_document:
+                #new_document = new_document.replace(el, el.replace(" ", collocation_marker))
+                new_document = new_document.replace(el, " ")
         new_documents.append(new_document)
+
 
     token_vectorizer = CountVectorizer(binary = True, ngram_range = (1, 1), min_df= 1 + max_occurrence_outside_collocation)
     token_vectorizer.fit_transform(new_documents)
     no_ngrams_features = set([token for token in token_vectorizer.get_feature_names() if " " not in token])
-    filtered_ngram_list = [] # Only ngrams where the constituent ouccrs a maximum of one time outside the ngram
+
+
+
+    filtered_ngram_list = [] # Only ngrams where the constituent ouccrs a maximum of nr_of_words_that_have_occurred_outside_n_gram_cutoff_to_use time outside the ngram
     for ngram in allowed_ngrams:
         sp = ngram.split(" ")
         if nr_of_words_that_have_occurred_outside_n_gram_cutoff != None:
             nr_of_words_that_have_occurred_outside_n_gram_cutoff_to_use = nr_of_words_that_have_occurred_outside_n_gram_cutoff
         else:
             nr_of_words_that_have_occurred_outside_n_gram_cutoff_to_use = len(sp)
+            # Default is that none of the words is allowed to occur outside the n-gram
 
         nr_of_words_that_have_occurred_outside_n_gram = 0
         for word in sp:
             if word in no_ngrams_features:
                 nr_of_words_that_have_occurred_outside_n_gram = nr_of_words_that_have_occurred_outside_n_gram + 1
+
         if nr_of_words_that_have_occurred_outside_n_gram <= len(sp) - nr_of_words_that_have_occurred_outside_n_gram_cutoff_to_use: # at least one of the words most not have occurred in another context than the ngram
             filtered_ngram_list.append(ngram)
 
-
-
+    #print("filtered_ngram_list", filtered_ngram_list)
     new_filtered_documents = []
     for document in documents:
-        new_document = document.replace(collocation_marker, " ") # If there are words already in the corpus containing "_" remove this so the are not interpreted as an n-gram
+        new_document = document.lower()
+        new_document = new_document.replace(collocation_marker, " ") # If there are words already in the corpus containing "_" remove this so the are not interpreted as an n-gram
         for el in filtered_ngram_list:
-            if el in document:
+            if el in new_document:
                 new_document = new_document.replace(el, el.replace(" ", collocation_marker))
         new_filtered_documents.append(new_document)
 
@@ -506,6 +517,7 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
     final_documents_vectorizer.fit_transform(new_filtered_documents)
     final_features = set(final_documents_vectorizer.get_feature_names())
 
+    # remove e.g. bigrams that only occur in the context of a three-gram
     if allowed_n_gram_components == None:
         filtered_final_feautures = set(final_documents_vectorizer.get_feature_names())
     else:
@@ -518,8 +530,10 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
                     add = False
             if add:
                 filtered_final_feautures.append(el)
-    # remove e.g. bigrams that only occur in the context of a three-gram
-    filtered_ngram_list_that_occurs_as_feature = [f for f in filtered_ngram_list if f in filtered_final_feautures]
+
+    filtered_ngram_list_that_occurs_as_feature = [f for f in filtered_ngram_list if f.replace(" ", collocation_marker) in filtered_final_feautures]
+
+    #print("filtered_ngram_list_that_occurs_as_feature", filtered_ngram_list_that_occurs_as_feature)
     removed_ngrams = [f.replace(" ", collocation_marker) for f in filtered_ngram_list if f not in filtered_final_feautures]
     return new_filtered_documents, filtered_ngram_list_that_occurs_as_feature, filtered_final_feautures
 
