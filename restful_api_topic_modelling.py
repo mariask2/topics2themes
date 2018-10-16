@@ -233,7 +233,10 @@ def get_theme_ranking_for_document():
     resp = make_response(jsonify({"result" : ranked_themes}))
     return resp
 
-
+@app.route('/topic_modelling/api/v1.0/empty', methods=['GET', 'POST'])
+def empty():
+    resp = make_response(jsonify({"result" : "empty"}))
+    return resp
 """
 def get_topic_model_results(topic_model_method):
     possible_dataset_names = [VACCINATION_MUMSNET]

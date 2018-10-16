@@ -214,15 +214,11 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                        properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
                                                                        properties.COLLOCATION_CUT_OFF,\
                                                                        stop_word_file,\
-                                                                       properties.SPACE_FOR_PATH,\
-                                                                       properties.VECTOR_LENGTH,\
                                                                        properties.MIN_DOCUMENT_FREQUENCY,\
                                                                        properties.MAX_DOCUMENT_FREQUENCY,\
                                                                        properties.NR_OF_TOP_WORDS,\
                                                                        properties.NR_OF_TOP_DOCUMENTS,\
-                                                                       properties.OVERLAP_CUT_OFF,\
-                                                                       properties.NO_MATCH,\
-                                                                       properties.MANUAL_MADE_DICT)
+                                                                       properties.OVERLAP_CUT_OFF)
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
             if number_of_topics - len(topic_info) <= max_less_than_requested_models_returned:
@@ -259,15 +255,11 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                        properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
                                                                        properties.COLLOCATION_CUT_OFF,\
                                                                        stop_word_file,\
-                                                                       properties.SPACE_FOR_PATH,\
-                                                                       properties.VECTOR_LENGTH,\
                                                                        properties.MIN_DOCUMENT_FREQUENCY,\
                                                                        properties.MAX_DOCUMENT_FREQUENCY,\
                                                                        properties.NR_OF_TOP_WORDS,\
                                                                        properties.NR_OF_TOP_DOCUMENTS,\
-                                                                       properties.OVERLAP_CUT_OFF,\
-                                                                       properties.NO_MATCH,\
-                                                                       properties.MANUAL_MADE_DICT)
+                                                                       properties.OVERLAP_CUT_OFF)
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
             if number_of_topics - len(topic_info) <= max_less_than_requested_models_returned:
@@ -285,7 +277,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               data_set_name, model_name, save_in_database,\
                                                               properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME,\
                                                               most_typical_model, \
-                                                              tf_vectorizer, properties.additional_labels_method)
+                                                              tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD)
         return result_dict, time, post_id, most_typical_model
 
     
@@ -382,10 +374,10 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
-                           space_for_path, vector_length, min_document_frequency, max_document_frequency,\
-                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, no_match, manual_made_dict):
+                        min_document_frequency, max_document_frequency,\
+                           nr_of_top_words, nr_of_to_documents, overlap_cut_off):
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                          space_for_path, vector_length, no_match, manual_made_dict, min_document_frequency)
+                                           min_document_frequency)
     texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, CountVectorizer,\
                                               min_document_frequency, max_document_frequency, stop_word_file)
     model_list = []
@@ -398,10 +390,10 @@ def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_p
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
-                           space_for_path, vector_length, min_document_frequency, max_document_frequency,\
-                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, no_match, manual_made_dict):
+                        min_document_frequency, max_document_frequency,\
+                           nr_of_top_words, nr_of_to_documents, overlap_cut_off):
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                          space_for_path, vector_length, no_match, manual_made_dict, min_document_frequency)
+                                           min_document_frequency)
                                           
     
     texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, TfidfVectorizer,\
@@ -432,8 +424,7 @@ def replace_spaces(text):
 # Pre-process and turn the documents into lists of terms to feed to the topic models
 #####
 
-def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, space_for_path, vector_length,\
-                no_match, manual_made_dict, min_document_frequency):
+def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, min_document_frequency):
     if not do_pre_process:
         return raw_documents
     documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off,\
@@ -443,26 +434,6 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
     pre_processed_documents = documents
 
 
-    """
-    word_vectorizer = CountVectorizer(binary = True, min_df=2, stop_words=stopword_handler.get_stop_word_set(stop_word_file))
-    word_vectorizer.fit_transform(documents)
-
-    cluster_output = "cluster_output.txt"
-    print("The output of word clustering will be written to '"  + cluster_output + "'")
-    word2vec = word2vecwrapper.Word2vecWrapper(space_for_path, vector_length, no_match, manual_made_dict)
-    word2vec.set_vocabulary(word_vectorizer.get_feature_names())
-    word2vec.load_clustering(cluster_output)
-
-    pre_processed_documents = []
-    for document in documents:
-        pre_processed_document = []
-        very_simple_tok = get_very_simple_tokenised(document)
-        for token in very_simple_tok:
-            pre_processed_document.append(word2vec.get_similars(token))
-        pre_processed_documents.append(" ".join(pre_processed_document))
-
-    word2vec.end()
-    """
     return pre_processed_documents
 
 
@@ -1101,11 +1072,11 @@ def get_snippet_text(marked_document):
     # TODO: This is not language independent
     sentence_list = sent_tokenize(marked_document)
     for sent in sentence_list:
-        if '<span class="topic' in sent:
+        if 'term-to-mark' in sent:
             sentences_to_keep.append(sent)
         else:
-            sentences_to_keep.append("[..]")
-    return " ".join(sentences_to_keep)
+            sentences_to_keep.append("MARKING[..]MARKING")
+    return " ".join(sentences_to_keep).replace("]MARKING MARKING[", "").replace("MARKING[","[").replace("]MARKING","]")
 
 # This is not used in the moment, but could be useful in the future if short summaries are to be created
 def get_snippet_text_short_snippet(text, most_typical_model, tf_vectorizer):
@@ -1207,7 +1178,7 @@ def add_markings_for_terms(text, term_list, topic_number, original_terms_with_co
             if topic_number == 4:
                 color = '#A0B3EF'
             """
-            simple_tokenised_marked.append('<span class="topic_' + str(topic_number) + \
+            simple_tokenised_marked.append('<span class="term-to-mark topic_' + str(topic_number) + \
                                            '"  style="background-color:' + color + str(transparancy) + ';font-weight: 500; color: black;">' + " " + el + " </span>")
             found_terms.append(el.lower())
         else:
