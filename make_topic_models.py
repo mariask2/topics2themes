@@ -34,6 +34,8 @@ TOPIC_CONFIDENCE = "topic_confidence"
 TOPIC_INDEX = "topic_index"
 TEXT = "text"
 LABEL = "label"
+BASE_NAME = "base_name"
+FULL_NAME = "full_name"
 COLLOCATION_BINDER = "_"
 #COLLOCATION_JSON_BINDER = " _ "
 SYNONYM_JSON_BINDER = " / "
@@ -302,10 +304,11 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name, w
         print("Reading", os.path.join(data_dir))
 
         for f in files:
+            base_name = os.path.basename(f)
             opened = open(f)
             text = opened.read()
             cleaned_text = cleaning_method(text)
-            file_list.append({TEXT: cleaned_text, LABEL: data_info[DATA_LABEL]})
+            file_list.append({TEXT: cleaned_text, LABEL: data_info[DATA_LABEL], BASE_NAME: base_name, FULL_NAME: f})
             opened.close()
 
     #remove duplicates. Just keep the first occurrence, and remove the once comming after
@@ -827,7 +830,9 @@ def is_collocation_in_document(synonym_sub_part, document):
             return False
     return True
 
-
+"""
+Filelist is a list of document-info-dict, with the same order as for the documents sent to the topic modelling
+"""
 def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
                              json_properties, data_set_name, model_name, save_in_database,\
                              are_these_two_terms_to_be_considered_the_same,\
@@ -836,6 +841,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         Prints output/returns from the topic model in txt and json format (depending on whether it is run as server or as a program), with topic terms in bold face
         
         """
+  
     
     document_dict = {}
     topic_info_list = []
@@ -940,7 +946,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 document_obj["timestamp"] = int(str(document[DOC_ID]))
                 document_obj["document_topics"] = []
                 document_obj["label"] = file_list[document[DOC_ID]][LABEL]
-                document_obj["additional_labels"] = sorted(additional_labels_method(document[DOC_ID]))
+                document_obj["base_name"] = file_list[document[DOC_ID]][BASE_NAME]
+                document_obj["additional_labels"] = sorted(additional_labels_method(file_list[document[DOC_ID]][FULL_NAME]))
                 document_dict[document[DOC_ID]] = document_obj
                 if document_obj["text"] != file_list[document[DOC_ID]][TEXT]:
                     print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(file_list[document[DOC_ID]][TEXT]))
