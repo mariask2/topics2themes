@@ -84,25 +84,27 @@ stopword_handler = StopwordHandler()
 
 
 # This function is only kept for the writing to file functionality. Should perhaps be removed in the future
-def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_be_considered_the_same):
-    collocation_features, original_term_weigth_dict =  get_collocations_from_documents_before_synonyms(documents, term_set)
+def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_be_considered_the_same, min_term_frequency_in_collection_to_include_as_term):
+    collocation_features, original_term_weigth_dict =  get_collocations_from_documents_before_synonyms(documents, term_set, min_term_frequency_in_collection_to_include_as_term)
 
     collocation_features_list_list = [collocation_features, collocation_features]
     original_term_weigth_dict_list = [original_term_weigth_dict, original_term_weigth_dict]
 
     return find_synonyms_from_collocation_features(collocation_features_list_list, original_term_weigth_dict_list, are_these_two_terms_to_be_considered_the_same)
 
-def get_collocations_from_documents_before_synonyms(documents, term_set):
+def get_collocations_from_documents_before_synonyms(documents, term_set, min_term_frequency_in_collection_to_include_as_term):
     original_term_dict = {}
     for t in term_set:
         original_term_dict[t[0]] = t[1]
     extracted_term_set = original_term_dict.keys() #  set([t[0] for t in term_set])
     cutoff = 2
 
+    #set max_occurrence_outside_collocation to min_term_frequency_in_collection_to_include_as_term
+    # to allow a small amount of frequent collocations despite that they also occur as non-collocations
     documents_with_collocation_marked, ngrams, all_features = find_frequent_n_grams(documents, collocation_cut_off=cutoff,\
                                                                       nr_of_words_that_have_occurred_outside_n_gram_cutoff = 1,\
                                                                       allowed_n_gram_components = extracted_term_set,\
-                                                                      max_occurrence_outside_collocation = 0,\
+                                                                        max_occurrence_outside_collocation = min_term_frequency_in_collection_to_include_as_term,\
                                                                                     collocation_marker = COLLOCATION_BINDER)
     return all_features, original_term_dict
 
@@ -877,7 +879,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     max_weight_dict = {}
     for nr, el in enumerate(topic_info):
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
-        collocation_features, original_term_weight_dict =  get_collocations_from_documents_before_synonyms(topic_texts, el[TERM_LIST])
+        collocation_features, original_term_weight_dict =  get_collocations_from_documents_before_synonyms(topic_texts, el[TERM_LIST], min_term_frequency_in_collection_to_include_as_term)
         collocation_features_list_list.append(collocation_features)
         original_term_weight_dict_list.append(original_term_weight_dict)
         for term, score in el[TERM_LIST]:
@@ -893,16 +895,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
 
     # Find out how many times the term combinations appear in the document collection and store that information in comb_term_frequencies
-
-    """
-    all_documents = list()
-    added_document_nr = set()
-    for nr, el in enumerate(topic_info):
-        for doc in el[DOCUMENT_LIST]:
-            if doc[DOC_ID] not in added_document_nr:
-                all_documents.append(doc)
-                added_document_nr.add(doc[DOC_ID])
-      """
     frequent_comb_term_set = set()
     for nr, el in enumerate(topic_info):
         comb_term_frequencies = {}
@@ -1101,7 +1093,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             
             topic_texts_write_to_file = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
             terms_scores_with_colloctations_write_to_file, original_terms_with_combined, new_terms_with_score_dict = \
-                get_collocations_from_documents(topic_texts_write_to_file, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same)
+                get_collocations_from_documents(topic_texts_write_to_file, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same, min_term_frequency_in_collection_to_include_as_term)
             terms_open.write(str(el[TOPIC_NUMBER]) + "\n")
             terms_open.write("----\n")
             terms_open.write(str(sorted([(strength, term) for (term, strength) in terms_scores_with_colloctations_write_to_file])[::-1]) + "\n")
