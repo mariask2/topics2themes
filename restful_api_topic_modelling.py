@@ -54,7 +54,7 @@ def load_keys(approved_keys, key_file_name):
         approved_keys.append(line.strip())
 
 def authenticate():
-    key = request.values.get("apiKey")
+    key = request.values.get("authentication_key")
     if key not in APPROVED_KEYS:
         abort(403)
 
@@ -62,12 +62,14 @@ VACCINATION_MUMSNET = "vaccination_mumsnet"
 
 @app.route('/topic_modelling/api/v1.0/get_data_sets', methods=['GET', 'POST'])
 def get_data_sets():
+    authenticate()
     data_sets = make_topic_models.get_sets_in_data_folder()
     resp = make_response(jsonify({"result" : data_sets}))
     return resp
 
 @app.route('/topic_modelling/api/v1.0/get_all_models_for_collection_with_name', methods=['GET', 'POST'])
 def get_all_models_for_collection_with_name():
+    authenticate()
     collection_name = request.values.get("collection_name")
     all_models_for_collection_with_name = mongo_con.get_all_models_for_collection_with_name(collection_name)
     resp = make_response(jsonify({"result" : all_models_for_collection_with_name}))
@@ -75,6 +77,7 @@ def get_all_models_for_collection_with_name():
 
 @app.route('/topic_modelling/api/v1.0/make_model_for_collection', methods=['GET', 'POST'])
 def make_model_for_collection():
+    authenticate()
     collection_name = request.values.get("collection_name")
     model_name = request.values.get("model_name")
     model_result = make_topic_models.make_model_for_collection(collection_name, model_name, mongo_con)
@@ -116,6 +119,7 @@ def get_cashed_topic_model_results():
 
 @app.route('/topic_modelling/api/v1.0/update_topic_name', methods=['GET', 'POST'])
 def update_topic_name():
+    authenticate()
     topic_id = request.values.get("topic_id")
     topic_name = request.values.get("topic_name")
     analysis_id = request.values.get("analysis_id")
@@ -125,6 +129,7 @@ def update_topic_name():
 
 @app.route('/topic_modelling/api/v1.0/update_user_defined_label', methods=['GET', 'POST'])
 def update_user_defined_label():
+    authenticate()
     text_id = request.values.get("text_id")
     user_defined_label = request.values.get("user_defined_label")
     analysis_id = request.values.get("analysis_id")
@@ -135,6 +140,7 @@ def update_user_defined_label():
 
 @app.route('/topic_modelling/api/v1.0/get_model_for_model_id', methods=['GET', 'POST'])
 def get_model_for_model_id():
+    authenticate()
     model_id = request.values.get("model_id")
     model =  mongo_con.get_model_for_model_id(model_id)
     resp = make_response(jsonify({"result" : model}))
@@ -143,6 +149,7 @@ def get_model_for_model_id():
 
 @app.route('/topic_modelling/api/v1.0/get_all_topic_names', methods=['GET', 'POST'])
 def get_all_topic_names():
+    authenticate()
     analysis_id = request.values.get("analysis_id")
     all_topic_names =  mongo_con.get_all_topic_names(analysis_id)
     resp = make_response(jsonify({"result" : all_topic_names}))
@@ -150,6 +157,7 @@ def get_all_topic_names():
 
 @app.route('/topic_modelling/api/v1.0/get_all_user_defined_labels', methods=['GET', 'POST'])
 def get_all_user_defined_labels():
+    authenticate()
     analysis_id = request.values.get("analysis_id")
     all_user_defined_labels =  mongo_con.get_all_user_defined_labels(analysis_id)
     resp = make_response(jsonify({"result" : all_user_defined_labels}))
@@ -159,6 +167,7 @@ def get_all_user_defined_labels():
 
 @app.route('/topic_modelling/api/v1.0/create_new_analysis', methods=['GET', 'POST'])
 def create_new_analysis():
+    authenticate()
     model_id = request.values.get("model_id")
     analysis_name = request.values.get("analysis_name")
     created_analysis =  mongo_con.create_new_analysis(model_id, analysis_name)
@@ -167,6 +176,7 @@ def create_new_analysis():
 
 @app.route('/topic_modelling/api/v1.0/get_all_analyses_for_model', methods=['GET', 'POST'])
 def get_all_analyses_for_model():
+    authenticate()
     model_id = request.values.get("model_id")
     analyses =  mongo_con.get_all_analyses_for_model(model_id)
     resp = make_response(jsonify({"result" : analyses}))
@@ -176,6 +186,7 @@ def get_all_analyses_for_model():
 
 @app.route('/topic_modelling/api/v1.0/create_new_theme', methods=['GET', 'POST'])
 def create_new_theme():
+    authenticate()
     analysis_id = request.values.get("analysis_id")
     new_theme_id =  mongo_con.create_new_theme(analysis_id)
     resp = make_response(jsonify({"result" : new_theme_id}))
@@ -183,6 +194,7 @@ def create_new_theme():
 
 @app.route('/topic_modelling/api/v1.0/delete_theme', methods=['GET', 'POST'])
 def delete_theme():
+    authenticate()
     analysis_id = request.values.get("analysis_id")
     theme_number = request.values.get("theme_number")
     nr_of_deleted_themes =  mongo_con.delete_theme(analysis_id, theme_number)
@@ -191,6 +203,7 @@ def delete_theme():
 
 @app.route('/topic_modelling/api/v1.0/get_saved_themes', methods=['GET', 'POST'])
 def get_saved_themes():
+    authenticate()
     analysis_id = request.values.get("analysis_id")
     new_theme_id =  mongo_con.get_saved_themes(analysis_id)
     resp = make_response(jsonify({"result" : new_theme_id}))
@@ -198,6 +211,7 @@ def get_saved_themes():
 
 @app.route('/topic_modelling/api/v1.0/update_theme_name', methods=['GET', 'POST'])
 def update_theme_name():
+    authenticate()
     theme_id = request.values.get("theme_number")
     theme_name = request.values.get("theme_name")
     analysis_id = request.values.get("analysis_id")
@@ -207,6 +221,7 @@ def update_theme_name():
 
 @app.route('/topic_modelling/api/v1.0/add_theme_document_connection', methods=['GET', 'POST'])
 def add_theme_document_connection():
+    authenticate()
     theme_id = request.values.get("theme_number")
     document_id = request.values.get("document_id")
     analysis_id = request.values.get("analysis_id")
@@ -217,6 +232,7 @@ def add_theme_document_connection():
 
 @app.route('/topic_modelling/api/v1.0/delete_theme_document_connection', methods=['GET', 'POST'])
 def delete_theme_document_connection():
+    authenticate()
     theme_id = request.values.get("theme_number")
     document_id = request.values.get("document_id")
     analysis_id = request.values.get("analysis_id")
@@ -227,16 +243,14 @@ def delete_theme_document_connection():
 
 @app.route('/topic_modelling/api/v1.0/get_theme_ranking_for_document', methods=['GET', 'POST'])
 def get_theme_ranking_for_document():
+    authenticate()
     document_id = request.values.get("document_id")
     analysis_id = request.values.get("analysis_id")
     ranked_themes = theme_sort.rank_themes_for_document(analysis_id, document_id)
     resp = make_response(jsonify({"result" : ranked_themes}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/empty', methods=['GET', 'POST'])
-def empty():
-    resp = make_response(jsonify({"result" : "empty"}))
-    return resp
+
 """
 def get_topic_model_results(topic_model_method):
     possible_dataset_names = [VACCINATION_MUMSNET]
