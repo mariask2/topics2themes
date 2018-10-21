@@ -32,6 +32,7 @@ CONFIGURATION_FILE_NAME = "topic_model_configuration"
 # How to signal that two words are synoyms
 SYNONYM_BINDER = "__"
 
+COLLOCATION_BINDER = "_"
 ####
 ## Database dictionary keys
 ####

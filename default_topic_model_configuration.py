@@ -80,6 +80,13 @@ documents are then cosidered as duplicates, and the longest one of these two doc
 """
 MIN_NGRAM_LENGTH_FOR_DUPLICATE = 8
 
+"""
+If an extracted term includes less than this among the documents that are extracted, this term is removed from the set of extracted terms
+Synonym clustering is performed before the counting is done, so a rare term with synonyms is retained
+"""
+MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM = 1
+
+
 def no_term_clustering(x, y):
     return False
 

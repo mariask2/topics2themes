@@ -131,6 +131,10 @@ class PropertiesContainer:
         except AttributeError:
             self.REMOVE_DUPLICATES = default_topic_model_configuration.REMOVE_DUPLICATES
 
+        try:
+            self.MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM = properties.MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM
+        except AttributeError:
+            self.MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM = default_topic_model_configuration.MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM
         # TODO: Make an int and float conversion for all propoerties, to get type control for user input properies
         try:
             self.MIN_NGRAM_LENGTH_FOR_DUPLICATE = int(properties.MIN_NGRAM_LENGTH_FOR_DUPLICATE)

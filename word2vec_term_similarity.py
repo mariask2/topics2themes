@@ -8,6 +8,7 @@ import numpy as np
 import gc
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk import edit_distance
+from topic_model_constants import *
 ########################
 # To vectorize the data
 #########################
@@ -41,22 +42,31 @@ class Word2vecSimilarity:
         self.word2vec_model = None
         gc.collect()
 
+    def potential_abbr(self, x, y):
+        return x[0] == y[0] and ((len(x) < 5 and len(y) > 10) or (len(y) < 5 and len(x) > 10))
+    
     def use_word2vec_for_determining_term_similarity(self, x, y):
+        no_collocations_div = self.determine_word_to_vec_sim_edit_dist_filtering(x, y)
+        return no_collocations_div
+
+    def determine_word_to_vec_sim_edit_dist_filtering(self, x, y):
+        edit_dist = edit_distance(x.lower(), y.lower())
+        mean_length = (len(x) + len(y))/2
+        # Only keep candidates with some string simliarity, or only one long and one short (to cover for abbreviations)
+        if edit_dist > mean_length/2 and not self.potential_abbr(x,y):
+            return False
+        return self.determine_word_to_vec_sim(x, y)
+     
+    def determine_word_to_vec_sim(self, x, y):
         try:
-            edit_dist = edit_distance(x.lower(), y.lower())
-            mean_length = (len(x) + len(y))/2
-            # Only keep candidates with some simliarity
-            if edit_dist > mean_length/2:
-                return False
-            
             x_vec = np.reshape(self.get_vector(x.lower()), (1, -1))
             y_vec = np.reshape(self.get_vector(y.lower()), (1, -1))
             dist = cosine_similarity(x_vec, y_vec)[0][0]
 
             if abs(dist) > self.similar_cut_off:
-                print(dist)
-                print(x,y)
-                print("\n")
+                #print(dist)
+                #print(x,y)
+                #print("\n")
                 return True
             else:
                 return False

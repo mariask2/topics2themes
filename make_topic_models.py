@@ -36,7 +36,6 @@ TEXT = "text"
 LABEL = "label"
 BASE_NAME = "base_name"
 FULL_NAME = "full_name"
-COLLOCATION_BINDER = "_"
 #COLLOCATION_JSON_BINDER = " _ "
 SYNONYM_JSON_BINDER = " / "
 PAR_START = "["
@@ -238,7 +237,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               data_set_name, model_name, save_in_database,\
                                                               properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME,\
                                                               most_typical_model,\
-                                                              tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD)
+                                                              tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD,\
+                                                              properties.MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
@@ -279,7 +279,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               data_set_name, model_name, save_in_database,\
                                                               properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME,\
                                                               most_typical_model, \
-                                                              tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD)
+                                                              tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD,\
+                                                              properties.MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM)
         return result_dict, time, post_id, most_typical_model
 
     
@@ -844,13 +845,20 @@ def is_collocation_in_document(synonym_sub_part, document):
             return False
     return True
 
+def is_term_combination_in_document(comb_term, document):
+    parts_syn = comb_term.split(SYNONYM_JSON_BINDER)
+    for synonym_sub_part in parts_syn:
+        if is_collocation_in_document(synonym_sub_part, document):
+            return True
+    return False
 """
 Filelist is a list of document-info-dict, with the same order as for the documents sent to the topic modelling
 """
 def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
                              json_properties, data_set_name, model_name, save_in_database,\
                              are_these_two_terms_to_be_considered_the_same,\
-                             most_typical_model, tf_vectorizer, additional_labels_method):
+                             most_typical_model, tf_vectorizer, additional_labels_method,\
+                             min_term_frequency_in_collection_to_include_as_term):
     """
         Prints output/returns from the topic model in txt and json format (depending on whether it is run as server or as a program), with topic terms in bold face
         
@@ -883,9 +891,33 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     # Combine the collocation lists from different topics, and also collapse into synonym clusters
     terms_scores_with_colloctations, original_terms_with_combined_dict, new_terms_with_score_dict = find_synonyms_from_collocation_features(collocation_features_list_list, original_term_weight_dict_list, are_these_two_terms_to_be_considered_the_same)
 
-    #print("terms_scores_with_colloctations, original_terms_with_combined_dict", terms_scores_with_colloctations, original_terms_with_combined_dict)
-    
 
+    # Find out how many times the term combinations appear in the document collection and store that information in comb_term_frequencies
+    comb_term_frequencies = {}
+    all_documents = list()
+    added_document_nr = set()
+    for nr, el in enumerate(topic_info):
+        for doc in el[DOCUMENT_LIST]:
+            if doc[DOC_ID] not in added_document_nr:
+                all_documents.append(doc)
+                added_document_nr.add(doc[DOC_ID])
+
+    for document in all_documents:
+        doc_terms = document[FOUND_CONCEPTS]
+        for comb_term in new_terms_with_score_dict.keys():
+            if is_term_combination_in_document(comb_term, document):
+                if comb_term not in comb_term_frequencies:
+                    comb_term_frequencies[comb_term] = 0
+                comb_term_frequencies[comb_term] = comb_term_frequencies[comb_term] + 1
+                # Also add subparts
+                for syn_subp in comb_term.split(SYNONYM_JSON_BINDER):
+                    if COLLOCATION_BINDER in syn_subp:
+                        for col_subp in syn_subp.split(COLLOCATION_BINDER):
+                            if col_subp not in comb_term_frequencies:
+                                comb_term_frequencies[col_subp] = 0
+                            comb_term_frequencies[col_subp] = comb_term_frequencies[col_subp] + 1
+                                
+    frequent_comb_term_set = set([term for term in comb_term_frequencies.keys() if comb_term_frequencies[term] >= min_term_frequency_in_collection_to_include_as_term])
 
     for nr, el in enumerate(topic_info):
         
@@ -925,13 +957,13 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
 
         for key, item in term_combination_score_dict.items():
-            term_object = {}
-            term_object["term"] = key.replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
-            term_object["score"] = item
-            topic_info_object["topic_terms"].append(term_object)
-        
-        
-        # TODO: Perhaps add some strength indication to the marking
+            if key in frequent_comb_term_set:
+                term_object = {}
+                term_object["term"] = key.replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
+                term_object["score"] = item
+                topic_info_object["topic_terms"].append(term_object)
+                
+
         for nr, document in enumerate(el[DOCUMENT_LIST]):
             if document[DOC_ID] not in document_dict:
                 #marked_document_for_snippet, terms_found_in_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT],\
@@ -948,7 +980,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                                                                                   original_terms_with_combined_dict, \
                                                                                   new_terms_with_score_dict, max_weight_dict)
             
-            snippet_text = get_snippet_text(marked_document)
+            snippet_text = get_snippet_text(marked_document, frequent_comb_term_set)
             
             if document[DOC_ID] not in document_dict:
                 document_obj = {}
@@ -975,13 +1007,13 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             document_topic_obj["topic_index"] = el[TOPIC_NUMBER]
             document_topic_obj["topic_confidence"] = document[DOCUMENT_TOPIC_STRENGTH]
             document_topic_obj["terms_found_in_text"] = document[FOUND_CONCEPTS]
-            
+
             # It is only the terms that are actually included in the document that are added here
             document_topic_obj["terms_in_topic"] = []
 
             # The document-term association score is based on the max score among the terms that belong to that concept
-            for term in terms_scores_with_colloctations:
-            
+            # Only include term that have occurred frequently enough in the document collection (they are in frequent_comb_term_set)
+            for term in [t for t in terms_scores_with_colloctations if t[0] in frequent_comb_term_set] :
                 add_term = False
                 for synonym_sub_part in term[0].split(SYNONYM_JSON_BINDER):
                     if is_collocation_in_document(synonym_sub_part, document):
@@ -991,6 +1023,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                     term_object["term"] = term[0].replace(SYNONYM_BINDER, SYNONYM_JSON_BINDER).strip()
                     term_object["score"] = term[1]
                     document_topic_obj["terms_in_topic"].append(term_object)
+                        #HERE
             ###
 
             document_dict[document[DOC_ID]]["document_topics"].append(document_topic_obj)
@@ -1086,14 +1119,22 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     return result_dict, saved_time, post_id
 
 
-def get_snippet_text(marked_document):
+def get_snippet_text(marked_document, frequent_comb_term_set):
     
     # Keep sentences which include a term marking
     sentences_to_keep = []
     # TODO: This is not language independent
     sentence_list = sent_tokenize(marked_document)
     for sent in sentence_list:
-        if 'term-to-mark' in sent:
+        keep_sentence = False
+        for comb_term in frequent_comb_term_set:
+            for synonym_sub_part in comb_term.split(SYNONYM_JSON_BINDER):
+                collocation_binder_removed = synonym_sub_part.replace(COLLOCATION_BINDER, " ")
+                if collocation_binder_removed in sent.lower():
+                    keep_sentence = True
+                    break
+    
+        if keep_sentence:
             sentences_to_keep.append(sent)
         else:
             sentences_to_keep.append("MARKING[..]MARKING")
