@@ -893,7 +893,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
 
     # Find out how many times the term combinations appear in the document collection and store that information in comb_term_frequencies
-    comb_term_frequencies = {}
+
+    """
     all_documents = list()
     added_document_nr = set()
     for nr, el in enumerate(topic_info):
@@ -901,24 +902,31 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             if doc[DOC_ID] not in added_document_nr:
                 all_documents.append(doc)
                 added_document_nr.add(doc[DOC_ID])
-
-    for document in all_documents:
-        doc_terms = document[FOUND_CONCEPTS]
-        for comb_term in new_terms_with_score_dict.keys():
-            if is_term_combination_in_document(comb_term, document):
-                if comb_term not in comb_term_frequencies:
-                    comb_term_frequencies[comb_term] = 0
-                comb_term_frequencies[comb_term] = comb_term_frequencies[comb_term] + 1
-                # Also add subparts
-                for syn_subp in comb_term.split(SYNONYM_JSON_BINDER):
-                    if COLLOCATION_BINDER in syn_subp:
-                        for col_subp in syn_subp.split(COLLOCATION_BINDER):
-                            if col_subp not in comb_term_frequencies:
-                                comb_term_frequencies[col_subp] = 0
-                            comb_term_frequencies[col_subp] = comb_term_frequencies[col_subp] + 1
+      """
+    frequent_comb_term_set = set()
+    for nr, el in enumerate(topic_info):
+        comb_term_frequencies = {}
+        for document in el[DOCUMENT_LIST]:
+            doc_terms = document[FOUND_CONCEPTS]
+            for comb_term in new_terms_with_score_dict.keys():
+                if is_term_combination_in_document(comb_term, document):
+                    if comb_term not in comb_term_frequencies:
+                        comb_term_frequencies[comb_term] = 0
+                    comb_term_frequencies[comb_term] = comb_term_frequencies[comb_term] + 1
+                    # Also add subparts
+                    for syn_subp in comb_term.split(SYNONYM_JSON_BINDER):
+                        if COLLOCATION_BINDER in syn_subp:
+                            for col_subp in syn_subp.split(COLLOCATION_BINDER):
+                                if col_subp not in comb_term_frequencies:
+                                    comb_term_frequencies[col_subp] = 0
+                                comb_term_frequencies[col_subp] = comb_term_frequencies[col_subp] + 1
                                 
-    frequent_comb_term_set = set([term for term in comb_term_frequencies.keys() if comb_term_frequencies[term] >= min_term_frequency_in_collection_to_include_as_term])
+        for term in comb_term_frequencies.keys():
+            if comb_term_frequencies[term] >= min_term_frequency_in_collection_to_include_as_term:
+                frequent_comb_term_set.add(term)
+                    
 
+    
     for nr, el in enumerate(topic_info):
         
         term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
