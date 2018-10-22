@@ -60,14 +60,14 @@ def authenticate():
 
 VACCINATION_MUMSNET = "vaccination_mumsnet"
 
-@app.route('/topic_modelling/api/v1.0/get_data_sets', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/get_data_sets', methods=['GET', 'POST'])
 def get_data_sets():
     authenticate()
     data_sets = make_topic_models.get_sets_in_data_folder()
     resp = make_response(jsonify({"result" : data_sets}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/get_all_models_for_collection_with_name', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/get_all_models_for_collection_with_name', methods=['GET', 'POST'])
 def get_all_models_for_collection_with_name():
     authenticate()
     collection_name = request.values.get("collection_name")
@@ -75,7 +75,7 @@ def get_all_models_for_collection_with_name():
     resp = make_response(jsonify({"result" : all_models_for_collection_with_name}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/make_model_for_collection', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/make_model_for_collection', methods=['GET', 'POST'])
 def make_model_for_collection():
     authenticate()
     collection_name = request.values.get("collection_name")
@@ -86,7 +86,7 @@ def make_model_for_collection():
 
 
 """
-@app.route('/topic_modelling/api/v1.0/get_topic_model_results', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/get_topic_model_results', methods=['GET', 'POST'])
 def get_new_topic_model_results():
     res = get_topic_model_results(make_topic_models.run_make_topic_models())
     print("*******")
@@ -97,7 +97,7 @@ def get_new_topic_model_results():
 """
 
 """
-@app.route('/topic_modelling/api/v1.0/get_topic_model_results', methods=['OPTIONS'])
+@app.route('/topics2themes/api/v1.0/get_topic_model_results', methods=['OPTIONS'])
 def get_new_topic_model_results_options():
     print("starting")
     resp = make_response(jsonify({"result" : "test"}))
@@ -112,12 +112,12 @@ def get_new_topic_model_results_options():
 
 
 """
-@app.route('/topic_modelling/api/v1.0/get_cashed_topic_model_results', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/get_cashed_topic_model_results', methods=['GET', 'POST'])
 def get_cashed_topic_model_results():
     return get_topic_model_results(make_topic_models.get_cashed_topic_model(mongo_con))
 """
 
-@app.route('/topic_modelling/api/v1.0/update_topic_name', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/update_topic_name', methods=['GET', 'POST'])
 def update_topic_name():
     authenticate()
     topic_id = request.values.get("topic_id")
@@ -127,7 +127,7 @@ def update_topic_name():
     resp = make_response(jsonify({"result" : "topic name updated"}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/update_user_defined_label', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/update_user_defined_label', methods=['GET', 'POST'])
 def update_user_defined_label():
     authenticate()
     text_id = request.values.get("text_id")
@@ -138,7 +138,7 @@ def update_user_defined_label():
     return resp
 
 
-@app.route('/topic_modelling/api/v1.0/get_model_for_model_id', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/get_model_for_model_id', methods=['GET', 'POST'])
 def get_model_for_model_id():
     authenticate()
     model_id = request.values.get("model_id")
@@ -147,7 +147,7 @@ def get_model_for_model_id():
     return resp
 
 
-@app.route('/topic_modelling/api/v1.0/get_all_topic_names', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/get_all_topic_names', methods=['GET', 'POST'])
 def get_all_topic_names():
     authenticate()
     analysis_id = request.values.get("analysis_id")
@@ -155,7 +155,7 @@ def get_all_topic_names():
     resp = make_response(jsonify({"result" : all_topic_names}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/get_all_user_defined_labels', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/get_all_user_defined_labels', methods=['GET', 'POST'])
 def get_all_user_defined_labels():
     authenticate()
     analysis_id = request.values.get("analysis_id")
@@ -165,7 +165,7 @@ def get_all_user_defined_labels():
 
 
 
-@app.route('/topic_modelling/api/v1.0/create_new_analysis', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/create_new_analysis', methods=['GET', 'POST'])
 def create_new_analysis():
     authenticate()
     model_id = request.values.get("model_id")
@@ -174,7 +174,7 @@ def create_new_analysis():
     resp = make_response(jsonify({"result" : created_analysis}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/get_all_analyses_for_model', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/get_all_analyses_for_model', methods=['GET', 'POST'])
 def get_all_analyses_for_model():
     authenticate()
     model_id = request.values.get("model_id")
@@ -184,7 +184,7 @@ def get_all_analyses_for_model():
 
 
 
-@app.route('/topic_modelling/api/v1.0/create_new_theme', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/create_new_theme', methods=['GET', 'POST'])
 def create_new_theme():
     authenticate()
     analysis_id = request.values.get("analysis_id")
@@ -192,7 +192,7 @@ def create_new_theme():
     resp = make_response(jsonify({"result" : new_theme_id}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/delete_theme', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/delete_theme', methods=['GET', 'POST'])
 def delete_theme():
     authenticate()
     analysis_id = request.values.get("analysis_id")
@@ -201,7 +201,7 @@ def delete_theme():
     resp = make_response(jsonify({"result" : nr_of_deleted_themes}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/get_saved_themes', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/get_saved_themes', methods=['GET', 'POST'])
 def get_saved_themes():
     authenticate()
     analysis_id = request.values.get("analysis_id")
@@ -209,7 +209,7 @@ def get_saved_themes():
     resp = make_response(jsonify({"result" : new_theme_id}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/update_theme_name', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/update_theme_name', methods=['GET', 'POST'])
 def update_theme_name():
     authenticate()
     theme_id = request.values.get("theme_number")
@@ -219,7 +219,7 @@ def update_theme_name():
     resp = make_response(jsonify({"result" : theme_name_update_result}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/add_theme_document_connection', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/add_theme_document_connection', methods=['GET', 'POST'])
 def add_theme_document_connection():
     authenticate()
     theme_id = request.values.get("theme_number")
@@ -230,7 +230,7 @@ def add_theme_document_connection():
     resp = make_response(jsonify({"result" : theme_document_connection_result}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/delete_theme_document_connection', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/delete_theme_document_connection', methods=['GET', 'POST'])
 def delete_theme_document_connection():
     authenticate()
     theme_id = request.values.get("theme_number")
@@ -241,7 +241,7 @@ def delete_theme_document_connection():
     resp = make_response(jsonify({"result" : theme_document_connection_result}))
     return resp
 
-@app.route('/topic_modelling/api/v1.0/get_theme_ranking_for_document', methods=['GET', 'POST'])
+@app.route('/topics2themes/api/v1.0/get_theme_ranking_for_document', methods=['GET', 'POST'])
 def get_theme_ranking_for_document():
     authenticate()
     document_id = request.values.get("document_id")
@@ -250,6 +250,9 @@ def get_theme_ranking_for_document():
     resp = make_response(jsonify({"result" : ranked_themes}))
     return resp
 
+@app.route('/topics2themes/')
+def start_page():
+    return send_from_directory("static/topics2themes", "index.html")
 
 """
 def get_topic_model_results(topic_model_method):
