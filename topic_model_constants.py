@@ -2,7 +2,6 @@
 Constanst to use in general
 """
 
-
 """
 Note: Don't use NMF (instead of NMF_NAME, since it will be name conflicts)
 """
@@ -18,10 +17,6 @@ DIRECTORY_NAME = "directory_name"
 
 # Where to look for the data sets
 DATA_FOLDER = "data_folder"
-
-# Where to start looking for the data
-# TODO: Make this better configurable
-DEFAULT_ROOT_DIRECTORY = "."
 
 # Where to save the constructed models (shouldn't be used anymore)
 PATH_TOPIC_MODEL_OUTPUT = "topic_modelling_data"

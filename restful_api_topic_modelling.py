@@ -5,11 +5,9 @@ import linecache
 from datetime import timedelta
 from functools import update_wrapper
 import make_topic_models
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 from mongo_connector import MongoConnector
 from theme_sorter import ThemeSorter
-
-import make_topic_models
 
 app = Flask(__name__)
 CORS(app)
@@ -252,7 +250,19 @@ def get_theme_ranking_for_document():
 
 @app.route('/topics2themes/')
 def start_page():
-    return send_from_directory("static/topics2themes", "index.html")
+    return send_from_directory("../static/topics2themes", "index.html")
+
+@app.route('/topics2themes/js/<filename>')
+def js_files(filename):
+    return send_from_directory("../static/topics2themes/js", filename)
+
+@app.route('/topics2themes/css/<filename>')
+def css_files(filename):
+    return send_from_directory("../static/topics2themes/css", filename)
+
+@app.route('/topics2themes/fonts/<filename>')
+def fonts_files(filename):
+    return send_from_directory("../static/topics2themes/fonts", filename)
 
 """
 def get_topic_model_results(topic_model_method):

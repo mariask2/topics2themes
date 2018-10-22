@@ -19,6 +19,7 @@ from sklearn.feature_extraction import text
 from topic_model_constants import *
 import handle_properties
 from mongo_connector import MongoConnector
+from environment_configuration import *
 import argparse
 import datetime
 import time
@@ -297,7 +298,7 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name, w
 
     print("data_label_list", data_label_list)
     for data_info in data_label_list:
-        data_dir = os.path.join(DATA_FOLDER, data_set_name, data_info[DIRECTORY_NAME])
+        data_dir = os.path.join(WORKSPACE_FOLDER, DATA_FOLDER, data_set_name, data_info[DIRECTORY_NAME])
         if not os.path.isdir(data_dir):
             print(os.path.abspath(data_dir), " does not exist")
         files = []
@@ -1268,9 +1269,8 @@ def get_first_in_tuple(item):
     return item[0]
 
 
-
 def get_sets_in_data_folder():
-    return [el for el in os.listdir(DATA_FOLDER) if (not el.startswith(".")) and os.path.isdir(os.path.join(DATA_FOLDER, el))]
+    return [el for el in os.listdir(os.path.join(WORKSPACE_FOLDER, DATA_FOLDER)) if (not el.startswith(".")) and os.path.isdir(os.path.join(os.path.join(WORKSPACE_FOLDER, DATA_FOLDER), el))]
 
 def get_cashed_topic_model(mongo_con):
     els = mongo_con.get_all_model_document_name_date_id()
@@ -1288,7 +1288,7 @@ def get_cashed_topic_model(mongo_con):
 
 
 def make_model_for_collection(collection_name, model_name, mongo_con):
-    properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + collection_name, DEFAULT_ROOT_DIRECTORY)
+    properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + collection_name)
     result_dict, time, post_id, most_typical_model = run_make_topic_models(mongo_con, properties, path_slash_format, model_name)
     return result_dict
 

@@ -2,8 +2,10 @@ import importlib
 import argparse
 import os
 import default_topic_model_configuration
+import sys
 
 from topic_model_constants import *
+from environment_configuration import *
 
 #TODO: Test that default properties work
 
@@ -205,26 +207,29 @@ def load_properties(parser):
         print("The argument '--project' with the path to the data needs to be given")
         exit(1)
 
+    """
     data_directory = "."
     if not args.data_directory:
         print("The argument '--data_directory' not given. Will use the current directory")
     else:
         data_directory = args.data_directory
-    
+    """
     print(args.project_path)
-    return load_properties_from_parameters(args.project_path, data_directory)
+    return load_properties_from_parameters(args.project_path)
 
 
-def load_properties_from_parameters(project_path, start_dir = "."):
-    if start_dir != ".":
-        sys.path.append(start_dir)
+def load_properties_from_parameters(project_path):
+    
+    sys.path.append(WORKSPACE_FOLDER)
+    
     path_slash_format = ""
     for path_part in project_path.split("."):
         path_slash_format = os.path.join(path_slash_format, path_part)
     
-    path_slash_format = os.path.join(start_dir, path_slash_format)
+    path_slash_format = os.path.join(WORKSPACE_FOLDER, path_slash_format)
 
     print("path_slash_format", path_slash_format)
+
     if not os.path.exists(path_slash_format):
         raise FileNotFoundError("The directory '" + str(path_slash_format) + "' i.e., the directory matching the project path given '" + \
                             str(project_path) + "', does not exist")
