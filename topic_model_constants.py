@@ -51,3 +51,4 @@ RED = "#8A0808"
 GREEN = "#0B6121"
 SILVER = "#C0C0C0"
 
+KEY_FILE_NAME = "approved_keys.txt"

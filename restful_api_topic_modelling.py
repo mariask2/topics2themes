@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, abort, make_response, request, json, request, current_app
 import sys
+import os
 import traceback
 import linecache
 from datetime import timedelta
@@ -8,6 +9,8 @@ import make_topic_models
 from flask_cors import CORS
 from mongo_connector import MongoConnector
 from theme_sorter import ThemeSorter
+from environment_configuration import *
+from topic_model_constants import *
 
 app = Flask(__name__)
 CORS(app)
@@ -47,9 +50,10 @@ def get_port():
 
 
 def load_keys(approved_keys, key_file_name):
-    f = open(key_file_name)
+    f = open(os.path.join(WORKSPACE_FOLDER, key_file_name))
     for line in f:
         approved_keys.append(line.strip())
+    f.close()
 
 def authenticate():
     key = request.values.get("authentication_key")
@@ -294,11 +298,11 @@ def get_topic_model_results(topic_model_method):
 
 APPROVED_KEYS = []
 FILE = open("log_file.txt", "w")
+load_keys(APPROVED_KEYS, KEY_FILE_NAME)
 
 if __name__ == '__main__':
 
 
-    load_keys(APPROVED_KEYS, "approved_keys.txt")
 
     current_port = get_port()
     app.run(port=current_port)

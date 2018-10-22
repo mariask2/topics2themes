@@ -1,5 +1,6 @@
 from mongo_connector import MongoConnector
 from topic_model_constants import *
+from environment_configuration import *
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.externals import joblib
@@ -8,7 +9,7 @@ from make_topic_models import StopwordHandler
 import os
 import handle_properties
 
-MODEL_FOLDER = "trained_machine_learning_models"
+MODEL_FOLDER = os.path.join(WORKSPACE_FOLDER, "trained_machine_learning_models")
 MODEL_PREFIX = "model_"
 VECTORIZER_PREFIX = "vectorizer_"
 CLASS_LIST_PREFIX = "class_list_"
@@ -39,7 +40,7 @@ class ThemeSorter:
             return # No point of training a model when there very little data
 
         text_collection_name = self.mongo_connector.get_collection_name_for_analysis(analysis_id)
-        properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + text_collection_name, DEFAULT_ROOT_DIRECTORY)
+        properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + text_collection_name)
         
         stop_word_file = os.path.join(path_slash_format, properties.STOP_WORD_FILE)
         stop_words=self.stopword_handler.get_stop_word_set(stop_word_file)
