@@ -11,7 +11,6 @@ import os
 import numpy as np
 import json
 from collections import Counter
-import word2vecwrapper
 from glob import glob
 import datetime
 from sklearn.feature_extraction import text
@@ -743,7 +742,7 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
                 term_list.append((feature_names[i], topic[i]))
                 term = feature_names[i]
                 
-                for split_synonym in term.split(word2vecwrapper.SYNONYM_BINDER):
+                for split_synonym in term.split(SYNONYM_BINDER):
                     for split_collocation in split_synonym.split(COLLOCATION_BINDER):
                         term_list_replace.append(split_collocation)
                         if split_collocation not in term_preprocessed_dict:
@@ -774,7 +773,7 @@ def construct_document_info_average(documents, selected_documents_strength, term
     term_list_replace = []
     for term, strength in terms_strength:
         term_strength_dict[term] = strength
-        for split_synonym in term.split(word2vecwrapper.SYNONYM_BINDER):
+        for split_synonym in term.split(SYNONYM_BINDER):
             for split_collocation in split_synonym.split(COLLOCATION_BINDER):
                 term_list_replace.append(split_collocation)
                 if split_collocation not in term_preprocessed_dict:
