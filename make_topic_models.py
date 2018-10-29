@@ -98,13 +98,13 @@ def get_collocations_from_documents_before_synonyms(documents, term_set, min_ter
         original_term_dict[t[0]] = t[1]
     extracted_term_set = original_term_dict.keys() #  set([t[0] for t in term_set])
     cutoff = 2
-
-    #set max_occurrence_outside_collocation to min_term_frequency_in_collection_to_include_as_term
-    # to allow a small amount of frequent collocations despite that they also occur as non-collocations
+    
+    # TODO: max_occurrence_outside_collocation could be set to a higher value if more collocations are wanted
+    # perhaps this should be configurable
     documents_with_collocation_marked, ngrams, all_features = find_frequent_n_grams(documents, collocation_cut_off=cutoff,\
                                                                       nr_of_words_that_have_occurred_outside_n_gram_cutoff = 1,\
                                                                       allowed_n_gram_components = extracted_term_set,\
-                                                                        max_occurrence_outside_collocation = min_term_frequency_in_collection_to_include_as_term,\
+                                                                        max_occurrence_outside_collocation = 0,\
                                                                                     collocation_marker = COLLOCATION_BINDER)
     return all_features, original_term_dict
 
@@ -894,7 +894,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     terms_scores_with_colloctations, original_terms_with_combined_dict, new_terms_with_score_dict = find_synonyms_from_collocation_features(collocation_features_list_list, original_term_weight_dict_list, are_these_two_terms_to_be_considered_the_same)
 
 
-    # Find out how many times the term combinations appear in the document collection and store that information in comb_term_frequencies
+    # Find out how many times the term combinations appear in the document collection and construct a frequent_comb_term_set
+    # which will goven which terms are to be included
     frequent_comb_term_set = set()
     for nr, el in enumerate(topic_info):
         comb_term_frequencies = {}

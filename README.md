@@ -24,7 +24,16 @@ pip install Flask
 
 pip install -U flask-cors
 
+When you run the code the first time, you'll get the following error message:
 
+Resource punkt not found.
+  Please use the NLTK Downloader to obtain the resource:
+  >>> import nltk
+  >>> nltk.download('punkt')
+
+Follow the NLTK instructions to fix this
+
+******
 To run the code you need a mongdodb server to be running.
 
 To achieve that, create the directory where the data is to be saved, e.g., “data/db
