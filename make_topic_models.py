@@ -24,6 +24,13 @@ import datetime
 import time
 import math
 
+try:
+    sent_tokenize("Check if punkt is imported")
+except:
+    print("Download punkt tokenizer")
+    import nltk
+    nltk.download('punkt')
+
 
 TOPIC_NUMBER = "TOPIC_NUMBER"
 TERM_LIST = "TERM_LIST"
