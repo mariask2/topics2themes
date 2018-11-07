@@ -3,10 +3,11 @@ from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.feature_extraction import text
-from topic_model_configuration import *
+#from topic_model_configuration import *
 import os
 
 TOP_ELEMENTS_RANGE = [1, 2, 3, 4, 5, 6]
+STOP_WORD_FILE = "english_added_mie.txt"
 
 f = open(STOP_WORD_FILE)
 additional_stop_words = [word.strip() for word in f.readlines()]
@@ -69,6 +70,7 @@ def run_classifier(filename, use_synonyms, output_path):
         else:
             count_categories_dict[category] = count_categories_dict[category] + 1
 
+    # Create a vectorizer that knows all texts (also the held-out one), because the text, but not its category is know to the classifier
     data_list = list(data_set)
     data_list_preprocessed = []
     for el in data_list:
@@ -82,6 +84,16 @@ def run_classifier(filename, use_synonyms, output_path):
 
     transformed = vectorizer.fit_transform(data_list_preprocessed)
 
+    # Only for writing the used feaures to the outputfile
+    transformed_to_print_all_texts_with_corresponding_categorisations = vectorizer.transform([el[1] for el in data_lines])
+    inverse_transformed_to_print_all_texts_with_corresponding_categorisations = \
+        vectorizer.inverse_transform(transformed_to_print_all_texts_with_corresponding_categorisations)
+
+    output_file.write("******\n")
+    for features, gold in zip(inverse_transformed_to_print_all_texts_with_corresponding_categorisations, [el[0] for el in data_lines]):
+        output_file.write(gold + "\t" + " ".join(list(features)) + "\n")
+
+    output_file.write("******\n")
     feature_set = set()
     inversed = vectorizer.inverse_transform(transformed)
     output_file.write("Features used: \n")
@@ -114,14 +126,14 @@ def run_classifier(filename, use_synonyms, output_path):
         unknown_str = data_lines[current_el][1]
         gold_standard_classification = data_lines[current_el][0]
         if count_categories_dict[gold_standard_classification] < 2:
-        # The categories that only occur once can not be included in the evaluation (but still as a category among which to chose from)
+        # The categories that only occur once can not be included in the evaluation (but still as a category among which to choose from)
             continue
         before_current = data_lines[0 : current_el]
         after_current = data_lines[current_el + 1:]
         training_data_y_x_unfiltered = before_current + after_current
         training_data_y_x = []
         for [y,x] in training_data_y_x_unfiltered:            
-            if x != unknown_str: # Don't use the classifications from the current text in the training.
+            if x != unknown_str: # Don't use the classifications from the current text in the training (the current data-point is filtered out in before_current + after_current, but no the same text with other classifications.
                 training_data_y_x.append([y,x])
                 if y not in count_categories_dict_training_data_specific:
                     count_categories_dict_training_data_specific[y] = 0
@@ -256,7 +268,13 @@ def start_classification():
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
             for include_clusters in [True, False]:
-                run_classifier("classification_data/output_" + str(min_occ) + "_for_classification_topic" + str(topic_nr) + "_annotated.txt",\
+                # The folder "classification_data" contains the original texts and their classifications
+                # The folder "vaccination_arguments" contains the texts, where only the tokens that were left after the
+                # stop words and infrequent words were removed. The results are the same, but the second does not re-publish the actual texts
+                #DATA_FOLDER = "classification_data"
+                DATA_FOLDER = "vaccination_arguments"
+                
+                run_classifier(os.path.join(DATA_FOLDER, "output_" + str(min_occ) + "_for_classification_topic" + str(topic_nr) + "_annotated.txt"),\
                                include_clusters, output_path)
 
 
