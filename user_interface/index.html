@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Topics2Themes">
+    
+    <title>Topics2Themes</title>
+	
+	<link rel="shortcut icon" href="favicon.png">
+		 
+	<!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	 	
+	<!-- noUiSlider -->
+	<link href="css/jquery.nouislider.min.css" rel="stylesheet">
+	 
+	<!-- Custom styles used for this page -->
+    <link href="css/custom.css" rel="stylesheet">
+    
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+      <script src="js/respond.min.js"></script>
+    <![endif]-->
+    
+  </head>
+  <body>
+      
+  	<div class="container-fluid">
+	    <div class="page-header outer-element">
+	    	<div class="row small-bottom-margin">
+                <div class="col-xs-3 small-top-margin">
+                    <h2 class="title-blue">Topics<span>2</span>Themes.</h2>
+                </div>
+	    		<div class="col-xs-9 large-top-margin pull-right">
+	    			<div class="form-inline small-bottom-margin pull-right large-top-margin">
+						<!--<span class="small-right-margin choice-description">Data set:</span>-->
+			
+            
+						<select id="dataset" class="form-control dataset-choices">
+						</select>
+                        <button id="newModel" type="button" title="Construct new model" class="btn btn-default btn-xs header-button create-button-button" aria-label="Construct new model">
+                            <span class="glyphicon glyphicon-cog create-buttons-cog" aria-hidden="true"></span>
+                        </button>
+                
+	                    <!--<span class="small-right-margin choice-description">Model version:</span>-->
+                        
+                        <select id="modelVersion" class="form-control dataset-choices">
+                            <option
+                                value="----"
+                                title="-----">---- model version ----</option>
+                        </select>
+                        
+                        <button id="newAnalysis" type="button" title="Add new analysis version" class="btn btn-default btn-xs header-button create-button-button" aria-label="Add a new analysis">
+                            <span class="glyphicon glyphicon-plus create-buttons-plus" aria-hidden="true"></span>
+                        </button>
+                        
+                        <!--<span class="small-right-margin choice-description">Analysis version:</span>-->
+                        
+                        <select id="analysisVersion" class="form-control dataset-choices">
+                            <option
+                                value="-----"
+                                title="-----">---- analysis version ----</option>
+                        </select>
+                        
+                        
+     
+                        
+                    </div>
+                </div><!-- /.col-md-6 -->
+	    	</div><!-- /.row  -->
+	    </div><!-- /.page-header -->
+	    
+	    <div id="mainRow" class="row-main small-bottom-margin">
+									
+			<div id="mainPanel" class="col-xs-12 no-bottom-margin">
+				<div id="mainPanelUpper" class="row
+				no-bottom-margin">
+
+
+
+				  
+					<div id="termsContainerColumn" class="col-xs-2 no-bottom-margin">
+						<div id="termsContainer" class="panel panel-default no-bottom-margin small-right-margin">
+							<div class="panel-heading">
+								<h3 class="panel-title">
+									Terms
+								
+                                    <div class="btn-group pull-right">
+                                        
+                                        <div class="btn-group small-right-margin">
+                                            <input id="termSearch"
+                                                type="search"
+                                                class="form-control search-input" placeholder="Search">
+                                                <span id="termSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
+                                        </div>
+                                        
+                                        <button id="termSearchButton" type="button" title="Search for term" class="btn btn-default btn-xs header-button" aria-label="Search for term">
+                                            <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                                        </button>
+									<div class="btn-group pull-right">
+									  <button type="button" title="Sort" class="btn btn-default btn-xs dropdown-toggle header-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+									    <span class="glyphicon glyphicon-sort-by-attributes" aria-hidden="true"></span>
+									  </button>
+									  <ul class="dropdown-menu">
+									    <li><a href="" class="sort-terms-trigger" data-sortkey="score/desc"><span class="checkmark"></span>Total score (desc)</a></li>
+									    <li><a href="" class="sort-terms-trigger" data-sortkey="score/asc"><span class="checkmark"></span>Total score (asc)</a></li>
+									    <li><a href="" class="sort-terms-trigger" data-sortkey="topics/desc"><span class="checkmark"></span>Number of topics (desc)</a></li>
+									    <li><a href="" class="sort-terms-trigger" data-sortkey="topics/asc"><span class="checkmark"></span>Number of topics (asc)</a></li>
+                                        <li><a href="" class="sort-terms-trigger" data-sortkey="docs/desc"><span class="checkmark"></span>Number of texts (desc)</a></li>
+                                        <li><a href="" class="sort-terms-trigger" data-sortkey="docs/asc"><span class="checkmark"></span>Number of texts (asc)</a></li>
+									    <li><a href="" class="sort-terms-trigger" data-sortkey="alpha/desc"><span class="checkmark"></span>Alphabetic (desc)</a></li>
+									    <li><a href="" class="sort-terms-trigger" data-sortkey="alpha/asc"><span class="checkmark"></span>Alphabetic (asc)</a></li>
+									  </ul>
+									</div>
+                                    </div>
+									<span class="clearfix"></span>
+								</h3>
+							</div>
+					
+							<ul id="termsList" class="list-group">
+							</ul>	
+						</div><!-- /.termsContainer -->
+					</div><!-- /.left column in the main panel -->
+
+					<div id="topicsContainerColumn" class="col-xs-2 no-bottom-margin">
+						<div id="topicsContainer" class="panel panel-default no-bottom-margin small-left-margin small-right-margin">
+							<div class="panel-heading">
+								<h3 class="panel-title">
+								Topics
+								
+                                <div class="btn-group pull-right">
+                                    
+                                    <div class="btn-group small-right-margin">
+                                        <input id="topicSearch"
+                                            type="search"
+                                            class="form-control search-input" placeholder="Search">
+                                            <span id="topicSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
+                                    </div>
+                                    
+                                    <button id="topicSearchButton" type="button" title="Search for topic" class="btn btn-default btn-xs header-button" aria-label="Search for topic">
+                                        <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                                    </button>
+                                <div class="btn-group pull-right">
+								  <button type="button" title="Sort" class="btn btn-default btn-xs dropdown-toggle header-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+								    <span class="glyphicon glyphicon-sort-by-attributes" aria-hidden="true"></span>
+								  </button>
+								  <ul class="dropdown-menu">
+								    <li><a href="" class="sort-topics-trigger" data-sortkey="score/desc"><span class="checkmark"></span>Total score (desc)</a></li>
+								    <li><a href="" class="sort-topics-trigger" data-sortkey="score/asc"><span class="checkmark"></span>Total score (asc)</a></li>
+								  </ul>
+								</div>
+                                </div>
+								<span class="clearfix"></span>
+								
+								</h3>
+							</div>
+					
+							<ul id="topicsList" class="list-group">
+							</ul>	
+						</div><!-- /.topicsContainer -->
+					</div><!-- /.second column in the main panel -->
+
+
+					<div id="textContainerColumn" class="col-xs-5 no-bottom-margin">
+						<div id="textContainer" class="panel panel-default no-bottom-margin small-left-margin small-right-margin">
+							<div class="panel-heading">
+								<h3 class="panel-title">
+								Texts
+                                
+   
+                                <div class="btn-group pull-right">
+                                    
+                                    <div class="btn-group small-right-margin">
+                                        <input id="textSearch"
+                                            type="search"
+                                            class="form-control search-input" placeholder="Search">
+                                            <span id="textSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
+                                    </div>
+                                    
+                                    <button id="textSearchButton" type="button" title="Search for text" class="btn btn-default btn-xs header-button" aria-label="Search for text">
+                                        <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                                    </button>
+                                <div class="btn-group pull-right">
+								  <button type="button" title="Sort" class="btn btn-default btn-xs dropdown-toggle header-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+								    <span class="glyphicon glyphicon-sort-by-attributes" aria-hidden="true"></span>
+								  </button>
+                                  
+								  <ul class="dropdown-menu">
+								    <li><a href="" class="sort-documents-trigger" data-sortkey="score/desc"><span class="checkmark"></span>Total score (desc)</a></li>
+								    <li><a href="" class="sort-documents-trigger" data-sortkey="score/asc"><span class="checkmark"></span>Total score (asc)</a></li>
+								  </ul>
+								</div>
+                                </div>
+                                <span class="clearfix"></span>
+                                </h3>
+							</div>
+
+							<ul id="textsList" class="list-group">
+							</ul>	
+						</div><!-- /.textsContainer -->
+					</div><!-- /.third column in the main panel -->
+									      
+					<div id="themesContainerColumn" class="col-xs-3 no-bottom-margin">
+						<div id="themesContainer" class="panel panel-default no-bottom-margin small-left-margin">
+							<div class="panel-heading">
+								<h3 class="panel-title">
+								Themes
+				<div class="btn-group pull-right">
+
+				  <button id="newTheme" type="button"
+                                      title="Add a new theme"
+                                      class="btn btn-default btn-xs
+                                      header-button new-theme-button pull-left" aria-label="Add a new theme">
+                                      <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                                  </button>
+				  
+				 <button id="lockThemeSorting" type="button"
+                                      title="Lock resorting of themes"
+                                      class="btn btn-default btn-xs
+                                      header-button lock-button pull-left" aria-label="Lock resorting of themes">
+                                      <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
+                                  </button>
+				  
+				   <button id="showLabels" type="button"
+                                      title="Show labels" class="btn
+                                      btn-default btn-xs header-button
+                                      hide-labels-button pull-left" aria-label="Show labels">
+                                      <span class="glyphicon glyphicon-tag" aria-hidden="true"></span>
+                                  </button>
+				  
+                                    
+                                    <div class="btn-group small-right-margin">
+                                        <input id="themeSearch"
+                                            type="search"
+                                            class="form-control search-input" placeholder="Search">
+                                            <span id="themeSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
+				    </div>
+                                    
+                                    <button id="themeSearchButton" type="button" title="Search for theme" class="btn btn-default btn-xs header-button" aria-label="Search for theme">
+                                        <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                                    </button>
+                                <div class="btn-group pull-right">
+								  <button id="sortTheme" type="button" title="Sort" class="btn btn-default btn-xs dropdown-toggle header-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+								    <span class="glyphicon glyphicon-sort-by-attributes" aria-hidden="true"></span>
+								  </button>
+                                  
+								  <ul class="dropdown-menu">
+								   <li><a href="" class="sort-themes-trigger" data-sortkey="time/asc"><span class="checkmark"></span>Time of creation (asc)</a></li>
+								    <li><a href="" class="sort-themes-trigger" data-sortkey="time/desc"><span class="checkmark"></span>Time of creation (desc)</a></li>
+								     <li><a
+								   href=""
+								   class="sort-themes-trigger"
+								   data-sortkey="texts/asc"><span
+								   class="checkmark"></span>Number
+								   of
+								   associated
+								   texts
+								   (asc)</a></li>
+								   <li><a
+								   href=""
+								   class="sort-themes-trigger"
+								   data-sortkey="texts/desc"><span
+								   class="checkmark"></span>Number
+								   of
+								   associated
+								   texts
+								   (desc)</a></li>
+								  </ul>
+								</div>
+                                </div>
+                                <span class="clearfix"></span>
+                                </h3>
+							</div>
+					
+							<ul id="themesList" class="list-group">
+							</ul>	
+						</div><!-- /.themesContainer -->
+					</div><!-- /.right column in the main panel -->
+					
+
+					</div>
+					<div id="bgSvgContainer">
+					</div>
+					
+				</div><!-- /.upperRow in the main panel -->
+				
+					
+			</div><!-- /.mainPanel -->
+			
+		</div><!-- /.mainRow  -->
+		
+		<div id="footer">
+		    <hr>
+	    		<p class="text-muted credit no-top-margin no-bottom-margin hidden">
+	      			&copy; ISOVIS group 2017-2018
+	    		</p>
+		    	<p class="text-muted credit no-bottom-margin right-margin">
+					Version 0.3.0. 
+				</p>
+		</div><!-- /.footer -->
+		
+    </div><!-- /.container -->
+    			
+    <div id="overlay"></div>			
+		
+	<!-- jQuery -->
+    <script src="js/jquery.js"></script>
+    <!-- Include all compiled plugins -->
+    <script src="js/bootstrap.min.js"></script>
+    
+    <!-- D3 -->
+    <script src="js/d3.v3.min.js"></script>
+    <!-- Colorbrewer colors; might not need this at all -->
+    <script src="js/colorbrewer.js"></script>
+    
+	<!-- noUiSlider; might not need this at all -->
+	<script src="js/jquery.nouislider.min.js"></script>	
+		
+    <!-- underscore.js; might not need this at all -->
+    <script src="js/underscore.min.js"></script>
+        
+    <!-- moment.js -->
+    <script src="js/moment.min.js"></script>
+    
+    <!-- Custom JS code -->
+    <script src="js/topics2themes.model.js"></script>
+    <script src="js/topics2themes.controller.js"></script>
+  </body>
+</html>
