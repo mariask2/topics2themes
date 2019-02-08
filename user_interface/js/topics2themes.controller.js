@@ -2772,14 +2772,11 @@ function onLockTextSorting(){
     if (lockTextsSorting){
         lockTextsSorting = false;
         $("#lockTextSorting").removeClass("button-active");
-        //modelSortThemesWithMachineLearningIfTextChosen();
-        
+	doResetHighlightAfterStateChange();
     }
     else{
         lockTextsSorting = true;
-        //modelResetRecentlyClickedForMachineLearningSorting();
         $("#lockTextSorting").addClass("button-active");
-        //modelSortThemesWithMachineLearningIfTextChosen();
     }
 }
 

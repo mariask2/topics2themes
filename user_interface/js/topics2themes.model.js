@@ -831,6 +831,13 @@ function calculateThemesScore(themeElements) {
 
 // Help function for sorting element, called by all sorting functions
 function sortElements(elements, calculateScoreFunction, compareValuesFunctionSelected, compareValuesFunctionOther){
+
+    // Don't do any sorting
+    if (compareValuesFunctionSelected == null){
+	return elements;
+    }
+
+
     let sortValues = calculateScoreFunction(elements);
     
     // Divide into two sublists to treat selected elements separately
@@ -847,11 +854,13 @@ function sortElements(elements, calculateScoreFunction, compareValuesFunctionSel
                                                         });
    
     // Is only used when sorting themes, and when there is a recently clicked text element, and the user has not selected to lock this kind of sorting
-    if (modelMostRecentlyClickedText != undefined && doThemesSorting){
+    // (It is only when sortElements for themes is envoked that compareValuesFunctionOther != null)
+    if (modelMostRecentlyClickedText != undefined && doThemesSorting && compareValuesFunctionOther != null){
         otherSortValues.sort(compareValuesFunctionOther);
     }
     else{
-        otherSortValues.sort(compareValuesFunctionSelected)
+	//TODO: I removed this to speed up sorting. But I don't know if it has any bad effects for the user.
+        //otherSortValues.sort(compareValuesFunctionSelected)
     }
     let sortedOtherElements = otherSortValues.map(function(element){
                                                   return elements[element.index];
@@ -865,7 +874,12 @@ function sortElements(elements, calculateScoreFunction, compareValuesFunctionSel
 // (descending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTextScoreDesc(textElements) {
-    return sortElements(textElements, calculateTextScore, compareValuesDesc, compareValuesDesc);
+    if (lockTextsSorting){
+	return sortElements(textElements, calculateTextScore, null, null);
+    }
+    else{
+	return sortElements(textElements, calculateTextScore, compareValuesDesc, null);
+    }
 }
 
 // Returns a sorted copy of the provided array of document list elements
@@ -873,7 +887,12 @@ function sortTextScoreDesc(textElements) {
 // (ascending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTextScoreAsc(textElements) {
-    return sortElements(textElements, calculateTextScore, compareValuesAsc, compareValuesAsc);
+    if (lockTextsSorting){
+	return sortElements(textElements, calculateTextScore, null, null);
+    }
+    else{
+	return sortElements(textElements, calculateTextScore, compareValuesAsc, null);
+    }
 }
 
 
@@ -882,7 +901,7 @@ function sortTextScoreAsc(textElements) {
 // (descending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTopicScoreDesc(topicElements) {
-    return sortElements(topicElements, calculateTopicScore, compareValuesDesc, compareValuesDesc);
+    return sortElements(topicElements, calculateTopicScore, compareValuesDesc, null);
 }
 
 // Returns a sorted copy of the provided array of topic list elements
@@ -890,7 +909,7 @@ function sortTopicScoreDesc(topicElements) {
 // (ascending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTopicScoreAsc(topicElements) {
-    return sortElements(topicElements, calculateTopicScore, compareValuesAsc, compareValuesAsc);
+    return sortElements(topicElements, calculateTopicScore, compareValuesAsc, null);
 }
 
 
@@ -899,7 +918,7 @@ function sortTopicScoreAsc(topicElements) {
 // (descending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTermsScoreDesc(termElements) {
-    return sortElements(termElements, calculateTermsScore, compareValuesDesc, compareValuesDesc);
+    return sortElements(termElements, calculateTermsScore, compareValuesDesc, null);
 }
 
 // Returns a sorted copy of the provided array of term list elements
@@ -907,7 +926,7 @@ function sortTermsScoreDesc(termElements) {
 // (ascending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTermsScoreAsc(termElements) {
-    return sortElements(termElements, calculateTermsScore, compareValuesAsc, compareValuesAsc);
+    return sortElements(termElements, calculateTermsScore, compareValuesAsc, null);
 }
 
 // TODO: There is a lot of duplicated code for the sorting, this could be fixed
@@ -1000,7 +1019,7 @@ function calculateTermsTopicsNumber(termElements) {
 // (descending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTermsTopicsDesc(termElements) {
-    return sortElements(termElements, calculateTermsTopicsNumber, compareValuesDesc, compareValuesDesc);
+    return sortElements(termElements, calculateTermsTopicsNumber, compareValuesDesc, null);
 	// Temporary array of element sorting values
 }
 
@@ -1009,7 +1028,7 @@ function sortTermsTopicsDesc(termElements) {
 // (ascending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTermsTopicsAsc(termElements) {
-    return sortElements(termElements, calculateTermsTopicsNumber, compareValuesAsc, compareValuesAsc);
+    return sortElements(termElements, calculateTermsTopicsNumber, compareValuesAsc, null);
 }
 
 // Calculates the total number of relevant documents for the provided array of term list elements
@@ -1064,7 +1083,7 @@ function calculateTermsDocsNumber(termElements) {
 // (descending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTermsDocsDesc(termElements) {
-    return sortElements(termElements, calculateTermsDocsNumber, compareValuesDesc, compareValuesDesc);
+    return sortElements(termElements, calculateTermsDocsNumber, compareValuesDesc, null);
 }
 
 // Returns a sorted copy of the provided array of term list elements
@@ -1072,7 +1091,7 @@ function sortTermsDocsDesc(termElements) {
 // (ascending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTermsDocsAsc(termElements) {
-    return sortElements(termElements, calculateTermsDocsNumber, compareValuesAsc, compareValuesAsc);
+    return sortElements(termElements, calculateTermsDocsNumber, compareValuesAsc, null);
 }
 
 // Provides a sorting value for term elements
@@ -1121,7 +1140,7 @@ function getTermStrings(termElements) {
 // (descending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTermsAlphaDesc(termElements) {
-    return sortElements(termElements, getTermStrings, compareStringValuesDesc, compareStringValuesDesc);
+    return sortElements(termElements, getTermStrings, compareStringValuesDesc, null);
 }
 
 // Returns a sorted copy of the provided array of term list elements
@@ -1129,7 +1148,7 @@ function sortTermsAlphaDesc(termElements) {
 // (ascending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTermsAlphaAsc(termElements) {
-    return sortElements(termElements, getTermStrings, compareStringValuesAsc, compareStringValuesAsc);
+    return sortElements(termElements, getTermStrings, compareStringValuesAsc, null);
 	// Temporary array of element sorting values
 	let sortValues = getTermStrings(termElements);
 	
