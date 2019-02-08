@@ -1,2 +1,2 @@
 
-WORKSPACE_FOLDER = "/Users/maria/mariaskeppstedtdsv/potsdam/visulizationideas/" #/topic_modelling"
+WORKSPACE_FOLDER = "/Users/maria/mariaskeppstedtdsv/potsdam/visulizationideas/topic_modelling"

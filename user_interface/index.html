@@ -43,6 +43,7 @@
 						<select id="dataset" class="form-control dataset-choices">
 						</select>
                         <button id="newModel" type="button" title="Construct new model" class="btn btn-default btn-xs header-button create-button-button" aria-label="Construct new model">
+                            <!-- glyphicon-cog -->
                             <span class="glyphicon glyphicon-cog create-buttons-cog" aria-hidden="true"></span>
                         </button>
                 
@@ -174,6 +175,14 @@
    
                                 <div class="btn-group pull-right">
                                     
+                                    <button id="lockTextSorting" type="button"
+                                        title="Lock resorting of texts"
+                                        class="btn btn-default btn-xs
+                                        header-button lock-button pull-left" aria-label="Lock resorting of texts">
+                                        <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
+                                    </button>
+                                    
+                                    
                                     <div class="btn-group small-right-margin">
                                         <input id="textSearch"
                                             type="search"
@@ -184,6 +193,9 @@
                                     <button id="textSearchButton" type="button" title="Search for text" class="btn btn-default btn-xs header-button" aria-label="Search for text">
                                         <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                                     </button>
+                                    
+
+                                    
                                 <div class="btn-group pull-right">
 								  <button type="button" title="Sort" class="btn btn-default btn-xs dropdown-toggle header-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
 								    <span class="glyphicon glyphicon-sort-by-attributes" aria-hidden="true"></span>
@@ -218,16 +230,16 @@
                                       <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                                   </button>
 				  
-				 <button id="lockThemeSorting" type="button"
-                                      title="Lock resorting of themes"
-                                      class="btn btn-default btn-xs
-                                      header-button lock-button pull-left" aria-label="Lock resorting of themes">
-                                      <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
+				 <button id="doThemeSorting" type="button"
+                                      title="Activate machine learning based resorting of themes"
+                                      class="btn btn-default btn-xs button-active
+                                      header-button lock-button pull-left" aria-label="Activate machine learning based resorting of themes">
+                                      <span class="glyphicon glyphicon-sort" aria-hidden="true"></span>
                                   </button>
 				  
 				   <button id="showLabels" type="button"
                                       title="Show labels" class="btn
-                                      btn-default btn-xs header-button
+                                      btn-default btn-xs header-button button-active
                                       hide-labels-button pull-left" aria-label="Show labels">
                                       <span class="glyphicon glyphicon-tag" aria-hidden="true"></span>
                                   </button>

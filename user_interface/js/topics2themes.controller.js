@@ -35,8 +35,9 @@ var SELECTDATASETTEXT = "Select data set";
 var SELECTMODELTEXT = "Select model";
 var SELECTANALYSISTEXT = "Select analysis";
 
-var showLabels = false;
-var lockThemesSorting = false;
+var showLabels = true;
+var doThemesSorting = true;
+var lockTextsSorting = false;
 
 // Holds terms selected, splitted for "/" and "_" into different terms
 var splittedTerms = [];
@@ -152,7 +153,11 @@ $(document).ready(function(){
     // Button for hide and show labels on themes
     $("#showLabels").click(onShowLabels);
                   
-    $("#lockThemeSorting").click(onLockThemesSorting);
+    // Button for lock and unlock the sorting of themes
+    $("#doThemeSorting").click(onLockThemesSorting);
+
+    // Button for lock and unlock the sorting of texts
+    $("#lockTextSorting").click(onLockTextSorting);
                   
     // Drag'n'drop handlers
     	$("#textsList")
@@ -2748,17 +2753,33 @@ function onShowLabels(){
 }
 
 function onLockThemesSorting(){
-    if (lockThemesSorting){
-        lockThemesSorting = false;
-        $("#lockThemeSorting").removeClass("button-active");
+    if (!doThemesSorting){
+        doThemesSorting = true;
+	$("#doThemeSorting").addClass("button-active");
         modelSortThemesWithMachineLearningIfTextChosen();
         
     }
     else{
-        lockThemesSorting = true;
+        doThemesSorting = false;
         modelResetRecentlyClickedForMachineLearningSorting();
-        $("#lockThemeSorting").addClass("button-active");
+        $("#doThemeSorting").removeClass("button-active");
         modelSortThemesWithMachineLearningIfTextChosen();
+    }
+}
+
+
+function onLockTextSorting(){
+    if (lockTextsSorting){
+        lockTextsSorting = false;
+        $("#lockTextSorting").removeClass("button-active");
+        //modelSortThemesWithMachineLearningIfTextChosen();
+        
+    }
+    else{
+        lockTextsSorting = true;
+        //modelResetRecentlyClickedForMachineLearningSorting();
+        $("#lockTextSorting").addClass("button-active");
+        //modelSortThemesWithMachineLearningIfTextChosen();
     }
 }
 

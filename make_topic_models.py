@@ -413,7 +413,7 @@ def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_p
                                                     min_document_frequency, max_document_frequency, stop_word_file)
     model_list = []
     for i in range(0, number_of_runs):
-        nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='nndsvd').fit(tfidf)
+        nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='random').fit(tfidf)
         model_list.append(nmf)
     topic_info, most_typical_model = get_scikit_topics(model_list, tfidf_vectorizer, tfidf, documents, nr_of_top_words, nr_of_to_documents, overlap_cut_off)
     return topic_info, most_typical_model, tfidf_vectorizer

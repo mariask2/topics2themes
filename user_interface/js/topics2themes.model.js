@@ -551,14 +551,14 @@ function removeTextThemeLink(themeId, textId){
 
 function modelSetMostRecentlyClickedForThemeRanking(textId){
     // TODO: Chosing not to sort after it already has been sorted doesn't seem to work
-    if (currentTextIds.indexOf(textId) == -1 || modelCurrentAnalysisVersionId == null || lockThemesSorting){
+    if (currentTextIds.indexOf(textId) == -1 || modelCurrentAnalysisVersionId == null || !doThemesSorting){
         // Then it was an unclick a previously selected text
         if (currentTextIds.length == 0){
             // If no more documents are selected, reset the machine learning based theme sorting
             modelResetRecentlyClickedForMachineLearningSorting();
         }
-        if (lockThemesSorting && currentTextIds.indexOf(textId) != -1){
-            modelMostRecentlyClickedText = textId; // Save to use for later if lockThemesSorting would be unlocked
+        if (!doThemesSorting && currentTextIds.indexOf(textId) != -1){
+            modelMostRecentlyClickedText = textId; // Save to use for later if doThemesSorting would be enabled
         }
         
         return;
@@ -847,7 +847,7 @@ function sortElements(elements, calculateScoreFunction, compareValuesFunctionSel
                                                         });
    
     // Is only used when sorting themes, and when there is a recently clicked text element, and the user has not selected to lock this kind of sorting
-    if (modelMostRecentlyClickedText != undefined && !lockThemesSorting){
+    if (modelMostRecentlyClickedText != undefined && doThemesSorting){
         otherSortValues.sort(compareValuesFunctionOther);
     }
     else{
