@@ -2799,17 +2799,25 @@ var showSupporting = false;
 var showOpposing = false;
 
 
+function resetIfNoArgumentsAreChosen(){
+    if (showPositive == false && showNegative == false && showClaim == false && showSupporting == false && showOpposing == false){
+	addChoiceBasedHighlight();
+    }
+}
 
 function onShowPositive(){
     if (showPositive){
         showPositive = false;
         $("#positive").removeClass("positive-marker");
-	d3.select("#textsList").selectAll("span").each(function(){$(this).removeClass("positive-marker");})
+	d3.select("#textsList").selectAll("positive").each(function(){$(this).removeClass("positive-marker");})
+	resetIfNoArgumentsAreChosen();
     }
     else{
-	d3.select("#textsList").selectAll("span").each(function(){$(this).addClass("positive-marker");})
+	d3.select("#textsList").selectAll("positive").each(function(){$(this).addClass("positive-marker");})
         showPositive = true;
         $("#positive").addClass("positive-marker");
+	d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
+	d3.selectAll(".term-to-mark").classed("specifictermchosen", false);
     }
 }
 
@@ -2817,12 +2825,15 @@ function onShowNegative(){
     if (showNegative){
         showNegative = false;
         $("#negative").removeClass("negative-marker");
-	d3.select("#textsList").selectAll("span").each(function(){$(this).removeClass("negative-marker");})
+	d3.select("#textsList").selectAll("negative").each(function(){$(this).removeClass("negative-marker");})
+	resetIfNoArgumentsAreChosen();
     }
     else{
-	d3.select("#textsList").selectAll("span").each(function(){$(this).addClass("negative-marker");})
+	d3.select("#textsList").selectAll("negative").each(function(){$(this).addClass("negative-marker");})
         showNegative = true;
         $("#negative").addClass("negative-marker");
+	d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
+	d3.selectAll(".term-to-mark").classed("specifictermchosen", false);
     }
 }
 
@@ -2831,12 +2842,15 @@ function onShowClaim(){
     if (showClaim){
         showClaim = false;
         $("#claim").removeClass("claim");
-	d3.select("#textsList").selectAll("span").each(function(){$(this).removeClass("claim");})
+	d3.select("#textsList").selectAll("claim").each(function(){$(this).removeClass("claim");})
+	resetIfNoArgumentsAreChosen();
     }
     else{
-	d3.select("#textsList").selectAll("span").each(function(){$(this).addClass("claim");})
+	d3.select("#textsList").selectAll("claim").each(function(){$(this).addClass("claim");})
         showClaim = true;
         $("#claim").addClass("claim");
+	d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
+	d3.selectAll(".term-to-mark").classed("specifictermchosen", false);
     }
 }
 
@@ -2846,12 +2860,15 @@ function onShowSupporting(){
     if (showSupporting){
         showSupporting = false;
         $("#supporting").removeClass("supporting");
-	d3.select("#textsList").selectAll("span").each(function(){$(this).removeClass("supporting");})
+	d3.select("#textsList").selectAll("support").each(function(){$(this).removeClass("supporting");})
+	resetIfNoArgumentsAreChosen();
     }
     else{
-	d3.select("#textsList").selectAll("span").each(function(){$(this).addClass("supporting");})
+	d3.select("#textsList").selectAll("support").each(function(){$(this).addClass("supporting");})
         showSupporting = true;
         $("#supporting").addClass("supporting");
+	d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
+	d3.selectAll(".term-to-mark").classed("specifictermchosen", false);
     }
 }
 
@@ -2860,12 +2877,15 @@ function onShowOpposing(){
     if (showOpposing){
         showOpposing = false;
         $("#opposing").removeClass("opposing");
-	d3.select("#textsList").selectAll("span").each(function(){$(this).removeClass("opposing");})
+	d3.select("#textsList").selectAll("oppose").each(function(){$(this).removeClass("opposing");})
+	resetIfNoArgumentsAreChosen();
     }
     else{
-	d3.select("#textsList").selectAll("span").each(function(){$(this).addClass("opposing");})
+	d3.select("#textsList").selectAll("oppose").each(function(){$(this).addClass("opposing");})
         showOpposing = true;
         $("#opposing").addClass("opposing");
+	d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
+	d3.selectAll(".term-to-mark").classed("specifictermchosen", false);
     }
 }
 

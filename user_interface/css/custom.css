@@ -821,21 +821,26 @@ span.checkmark {
 }
 
 .positive-marker{
-    background-color: green !important;
+   background-color: #3ADF00;
 }
 
 .negative-marker{
-    background-color: red !important;
+    background-color: #FA5858;
 }
 
 .claim{
-    background-color: gray !important;
+    text-decoration: underline overline;
+    background-color: #E6F3FF;
+    text-shadow: 4px 4px 8px #E4F1FE;
 }
 
 .supporting{
-    background-color: blue !important;
+    background-color: #E6F3FF;
+     text-shadow: 4px 4px 8px #E6F3F;
 }
 
 .opposing{
-    background-color: brown !important;
+  text-shadow: 4px 4px 8px #424242;
+    background-color: #E6F3FF;
 }
+
