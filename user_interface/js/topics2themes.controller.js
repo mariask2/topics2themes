@@ -2780,4 +2780,93 @@ function onLockTextSorting(){
     }
 }
 
+/*******************/
+
+/* Extra functions for Tag der Wissenschaften */
+
+
+// Button for showing positive markers
+$("#positive").click(onShowPositive);
+$("#negative").click(onShowNegative);
+$("#claim").click(onShowClaim);
+$("#supporting").click(onShowSupporting);
+$("#opposing").click(onShowOpposing);
+
+var showPositive = false;
+var showNegative = false;
+var showClaim = false;
+var showSupporting = false;
+var showOpposing = false;
+
+
+
+function onShowPositive(){
+    if (showPositive){
+        showPositive = false;
+        $("#positive").removeClass("positive-marker");
+	d3.select("#textsList").selectAll("span").each(function(){$(this).removeClass("positive-marker");})
+    }
+    else{
+	d3.select("#textsList").selectAll("span").each(function(){$(this).addClass("positive-marker");})
+        showPositive = true;
+        $("#positive").addClass("positive-marker");
+    }
+}
+
+function onShowNegative(){
+    if (showNegative){
+        showNegative = false;
+        $("#negative").removeClass("negative-marker");
+	d3.select("#textsList").selectAll("span").each(function(){$(this).removeClass("negative-marker");})
+    }
+    else{
+	d3.select("#textsList").selectAll("span").each(function(){$(this).addClass("negative-marker");})
+        showNegative = true;
+        $("#negative").addClass("negative-marker");
+    }
+}
+
+
+function onShowClaim(){
+    if (showClaim){
+        showClaim = false;
+        $("#claim").removeClass("claim");
+	d3.select("#textsList").selectAll("span").each(function(){$(this).removeClass("claim");})
+    }
+    else{
+	d3.select("#textsList").selectAll("span").each(function(){$(this).addClass("claim");})
+        showClaim = true;
+        $("#claim").addClass("claim");
+    }
+}
+
+
+
+function onShowSupporting(){
+    if (showSupporting){
+        showSupporting = false;
+        $("#supporting").removeClass("supporting");
+	d3.select("#textsList").selectAll("span").each(function(){$(this).removeClass("supporting");})
+    }
+    else{
+	d3.select("#textsList").selectAll("span").each(function(){$(this).addClass("supporting");})
+        showSupporting = true;
+        $("#supporting").addClass("supporting");
+    }
+}
+
+
+function onShowOpposing(){
+    if (showOpposing){
+        showOpposing = false;
+        $("#opposing").removeClass("opposing");
+	d3.select("#textsList").selectAll("span").each(function(){$(this).removeClass("opposing");})
+    }
+    else{
+	d3.select("#textsList").selectAll("span").each(function(){$(this).addClass("opposing");})
+        showOpposing = true;
+        $("#opposing").addClass("opposing");
+    }
+}
+
 

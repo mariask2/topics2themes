@@ -50,6 +50,7 @@ hr {
     padding-top: 1px !important;
 }
 
+
 .search-input {
 	font-size: small;
 	padding: 1px 6px;
@@ -808,3 +809,33 @@ span.checkmark {
 
 
 
+
+.argumentation-button{
+    font-size: 11px;
+    margin-left: 0px !important;
+    margin-right: 1px !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+    padding-bottom: 4px !important;
+    padding-top: 4px !important;
+}
+
+.positive-marker{
+    background-color: green !important;
+}
+
+.negative-marker{
+    background-color: red !important;
+}
+
+.claim{
+    background-color: gray !important;
+}
+
+.supporting{
+    background-color: blue !important;
+}
+
+.opposing{
+    background-color: brown !important;
+}
