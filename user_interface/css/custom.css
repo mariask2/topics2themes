@@ -821,18 +821,47 @@ span.checkmark {
 }
 
 .positive-marker{
-   background-color: #3ADF00;
+    border-style: solid;
+    border-color: green;
+    border-width: thin;
 }
 
 .negative-marker{
-    background-color: #FA5858;
+    border-style: solid;
+    border-color: red;
+    border-width: thin;
 }
 
+.claim{
+    border-style: dashed;
+    border-color: black;
+    border-width: thin;
+    background-color: #E6F3FF;
+}
+
+.supporting{
+    border-style: dotted;
+    border-color: grey;
+    border-width: thin;
+    background-color:#EFF8FB;
+}
+
+.opposing{
+    border-style: dotted;
+    border-color: grey;
+    border-width: thin;
+    background-color: #F5F6CE;
+}
+
+/*
 .claim{
     text-decoration: underline overline;
     background-color: #E6F3FF;
     text-shadow: 4px 4px 8px #E4F1FE;
+    border-style: solid;
+  border-width: 5px;
 }
+
 
 .supporting{
     background-color: #E6F3FF;
@@ -843,4 +872,5 @@ span.checkmark {
   text-shadow: 4px 4px 8px #424242;
     background-color: #E6F3FF;
 }
+*/
 
