@@ -50,6 +50,15 @@ hr {
     padding-top: 1px !important;
 }
 
+.lock-text-button{
+    margin-left: 0px !important;
+    margin-right: 13px !important;
+    padding-left: 4px !important;
+    padding-right: 3px !important;
+    padding-bottom: 3px !important;
+    padding-top: 1px !important;
+}
+
 
 .search-input {
 	font-size: small;
@@ -515,6 +524,7 @@ li.indirect-chosen * {
     font-family: Menlo, Consolas, "Courier New", Courier, monospace;
     letter-spacing: 0px;
     font-size: small;
+    text-shadow: 1px 1px 2px gray !important;
 }
 
 span.theme-indicator {
@@ -834,7 +844,7 @@ span.checkmark {
 }
 
 .positive-marker{
-     background-color: #e6ffe6 ;
+    background-color: #e6ffe6;
     border-style: solid none;
     border-color: green;
     border-width: thin;
@@ -847,6 +857,15 @@ span.checkmark {
     border-color: red;
     border-width: thin;
     background: repeating-linear-gradient(45deg, white, #ffe6e6 50%, white);
+}
+
+.modifier-marker{
+    background-color: whitesmoke ;
+    text-decoration: underline;
+    border-style: none none solid none;
+    border-color: black;
+    border-width: thin;
+    background: repeating-linear-gradient(45deg, #F5F5F5, white 50%, #F5F5F5);
 }
 
 .claim{

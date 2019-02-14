@@ -2103,6 +2103,8 @@ function addChoiceBasedHighlight(){
           highlightThemeElement(element, DIRECTCHOOSEN, CHOOSEN);
           }
           });
+
+    resetAllArgumentMarkings();
     
 }
 
@@ -2796,9 +2798,30 @@ var showClaim = false;
 var showSupporting = false;
 var showOpposing = false;
 
+function resetAllArgumentMarkings(){
+    showSentiment = false;
+    showClaim = false;
+    showSupporting = false;
+    showOpposing = false;
+    
+    $("#sentiment").removeClass("sentiment-marker");
+    d3.select("#textsList").selectAll("positive").each(function(){$(this).removeClass("positive-marker");})
+    d3.select("#textsList").selectAll("negative").each(function(){$(this).removeClass("negative-marker");})
+    d3.select("#textsList").selectAll("modifier").each(function(){$(this).removeClass("modifier-marker");})
+
+    $("#claim").removeClass("claim");
+    d3.select("#textsList").selectAll("claim").each(function(){$(this).removeClass("claim");})
+
+    $("#supporting").removeClass("supporting");
+    d3.select("#textsList").selectAll("support").each(function(){$(this).removeClass("supporting");})
+
+    $("#opposing").removeClass("opposing");
+    d3.select("#textsList").selectAll("oppose").each(function(){$(this).removeClass("opposing");})
+    
+}
 
 function resetIfNoArgumentsAreChosen(){
-    if (showSentiment == false && showNegative == false && showClaim == false && showSupporting == false && showOpposing == false){
+    if (showSentiment == false && showClaim == false && showSupporting == false && showOpposing == false){
 	addChoiceBasedHighlight();
     }
 }
@@ -2809,11 +2832,13 @@ function onShowSentiment(){
         $("#sentiment").removeClass("sentiment-marker");
 	d3.select("#textsList").selectAll("positive").each(function(){$(this).removeClass("positive-marker");})
 	d3.select("#textsList").selectAll("negative").each(function(){$(this).removeClass("negative-marker");})
+	d3.select("#textsList").selectAll("modifier").each(function(){$(this).removeClass("modifier-marker");})
 	resetIfNoArgumentsAreChosen();
     }
     else{
 	d3.select("#textsList").selectAll("positive").each(function(){$(this).addClass("positive-marker");})
 	d3.select("#textsList").selectAll("negative").each(function(){$(this).addClass("negative-marker");})
+	d3.select("#textsList").selectAll("modifier").each(function(){$(this).addClass("modifier-marker");})
         showSentiment = true;
         $("#sentiment").addClass("sentiment-marker");
 	d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
