@@ -813,44 +813,66 @@ span.checkmark {
 .argumentation-button{
     font-size: 11px;
     margin-left: 0px !important;
-    margin-right: 1px !important;
-    padding-left: 2px !important;
-    padding-right: 2px !important;
+    margin-right: 1px;
+    padding-left: 3px !important;
+    padding-right: 3px !important;
     padding-bottom: 4px !important;
     padding-top: 4px !important;
+    color: black;
+}
+
+.sentiment-button{
+     margin-right: 15px;
+}
+
+.sentiment-marker{
+    border-style: solid;
+    border-color: grey;
+    border-width: thin;
+    border-style: solid solid solid solid;
+    background: repeating-linear-gradient(45deg, #ffe6e6 , white 50%, #e6ffe6);
 }
 
 .positive-marker{
-    border-style: solid;
+     background-color: #e6ffe6 ;
+    border-style: solid none;
     border-color: green;
     border-width: thin;
+    background: repeating-linear-gradient(45deg, white, #e6ffe6 50%, white);
 }
 
 .negative-marker{
-    border-style: solid;
+    background-color: #ffe6e6 ;
+    border-style: solid none;
     border-color: red;
     border-width: thin;
+    background: repeating-linear-gradient(45deg, white, #ffe6e6 50%, white);
 }
 
 .claim{
     border-style: dashed;
-    border-color: black;
+    border-color: #004280;
     border-width: thin;
     background-color: #E6F3FF;
+    background: repeating-linear-gradient(45deg, #c6f0ff, #E6F3FF, #c6f0ff #E6F3FF);
 }
+
+
 
 .supporting{
     border-style: dotted;
-    border-color: grey;
+    border-color: #b3daff;
     border-width: thin;
-    background-color:#EFF8FB;
+    background-color:#F2FBFF;
+    background: repeating-linear-gradient(45deg, #F7FFFF, #EFF7FF, #F7FFFF, #EFF7FF);
 }
 
 .opposing{
     border-style: dotted;
-    border-color: grey;
+    border-color: #666666;
     border-width: thin;
-    background-color: #F5F6CE;
+    background-color: #E7E7E7;
+    background: repeating-linear-gradient(45deg, #E7E7E7, #FAFAFA, #E7E7E7, #FAFAFA);
 }
 
 /*

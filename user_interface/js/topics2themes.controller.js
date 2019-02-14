@@ -2786,52 +2786,36 @@ function onLockTextSorting(){
 
 
 // Button for showing positive markers
-$("#positive").click(onShowPositive);
-$("#negative").click(onShowNegative);
+$("#sentiment").click(onShowSentiment);
 $("#claim").click(onShowClaim);
 $("#supporting").click(onShowSupporting);
 $("#opposing").click(onShowOpposing);
 
-var showPositive = false;
-var showNegative = false;
+var showSentiment = false;
 var showClaim = false;
 var showSupporting = false;
 var showOpposing = false;
 
 
 function resetIfNoArgumentsAreChosen(){
-    if (showPositive == false && showNegative == false && showClaim == false && showSupporting == false && showOpposing == false){
+    if (showSentiment == false && showNegative == false && showClaim == false && showSupporting == false && showOpposing == false){
 	addChoiceBasedHighlight();
     }
 }
 
-function onShowPositive(){
-    if (showPositive){
-        showPositive = false;
-        $("#positive").removeClass("positive-marker");
+function onShowSentiment(){
+    if (showSentiment){
+        showSentiment = false;
+        $("#sentiment").removeClass("sentiment-marker");
 	d3.select("#textsList").selectAll("positive").each(function(){$(this).removeClass("positive-marker");})
-	resetIfNoArgumentsAreChosen();
-    }
-    else{
-	d3.select("#textsList").selectAll("positive").each(function(){$(this).addClass("positive-marker");})
-        showPositive = true;
-        $("#positive").addClass("positive-marker");
-	d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
-	d3.selectAll(".term-to-mark").classed("specifictermchosen", false);
-    }
-}
-
-function onShowNegative(){
-    if (showNegative){
-        showNegative = false;
-        $("#negative").removeClass("negative-marker");
 	d3.select("#textsList").selectAll("negative").each(function(){$(this).removeClass("negative-marker");})
 	resetIfNoArgumentsAreChosen();
     }
     else{
+	d3.select("#textsList").selectAll("positive").each(function(){$(this).addClass("positive-marker");})
 	d3.select("#textsList").selectAll("negative").each(function(){$(this).addClass("negative-marker");})
-        showNegative = true;
-        $("#negative").addClass("negative-marker");
+        showSentiment = true;
+        $("#sentiment").addClass("sentiment-marker");
 	d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
 	d3.selectAll(".term-to-mark").classed("specifictermchosen", false);
     }
