@@ -532,27 +532,12 @@ span.theme-indicator {
     margin-bottom: 0px !important;
 }
 
-.badge-for {
-    background-color : #0B6121 !important;
-    border-radius: 5px !important;
-    color: whitesmoke !important;
-    padding-bottom: 6px !important;
-    padding-top: 5px !important;  
-}
-
-.badge-against {
-    background-color : #8A0808 !important;
-    border-radius: 5px !important;
-    color: whitesmoke !important;
-    padding-bottom: 6px !important;
-    padding-top: 5px !important;
-}
 
 .badge-main-label {
     margin-left: 11px !important;
     margin-right: 0px !important;
     margin-top: 0px !important;
-    padding-bottom: 6px !important;
+    padding-bottom: 4px !important;
     padding-top: 4px !important;
 }
 
