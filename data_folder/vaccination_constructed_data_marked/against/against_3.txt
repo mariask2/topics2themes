@@ -1,0 +1,1 @@
+People always refer to smallpox to motivate why vaccination is <positive>good</positive>. <claim>MRR might still be <negative>bad</negative></claim>, <oppose>even if smallpox vaccination has led to that we have been able to eradicate the disease</oppose>.
