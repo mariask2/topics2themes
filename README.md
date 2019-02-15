@@ -59,8 +59,21 @@ for instance:
 
 python restful_api_topic_modelling.py 5000
 
-You will need a file in the same directory from which it is run, which is called "approved_keys.txt" (which at the moment is not used, but which will be used in a later version).
+***************
+You will need a file in the same directory from the code it is run, which is called "approved_keys.txt".
+Here you put the allowed keys that the user of the user interface need to input when promted (when the interface is started).
+One allowed key per line, e.g.;
+key1
+key2
+key3
 
+****************
+The text collections that are available to the user must be positioned in a folder named "data_folder".
+Each text collection is positioned in a subfolder of "data_folder". This subfolder should, in turn, contain several subfolders for each of the dynamic labels of the data set. The example text collection "vaccination_constructed_data_marked" set  has three dynamic labels "for", "against" and "uncertain", and correspondingly three subfolders with these names. The actual text files, should be placed as ".txt"-files in these sub-folders. (only .txt-files will be used for topic modelling)
+
+********
+As a default, the "data_folder" is positioned as a subdirectory in the folder with the python code.
+The variable "WORKSPACE_FOLDER" in the file "environment_configuration.py"  can, however, be changed to another location, and the "data_folder" can be positioned there.
 
 
 Part of the code is inspired from:
