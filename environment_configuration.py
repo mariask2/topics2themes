@@ -7,4 +7,11 @@ WORKSPACE_FOLDER = "."
 
 # The logging level
 # Can be any of logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL
+# If it's not given, logging.DEBUG will be used
 LOGGING_LEVEL = logging.DEBUG
+
+# The name of the database
+# If it is not given, a default name will be used
+DATABASE_NAME = "database_1"
+
+

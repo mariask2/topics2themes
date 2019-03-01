@@ -5,14 +5,18 @@ from pymongo.errors import DuplicateKeyError
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from topic_model_constants import *
+from environment_configuration import *
 
-
+DEFAULT_DATABASE_NAME = "default_database_name"
 
 class MongoConnector:
     def __init__(self):
-        #self.TOPIC_MODEL_DATABASE = "topic_model_database"
-        #self.TOPIC_MODEL_DATABASE = "text_database"
-        self.TOPIC_MODEL_DATABASE = "text_database_5"
+        self.TOPIC_MODEL_DATABASE = DEFAULT_DATABASE_NAME
+        try:
+            self.TOPIC_MODEL_DATABASE = DATABASE_NAME
+        except:
+            self.TOPIC_MODEL_DATABASE = DEFAULT_DATABASE_NAME
+       
         self.client = None
         self.DATE = "date"
         self.ID = "_id"
