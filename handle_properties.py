@@ -152,6 +152,11 @@ class PropertiesContainer:
             self.ADDITIONAL_LABELS_METHOD = properties.ADDITIONAL_LABELS_METHOD
         except AttributeError:
             self.ADDITIONAL_LABELS_METHOD = default_topic_model_configuration.ADDITIONAL_LABELS_METHOD
+
+        try:
+            self.MAX_NR_OF_FEATURES = properties.MAX_NR_OF_FEATURES
+        except AttributeError:
+            self.MAX_NR_OF_FEATURES = default_topic_model_configuration.MAX_NR_OF_FEATURES
                 
     def get_properties_in_json(self):
         """

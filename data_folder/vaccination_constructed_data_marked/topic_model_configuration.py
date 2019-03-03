@@ -114,6 +114,7 @@ TOPIC_MODEL_ALGORITHM = NMF_NAME
     """
 MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM = 4
 
+MAX_NR_OF_FEATURES = 10000
 
 def digits_in_doc_id(doc_id):
     # Just for testing
@@ -152,6 +153,7 @@ def corpus_specific_text_cleaning(text):
             no_links.append(word)
     cleaned_text = " ".join(no_links)
     return cleaned_text
+
 
 """
 NO_MATCH = set(["polio", "measles", "measle", "chickenpox", "flu", "meningitis", "mumps", "pertussis", "capable",\

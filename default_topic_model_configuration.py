@@ -55,11 +55,17 @@ Maximum occurrence in the corpus for a term to be included in the topic modellin
 """
 MAX_DOCUMENT_FREQUENCY = 0.95
 
+"""
+The maximumn number of features to include when vectorizing the texts
+"""
+MAX_NR_OF_FEATURES = None
+
 
 """
 Minimum proportion of documents that are to contain a term sequence for it to be counted as a collocation
 """
 COLLOCATION_CUT_OFF = 0.005
+
 
 
 
