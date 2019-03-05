@@ -56,6 +56,7 @@ MODEL_INFO = "MODEL_INFO"
 MODEL = "MODEL"
 PRE_PROCESS_COLLOCATION_MARKER = "PREPROCESSCOLLOCATIONMARKER"
 NO_TOPIC_CHOSEN = "NOTOPIC"
+SHOW_ARGUMENTATION = "SHOW_ARGUMENTATION"
 
 
 #####
@@ -248,7 +249,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME,\
                                                               most_typical_model,\
                                                               tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD,\
-                                                              properties.MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM)
+                                                              properties.MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM,\
+                                                              properties.SHOW_ARGUMENTATION)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
@@ -291,7 +293,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME,\
                                                               most_typical_model, \
                                                               tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD,\
-                                                              properties.MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM)
+                                                              properties.MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM,\
+                                                              properties.SHOW_ARGUMENTATION)
         return result_dict, time, post_id, most_typical_model
 
     
@@ -872,7 +875,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                              json_properties, data_set_name, model_name, save_in_database,\
                              are_these_two_terms_to_be_considered_the_same,\
                              most_typical_model, tf_vectorizer, additional_labels_method,\
-                             min_term_frequency_in_collection_to_include_as_term):
+                             min_term_frequency_in_collection_to_include_as_term,\
+                             show_argumentation):
     """
         Prints output/returns from the topic model in txt and json format (depending on whether it is run as server or as a program), with topic terms in bold face
         
@@ -1054,7 +1058,9 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     result_dict[META_DATA] = {"creation_date" : str(datetime.datetime.now()),\
                                 "configuration" : json_properties, \
                                     "user" : "dummy_user",\
-                                    MODEL_NAME : model_name}
+                                    MODEL_NAME : model_name,\
+                                    SHOW_ARGUMENTATION : str(show_argumentation)
+    }
 
 
 
@@ -1299,9 +1305,11 @@ def get_cashed_topic_model(mongo_con):
 
 
 
+
 def make_model_for_collection(collection_name, model_name, mongo_con):
     properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + collection_name)
     result_dict, time, post_id, most_typical_model = run_make_topic_models(mongo_con, properties, path_slash_format, model_name)
+    
     return result_dict
 
 ###

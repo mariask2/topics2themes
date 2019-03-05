@@ -158,6 +158,11 @@ class PropertiesContainer:
         except AttributeError:
             self.MAX_NR_OF_FEATURES = default_topic_model_configuration.MAX_NR_OF_FEATURES
                 
+        try:
+            self.SHOW_ARGUMENTATION = properties.SHOW_ARGUMENTATION
+        except AttributeError:
+            self.SHOW_ARGUMENTATION = default_topic_model_configuration.SHOW_ARGUMENTATION
+                
     def get_properties_in_json(self):
         """
         Returns properties in json format

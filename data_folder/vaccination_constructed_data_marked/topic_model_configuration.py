@@ -116,6 +116,9 @@ MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM = 4
 
 MAX_NR_OF_FEATURES = 10000
 
+
+#SHOW_ARGUMENTATION = True
+
 def digits_in_doc_id(doc_id):
     # Just for testing
     to_return = []

@@ -87,6 +87,9 @@ var textSortMode = null;
 var themeSortMode = null;
 
 var authenticationKey = null;
+
+
+
 /////////////////////
 // Script entry point
 //////////////////////
@@ -102,20 +105,19 @@ $(document).ready(function(){
     ////////////////////////
 	// Set up the handlers
     /////////////////////////
-                  
-	$("#dataset").change(onDatasetChange);
+    
+    // Handlers for selecting and/or constructing data sets, models and analysis 
+    $("#dataset").change(onDatasetChange);
     $("#newModel").click(onConstructNewModel);
     $("#modelVersion").change(onModelVersionListChange);
     $("#newAnalysis").click(onNewAnalysis);
-    
+    $("#analysisVersion").change(onAnalysisVersionListChange);    
                   
     // Search buttons
     $("#termSearchButton").click(onTermSearchButtonClick);
     $("#topicSearchButton").click(onTopicSearchButtonClick);
     $("#textSearchButton").click(onTextSearchButtonClick);
     $("#themeSearchButton").click(onThemeSearchButtonClick);
-                  
-    $("#analysisVersion").change(onAnalysisVersionListChange);
                   
                   
 	$("#termsList, #topicsList, #themesList, #textsList").scroll(onListScroll);
@@ -158,6 +160,7 @@ $(document).ready(function(){
 
     // Button for lock and unlock the sorting of texts
     $("#lockTextSorting").click(onLockTextSorting);
+
                   
     // Drag'n'drop handlers
     	$("#textsList")
@@ -171,6 +174,7 @@ $(document).ready(function(){
 		.on("dragleave", ".theme-element", onThemeElementDragLeave)
 		.on("drop", ".theme-element", onThemeElementDrop);
 	
+
 	// Highlight handlers
     $("#textsList")
 		.on("mouseenter", ".text-element", onTextElementMouseEnter)
@@ -185,9 +189,6 @@ $(document).ready(function(){
 		.on("mouseenter", ".theme-element", onThemeElementMouseEnter)
 		.on("mouseleave", ".theme-element", onThemeElementMouseLeave);
 	
-	// TODO: register other handlers here
-	
-	// TODO: set up sliders, if any
 	
     disableModelChoices();
     disableAnalysisChoices();
@@ -455,7 +456,7 @@ function onModelVersionListChange(element) {
     enableAnalysisChoices();
     disableThemeButtons();
     
-
+   
     // leads to controllerDoPopulateInterface and controllerDoPopulateAnalysisChoices via call-backs to the model function 'doInitializeData'
     //resetDataWhenNewAnalysisIsSelected()
 }
@@ -582,7 +583,7 @@ function controllerDoPopulateInterface() {
     //texts
     controllerDoPopulateTextElements();
   
-
+    adaptArgumentationButtonsToModel();
 	// Themes are populated in  controllerDoPopulateThemes, when an analysis version is selected, and not here
    
     
@@ -2785,18 +2786,47 @@ function onLockTextSorting(){
 /*******************/
 
 /* Extra functions for Tag der Wissenschaften */
+var showSentiment = false;
+var showClaim = false;
+var showSupporting = false;
+var showOpposing = false;
 
+// Start by hiding the argumentation-specific buttons, and then show them if the model has the configuration that these
+// buttons are to be shown
 
-// Button for showing positive markers
 $("#sentiment").click(onShowSentiment);
 $("#claim").click(onShowClaim);
 $("#supporting").click(onShowSupporting);
 $("#opposing").click(onShowOpposing);
 
-var showSentiment = false;
-var showClaim = false;
-var showSupporting = false;
-var showOpposing = false;
+d3.select("#sentiment").style("visibility", "hidden");
+d3.select("#claim").style("visibility", "hidden");
+d3.select("#supporting").style("visibility", "hidden");
+d3.select("#opposing").style("visibility", "hidden");
+
+function adaptArgumentationButtonsToModel(){
+
+    showSentiment = false;
+    showClaim = false;
+    showSupporting = false;
+    showOpposing = false;
+
+    // Button for showing positive markers
+    if (modelShowArgumentation == undefined){
+	d3.select("#sentiment").style("visibility", "hidden");
+	d3.select("#claim").style("visibility", "hidden");
+	d3.select("#supporting").style("visibility", "hidden");
+	d3.select("#opposing").style("visibility", "hidden");
+    }
+    else{
+	d3.select("#sentiment").style("visibility", "visible");
+	d3.select("#claim").style("visibility", "visible");
+	d3.select("#supporting").style("visibility", "visible");
+	d3.select("#opposing").style("visibility", "visible");
+
+
+    }
+}
 
 function resetAllArgumentMarkings(){
     showSentiment = false;

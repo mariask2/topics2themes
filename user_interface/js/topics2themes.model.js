@@ -75,6 +75,8 @@ var currentThemeIds = [];
 var modelMostRecentlyClickedText;
 var modelThemeRankingForMostRecentlyClickedText = [];
 
+var modelShowArgumentation = undefined;
+
 ////////////////
 // Comparators for sorting
 ///////////////
@@ -321,8 +323,15 @@ function doInitializeData(res){
         modelLabelCategories.push({"label" : labelCategories[index]["data_label"], "color" : color})
     }
 
+    if (jsonData["meta_data"]["SHOW_ARGUMENTATION"] == "True"){
+	modelShowArgumentation = 1;
+    }
+    else{
+	modelShowArgumentation = undefined;
+    }
     
-    
+   
+
 	// Terms have to be constructed from topics
     // At the same time, the reverse mapping from terms to topics should be established
 	for (let i = 0; i < topics.length; i++) {

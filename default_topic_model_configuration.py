@@ -60,6 +60,11 @@ The maximumn number of features to include when vectorizing the texts
 """
 MAX_NR_OF_FEATURES = None
 
+"""
+Whether to show the argumentation buttons or not
+"""
+SHOW_ARGUMENTATION = True
+
 
 """
 Minimum proportion of documents that are to contain a term sequence for it to be counted as a collocation
