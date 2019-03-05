@@ -90,6 +90,16 @@ stopword_handler = StopwordHandler()
 # Main 
 ####
 
+def can_model_be_created():
+    can_model_be_created = True
+    try:
+        if not ALLOWED_TO_CREATE_MODEL:
+            can_model_be_created = False
+    except: # Default if nothing is given in environment configuration
+        can_model_be_created = True
+
+    return str(can_model_be_created)
+
 
 # This function is only kept for the writing to file functionality. Should perhaps be removed in the future
 def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_be_considered_the_same, min_term_frequency_in_collection_to_include_as_term):

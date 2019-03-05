@@ -14,4 +14,10 @@ LOGGING_LEVEL = logging.DEBUG
 # If it is not given, a default name will be used
 DATABASE_NAME = "database_1"
 
+# Whether it should be allowed to create new models
+# If no value is given, the default value is that a model
+# can be created
+
+ALLOWED_TO_CREATE_MODEL = True
+
 

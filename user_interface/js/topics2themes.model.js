@@ -77,6 +77,8 @@ var modelThemeRankingForMostRecentlyClickedText = [];
 
 var modelShowArgumentation = undefined;
 
+var modelDisableModelCreation = undefined;
+
 ////////////////
 // Comparators for sorting
 ///////////////
@@ -1271,6 +1273,22 @@ function toggleSelectedElements(element, list){
     else{
         list.push(element);
         return true;
+    }
+}
+
+//////
+// For determining if new models can be created
+//////
+
+function modelCanModelBeCreated(){
+    let canModelBeCreatedUrl = "can_model_be_created";
+    get_data(canModelBeCreatedUrl, modelSetCanModelBeCreated, {});
+}
+
+
+function modelSetCanModelBeCreated(createModel){
+    if (createModel == "False"){
+	modelDisableModelCreation = 1; 
     }
 }
 

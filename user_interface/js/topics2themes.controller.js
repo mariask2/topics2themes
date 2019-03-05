@@ -194,12 +194,13 @@ $(document).ready(function(){
     disableAnalysisChoices();
     disableThemeButtons();
     resetInterface();
-	modelCurrentDataset = null;
+    modelCurrentDataset = null;
                   
     // Load the dataset choices
     populateDataChoices();
                   
-        
+    // Check if the create model button is to be enabled
+    modelCanModelBeCreated();
 });
 
 
@@ -235,12 +236,16 @@ function disableAnalysisChoices(){
 }
 
 function enableModelChoices() {
-    
-    $("#newModel").removeClass("disabled");
-    
-    $("#modelVersion").removeClass("disabled");
-    $("#modelVersion").attr("disabled", false);
-    
+
+    // If enviroment configuration dictates that no new models are to be created,
+    // never enable the create model button
+    if (modelDisableModelCreation == undefined){
+	$("#newModel").removeClass("disabled");
+    }
+ 
+	$("#modelVersion").removeClass("disabled");
+	$("#modelVersion").attr("disabled", false);
+   
 }
 
 function enableAnalysisChoices(){
@@ -392,8 +397,7 @@ function onDatasetChange() {
 // invoked from the model
 function controllerDoPopulateModelChoices(modelModelsForCurrentDataset){
     
-    
-    $("#newModel").removeClass("disabled");
+
     if (modelModelsForCurrentDataset != undefined && modelModelsForCurrentDataset != null && modelModelsForCurrentDataset.length > 1){
         enableModelChoices();
         $("#modelVersion").empty();

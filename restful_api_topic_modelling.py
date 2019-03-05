@@ -73,6 +73,16 @@ def authenticate():
     if key not in APPROVED_KEYS:
         abort(403)
 
+@app.route('/topics2themes/api/v1.0/can_model_be_created', methods=['GET', 'POST'])
+def can_model_be_created():
+    try:
+        authenticate()
+        can_be_created = make_topic_models.can_model_be_created()
+        resp = make_response(jsonify({"result" : can_be_created}))
+        return resp
+    except Exception as e:
+        return get_exception_info(e)
+
 
 @app.route('/topics2themes/api/v1.0/get_data_sets', methods=['GET', 'POST'])
 def get_data_sets():
