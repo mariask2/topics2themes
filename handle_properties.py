@@ -1,11 +1,22 @@
 import importlib
 import argparse
 import os
-import default_topic_model_configuration
 import sys
 
-from topic_model_constants import *
-from environment_configuration import *
+# An import that should function both locally and when running an a remote server
+try:
+    from environment_configuration import *
+except:
+    from topics2themes.environment_configuration import *
+
+
+
+if RUN_LOCALLY:
+    from topic_model_constants import *
+    import default_topic_model_configuration
+else:
+    from topics2themes.topic_model_constants import *
+    import topics2themes.default_topic_model_configuration as default_topic_model_configuration
 
 #TODO: Test that default properties work
 

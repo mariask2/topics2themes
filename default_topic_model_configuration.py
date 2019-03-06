@@ -1,5 +1,13 @@
-from topic_model_constants import *
+# An import that should function both locally and when running an a remote server
+try:
+    from environment_configuration import *
+except:
+    from topics2themes.environment_configuration import *
 
+if RUN_LOCALLY:
+    from topic_model_constants import *
+else:
+    from topics2themes.topic_model_constants import *
 
 """
 Nr of topics to retrieve

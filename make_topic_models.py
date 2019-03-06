@@ -14,16 +14,25 @@ from collections import Counter
 from glob import glob
 import datetime
 from sklearn.feature_extraction import text
-#from topic_model_configuration import *
-from topic_model_constants import *
-import handle_properties
-from mongo_connector import MongoConnector
-from environment_configuration import *
 import argparse
 import datetime
 import time
 import math
 
+# An import that should function both locally and when running an a remote server
+try:
+    from environment_configuration import *
+except:
+    from topics2themes.environment_configuration import *
+
+if RUN_LOCALLY:
+    from topic_model_constants import *
+    import handle_properties
+    from mongo_connector import MongoConnector
+else:
+    from topics2themes.topic_model_constants import *
+    import topics2themes.handle_properties as handle_properties
+    from topics2themes.mongo_connector import MongoConnector
 try:
     sent_tokenize("Check if punkt is imported")
 except:

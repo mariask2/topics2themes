@@ -4,8 +4,17 @@ import os
 from pymongo.errors import DuplicateKeyError
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from topic_model_constants import *
-from environment_configuration import *
+
+# An import that should function both locally and when running an a remote server
+try:
+    from environment_configuration import *
+except:
+    from topics2themes.environment_configuration import *
+
+if RUN_LOCALLY:
+    from topic_model_constants import *
+else:
+    from topics2themes.topic_model_constants import *
 
 DEFAULT_DATABASE_NAME = "default_database_name"
 
@@ -43,8 +52,9 @@ class MongoConnector:
     def get_connection(self):
         maxSevSelDelay = 5 #Check that the server is listening, wait max 5 sec
         if not self.client:
-            self.client = MongoClient('localhost', 27017, serverSelectionTimeoutMS=maxSevSelDelay)
-        self.server_info = self.client.server_info()
+            self.client = MongoClient(serverSelectionTimeoutMS=maxSevSelDelay)
+        #self.client = MongoClient('localhost', 27017, serverSelectionTimeoutMS=maxSevSelDelay)
+        #self.server_info = self.client.server_info()
         return self.client
 
     def close_connection(self):

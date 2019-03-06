@@ -1,6 +1,9 @@
-Application of topic modelling functionality in Scikit-learn.
+Note: The name of the repository was recently changed. It still works to clone from and push to the repository using the old name, but to avoid confusion, it can be good to do:
 
-The code was originally written for the specific task of using topic modelling to extract arguments "for" and "against" vaccination from Internet forums on vaccination in English. There code, therefore, currently uses domain specific vocabularies for the pre-processing. If the package is to be applied on other domains, that vocabulary needs to be changed.
+git remote set-url origin https://github.com/mariask2/topics2themes.git
+
+
+Application of topic modelling functionality in Scikit-learn.
 
 Given that you have a conda environment named topic_modelling where you have installed the following:
 

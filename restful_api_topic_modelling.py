@@ -6,15 +6,34 @@ import linecache
 import logging
 from datetime import timedelta
 from functools import update_wrapper
-import make_topic_models
-from flask_cors import CORS
-from mongo_connector import MongoConnector
-from theme_sorter import ThemeSorter
-from environment_configuration import *
-from topic_model_constants import *
+
+# An import that should function both locally and when running an a remote server
+try:
+    from environment_configuration import *
+except:
+    from topics2themes.environment_configuration import *
+
+
+if RUN_LOCALLY:
+    from flask_cors import CORS
+    import make_topic_models
+    from mongo_connector import MongoConnector
+    from theme_sorter import ThemeSorter
+    from topic_model_constants import *
+else:
+    import topics2themes.make_topic_models as make_topic_models
+    from topics2themes.mongo_connector import MongoConnector
+    from topics2themes.theme_sorter import ThemeSorter
+    from topics2themes.environment_configuration import *
+    from topics2themes.topic_model_constants import *
+    from flask import send_from_directory
 
 app = Flask(__name__)
-CORS(app)
+
+if RUN_LOCALLY:
+    CORS(app)
+else:
+    app.config['MONGO_CONNECT'] = False
 
 mongo_con = MongoConnector()
 theme_sort = ThemeSorter(mongo_con)

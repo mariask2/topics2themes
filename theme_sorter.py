@@ -1,13 +1,25 @@
-from mongo_connector import MongoConnector
-from topic_model_constants import *
-from environment_configuration import *
+import os
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.externals import joblib
-from make_topic_models import StopwordHandler
 
-import os
-import handle_properties
+
+# An import that should function both locally and when running an a remote server
+try:
+    from environment_configuration import *
+except:
+    from topics2themes.environment_configuration import *
+
+if RUN_LOCALLY:
+    from mongo_connector import MongoConnector
+    from topic_model_constants import *
+    from make_topic_models import StopwordHandler
+    import handle_properties
+else:
+    from topics2themes.mongo_connector import MongoConnector
+    from topics2themes.topic_model_constants import *
+    from topics2themes.make_topic_models import StopwordHandler
+    import topics2themes.handle_properties as handle_properties
 
 MODEL_FOLDER = os.path.join(WORKSPACE_FOLDER, "trained_machine_learning_models")
 MODEL_PREFIX = "model_"
