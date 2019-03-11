@@ -105,6 +105,12 @@ Synonym clustering is performed before the counting is done, so a rare term with
 """
 MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM = 1
 
+"""
+    Stop words can either be given in a separate file, or as set defined in the configuration
+    Default is the empty set
+"""
+STOP_WORD_SET = set()
+
 
 def no_term_clustering(x, y):
     return False

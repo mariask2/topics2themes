@@ -1,3 +1,6 @@
+import os
+from sklearn.feature_extraction import text
+
 """
 from topics2themes.topic_model_constants import *
 from topics2themes.word2vec_term_similarity import *
@@ -6,7 +9,8 @@ from topics2themes.environment_configuration import *
 from topic_model_constants import *
 from word2vec_term_similarity import *
 from environment_configuration import *
-import os
+
+
 
 """
 Nr of topics to retrieve
@@ -116,6 +120,8 @@ MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM = 4
 
 MAX_NR_OF_FEATURES = 10000
 
+#STOP_WORD_SET = set(["many", "child", "kids", "parent", "types"])
+STOP_WORD_SET = text.ENGLISH_STOP_WORDS
 
 #SHOW_ARGUMENTATION = True
 

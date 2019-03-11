@@ -173,6 +173,12 @@ class PropertiesContainer:
             self.SHOW_ARGUMENTATION = properties.SHOW_ARGUMENTATION
         except AttributeError:
             self.SHOW_ARGUMENTATION = default_topic_model_configuration.SHOW_ARGUMENTATION
+
+
+        try:
+            self.STOP_WORD_SET = properties.STOP_WORD_SET
+        except AttributeError:
+            self.STOP_WORD_SET = default_topic_model_configuration.STOP_WORD_SET
                 
     def get_properties_in_json(self):
         """

@@ -13,7 +13,6 @@ import json
 from collections import Counter
 from glob import glob
 import datetime
-from sklearn.feature_extraction import text
 import argparse
 import datetime
 import time
@@ -82,7 +81,7 @@ class StopwordHandler():
     def get_entire_used_stop_word_list(self):
         return self.stop_word_set
     
-    def get_stop_word_set(self, stop_word_file):
+    def get_stop_word_set(self, stop_word_file, stop_words_from_configuration_file):
         if stop_word_file == None:
             return None
         if self.stop_word_set == None:
@@ -90,7 +89,7 @@ class StopwordHandler():
             additional_stop_words = [word.strip() for word in f.readlines()]
             self.user_stop_word_list = additional_stop_words
             f.close()
-            self.stop_word_set = text.ENGLISH_STOP_WORDS.union(additional_stop_words)
+            self.stop_word_set = set(stop_words_from_configuration_file).union(additional_stop_words)
         return self.stop_word_set
 
 stopword_handler = StopwordHandler()
@@ -244,6 +243,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                        properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
                                                                        properties.COLLOCATION_CUT_OFF,\
                                                                        stop_word_file,\
+                                                                       properties.STOP_WORD_SET,\
                                                                        properties.MIN_DOCUMENT_FREQUENCY,\
                                                                        properties.MAX_DOCUMENT_FREQUENCY,\
                                                                        properties.NR_OF_TOP_WORDS,\
@@ -288,6 +288,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                        properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
                                                                        properties.COLLOCATION_CUT_OFF,\
                                                                        stop_word_file,\
+                                                                       properties.STOP_WORD_SET,\
                                                                        properties.MIN_DOCUMENT_FREQUENCY,\
                                                                        properties.MAX_DOCUMENT_FREQUENCY,\
                                                                        properties.NR_OF_TOP_WORDS,\
@@ -411,13 +412,13 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
-                        min_document_frequency, max_document_frequency,\
+                        stop_word_set, min_document_frequency, max_document_frequency,\
                            nr_of_top_words, nr_of_to_documents, overlap_cut_off, max_features):
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                           min_document_frequency)
+                                           stop_word_set, min_document_frequency)
     texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, CountVectorizer,\
                                               min_document_frequency, max_document_frequency, stop_word_file,\
-                                              max_features)
+                                              stop_word_set, max_features)
     model_list = []
     for i in range(0, number_of_runs):
         lda = LatentDirichletAllocation(n_components=number_of_topics, max_iter=10, learning_method='online', learning_offset=50.).fit(tf)
@@ -428,15 +429,15 @@ def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_p
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
-                        min_document_frequency, max_document_frequency,\
+                        stop_word_set, min_document_frequency, max_document_frequency,\
                            nr_of_top_words, nr_of_to_documents, overlap_cut_off, max_features):
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                           min_document_frequency)
+                                           stop_word_set, min_document_frequency)
                                           
     
     texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, TfidfVectorizer,\
                                                     min_document_frequency, max_document_frequency,\
-                                                    stop_word_file, max_features)
+                                                    stop_word_file, stop_word_set, max_features)
     model_list = []
     for i in range(0, number_of_runs):
         nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='random').fit(tfidf)
@@ -463,7 +464,8 @@ def replace_spaces(text):
 # Pre-process and turn the documents into lists of terms to feed to the topic models
 #####
 
-def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, min_document_frequency):
+#TODO: Check if stop words should be used here. They are ot used currently
+def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, stop_word_set, min_document_frequency):
     if not do_pre_process:
         return raw_documents
     documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off,\
@@ -575,7 +577,7 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
 
     
 
-def get_scikit_bow(documents, vectorizer, min_document_frequency, max_document_frequency, stop_word_file, max_features):
+def get_scikit_bow(documents, vectorizer, min_document_frequency, max_document_frequency, stop_word_file, stop_word_set, max_features):
     """
     Will tranform the list of documents that are given as input, to a list of terms
     that occurr in these documents
@@ -597,7 +599,7 @@ def get_scikit_bow(documents, vectorizer, min_document_frequency, max_document_f
 
     ngram_length = 1
     tf_vectorizer = vectorizer(max_df= max_document_frequency, min_df=min_document_frequency,\
-                                   ngram_range = (1, ngram_length), stop_words=stopword_handler.get_stop_word_set(stop_word_file),\
+                                   ngram_range = (1, ngram_length), stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set),\
                                max_features = max_features)
     tf = tf_vectorizer.fit_transform(documents)
     inversed = tf_vectorizer.inverse_transform(tf)
