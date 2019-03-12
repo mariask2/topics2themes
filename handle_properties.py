@@ -81,28 +81,32 @@ class PropertiesContainer:
         
         try:
             self.SPACE_FOR_PATH = properties.SPACE_FOR_PATH
-        except AttributeError:
+        except AttributeError as a:
             if self.PRE_PROCESS:
                 print("The configuration variable SPACE_FOR_PATH is not set. Either give the path to a word2vec space, or set PRE_PROCESS to false")
-                exit(1)
+                logging.error("The configuration variable SPACE_FOR_PATH is not set. Either give the path to a word2vec space, or set PRE_PROCESS to false")
+                raise(a)
         try:
             self.VECTOR_LENGTH = properties.VECTOR_LENGTH
-        except AttributeError:
+        except AttributeError as a:
             if self.PRE_PROCESS:
                 print("The configuration variable VECTOR_LENGTH is not set. Either give the a word2vec space vectorlengt, or set PRE_PROCESS to false")
-                exit(1)
+                logging.error("The configuration variable VECTOR_LENGTH is not set. Either give the a word2vec space vectorlengt, or set PRE_PROCESS to false")
+                raise(a)
 
         try:
             self.STOP_WORD_FILE = properties.STOP_WORD_FILE
-        except AttributeError:
+        except AttributeError as a:
             print("No STOP_WORD_FILE is given in the configuration file.")
-            exit(1)
+            logging.error("No STOP_WORD_FILE is given in the configuration file.")
+            raise(a)
 
         try:
             self.DATA_LABEL_LIST = properties.DATA_LABEL_LIST
-        except AttributeError:
+        except AttributeError as a:
             print("No DATA_LABEL_LIST is given in the configuration file.")
-            exit(1)
+            logging.error("No DATA_LABEL_LIST is given in the configuration file.")
+            raise(a)
             
         try:
             self.COLLOCATION_CUT_OFF = properties.COLLOCATION_CUT_OFF
