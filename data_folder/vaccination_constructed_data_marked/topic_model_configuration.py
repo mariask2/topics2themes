@@ -10,6 +10,8 @@ from topic_model_constants import *
 from word2vec_term_similarity import *
 from environment_configuration import *
 
+from nltk.corpus import stopwords
+
 
 
 """
@@ -121,7 +123,10 @@ MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM = 4
 MAX_NR_OF_FEATURES = 10000
 
 #STOP_WORD_SET = set(["many", "child", "kids", "parent", "types"])
+#STOP_WORD_SET = set(stopwords.words('english'))
 STOP_WORD_SET = text.ENGLISH_STOP_WORDS
+
+
 
 #SHOW_ARGUMENTATION = True
 
