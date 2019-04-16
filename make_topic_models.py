@@ -18,6 +18,8 @@ import datetime
 import time
 import math
 
+
+
 # An import that should function both locally and when running an a remote server
 try:
     from environment_configuration import *
@@ -28,10 +30,12 @@ if RUN_LOCALLY:
     from topic_model_constants import *
     import handle_properties
     from mongo_connector import MongoConnector
+    from word2vecwrapper import Word2vecWrapper
 else:
     from topics2themes.topic_model_constants import *
     import topics2themes.handle_properties as handle_properties
     from topics2themes.mongo_connector import MongoConnector
+    from topics2themes.word2vecwrapper import Word2vecWrapper
 try:
     sent_tokenize("Check if punkt is imported")
 except:
@@ -93,6 +97,8 @@ class StopwordHandler():
         return self.stop_word_set
 
 stopword_handler = StopwordHandler()
+
+word2vecwrapper = None
 
 ####
 # Main 
@@ -206,6 +212,9 @@ def get_min_score_for_collocation_part(synonym, original_term_dict):
 
 def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, save_in_database = True):
 
+    # TODO: fix empty arguments
+    word2vecwrapper = Word2vecWrapper(properties.SPACE_FOR_PATH, properties.VECTOR_LENGTH, properties.MAX_DIST_FOR_CLUSTERING, [], {})
+    
     data_set_name = os.path.basename(path_slash_format)
  
     stop_word_file = os.path.join(path_slash_format, properties.STOP_WORD_FILE)
@@ -249,7 +258,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                        properties.NR_OF_TOP_WORDS,\
                                                                        properties.NR_OF_TOP_DOCUMENTS,\
                                                                        properties.OVERLAP_CUT_OFF,\
-                                                                       properties.MAX_NR_OF_FEATURES)
+                                                                       properties.MAX_NR_OF_FEATURES,\
+                                                                                   word2vecwrapper)
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
             if number_of_topics - len(topic_info) <= max_less_than_requested_models_returned:
@@ -294,7 +304,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                        properties.NR_OF_TOP_WORDS,\
                                                                        properties.NR_OF_TOP_DOCUMENTS,\
                                                                        properties.OVERLAP_CUT_OFF,\
-                                                                       properties.MAX_NR_OF_FEATURES)
+                                                                    properties.MAX_NR_OF_FEATURES,\
+                                                                                   word2vecwrapper)
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
             if number_of_topics - len(topic_info) <= max_less_than_requested_models_returned:
@@ -413,9 +424,9 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
                         stop_word_set, min_document_frequency, max_document_frequency,\
-                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, max_features):
+                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, max_features, word2vecwrapper):
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                           stop_word_set, min_document_frequency)
+                                           stop_word_set, min_document_frequency, max_features, word2vecwrapper)
     texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, CountVectorizer,\
                                               min_document_frequency, max_document_frequency, stop_word_file,\
                                               stop_word_set, max_features)
@@ -431,9 +442,9 @@ def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_p
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
                         stop_word_set, min_document_frequency, max_document_frequency,\
-                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, max_features):
+                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, max_features, word2vecwrapper):
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                           stop_word_set, min_document_frequency)
+                                           stop_word_set, min_document_frequency, max_features, word2vecwrapper)
                                           
     
     texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, TfidfVectorizer,\
@@ -466,16 +477,46 @@ def replace_spaces(text):
 #####
 
 #TODO: Check if stop words should be used here. They are ot used currently
-def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, stop_word_set, min_document_frequency):
+def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, stop_word_set, \
+                    min_document_frequency, max_features, word2vecwrapper):
     if not do_pre_process:
         return raw_documents
-    documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off,\
-                                                               max_occurrence_outside_collocation=min_document_frequency,\
-                                                               collocation_marker = PRE_PROCESS_COLLOCATION_MARKER)
+    
+    #documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off,\
+    #                                                         max_occurrence_outside_collocation=min_document_frequency,\
+    #                                                          collocation_marker = PRE_PROCESS_COLLOCATION_MARKER)
 
-    pre_processed_documents = documents
+
+
+
+    #vectorizer = CountVectorizer(binary = True, min_df=collocation_cut_off, max_features = max_features)
+    #vectorizer.fit_transform(raw_documents)
+    #features = vectorizer.get_feature_names()
+    #print(features)
+
+    documents = raw_documents
+
+    pre_processed_documents = pre_process_word2vec(documents, min_document_frequency, word2vecwrapper)
 
     print("***************")
+    return pre_processed_documents
+
+def pre_process_word2vec(documents, min_document_frequency, word2vecwrapper):
+    word_vectorizer = CountVectorizer(binary = True, min_df=min_document_frequency)
+    word_vectorizer.fit_transform(documents)
+    word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names())
+    word2vecwrapper.load_clustering("temp_clustering_output.txt")
+    
+    pre_processed_documents = []
+    for document in documents:
+        pre_processed_document = []
+        very_simple_tok = document.lower().replace(".", " .").replace(",", " ,").\
+            replace(":", " :").replace(";", " ;").replace("!", " !").replace("?", " ?").replace("(", " ( ").replace(")", " ) ").split(" ")
+        for token in very_simple_tok:
+            pre_processed_document.append(word2vecwrapper.get_similars(token))
+        pre_processed_documents.append(" ".join(pre_processed_document))
+    
+    
     return pre_processed_documents
 
 

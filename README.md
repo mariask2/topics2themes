@@ -51,7 +51,7 @@ source activate topic_modelling
 
 
 To create a new topic model for the data in the folders data_folder/vaccination_constructed_data
-python make_topic_models.py --project data_folder.vaccination_constructed_data
+python make_topic_models.py --project data_folder.vaccination_constructed_data_marked
 (This will not be save to the database, only written to a file)
 
 To run the topic modell as a flask server, you write:

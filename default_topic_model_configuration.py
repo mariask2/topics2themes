@@ -106,6 +106,11 @@ Synonym clustering is performed before the counting is done, so a rare term with
 MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM = 1
 
 """
+The maximum distance between two words in the vector space, for the vector space to consider them as the same concept
+"""
+MAX_DIST_FOR_CLUSTERING = 0.7
+
+"""
     Stop words can either be given in a separate file, or as set defined in the configuration
     Default is the empty set
 """

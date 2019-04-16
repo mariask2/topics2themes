@@ -23,13 +23,15 @@ class Word2vecWrapper:
     A class for storing the information regarding the distributional semantics space
     """
 
-    def __init__(self, model_path, semantic_vector_length, no_match, manual_made_dict):
+    def __init__(self, model_path, semantic_vector_length, cluster_eps, no_match, manual_made_dict, ):
         self.word2vec_model = None
         self.model_path = model_path
         self.semantic_vector_length = semantic_vector_length
         self._vocabulary_list = None
         self.no_match = no_match
         self.manual_made_dict = manual_made_dict
+        
+        self.cluster_eps = cluster_eps
 
         if semantic_vector_length is not None:
             self.default_vector = [0] * self.semantic_vector_length
@@ -102,7 +104,7 @@ class Word2vecWrapper:
         # Compute DBSCAN
         X = np.matrix(X_vectors)
         self.cluster_dict = {}
-        db = DBSCAN(eps=0.8, min_samples=1).fit(X)
+        db = DBSCAN(self.cluster_eps, min_samples=1).fit(X)
         labels = db.labels_
 
         for label, term, vector in zip(labels, cluster_words, X_vectors):
