@@ -965,25 +965,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     topic_info_list = []
     json_properties["STOP_WORDS"] = stopword_handler.get_user_stop_word_list()
     
-    """
-    collocation_features_list_list = []
-    original_term_weight_dict_list = []
-    
-    # Construct collocation lists for all topics
-    # And find out the max weight (for the different topics, if a term would be included in several topics) for each term
-    max_weight_dict = {}
-    for nr, el in enumerate(topic_info):
-        topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
-        collocation_features, original_term_weight_dict =  get_collocations_from_documents_before_synonyms(topic_texts, el[TERM_LIST], min_term_frequency_in_collection_to_include_as_term)
-        collocation_features_list_list.append(collocation_features)
-        original_term_weight_dict_list.append(original_term_weight_dict)
-        for term, score in el[TERM_LIST]:
-            if term not in max_weight_dict:
-                max_weight_dict[term] = 0
-            if score > max_weight_dict[term]:
-                   max_weight_dict[term] = score
-       """
-
     # Get the max_weights for the terms (if a term would be included in several topics)
     max_weight_dict = {}
     for nr, el in enumerate(topic_info):
@@ -992,47 +973,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 max_weight_dict[term] = 0
             if score > max_weight_dict[term]:
                 max_weight_dict[term] = score
-
-
-
-    """
-    # Combine the collocation lists from different topics, and also collapse into synonym clusters
-    terms_scores_with_colloctations, original_terms_with_combined_dict, new_terms_with_score_dict = find_synonyms_from_collocation_features(collocation_features_list_list, original_term_weight_dict_list, are_these_two_terms_to_be_considered_the_same)
-
-
-    print("*********")
-    # Find out how many times the term combinations appear in the document collection and construct a frequent_comb_term_set
-    # which will goven which terms are to be included
-    frequent_comb_term_set = set()
-    found_concepts_in_all_documents = set()
-
-    for nr, el in enumerate(topic_info):
-        comb_term_frequencies = {}
-        for document in el[DOCUMENT_LIST]:
-            doc_terms = document[FOUND_CONCEPTS]
-            for t in doc_terms:
-                found_concepts_in_all_documents.add(t)
-            for comb_term in new_terms_with_score_dict.keys():
-                if is_term_combination_in_document(comb_term, document):
-                    if comb_term not in comb_term_frequencies:
-                        comb_term_frequencies[comb_term] = 0
-                    comb_term_frequencies[comb_term] = comb_term_frequencies[comb_term] + 1
-                    # Also add subparts
-                    for syn_subp_first in comb_term.split(SYNONYM_JSON_BINDER):
-                        for syn_subp_second in syn_subp_first.split(SYNONYM_JSON_BINDER):
-                            if COLLOCATION_BINDER in syn_subp_second:
-                                for col_subp in syn_subp_second.split(COLLOCATION_BINDER):
-                                    if col_subp not in comb_term_frequencies:
-                                        comb_term_frequencies[col_subp] = 0
-                                    comb_term_frequencies[col_subp] = comb_term_frequencies[col_subp] + 1
-                                
-        for term in comb_term_frequencies.keys():
-            if comb_term_frequencies[term] >= min_term_frequency_in_collection_to_include_as_term:
-                frequent_comb_term_set.add(term)
-
-        print("frequent_comb_term_set", sorted(frequent_comb_term_set))
-        print("found_concepts_in_all_documents", sorted(found_concepts_in_all_documents))
-        """
 
     for nr, el in enumerate(topic_info):
         
@@ -1046,33 +986,12 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         
         topic_texts = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
         
-        
-        # Here it is a term-topic object that is constucted, so it's important to use the term strength that the terms have for the topic,
-        # not the max term strength from
 
         topic_terms_score_dict = {}
         for term in el[TERM_LIST]:
             topic_terms_score_dict[term[0]] = term[1]
 
-        """
-        term_combination_score_dict = {}
-        for term_combo in [t[0] for t in terms_scores_with_colloctations]:
-            best_score = 0
-        
-            for synonym in term_combo.split(SYNONYM_JSON_BINDER):
-                # Returns None is the subpart is not a term for this topic
-                score_for_synonoym = get_min_score_for_collocation_part(synonym, topic_terms_score_dict) # If the synonym is a collocation, use the lowest score for the collocation component
-            # but use the highest score for the synonym
-                if score_for_synonoym:
-                    if score_for_synonoym > best_score:
-                        best_score = score_for_synonoym # use the highest score among its included parts
 
-            if best_score != 0:
-                term_combination_score_dict[term_combo] = best_score
-
-
-
-        """
         for key, item in topic_terms_score_dict.items():
             term_object = {}
             term_object["term"] = key.replace(SYNONYM_BINDER,SYNONYM_JSON_BINDER).strip()
@@ -1125,15 +1044,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             # It is only the terms that are actually included in the document that are added here
             document_topic_obj["terms_in_topic"] = []
 
-            # The document-term association score is based on the max score among the terms that belong to that concept
             # Only include term that have occurred frequently enough in the document collection (they are in frequent_comb_term_set)
-
-
-
-#print(max_weight_dict)
-#print(topic_terms_score_dict)
-            
-            print("terms_found_in_document", terms_found_in_document)
             for term, score in topic_terms_score_dict.items():
                 print("term, score", term, score)
                 if term in terms_found_in_document:
@@ -1141,9 +1052,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                     term_object["term"] = term.replace(SYNONYM_BINDER, SYNONYM_JSON_BINDER).strip()
                     term_object["score"] = score
                     document_topic_obj["terms_in_topic"].append(term_object)
-
-
-            print('document_topic_obj["terms_in_topic"]', document_topic_obj["terms_in_topic"])
 
             document_dict[document[DOC_ID]]["document_topics"].append(document_topic_obj)
 
