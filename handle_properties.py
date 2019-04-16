@@ -126,11 +126,6 @@ class PropertiesContainer:
             self.CLEANING_METHOD = default_topic_model_configuration.no_cleaning
             print("Using default CLEANING_METHOD")
 
-        try:
-            self.NO_MATCH = properties.NO_MATCH
-        except AttributeError:
-            self.NO_MATCH = set()
-            print("No exceptsion added for clusters")
 
         try:
             self.MANUAL_MADE_DICT = properties.MANUAL_MADE_DICT
@@ -183,7 +178,18 @@ class PropertiesContainer:
             self.STOP_WORD_SET = properties.STOP_WORD_SET
         except AttributeError:
             self.STOP_WORD_SET = default_topic_model_configuration.STOP_WORD_SET
+
+        try:
+            self.MAX_DIST_FOR_CLUSTERING = properties.MAX_DIST_FOR_CLUSTERING
+        except AttributeError:
+            self.MAX_DIST_FOR_CLUSTERING = default_topic_model_configuration.MAX_DIST_FOR_CLUSTERING
                 
+        try:
+            self.WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE = properties.WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE
+        except AttributeError:
+            pass # Then all words are included in clustering
+            
+            
     def get_properties_in_json(self):
         """
         Returns properties in json format
@@ -214,9 +220,7 @@ class PropertiesContainer:
 
         dict["TOPIC_MODEL_ALGORITHM"] = self.TOPIC_MODEL_ALGORITHM
         
-        dict["CLEANING_METHOD"] = str(self.CLEANING_METHOD)
-
-        dict["NO_MATCH"] = list(self.NO_MATCH)
+        dict["CLEANING_METHOD"] = str(self.CLEANING_METHOD) 
 
         dict["MANUAL_MADE_DICT"] = self.MANUAL_MADE_DICT
         
