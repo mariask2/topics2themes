@@ -189,7 +189,12 @@ class PropertiesContainer:
         except AttributeError:
             pass # Then all words are included in clustering
             
-            
+        try:
+            self.BINARY_SPACE = properties.BINARY_SPACE
+        except AttributeError:
+            self.BINARY_SPACE = default_topic_model_configuration.BINARY_SPACE
+
+
     def get_properties_in_json(self):
         """
         Returns properties in json format

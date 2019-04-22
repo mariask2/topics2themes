@@ -23,27 +23,29 @@ class Word2vecWrapper:
     A class for storing the information regarding the distributional semantics space
     """
 
-    def __init__(self, model_path, semantic_vector_length, cluster_eps, no_match, manual_made_dict, ):
+    def __init__(self, model_path, semantic_vector_length, cluster_eps, no_match, manual_made_dict, binary):
         self.word2vec_model = None
         self.model_path = model_path
         self.semantic_vector_length = semantic_vector_length
         self._vocabulary_list = None
         self.no_match = no_match
         self.manual_made_dict = manual_made_dict
+        self.binary = binary
         
         self.cluster_eps = cluster_eps
 
         if semantic_vector_length is not None:
             self.default_vector = [0] * self.semantic_vector_length
 
-    
+        self.term_similar_dict = None
+            
     def load(self):
         """
         load the semantic space in the memory
         """
         if self.word2vec_model == None:
             print("Loading word2vec model, this might take a while ....")
-            self.word2vec_model = gensim.models.KeyedVectors.load_word2vec_format(self.model_path, binary=True)
+            self.word2vec_model = gensim.models.KeyedVectors.load_word2vec_format(self.model_path, binary=self.binary, unicode_errors='ignore')
             print("Loaded word2vec model")
 
     def get_semantic_vector_length(self):
@@ -130,7 +132,7 @@ class Word2vecWrapper:
         
 
     def get_similars(self, word):
-        if not self.term_similar_dict:
+        if self.term_similar_dict == None:
             raise Exception("load_clustering is not yet run")
         try: # TODO: Check that all is initialised here
             similars = self.term_similar_dict[word]

@@ -225,7 +225,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
     word2vecwrapper = None
     if properties.PRE_PROCESS:
         word2vecwrapper = Word2vecWrapper(properties.SPACE_FOR_PATH, properties.VECTOR_LENGTH, properties.MAX_DIST_FOR_CLUSTERING,\
-                                      words_not_to_include_in_clustering, {})
+                                      words_not_to_include_in_clustering, {}, properties.BINARY_SPACE)
     
     data_set_name = os.path.basename(path_slash_format)
  
@@ -508,16 +508,18 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
 
     documents = raw_documents
 
-    pre_processed_documents = pre_process_word2vec(documents, min_document_frequency, word2vecwrapper)
+    pre_processed_documents = pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper)
 
     print("***************")
     return pre_processed_documents
 
-def pre_process_word2vec(documents, min_document_frequency, word2vecwrapper):
-    word_vectorizer = CountVectorizer(binary = True, min_df=min_document_frequency)
+def pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper):
+    word_vectorizer = CountVectorizer(binary = True, min_df=min_document_frequency) #, max_features = max_features)
     word_vectorizer.fit_transform(documents)
     word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names())
     word2vecwrapper.load_clustering("temp_clustering_output.txt")
+    
+
     
     pre_processed_documents = []
     for document in documents:

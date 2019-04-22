@@ -116,6 +116,7 @@ MAX_DIST_FOR_CLUSTERING = 0.7
 """
 STOP_WORD_SET = set()
 
+BINARY_SPACE = True
 
 def no_term_clustering(x, y):
     return False

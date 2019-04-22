@@ -334,10 +334,10 @@ function doInitializeData(res){
     
    
 
-	// Terms have to be constructed from topics
+    // Terms have to be constructed from topics
     // At the same time, the reverse mapping from terms to topics should be established
-	for (let i = 0; i < topics.length; i++) {
-		let topic = topics[i];
+    for (let i = 0; i < topics.length; i++) {
+	let topic = topics[i];
 
         modelTopics.push({"id" : topic.id, "defaultlabel" : topic.label})
 	

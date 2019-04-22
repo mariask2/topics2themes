@@ -58,9 +58,12 @@ OVERLAP_CUT_OFF = 0.70
 """
 Whether to use pre-processing (collocation detection and synonym clustering)
 """
-#PRE_PROCESS = True
-PRE_PROCESS = False
-
+PRE_PROCESS = True
+#PRE_PROCESS = False
+VECTOR_LENGTH = 300
+SPACE_FOR_PATH = "/Users/maria/mariaskeppstedtdsv/post-doc/gavagai/googlespace/GoogleNews-vectors-negative300.bin"
+MAX_DIST_FOR_CLUSTERING = 0.7
+WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE = "not_cluster.txt"
 """
 Mininimum occurrence in the corpus for a term to be included in the topic modelling
 """
@@ -118,9 +121,9 @@ TOPIC_MODEL_ALGORITHM = NMF_NAME
     If an extracted term includes less than this among the documents that are extracted, this term is removed from the set of extracted terms
     Synonym clustering is performed before the counting is done, so a rare term with synonyms is retained
     """
-MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM = 4
+MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM = 1
 
-MAX_NR_OF_FEATURES = 10000
+MAX_NR_OF_FEATURES = 10
 
 #STOP_WORD_SET = set(["many", "child", "kids", "parent", "types"])
 #STOP_WORD_SET = set(stopwords.words('english'))
