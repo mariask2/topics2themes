@@ -58,8 +58,8 @@ OVERLAP_CUT_OFF = 0.70
 """
 Whether to use pre-processing (collocation detection and synonym clustering)
 """
-PRE_PROCESS = True
-#PRE_PROCESS = False
+#PRE_PROCESS = True
+PRE_PROCESS = False
 VECTOR_LENGTH = 300
 SPACE_FOR_PATH = "/Users/maria/mariaskeppstedtdsv/post-doc/gavagai/googlespace/GoogleNews-vectors-negative300.bin"
 MAX_DIST_FOR_CLUSTERING = 0.7
