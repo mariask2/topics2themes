@@ -17,6 +17,7 @@ import argparse
 import datetime
 import time
 import math
+import re
 
 
 
@@ -491,8 +492,16 @@ def replace_spaces(text):
 #TODO: Check if stop words should be used here. They are ot used currently
 def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, stop_word_set, \
                     min_document_frequency, max_features, word2vecwrapper):
+    
+    # TODO: Not very reliable html-tag removal. Fix that
+    TAG_RE = re.compile(r'<[^>]+>')
+    documents = []
+    for d in raw_documents:
+        documents.append(TAG_RE.sub('', d))
+    
+    # Always remove html tags for now
     if not do_pre_process:
-        return raw_documents
+        return documents
     
     #documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off,\
     #                                                         max_occurrence_outside_collocation=min_document_frequency,\
@@ -506,7 +515,7 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
     #features = vectorizer.get_feature_names()
     #print(features)
 
-    documents = raw_documents
+
 
     pre_processed_documents = pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper)
 
@@ -844,9 +853,7 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
         term_list_replace = list(set(term_list_replace))
         term_list_replace.sort(key = len, reverse = True)
    
-        print("term_list", term_list)
-        print("term_list_replace", term_list_replace)
-   
+
         doc_strength = sorted(W[:,topic_idx])[::-1]
         top_doc_indices = np.argsort( W[:,topic_idx] )[::-1][0:no_top_documents]
         doc_list= [{DOC_ID: doc_i, DOCUMENT_TOPIC_STRENGTH : strength} for doc_i, strength in zip(top_doc_indices, doc_strength)]
@@ -1048,7 +1055,6 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
             # Only include term that have occurred frequently enough in the document collection (they are in frequent_comb_term_set)
             for term, score in topic_terms_score_dict.items():
-                print("term, score", term, score)
                 if term in terms_found_in_document:
                     term_object = {}
                     term_object["term"] = term.replace(SYNONYM_BINDER, SYNONYM_JSON_BINDER).strip()
@@ -1239,8 +1245,9 @@ def get_hex_for_term(score, max_score):
 
 def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
     
-    print("term_list", term_list)
+    print("**************************")
     print("text", text)
+    
     all_scores = list(set([score for key, score in max_weight_dict.items()]))
 
     max_score = max(all_scores)
@@ -1255,28 +1262,29 @@ def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
     
     simple_tokenised = get_very_simple_tokenised(text, lower = False)
     simple_tokenised_marked = []
+    inside_htlm_tag = False
     for el in simple_tokenised:
-        if el.lower() in term_list_splitted_synonyms_dict.keys():
-            best_score_for_el = max_weight_dict[term_list_splitted_synonyms_dict[el.lower()]]
-            transparancy = get_hex_for_term(best_score_for_el, max_score)
-            #color = '#E6F3FF'
-            color = '#D7E9FF'
-            #color = '#A6B3EF'
-            """
-            if topic_number == 2:
-                color = '#A2B3EF'
-            if topic_number == 3:
-                color = '#A1B3EF'
-            if topic_number == 4:
-                color = '#A0B3EF'
-            """
-            simple_tokenised_marked.append('<span class="term-to-mark topic_' + str(topic_number) + \
+        if el.startswith("<") and len(el) > 1 and el[1] != "/": #TODO: Test what to do with a span tag and el[1:] != "span":
+            inside_htlm_tag = True
+        if el.endswith(">") and inside_htlm_tag:
+            inside_htlm_tag = False
+
+        if not inside_htlm_tag:
+            if el.lower() in term_list_splitted_synonyms_dict.keys():
+                best_score_for_el = max_weight_dict[term_list_splitted_synonyms_dict[el.lower()]]
+                transparancy = get_hex_for_term(best_score_for_el, max_score)
+                color = '#D7E9FF'
+
+                simple_tokenised_marked.append('<span class="term-to-mark topic_' + str(topic_number) + \
                                            '"  style="background-color:' + color + str(transparancy) + ';font-weight: 500; color: black;">' + " " + el + " </span>")
-            found_terms.append(term_list_splitted_synonyms_dict[el.lower()])
+                found_terms.append(term_list_splitted_synonyms_dict[el.lower()])
+            else:
+                simple_tokenised_marked.append(el)
         else:
             simple_tokenised_marked.append(el)
-
+                
     marked_document = untokenize(simple_tokenised_marked)
+    print("marked_document", marked_document)
     
     # TODO Perhpas concatnating with lists is faster
     marked_text_transformed = replace_spaces(marked_document.replace(" </span>","</span> "))
@@ -1292,7 +1300,6 @@ def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
             marked_text_inserted_spaces = marked_text_inserted_spaces + c
         ch_nr = ch_nr + 1
 
-    print("found_terms", found_terms)
     return marked_text_inserted_spaces, found_terms
 
 def get_first_in_tuple(item):
