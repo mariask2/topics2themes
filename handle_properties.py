@@ -120,8 +120,8 @@ class PropertiesContainer:
             self.TOPIC_MODEL_ALGORITHM = default_topic_model_configuration.TOPIC_MODEL_ALGORITHM
             print("Using default TOPIC_MODEL_ALGORITHM")
 
-        try:  
-            self.CLEANING_METHOD = properties.corpus_specific_text_cleaning
+        try:  # TODO: incosistent notation, should use CLEANING_METHOD in properties file also
+            self.CLEANING_METHOD = properties.CLEANING_METHOD
         except AttributeError: 
             self.CLEANING_METHOD = default_topic_model_configuration.no_cleaning
             print("Using default CLEANING_METHOD")

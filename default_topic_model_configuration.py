@@ -1,3 +1,5 @@
+import re
+
 # An import that should function both locally and when running an a remote server
 try:
     from environment_configuration import *
@@ -91,7 +93,7 @@ Recommended to do that, otherwise there is a risk that the topic modelling algor
 these as topics
 """
 
-REMOVE_DUPLICATES = True
+REMOVE_DUPLICATES = False
 
 """
 If two documents have a series of MIN_NGRAM_LENGTH_FOR_DUPLICATE tokens that are identical, these
@@ -134,6 +136,14 @@ def simple_english_are_these_two_terms_considered_to_be_the_same(x, y):
         return True
     else:
         return False
+
+def simple_tag_removal(text):
+    """
+       Only for debugging. This will break if the text contains < or >
+    """
+    TAG_RE = re.compile(r'<[^>]+>')
+    cleaned_text = TAG_RE.sub('', text)
+    return cleaned_text
 
 def no_additiona_labels(doc_id):
     return []

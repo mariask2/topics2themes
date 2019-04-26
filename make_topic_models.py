@@ -17,7 +17,6 @@ import argparse
 import datetime
 import time
 import math
-import re
 
 
 
@@ -237,7 +236,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
     else:
         print("Model will not be saved in database")
     
-    file_list = read_discussion_documents(properties.DATA_LABEL_LIST, properties.CLEANING_METHOD, data_set_name, \
+    file_list = read_discussion_documents(properties.DATA_LABEL_LIST, data_set_name, \
                                           properties.REMOVE_DUPLICATES, properties.MIN_NGRAM_LENGTH_FOR_DUPLICATE)
 
     documents = [el[TEXT] for el in file_list]
@@ -272,10 +271,11 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                        properties.NR_OF_TOP_DOCUMENTS,\
                                                                        properties.OVERLAP_CUT_OFF,\
                                                                        properties.MAX_NR_OF_FEATURES,\
+                                                                        properties.CLEANING_METHOD,\
                                                                                    word2vecwrapper)
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
-            if number_of_topics - len(topic_info) <= max_less_than_requested_models_returned:
+            if (number_of_topics - len(topic_info) <= max_less_than_requested_models_returned) or len(topic_info) < 3: #Assume there is at least two topics
                 break # This topic is okay, use it
             else:
                 # Try again, with a requested number of topic that is more similar to the number of topics
@@ -318,6 +318,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                        properties.NR_OF_TOP_DOCUMENTS,\
                                                                        properties.OVERLAP_CUT_OFF,\
                                                                     properties.MAX_NR_OF_FEATURES,\
+                                                                                   properties.CLEANING_METHOD,\
                                                                                    word2vecwrapper)
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
@@ -348,7 +349,7 @@ def get_current_file_name(name, topic_model_algorithm):
 ######
 # Read documents from file
 ######
-def read_discussion_documents(data_label_list, cleaning_method, data_set_name, whether_to_remove_duplicates, n_gram_length_conf):
+def read_discussion_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf):
     file_list = []
 
     print("data_label_list", data_label_list)
@@ -366,8 +367,7 @@ def read_discussion_documents(data_label_list, cleaning_method, data_set_name, w
             base_name = os.path.basename(f)
             opened = open(f)
             text = opened.read()
-            cleaned_text = cleaning_method(text)
-            file_list.append({TEXT: cleaned_text, LABEL: data_info[DATA_LABEL], BASE_NAME: base_name, FULL_NAME: f})
+            file_list.append({TEXT: text, LABEL: data_info[DATA_LABEL], BASE_NAME: base_name, FULL_NAME: f})
             opened.close()
 
     #remove duplicates. Just keep the first occurrence, and remove the once comming after
@@ -437,9 +437,10 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
                         stop_word_set, min_document_frequency, max_document_frequency,\
-                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, max_features, word2vecwrapper):
+                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, max_features, cleaning_method, word2vecwrapper):
+    
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                           stop_word_set, min_document_frequency, max_features, word2vecwrapper)
+                                           stop_word_set, min_document_frequency, max_features, cleaning_method, word2vecwrapper)
     texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, CountVectorizer,\
                                               min_document_frequency, max_document_frequency, stop_word_file,\
                                               stop_word_set, max_features)
@@ -455,9 +456,9 @@ def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_p
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
                         stop_word_set, min_document_frequency, max_document_frequency,\
-                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, max_features, word2vecwrapper):
+                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, max_features, cleaning_method, word2vecwrapper):
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                           stop_word_set, min_document_frequency, max_features, word2vecwrapper)
+                                           stop_word_set, min_document_frequency, max_features, cleaning_method, word2vecwrapper)
                                           
     
     texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, TfidfVectorizer,\
@@ -491,13 +492,18 @@ def replace_spaces(text):
 
 #TODO: Check if stop words should be used here. They are ot used currently
 def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, stop_word_set, \
-                    min_document_frequency, max_features, word2vecwrapper):
+                    min_document_frequency, max_features, cleaning_method, word2vecwrapper):
     
     # TODO: Not very reliable html-tag removal. Fix that
-    TAG_RE = re.compile(r'<[^>]+>')
+    
+    
+    
     documents = []
     for d in raw_documents:
-        documents.append(TAG_RE.sub('', d))
+        print(d)
+        documents.append(cleaning_method(d))
+        print(cleaning_method(d))
+        print("******")
     
     # Always remove html tags for now
     if not do_pre_process:
@@ -1245,8 +1251,7 @@ def get_hex_for_term(score, max_score):
 
 def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
     
-    print("**************************")
-    print("text", text)
+    #print("text", text)
     
     all_scores = list(set([score for key, score in max_weight_dict.items()]))
 
@@ -1284,7 +1289,7 @@ def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
             simple_tokenised_marked.append(el)
                 
     marked_document = untokenize(simple_tokenised_marked)
-    print("marked_document", marked_document)
+    #print("marked_document", marked_document)
     
     # TODO Perhpas concatnating with lists is faster
     marked_text_transformed = replace_spaces(marked_document.replace(" </span>","</span> "))
