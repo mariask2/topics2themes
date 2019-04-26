@@ -707,6 +707,7 @@ function populateTextElement(d, i){
     let snippetLabel = $("<span></span>");
     snippetLabel.append(d.snippet);
     snippetLabel.addClass("snippet-text")
+    snippetLabel.addClass("displayed-text")
     textContainer.append(snippetLabel);
     //textLabel.append("marked_text_tok" in d ? d.marked_text_tok : d.text);
     
@@ -2066,6 +2067,11 @@ function addChoiceBasedHighlight(){
     
     d3.selectAll('.snippet-text').classed("not-displayed-text", false);
     d3.selectAll('.full-text').classed("not-displayed-text", true);
+
+    d3.selectAll('.snippet-text').classed("displayed-text", true);
+    d3.selectAll('.full-text').classed("displayed-text", false);
+
+
     d3.selectAll('.text-container').classed("text-border", false);
     
     // Reset highlight of terms that stem from topics that are not chosen
@@ -2284,6 +2290,10 @@ function showFullText(textElement){
     d3.select(textElement.get(0)).selectAll('.text-container').classed("text-border", true);
     d3.select(textElement.get(0)).selectAll('.snippet-text').classed("not-displayed-text", true);
     d3.select(textElement.get(0)).selectAll('.full-text').classed("not-displayed-text", false);
+
+    d3.select(textElement.get(0)).selectAll('.snippet-text').classed("displayed-text", false);
+    d3.select(textElement.get(0)).selectAll('.full-text').classed("displayed-text", true);
+
     
     let textId = d3.select(textElement.get(0)).datum().id;
     

@@ -265,7 +265,16 @@ h3 {
 }
 
 .not-displayed-text {
-	display: none;
+    display: none;
+}
+
+.displayed-text {
+    display: inline-block;
+}
+
+.label-button-container{
+    margin-left: 1em;
+    float: right;
 }
 
 .no-pointer-events {
@@ -356,8 +365,12 @@ h3 {
 	border-top-width: 0px;
 }
 
-#termsList, #topicsList, #themesList, #textsList {
+#termsList, #topicsList, #themesList {
 	overflow-y: auto;
+}
+
+#textsList{
+    overflow-y:scroll;
 }
 
 #bgSvgContainer {
@@ -674,6 +687,7 @@ span.checkmark {
     padding-left: 8px;
     padding-top: 5px;
     padding-bottom: 5px;
+    max-width: 100%;
 }
 .text-container{
     background-color: white;
@@ -681,7 +695,7 @@ span.checkmark {
     padding:7px;
     padding-left:9px;
     border-radius: 7px;
-    width: 100%;
+    max-width: 100%;
 }
 
 .text-border{
@@ -705,11 +719,18 @@ span.checkmark {
 .full-text{
     font-size: 105%;
     color: #606060;
+    max-width: 85%;
+    float: left;
+    margin-right: 20px;
+
 }
 
 .snippet-text{
     font-size: 105%;
     color: #606060;
+    margin-right: 20px;
+    max-width: 85%;
+    float: left;
 }
 
 .city{
