@@ -194,6 +194,11 @@ class PropertiesContainer:
         except AttributeError:
             self.BINARY_SPACE = default_topic_model_configuration.BINARY_SPACE
 
+        try:
+            self.GENSIM_FORMAT = properties.GENSIM_FORMAT
+        except AttributeError:
+            self.GENSIM_FORMAT = default_topic_model_configuration.GENSIM_FORMAT
+
 
     def get_properties_in_json(self):
         """

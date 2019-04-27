@@ -225,7 +225,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
     word2vecwrapper = None
     if properties.PRE_PROCESS:
         word2vecwrapper = Word2vecWrapper(properties.SPACE_FOR_PATH, properties.VECTOR_LENGTH, properties.MAX_DIST_FOR_CLUSTERING,\
-                                      words_not_to_include_in_clustering, {}, properties.BINARY_SPACE)
+                                      words_not_to_include_in_clustering, {}, properties.BINARY_SPACE, properties.GENSIM_FORMAT)
     
     data_set_name = os.path.basename(path_slash_format)
  
@@ -500,10 +500,7 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
     
     documents = []
     for d in raw_documents:
-        print(d)
         documents.append(cleaning_method(d))
-        print(cleaning_method(d))
-        print("******")
     
     # Always remove html tags for now
     if not do_pre_process:
@@ -523,13 +520,14 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
 
 
 
-    pre_processed_documents = pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper)
+    pre_processed_documents = pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper, stop_word_file, stop_word_set)
 
     print("***************")
     return pre_processed_documents
 
-def pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper):
-    word_vectorizer = CountVectorizer(binary = True, min_df=min_document_frequency) #, max_features = max_features)
+def pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper, stop_word_file, stop_word_set):
+
+    word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set)) #, max_features = max_features)
     word_vectorizer.fit_transform(documents)
     word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names())
     word2vecwrapper.load_clustering("temp_clustering_output.txt")

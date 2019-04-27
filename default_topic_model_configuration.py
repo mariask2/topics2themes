@@ -118,7 +118,16 @@ MAX_DIST_FOR_CLUSTERING = 0.7
 """
 STOP_WORD_SET = set()
 
+"""
+    True if the vectors are provided in binary format
+"""
+
 BINARY_SPACE = True
+
+"""
+   True if the vectors are provided in Gensim format
+"""
+GENSIM_FORMAT = False
 
 def no_term_clustering(x, y):
     return False

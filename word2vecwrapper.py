@@ -23,7 +23,7 @@ class Word2vecWrapper:
     A class for storing the information regarding the distributional semantics space
     """
 
-    def __init__(self, model_path, semantic_vector_length, cluster_eps, no_match, manual_made_dict, binary):
+    def __init__(self, model_path, semantic_vector_length, cluster_eps, no_match, manual_made_dict, binary, gensim_format):
         self.word2vec_model = None
         self.model_path = model_path
         self.semantic_vector_length = semantic_vector_length
@@ -31,7 +31,7 @@ class Word2vecWrapper:
         self.no_match = no_match
         self.manual_made_dict = manual_made_dict
         self.binary = binary
-        
+        self.gensim_format = gensim_format
         self.cluster_eps = cluster_eps
 
         if semantic_vector_length is not None:
@@ -45,7 +45,11 @@ class Word2vecWrapper:
         """
         if self.word2vec_model == None:
             print("Loading word2vec model, this might take a while ....")
-            self.word2vec_model = gensim.models.KeyedVectors.load_word2vec_format(self.model_path, binary=self.binary, unicode_errors='ignore')
+
+            if self.gensim_format:
+                self.word2vec_model = gensim.models.KeyedVectors.load(self.model_path)
+            else:
+                self.word2vec_model = gensim.models.KeyedVectors.load_word2vec_format(self.model_path, binary=self.binary, unicode_errors='ignore')
             print("Loaded word2vec model")
 
     def get_semantic_vector_length(self):
