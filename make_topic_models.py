@@ -6,6 +6,7 @@ from pprint import pprint
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import NMF, LatentDirichletAllocation
 from nltk.tokenize import sent_tokenize
+from html.parser import HTMLParser
 
 import os
 import numpy as np
@@ -758,7 +759,7 @@ def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_
     # and decide which topics to keep
     
     minimum_found_for_a_topic_to_be_kept = round(len(model_results_filtered))
-    # A topic has to occurr in all folds to be included
+    # A topic has to occurr in all folds to be included, therefore 'minimum_found_for_a_topic_to_be_kept' is equal to the number of folds
     
     average_list = [] # only include topics that have been stable in this, and average the information from each run
     # that is, only include the terms that have occurred in many of the folds and the documents that have occurred in many of the folds
@@ -911,9 +912,11 @@ def construct_document_info_average(documents, selected_documents_strength, term
                                 FOUND_CONCEPTS : list(set(found_concepts))})
 
         for t in set(found_concepts):
+            print("concept", t)
             ts = (term_strength_dict[t], t)
             if ts not in terms_strength_filtered:
                 terms_strength_filtered.add(ts)
+
 
     terms_strength_filtered_sorted = [(t,s) for (s,t) in sorted(terms_strength_filtered, reverse = True)]
 
@@ -1249,6 +1252,7 @@ def get_hex_for_term(score, max_score):
 
 def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
     
+    print("term_list", term_list)
     #print("text", text)
     
     all_scores = list(set([score for key, score in max_weight_dict.items()]))
@@ -1262,17 +1266,13 @@ def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
     for word in term_list_replace:
         for sub_word in word.split(SYNONYM_BINDER):
             term_list_splitted_synonyms_dict[sub_word] = word
-    
-    simple_tokenised = get_very_simple_tokenised(text, lower = False)
+    print("term_list_splitted_synonyms_dict.keys", term_list_splitted_synonyms_dict.keys())
+    simple_tokenised = get_tokenised(text)
     simple_tokenised_marked = []
     inside_htlm_tag = False
-    for el in simple_tokenised:
-        if el.startswith("<") and len(el) > 1 and el[1] != "/": #TODO: Test what to do with a span tag and el[1:] != "span":
-            inside_htlm_tag = True
-        if el.endswith(">") and inside_htlm_tag:
-            inside_htlm_tag = False
-
-        if not inside_htlm_tag:
+    for (el, token_contains_data) in simple_tokenised:
+        if token_contains_data:
+            print("token", el)
             if el.lower() in term_list_splitted_synonyms_dict.keys():
                 best_score_for_el = max_weight_dict[term_list_splitted_synonyms_dict[el.lower()]]
                 transparancy = get_hex_for_term(best_score_for_el, max_score)
@@ -1304,6 +1304,39 @@ def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
         ch_nr = ch_nr + 1
 
     return marked_text_inserted_spaces, found_terms
+
+# Part html, and make a very simple tokenisation
+class HTMLParserTokenise(HTMLParser):
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self.acc_lst = []
+        self.global_acc_str = ""
+    
+    
+    def handle_starttag(self, tag, attrs):
+        if tag:
+            acc_str = ""
+            acc_str = acc_str + "<" + tag + " "
+            for attr in attrs:
+                if attr[0] and attr[1]:
+                    acc_str = acc_str + attr[0] + '="' + attr[1] + '" '
+            acc_str = acc_str + ">"
+            self.acc_lst.append((acc_str, False))
+    
+    def handle_endtag(self, tag):
+        self.acc_lst.append(("</" + tag + ">", False))
+    
+    def handle_data(self, data):
+        data_list = data.replace(".", " .").replace('"', ' " ').replace(",", " ,").\
+        replace(":", " :").replace("\t", ".\t").replace("..", ".").replace("...", ".").replace("\t", " ").replace(";", " ;").replace("!", " !").replace("?", " ?").replace("(", " ( ").replace(")", " ) ").replace("  ", " ").replace("   ", " ").split(" ")
+        
+        self.acc_lst.extend([(data, True) for data in data_list])
+
+def get_tokenised(html_str):
+    parser = HTMLParserTokenise()
+    parser.feed(html_str)
+    return parser.acc_lst
+
 
 def get_first_in_tuple(item):
     return item[0]
