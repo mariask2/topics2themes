@@ -900,6 +900,15 @@ span.checkmark {
     background: repeating-linear-gradient(45deg, #E7E7E7, #FAFAFA, #E7E7E7, #FAFAFA);
 }
 
+/* Japanese text */
+
+rt.gloss{  text-decoration: overline;
+}
+
+rt.furigana{  text-decoration: underline;
+}
+
+
 /*
 .claim{
     text-decoration: underline overline;

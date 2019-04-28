@@ -237,16 +237,22 @@ function disableAnalysisChoices(){
 
 function enableModelChoices() {
 
+    enableCreateModel();
+ 
+    $("#modelVersion").removeClass("disabled");
+    $("#modelVersion").attr("disabled", false);
+   
+}
+
+function enableCreateModel() {
+
     // If enviroment configuration dictates that no new models are to be created,
     // never enable the create model button
     if (modelDisableModelCreation == undefined){
 	$("#newModel").removeClass("disabled");
-    }
- 
-	$("#modelVersion").removeClass("disabled");
-	$("#modelVersion").attr("disabled", false);
-   
+    }   
 }
+
 
 function enableAnalysisChoices(){
     $("#newAnalysis").removeClass("disabled");
@@ -397,7 +403,7 @@ function onDatasetChange() {
 // invoked from the model
 function controllerDoPopulateModelChoices(modelModelsForCurrentDataset){
     
-
+    enableCreateModel();
     if (modelModelsForCurrentDataset != undefined && modelModelsForCurrentDataset != null && modelModelsForCurrentDataset.length > 1){
         enableModelChoices();
         $("#modelVersion").empty();
