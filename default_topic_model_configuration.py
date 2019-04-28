@@ -1,4 +1,5 @@
 import re
+from html.parser import HTMLParser
 
 # An import that should function both locally and when running an a remote server
 try:
@@ -160,6 +161,21 @@ def no_additiona_labels(doc_id):
 ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME = simple_english_are_these_two_terms_considered_to_be_the_same
 
 ADDITIONAL_LABELS_METHOD = no_additiona_labels
+
+class HTMLParserContent(HTMLParser):
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self.acc_str = ""
+    
+    def handle_data(self, data):
+        self.acc_str = self.acc_str + " " + data
+
+def get_data_from_html(html_str):
+    parser = HTMLParserContent()
+    parser.feed(html_str)
+    return parser.acc_str
+
+CLEANING_METHOD = get_data_from_html
 
 def no_cleaning(text):
 

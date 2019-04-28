@@ -123,8 +123,8 @@ class PropertiesContainer:
         try:  # TODO: incosistent notation, should use CLEANING_METHOD in properties file also
             self.CLEANING_METHOD = properties.CLEANING_METHOD
         except AttributeError: 
-            self.CLEANING_METHOD = default_topic_model_configuration.no_cleaning
-            print("Using default CLEANING_METHOD")
+            self.CLEANING_METHOD = default_topic_model_configuration.CLEANING_METHOD
+            print("Using default CLEANING_METHOD which removes HTML tags")
 
 
         try:
