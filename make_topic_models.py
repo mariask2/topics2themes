@@ -215,13 +215,14 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
 
     # TODO: fix empty argument
     words_not_to_include_in_clustering = []
-    try:
+    if properties.WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE != None:
+        if not os.path.isfile(os.path.join(path_slash_format, properties.WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE)):
+            raise FileNotFoundError("The file for specifying words not to include in clustering doesn't exist. Filename given in configuration is: " + \
+                                    properties.WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE)
         words_not_to_include_in_clustering_file = open(os.path.join(path_slash_format, properties.WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE))
         for word in words_not_to_include_in_clustering_file.readlines():
             words_not_to_include_in_clustering.append(word.strip())
 
-    except AttributeError:
-        pass # If no such file has been given, include all words in clustering
 
     word2vecwrapper = None
     if properties.PRE_PROCESS:

@@ -126,13 +126,6 @@ class PropertiesContainer:
             self.CLEANING_METHOD = default_topic_model_configuration.CLEANING_METHOD
             print("Using default CLEANING_METHOD which removes HTML tags")
 
-
-        try:
-            self.MANUAL_MADE_DICT = properties.MANUAL_MADE_DICT
-        except AttributeError:
-            self.MANUAL_MADE_DICT = {}
-            print("No manually added clusters")
-
         try:
             self.PROPORTION_OF_LESS_TOPIC_TO_ALLOW = properties.PROPORTION_OF_LESS_TOPIC_TO_ALLOW
         except AttributeError:
@@ -187,7 +180,8 @@ class PropertiesContainer:
         try:
             self.WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE = properties.WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE
         except AttributeError:
-            pass # Then all words are included in clustering
+            print("No file specified for cluster exceptions")
+            self.WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE = None # Then all words are included in clustering
             
         try:
             self.BINARY_SPACE = properties.BINARY_SPACE
@@ -231,8 +225,6 @@ class PropertiesContainer:
         dict["TOPIC_MODEL_ALGORITHM"] = self.TOPIC_MODEL_ALGORITHM
         
         dict["CLEANING_METHOD"] = str(self.CLEANING_METHOD) 
-
-        dict["MANUAL_MADE_DICT"] = self.MANUAL_MADE_DICT
         
         # TODO: This is not complete
 
