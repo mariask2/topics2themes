@@ -6,6 +6,7 @@ import linecache
 import logging
 from datetime import timedelta
 from functools import update_wrapper
+from flask import send_from_directory
 
 # An import that should function both locally and when running an a remote server
 try:
@@ -26,7 +27,7 @@ else:
     from topics2themes.theme_sorter import ThemeSorter
     from topics2themes.environment_configuration import *
     from topics2themes.topic_model_constants import *
-    from flask import send_from_directory
+
 
 app = Flask(__name__)
 
@@ -327,19 +328,19 @@ def get_theme_ranking_for_document():
 
 @app.route('/topics2themes/')
 def start_page():
-    return send_from_directory("../static/topics2themes", "index.html")
+    return send_from_directory("user_interface", "index.html")
 
 @app.route('/topics2themes/js/<filename>')
 def js_files(filename):
-    return send_from_directory("../static/topics2themes/js", filename)
+    return send_from_directory("user_interface/js", filename)
 
 @app.route('/topics2themes/css/<filename>')
 def css_files(filename):
-    return send_from_directory("../static/topics2themes/css", filename)
+    return send_from_directory("user_interface/css", filename)
 
 @app.route('/topics2themes/fonts/<filename>')
 def fonts_files(filename):
-    return send_from_directory("../static/topics2themes/fonts", filename)
+    return send_from_directory("user_interface/fonts", filename)
 
 
 

@@ -171,6 +171,7 @@ def corpus_specific_text_cleaning(text):
     cleaned_text = " ".join(no_links)
     return cleaned_text
 
+CLEANING_METHOD = corpus_specific_text_cleaning
 
 """
 NO_MATCH = set(["polio", "measles", "measle", "chickenpox", "flu", "meningitis", "mumps", "pertussis", "capable",\

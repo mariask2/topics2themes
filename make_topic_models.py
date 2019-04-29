@@ -912,7 +912,6 @@ def construct_document_info_average(documents, selected_documents_strength, term
                                 FOUND_CONCEPTS : list(set(found_concepts))})
 
         for t in set(found_concepts):
-            print("concept", t)
             ts = (term_strength_dict[t], t)
             if ts not in terms_strength_filtered:
                 terms_strength_filtered.add(ts)
@@ -1252,9 +1251,6 @@ def get_hex_for_term(score, max_score):
 
 def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
     
-    print("term_list", term_list)
-    #print("text", text)
-    
     all_scores = list(set([score for key, score in max_weight_dict.items()]))
 
     max_score = max(all_scores)
@@ -1266,13 +1262,12 @@ def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
     for word in term_list_replace:
         for sub_word in word.split(SYNONYM_BINDER):
             term_list_splitted_synonyms_dict[sub_word] = word
-    print("term_list_splitted_synonyms_dict.keys", term_list_splitted_synonyms_dict.keys())
+
     simple_tokenised = get_tokenised(text)
     simple_tokenised_marked = []
     inside_htlm_tag = False
     for (el, token_contains_data) in simple_tokenised:
         if token_contains_data:
-            print("token", el)
             if el.lower() in term_list_splitted_synonyms_dict.keys():
                 best_score_for_el = max_weight_dict[term_list_splitted_synonyms_dict[el.lower()]]
                 transparancy = get_hex_for_term(best_score_for_el, max_score)
