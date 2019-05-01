@@ -360,7 +360,7 @@ if __name__ == '__main__':
         logging_level_to_use = logging.DEBUG
         print("Using default logging level " + str(logging.DEBUG))
 
-    logging.basicConfig(filename='topics2themes_log.log',level=logging_level_to_use)
+    logging.basicConfig(filename=os.path.join(WORKSPACE_FOLDER, 'topics2themes_log.log'),level=logging_level_to_use)
     logging.info("TOPICS2THEMES: ******** Starting Topics2Themes server ***************")
     current_port = get_port()
     logging.info("TOPICS2THEMES: ******** Listning to port " + str(current_port) + " ***************")
