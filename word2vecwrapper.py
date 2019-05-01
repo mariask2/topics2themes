@@ -10,8 +10,17 @@ from sklearn.cluster import DBSCAN
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 from sklearn.metrics.pairwise import euclidean_distances
 from topic_model_constants import *
-#from domain_synonym_dictionary import MANUAL_MADE_DICT
-#from domain_synonym_dictionary import NO_MATCH
+
+# An import that should function both locally and when running an a remote server
+try:
+    from environment_configuration import *
+except:
+    from topics2themes.environment_configuration import *
+
+if RUN_LOCALLY:
+    from topic_model_constants import *
+else:
+    from topics2themes.topic_model_constants import *
 
 ########################
 # To vectorize the data
