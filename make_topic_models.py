@@ -239,7 +239,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
         print("Model will not be saved in database")
     
     file_list = read_discussion_documents(properties.DATA_LABEL_LIST, data_set_name, \
-                                          properties.REMOVE_DUPLICATES, properties.MIN_NGRAM_LENGTH_FOR_DUPLICATE)
+                                          properties.REMOVE_DUPLICATES, properties.MIN_NGRAM_LENGTH_FOR_DUPLICATE, properties.CLEANING_METHOD)
 
     documents = [el[TEXT] for el in file_list]
 
@@ -351,7 +351,7 @@ def get_current_file_name(name, topic_model_algorithm):
 ######
 # Read documents from file
 ######
-def read_discussion_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf):
+def read_discussion_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method):
     file_list = []
 
     print("data_label_list", data_label_list)
@@ -382,7 +382,7 @@ def read_discussion_documents(data_label_list, data_set_name, whether_to_remove_
     file_list_len_sorted = sorted(file_list, key=lambda x: len(x[TEXT]))
     for file in file_list_len_sorted:
         filtered_text = []
-        for ch in file[TEXT].strip():
+        for ch in cleaning_method(file[TEXT]).strip():
             if ch.isalpha() or (ch == " " and (len(filtered_text) > 0 and filtered_text[-1] != " ")): #don't add several white space in a row
                 filtered_text.append(ch.lower())
         filtered_text_text = "".join(filtered_text).strip()
@@ -529,7 +529,8 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
 
 def pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper, stop_word_file, stop_word_set):
 
-    word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set)) #, max_features = max_features)
+    word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set), min_df= 1)
+    #word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set)) #, max_features = max_features)
     word_vectorizer.fit_transform(documents)
     word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names())
     word2vecwrapper.load_clustering("temp_clustering_output.txt")

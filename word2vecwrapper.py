@@ -89,8 +89,8 @@ class Word2vecWrapper:
                             + str(self.semantic_vector_length))
             return raw_vec
         except KeyError:
-            return self.default_vector
-        
+                return self.default_vector
+
     def load_clustering(self, output_file):
         print("Clustering vectors, this might take a while ....")
         
