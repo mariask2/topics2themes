@@ -1,12 +1,11 @@
 "use strict";
 
-// Front-end development mode – no real backend involved
-// Comment out or set to false if the actual backend is deployed
-var NO_BACKEND = false;
 
 // The URL to communicate with the restful api. Looking at the local server at the
 // moment.
-var BASEURL = "http://127.0.0.1:5000/topics2themes/api/v1.0/"
+//var BASEURL = "http://127.0.0.1:5000/topics2themes/api/v1.0/"
+
+var BASEURL = "/topics2themes/api/v1.0/"
 
 // The original JSON data set that contains the topic model
 var jsonData;
