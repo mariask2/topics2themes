@@ -9,7 +9,7 @@ import gc
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 from sklearn.metrics.pairwise import euclidean_distances
-from topic_model_constants import *
+
 
 # An import that should function both locally and when running an a remote server
 try:
