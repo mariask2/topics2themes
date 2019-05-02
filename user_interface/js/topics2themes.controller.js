@@ -248,9 +248,17 @@ function enableCreateModel() {
 
     // If enviroment configuration dictates that no new models are to be created,
     // never enable the create model button
+    
+    $("#newModel").removeClass("disabled");
+    
+    /*
     if (modelDisableModelCreation == undefined){
 	$("#newModel").removeClass("disabled");
-    }   
+    }
+    else{
+        alert("not allowed to create model");
+    }
+     */
 }
 
 
@@ -438,10 +446,15 @@ function controllerDoPopulateModelChoices(modelModelsForCurrentDataset){
 
 /// Construct new model
 function onConstructNewModel(){
-    var modelName = prompt("Please enter the name of the model to create");
     
+    if (modelDisableModelCreation == undefined){
+        var modelName = prompt("Please enter the name of the model to create");
+    }
+    else{
+        var modelName = prompt("You are running with settings for which a new model cannot be created. You can load models that have been saved to file. Please specificy the name of the model to create.");
+    }
     if (modelName == null || modelName == "") {
-        alert("No model created, a name must be given");
+        alert("No model created/loaded, a name must be given");
     } else {
         modelConstructNewModel(modelName);
         disableModelChoices();

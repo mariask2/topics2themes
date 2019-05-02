@@ -36,7 +36,16 @@ if RUN_LOCALLY:
 else:
     app.config['MONGO_CONNECT'] = False
 
-mongo_con = MongoConnector()
+try:
+    mongo_con = MongoConnector()
+except:
+    e = sys.exc_info()
+    print("The following error occurred: ")
+    print(e)
+    print("The pymongo database might not be running")
+    mongo_con = MongoConnector()
+    exit(1)
+
 theme_sort = ThemeSorter(mongo_con)
 
 # To not have a lot of space in the output
@@ -132,7 +141,11 @@ def make_model_for_collection():
         authenticate()
         collection_name = request.values.get("collection_name")
         model_name = request.values.get("model_name")
-        model_result = make_topic_models.make_model_for_collection(collection_name, model_name, mongo_con)
+        if ALLOWED_TO_CREATE_MODEL:
+            model_result = make_topic_models.make_model_for_collection(collection_name, model_name, mongo_con)
+        else:
+            model_result = mongo_con.load_saved_in_file_from_database(collection_name, model_name)
+        
         resp = make_response(jsonify({"result" : model_result}))
         return resp
     except Exception as e:
@@ -365,6 +378,9 @@ if __name__ == '__main__':
     current_port = get_port()
     logging.info("TOPICS2THEMES: ******** Listning to port " + str(current_port) + " ***************")
 
+    if RUN_LOCALLY:
+        print("You have specified in 'environment_configuration.py' to run Topics2Themes on your local computer. That means you can access Topics2Themes from your browser at:")
+        print("http://127.0.0.1:" + str(current_port) + "/topics2themes/")
     applogger = app.logger
     applogger.setLevel(logging_level_to_use)
     app.run(port=current_port)
