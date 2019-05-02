@@ -28,6 +28,10 @@ CONFIGURATION_FILE_NAME = "topic_model_configuration"
 SYNONYM_BINDER = "__"
 
 COLLOCATION_BINDER = "_"
+
+# Export and import data
+
+EXPORT_DIR = "topics2themes_exports_folder_created_by_system"
 ####
 ## Database dictionary keys
 ####

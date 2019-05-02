@@ -18,7 +18,7 @@ hr {
 	height: 2em;
     max-width: 15em;
     margin-right: 2px;
-    margin-left: 40px;
+    margin-left: 30px;
 }
 
 .new-theme-button{
@@ -121,6 +121,24 @@ hr {
 }
 
 .create-button-button.disabled{
+        color: silver !important;
+}
+
+
+.save-button-button{
+    border-radius: 6px !important;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+    border-color: #E6F3FF !important;
+    border-width: 2px !important;
+    padding-left: 6px !important;
+    padding-right: 4px  !important;
+    padding-top: 2px  !important;
+    padding-bottom: 1px  !important;
+    line-height: 1.6em !important;
+}
+
+.save-button-button.disabled{
         color: silver !important;
 }
 
@@ -658,6 +676,7 @@ span.checkmark {
     padding-bottom: 3px !important;
     font-size: larger !important;
 }
+
 
 .save-button {
     padding: 0px !important;

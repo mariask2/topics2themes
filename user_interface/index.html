@@ -46,8 +46,7 @@
                             <!-- glyphicon-cog -->
                             <span class="glyphicon glyphicon-cog create-buttons-cog" aria-hidden="true"></span>
                         </button>
-                
-	                    <!--<span class="small-right-margin choice-description">Model version:</span>-->
+            
                         
                         <select id="modelVersion" class="form-control dataset-choices">
                             <option
@@ -67,10 +66,17 @@
                                 title="-----">---- analysis version ----</option>
                         </select>
 			<button id="exportAnalysis" type="button"
-                            title="Export analysis" class="btn btn-default btn-xs
-                            header-button create-button-button"
+                            title="Export analysis" class="btn
+                            btn-default btn-xs save-button-button
+                            header-button"
                             aria-label="Export analysis">
 			 <span class="glyphicon glyphicon-save save-button" aria-hidden="true"></span>
+                        </button>
+			<button id="importAnalysis" type="button"
+                            title="Import analysis" class="btn btn-default btn-xs
+                            header-button create-button-button"
+                            aria-label="Import analysis">
+			 <span class="glyphicon glyphicon-open save-button" aria-hidden="true"></span>
                         </button>
                         
                         

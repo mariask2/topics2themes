@@ -1,9 +1,11 @@
 import pymongo
 import datetime
 import os
+import json
 from pymongo.errors import DuplicateKeyError
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from bson.json_util import dumps
 
 # An import that should function both locally and when running an a remote server
 try:
@@ -42,7 +44,13 @@ class MongoConnector:
         self.ANALYSIS_ID = "analysis_id"
         self.TEXT_ID = "text_id"
         self.USER_DEFINED_LABEL = "user_defined_label"
-    
+        
+        self.MODEL_FILE_NAME = "_model.json"
+        self.THEMES_FILE_NAME = "_theme.json"
+        self.ANALYSIS_FILE_NAME = "_analysis.json"
+        self.TOPIC_NAME_FILE_NAME = "_topic_name.json"
+        self.USER_DEFINED_LABEL_FILE_NAME = "_user_defined_label.json"
+
         self.get_theme_collection().create_index(\
                         [(self.THEME_NUMBER, pymongo.ASCENDING),\
                          (self.ANALYSIS_ID, pymongo.ASCENDING)], unique=True)
@@ -65,7 +73,6 @@ class MongoConnector:
     def get_database(self):
         con = self.get_connection()
         db = con[self.TOPIC_MODEL_DATABASE]
-        print("Accessing ", self.TOPIC_MODEL_DATABASE)
         return db
 
     ### Storing and fetching the output of models
@@ -82,7 +89,52 @@ class MongoConnector:
                         self.ID : str(document[self.ID])}
         return document_spec
         
+    def get_analysis_for_analysis_id(self, id):
+        analysis =  self.get_analyses_collection().find_one({'_id' : ObjectId(id)})
+        return_analysis = {self.MODEL_ID : analysis[self.MODEL_ID],\
+            self.ANALYSIS_NAME : analysis[self.ANALYSIS_NAME],\
+            self.ID : str(analysis[self.ID])
+        }
+        return return_analysis
 
+
+
+
+    """
+        Help method for storing data in file
+        """
+    def save_analysis_data_to_folder(self, analysis_id, data_dir, file_name, data):
+        save_to = os.path.join(data_dir, str(analysis_id) + file_name)
+        
+        with open(save_to, 'w') as outfile:
+            json.dump(data, outfile, sort_keys = True, indent = 4, ensure_ascii = False)
+    
+    def save_analysis_to_file_for_analysis_id(self, analysis_id):
+        model_id = self.get_model_for_analysis(analysis_id)
+        model = self.get_model_for_model_id(model_id)
+        data_dir = os.path.join(WORKSPACE_FOLDER, DATA_FOLDER, model[self.TEXT_COLLECTION_NAME], EXPORT_DIR)
+        
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+
+        self.save_analysis_data_to_folder(analysis_id, data_dir, self.MODEL_FILE_NAME, model)
+        
+        self.save_analysis_data_to_folder(analysis_id, data_dir, self.THEMES_FILE_NAME, self.get_saved_themes(analysis_id))
+
+        self.save_analysis_data_to_folder(analysis_id, data_dir, self.ANALYSIS_FILE_NAME, self.get_analysis_for_analysis_id(analysis_id))
+
+        self.save_analysis_data_to_folder(analysis_id, data_dir, self.TOPIC_NAME_FILE_NAME, self.get_all_topic_names(analysis_id))
+        
+        self.save_analysis_data_to_folder(analysis_id, data_dir, self.USER_DEFINED_LABEL_FILE_NAME, self.get_all_user_defined_labels(analysis_id))
+
+
+
+
+
+
+
+            
+ 
     # TODO: Check that it is correct to turn str(document[self.ID]) to a string, to make it serializable
     # If it is not turned to a string it will not be accepted for http
     def get_all_models_for_collection_with_name(self, text_collection_name):
@@ -97,6 +149,7 @@ class MongoConnector:
    
         return document_spec
     
+
     def get_all_collections(self):
         return self.get_database().collection_names()
 
@@ -152,7 +205,6 @@ class MongoConnector:
     
                                                 
     def get_all_topic_names(self, analysis_id):
-        print("analysis_id", analysis_id)
         topic_names = self.get_topic_name_collection().find({self.ANALYSIS_ID : analysis_id})
         all_topic_names = []
         for post in topic_names:
@@ -344,9 +396,13 @@ if __name__ == '__main__':
     print(mc.get_connection())
     print(mc.get_database())
     print(mc.get_all_collections())
-    constructed_col = mc.get_all_models_for_collection_with_name("vaccination_constructed_data_marked")
-    one_model_output = mc.get_model_for_model_id("5cc9d78999a02903400717af")
-    print(one_model_output)
+    #print(mc.get_all_analyses_for_model("5cc9d78999a02903400717af"))
+    mc.save_analysis_to_file_for_analysis_id("5ccad37e99a029092cb79fea")
+    #print(mc.get_analysis_for_analysis_id("5ccad37e99a029092cb79fea"))
+    
+    #constructed_col = mc.get_all_models_for_collection_with_name("vaccination_constructed_data_marked")
+    #one_model_output = mc.get_model_for_model_id("5cc9d78999a02903400717af")
+    #print(one_model_output)
     #print(mc.get_all_model_document_name_date_id())
     #print(mc.get_all_models_for_collection_with_name("vaccination_constructed_data"))
     #print(mc.create_new_theme("5adb865599a029323a4599c1"))
