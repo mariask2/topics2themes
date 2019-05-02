@@ -659,6 +659,12 @@ span.checkmark {
     font-size: larger !important;
 }
 
+.save-button {
+    padding: 0px !important;
+    padding-top: 2px !important;
+    font-size: larger !important;
+}
+
 
 .choice-description{
     color: #909090;

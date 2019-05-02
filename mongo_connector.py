@@ -97,10 +97,6 @@ class MongoConnector:
    
         return document_spec
     
-    def get_topic_model_output_with_id(self, id):
-        document = self.get_model_collection().find_one({ self.ID : id})
-        return document[self.TOPIC_MODEL_OUTPUT]
-    
     def get_all_collections(self):
         return self.get_database().collection_names()
 
@@ -348,10 +344,12 @@ if __name__ == '__main__':
     print(mc.get_connection())
     print(mc.get_database())
     print(mc.get_all_collections())
-    
+    constructed_col = mc.get_all_models_for_collection_with_name("vaccination_constructed_data_marked")
+    one_model_output = mc.get_model_for_model_id("5cc9d78999a02903400717af")
+    print(one_model_output)
     #print(mc.get_all_model_document_name_date_id())
     #print(mc.get_all_models_for_collection_with_name("vaccination_constructed_data"))
-    print(mc.create_new_theme("5adb865599a029323a4599c1"))
+    #print(mc.create_new_theme("5adb865599a029323a4599c1"))
     #print(mc.get_saved_themes("5adb995c99a029323d4b2b7d"))
     #print(mc.get_all_analyses_for_model("5adb84c199a02931a1eb1dd5"))
 

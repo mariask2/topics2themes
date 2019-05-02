@@ -55,7 +55,7 @@ class ThemeSorter:
         properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + text_collection_name)
         
         stop_word_file = os.path.join(path_slash_format, properties.STOP_WORD_FILE)
-        stop_words=self.stopword_handler.get_stop_word_set(stop_word_file)
+        stop_words=self.stopword_handler.get_stop_word_set(stop_word_file, properties.STOP_WORD_SET)
         
         data_list = []
         y = []

@@ -270,6 +270,9 @@ function enableAnalysisChoices(){
 }
 
 function disableThemeButtons(){
+    $("#exportAnalysis").addClass("disabled");
+    $("#exportAnalysis").attr("disabled", true);
+
     $("#newTheme").addClass("disabled");
     $("#newTheme").attr("disabled", true);
     
@@ -286,6 +289,9 @@ function disableThemeButtons(){
 }
 
 function enableThemeButtons(){
+    $("#exportAnalysis").removeClass("disabled")
+    $("#exportAnalysis").attr("disabled", false);
+
     $("#newTheme").removeClass("disabled")
     $("#newTheme").attr("disabled", false);
     

@@ -1342,21 +1342,6 @@ def get_first_in_tuple(item):
 def get_sets_in_data_folder():
     return [el for el in os.listdir(os.path.join(WORKSPACE_FOLDER, DATA_FOLDER)) if (not el.startswith(".")) and os.path.isdir(os.path.join(os.path.join(WORKSPACE_FOLDER, DATA_FOLDER), el))]
 
-def get_cashed_topic_model(mongo_con):
-    els = mongo_con.get_all_model_document_name_date_id()
-    
-    # For now, just take the last of the created models. Add the selection later.
-    id_to_use = els[-1][mongo_con.ID]
-    date_to_use = els[-1][mongo_con.DATE]
-    print("Use model saved at " + str(date_to_use))
-    saved_model = mongo_con.get_topic_model_output_with_id(id_to_use)
-    result_with_id = {}
-    result_with_id["id"] = str(id_to_use)
-    result_with_id["saved_model"] = saved_model
-    return result_with_id
-
-
-
 
 def make_model_for_collection(collection_name, model_name, mongo_con):
     properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + collection_name)
