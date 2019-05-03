@@ -144,7 +144,7 @@ def make_model_for_collection():
         if ALLOWED_TO_CREATE_MODEL:
             model_result = make_topic_models.make_model_for_collection(collection_name, model_name, mongo_con)
         else:
-            model_result = mongo_con.load_saved_in_file_from_database(collection_name, model_name)
+            model_result = mongo_con.load_model_from_file(model_name, collection_name)
         
         resp = make_response(jsonify({"result" : model_result}))
         return resp

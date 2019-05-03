@@ -163,9 +163,6 @@ class MongoConnector:
                 self.TOPIC_MODEL_OUTPUT: topic_model_output}
         post_id = self.get_model_collection().insert_one(post).inserted_id
         return time, post_id
-
-    def load_saved_in_file_from_database(self, collection_name, model_name):
-        return "test"
     
     
     ### Storing and fetching analyses

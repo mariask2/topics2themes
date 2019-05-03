@@ -458,7 +458,7 @@ function onConstructNewModel(){
         var modelName = prompt("Please enter the name of the model to create");
     }
     else{
-        var modelName = prompt("You are running with settings for which a new model cannot be created. You can load models that have been saved to file. Please specificy the name of the model to create.");
+        var modelName = prompt("You are running with settings for which a new model cannot be created. You can load models that have been saved to file. Please specificy the model-id that you have been provided.");
     }
     if (modelName == null || modelName == "") {
         alert("No model created/loaded, a name must be given");
