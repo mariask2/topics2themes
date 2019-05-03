@@ -127,13 +127,17 @@ class MongoConnector:
         
         self.save_analysis_data_to_folder(analysis_id, data_dir, self.USER_DEFINED_LABEL_FILE_NAME, self.get_all_user_defined_labels(analysis_id))
 
-
         return data_dir
 
-
-
-
-            
+    """
+        Right now, it only possible to write analyses. When this is done, it's model is also saved with the id of the analysis. Therefore, the saved analysisid is given
+        """
+    def load_model_from_file(self, saved_analysis_id, data_collection_name):
+        saved_file = open(os.path.join(WORKSPACE_FOLDER, DATA_FOLDER, data_collection_name, EXPORT_DIR, saved_analysis_id + self.MODEL_FILE_NAME))
+        saved_model = json.load(saved_file)
+        saved_model[self.TOPIC_MODEL_OUTPUT][META_DATA][MODEL_NAME] = str(datetime.datetime.utcnow()) \
+            + "_loaded_" + saved_model[self.TOPIC_MODEL_OUTPUT][META_DATA][MODEL_NAME]
+        self.insert_new_model(saved_model[self.TOPIC_MODEL_OUTPUT], saved_model[self.TEXT_COLLECTION_NAME])
  
     # TODO: Check that it is correct to turn str(document[self.ID]) to a string, to make it serializable
     # If it is not turned to a string it will not be accepted for http
@@ -409,7 +413,7 @@ if __name__ == '__main__':
     #print(mc.get_saved_themes("5adb995c99a029323d4b2b7d"))
     #print(mc.get_all_analyses_for_model("5adb84c199a02931a1eb1dd5"))
 
-    
+    mc.load_model_from_file("5cca9d0f99a029086822ccd3", "vaccination_constructed_data_marked")
     """
     print(mc.create_new_analysis("5adb84c199a02931a1eb1dd5", "test_name"))
     an = mc.get_all_analyses_for_model("5adb84c199a02931a1eb1dd5")
