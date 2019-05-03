@@ -1525,7 +1525,8 @@ function modelLoadNewAnalysis(newAnalysisVersionId){
 }
 
 ///////
-/// For constructing a new analysis
+/// For constructing a new analysis, loading analyses and exporting analysis
+////////////
 function modelConstructNewAnalysis(analysisName){
     let constructNewAnalysisUrl = "create_new_analysis";
     let data = {"model_id" : modelCurrentModelId, "analysis_name" : analysisName};
@@ -1543,8 +1544,23 @@ function modelLoadAnalysisForCurrentModel(createdAnalysisParameters){
     modelCurrentAnalysisVersionId = createdAnalysisParameters["analysis_id"];
 
     get_data(loadAnalysesUrl, doLoadAnalysesForSelectedModelAndSelectOne, data);
-
 }
+
+function modelExportAnalysis(){
+    if (modelCurrentAnalysisVersionId == null){
+	// Nothing to export if there is no analysis
+	return;
+    }
+    let exportAnalysisUrl = "export_analysis";
+    let data = {"analysis_id" : modelCurrentAnalysisVersionId};
+    get_data(exportAnalysisUrl, doNotifyExportedAnalysis, data);
+}
+
+function doNotifyExportedAnalysis(savedData){
+    alert("Saved analysis with id: " + savedData["analysis_id"] + ".\nTo folder: " +savedData["data_dir"]);
+}
+
+
 
 /////////////////////////////////////////
 /// Handling user defined text labels

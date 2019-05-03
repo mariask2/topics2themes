@@ -128,7 +128,7 @@ class MongoConnector:
         self.save_analysis_data_to_folder(analysis_id, data_dir, self.USER_DEFINED_LABEL_FILE_NAME, self.get_all_user_defined_labels(analysis_id))
 
 
-
+        return data_dir
 
 
 

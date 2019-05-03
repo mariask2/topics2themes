@@ -112,7 +112,8 @@ $(document).ready(function(){
     $("#modelVersion").change(onModelVersionListChange);
     $("#newAnalysis").click(onNewAnalysis);
     $("#analysisVersion").change(onAnalysisVersionListChange);    
-                  
+    $("#exportAnalysis").click(onExportAnalysis);                  
+
     // Search buttons
     $("#termSearchButton").click(onTermSearchButtonClick);
     $("#topicSearchButton").click(onTopicSearchButtonClick);
@@ -550,6 +551,11 @@ function onNewAnalysis(){
 
 }
 }
+
+function onExportAnalysis(){
+    modelExportAnalysis();
+}
+
 
 
 ////

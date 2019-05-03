@@ -339,6 +339,20 @@ def get_theme_ranking_for_document():
         return get_exception_info(e)
 
 
+@app.route('/topics2themes/api/v1.0/export_analysis', methods=['GET', 'POST'])
+def export_analysis():
+    try:
+        authenticate()
+        analysis_id = request.values.get("analysis_id")
+        data_dir =  mongo_con.save_analysis_to_file_for_analysis_id(analysis_id)
+        saved_data = {"analysis_id": analysis_id, "data_dir" : data_dir}
+        resp = make_response(jsonify({"result" : saved_data}))
+        return resp
+    except Exception as e:
+        return get_exception_info(e)
+
+
+
 @app.route('/topics2themes/')
 def start_page():
     return send_from_directory("user_interface", "index.html")
