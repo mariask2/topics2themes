@@ -2,6 +2,7 @@ import pymongo
 import datetime
 import os
 import json
+import re
 from pymongo.errors import DuplicateKeyError
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -101,15 +102,24 @@ class MongoConnector:
 
 
     """
-        Help method for storing data in file
+        Help methods for storing data in file
         """
     def save_analysis_data_to_folder(self, analysis_id, data_dir, file_name, data):
         save_to = os.path.join(data_dir, str(analysis_id) + file_name)
         
         with open(save_to, 'w') as outfile:
             json.dump(data, outfile, sort_keys = True, indent = 4, ensure_ascii = False)
-    
+
+    def is_analysis_id_valid(self, analysis_id):
+        valid = re.compile(r"^[A-Za-z0-9]{24}$")
+        if valid.match(analysis_id) is None:
+            return False
+        else:
+            return True
+
     def save_analysis_to_file_for_analysis_id(self, analysis_id):
+        if not self.is_analysis_id_valid(analysis_id):
+            raise ValueError("Format of analysis_id incorrect: " + str(analysis_id))
         model_id = self.get_model_for_analysis(analysis_id)
         model = self.get_model_for_model_id(model_id)
         data_dir = os.path.join(WORKSPACE_FOLDER, DATA_FOLDER, model[self.TEXT_COLLECTION_NAME], EXPORT_DIR)
@@ -133,7 +143,14 @@ class MongoConnector:
         Right now, it only possible to write analyses. When this is done, it's model is also saved with the id of the analysis. Therefore, the saved analysisid is given
         """
     def load_model_from_file(self, saved_analysis_id, data_collection_name):
-        saved_file = open(os.path.join(WORKSPACE_FOLDER, DATA_FOLDER, data_collection_name, EXPORT_DIR, saved_analysis_id + self.MODEL_FILE_NAME))
+        if not self.is_analysis_id_valid(saved_analysis_id):
+            raise ValueError("Format of analysis_id incorrect: " + str(saved_analysis_id))
+        
+        data_collection_path = os.path.join(WORKSPACE_FOLDER, DATA_FOLDER, data_collection_name)
+        if not os.path.isdir(data_collection_path):
+            raise ValueError("The specified data folder does not exist: " + str(data_collection_path))
+
+        saved_file = open(os.path.join(data_collection_path, EXPORT_DIR, saved_analysis_id + self.MODEL_FILE_NAME))
         saved_model = json.load(saved_file)
         saved_model[self.TOPIC_MODEL_OUTPUT][META_DATA][MODEL_NAME] = str(datetime.datetime.utcnow()) \
             + "_loaded_" + saved_model[self.TOPIC_MODEL_OUTPUT][META_DATA][MODEL_NAME]
@@ -398,7 +415,7 @@ if __name__ == '__main__':
     print(mc.get_database())
     print(mc.get_all_collections())
     #print(mc.get_all_analyses_for_model("5cc9d78999a02903400717af"))
-    mc.save_analysis_to_file_for_analysis_id("5ccad37e99a029092cb79fea")
+    #mc.save_analysis_to_file_for_analysis_id("5ccad37e99a029092cb79fea")
     #print(mc.get_analysis_for_analysis_id("5ccad37e99a029092cb79fea"))
     
     #constructed_col = mc.get_all_models_for_collection_with_name("vaccination_constructed_data_marked")
