@@ -237,8 +237,6 @@ function disableAnalysisChoices(){
 }
 
 function enableModelChoices() {
-    alert("enable create model")
-
     enableCreateModel();
  
     $("#modelVersion").removeClass("disabled");

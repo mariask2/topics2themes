@@ -52,13 +52,17 @@ class MongoConnector:
         self.TOPIC_NAME_FILE_NAME = "_topic_name.json"
         self.USER_DEFINED_LABEL_FILE_NAME = "_user_defined_label.json"
 
-        self.get_theme_collection().create_index(\
-                        [(self.THEME_NUMBER, pymongo.ASCENDING),\
-                         (self.ANALYSIS_ID, pymongo.ASCENDING)], unique=True)
-    
+        self.theme_index_created = False
         
     
     def get_connection(self):
+        
+        if not self.theme_index_created:
+            self.theme_index_created = True # Make sur sure to set to true here, so that when running to get theme collection doesn't cause an indefinite loop
+            self.get_theme_collection().create_index(\
+                                                 [(self.THEME_NUMBER, pymongo.ASCENDING),\
+                                                  (self.ANALYSIS_ID, pymongo.ASCENDING)], unique=True)
+        
         maxSevSelDelay = 5 #Check that the server is listening, wait max 5 sec
         if not self.client:
             self.client = MongoClient(serverSelectionTimeoutMS=maxSevSelDelay)
