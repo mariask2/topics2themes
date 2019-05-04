@@ -237,6 +237,7 @@ function disableAnalysisChoices(){
 }
 
 function enableModelChoices() {
+    alert("enable create model")
 
     enableCreateModel();
  
@@ -251,6 +252,7 @@ function enableCreateModel() {
     // never enable the create model button
     
     $("#newModel").removeClass("disabled");
+    $("#newModel").attr("disabled", false);
     
     /*
     if (modelDisableModelCreation == undefined){
