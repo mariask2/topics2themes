@@ -157,7 +157,7 @@ class MongoConnector:
         saved_file = open(os.path.join(data_collection_path, EXPORT_DIR, saved_analysis_id + self.MODEL_FILE_NAME))
         saved_model = json.load(saved_file)
         saved_model[self.TOPIC_MODEL_OUTPUT][META_DATA][MODEL_NAME] = str(datetime.datetime.utcnow()) \
-            + "_loaded_" + saved_model[self.TOPIC_MODEL_OUTPUT][META_DATA][MODEL_NAME]
+            + "_loaded_" + saved_analysis_id + "_" + saved_model[self.TOPIC_MODEL_OUTPUT][META_DATA][MODEL_NAME]
         self.insert_new_model(saved_model[self.TOPIC_MODEL_OUTPUT], saved_model[self.TEXT_COLLECTION_NAME])
  
     # TODO: Check that it is correct to turn str(document[self.ID]) to a string, to make it serializable
@@ -193,17 +193,18 @@ class MongoConnector:
         return model_collection
 
     def create_new_analysis(self, model_id, analysis_name):
-        print("model_id", model_id)
+        print(str(datetime.datetime.now()) + " Creating new analysis for model_id ", model_id)
         name_with_time = analysis_name + " " + str(datetime.datetime.now())
         post = {self.MODEL_ID : model_id, self.ANALYSIS_NAME : name_with_time}
-        print("post")
         post_id = self.get_analyses_collection().insert_one(post).inserted_id
+        print(str(datetime.datetime.now()) + " Inserted post. New post-id: " + str(post_id))
         return {self.ID : str(post_id), self.ANALYSIS_NAME : name_with_time}
 
     def get_all_analyses_for_model(self, model_id):
         analyses = self.get_analyses_collection().find({self.MODEL_ID : model_id})
         analyses_to_return = [{self.MODEL_ID: post[self.MODEL_ID], self.ID : str(post[self.ID]),\
          self.ANALYSIS_NAME : post[self.ANALYSIS_NAME]} for post in analyses]
+        print(str(datetime.datetime.now()) + " Found " + str(len(analyses_to_return)) + " number of analysis for model " + str(model_id))
         return analyses_to_return
 
     def get_model_for_analysis(self, analysis_id):
@@ -278,17 +279,18 @@ class MongoConnector:
 
     def create_new_theme(self, analysis_id):
         # Index for themes are stored in a separate collection
-        print("*****")
+        print(str(datetime.datetime.now()) + " Started proces of creating theme for " + str(analysis_id))
         post_id = self.get_theme_index_collection().update_one({self.ANALYSIS_ID : analysis_id},\
             {"$inc": {self.THEME_INDEX : 1 }}, upsert=True)
-        print("post_id", post_id)
+
         new_index = self.get_theme_index_collection().find_one({self.ANALYSIS_ID : analysis_id})[self.THEME_INDEX]
-        print("created theme nr", new_index)
+
 
         # TODO: To allow for several users, this must be updated
         post = {self.THEME_NUMBER : new_index, self.ANALYSIS_ID : analysis_id, self.DOCUMENT_IDS : [], self.THEME_NAME : ""}
         
         self.get_theme_collection().insert_one(post)
+        print(str(datetime.datetime.now()) + " Inserted post " + str(post))
         return(new_index)
 
 
@@ -298,6 +300,8 @@ class MongoConnector:
         for post in themes:
             return_post = {self.THEME_NUMBER : str(post[self.THEME_NUMBER]), self.DOCUMENT_IDS : post[self.DOCUMENT_IDS], self.THEME_NAME : post[self.THEME_NAME]}
             all_themes.append(return_post)
+        
+        print(str(datetime.datetime.now()) + " Found " + str(len(all_themes)) + " number of themes for analysis " + str(analysis_id))
 
         return all_themes
 
