@@ -69,6 +69,7 @@ def get_exception_info(e, extra_log_file = None):
     print(e)
     print(more)
     resp = make_response(jsonify({'error' : str(e) + " " + more}), 400)
+    resp.headers['Cache-Control'] = 'no-cache'
     return resp
 
 def get_port():
@@ -108,6 +109,7 @@ def can_model_be_created():
         authenticate()
         can_be_created = make_topic_models.can_model_be_created()
         resp = make_response(jsonify({"result" : can_be_created}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -119,6 +121,7 @@ def get_data_sets():
         authenticate()
         data_sets = make_topic_models.get_sets_in_data_folder()
         resp = make_response(jsonify({"result" : data_sets}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -131,6 +134,7 @@ def get_all_models_for_collection_with_name():
         collection_name = request.values.get("collection_name")
         all_models_for_collection_with_name = mongo_con.get_all_models_for_collection_with_name(collection_name)
         resp = make_response(jsonify({"result" : all_models_for_collection_with_name}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -147,6 +151,7 @@ def make_model_for_collection():
             model_result = mongo_con.load_model_from_file(model_name, collection_name)
         
         resp = make_response(jsonify({"result" : model_result}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -161,6 +166,7 @@ def update_topic_name():
         analysis_id = request.values.get("analysis_id")
         topic_name_update_result =  mongo_con.save_or_update_topic_name(topic_id, topic_name, analysis_id)
         resp = make_response(jsonify({"result" : "topic name updated"}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -175,6 +181,7 @@ def update_user_defined_label():
         analysis_id = request.values.get("analysis_id")
         user_defined_label_result =  mongo_con.save_or_update_user_defined_label(text_id, user_defined_label, analysis_id)
         resp = make_response(jsonify({"result" : user_defined_label_result}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -188,6 +195,7 @@ def get_model_for_model_id():
         model_id = request.values.get("model_id")
         model =  mongo_con.get_model_for_model_id(model_id)
         resp = make_response(jsonify({"result" : model}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -201,6 +209,7 @@ def get_all_topic_names():
         analysis_id = request.values.get("analysis_id")
         all_topic_names =  mongo_con.get_all_topic_names(analysis_id)
         resp = make_response(jsonify({"result" : all_topic_names}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -213,6 +222,7 @@ def get_all_user_defined_labels():
         analysis_id = request.values.get("analysis_id")
         all_user_defined_labels =  mongo_con.get_all_user_defined_labels(analysis_id)
         resp = make_response(jsonify({"result" : all_user_defined_labels}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -228,6 +238,7 @@ def create_new_analysis():
         analysis_name = request.values.get("analysis_name")
         created_analysis =  mongo_con.create_new_analysis(model_id, analysis_name)
         resp = make_response(jsonify({"result" : created_analysis}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -240,6 +251,7 @@ def get_all_analyses_for_model():
         model_id = request.values.get("model_id")
         analyses =  mongo_con.get_all_analyses_for_model(model_id)
         resp = make_response(jsonify({"result" : analyses}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -252,6 +264,7 @@ def create_new_theme():
         analysis_id = request.values.get("analysis_id")
         new_theme_id =  mongo_con.create_new_theme(analysis_id)
         resp = make_response(jsonify({"result" : new_theme_id}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -265,6 +278,7 @@ def delete_theme():
         theme_number = request.values.get("theme_number")
         nr_of_deleted_themes =  mongo_con.delete_theme(analysis_id, theme_number)
         resp = make_response(jsonify({"result" : nr_of_deleted_themes}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -277,6 +291,7 @@ def get_saved_themes():
         analysis_id = request.values.get("analysis_id")
         new_theme_id =  mongo_con.get_saved_themes(analysis_id)
         resp = make_response(jsonify({"result" : new_theme_id}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -291,6 +306,7 @@ def update_theme_name():
         analysis_id = request.values.get("analysis_id")
         theme_name_update_result =  mongo_con.update_theme_name(theme_id, theme_name, analysis_id)
         resp = make_response(jsonify({"result" : theme_name_update_result}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -306,6 +322,7 @@ def add_theme_document_connection():
         theme_document_connection_result =  mongo_con.add_theme_document_connection(theme_id, document_id, analysis_id)
         theme_sort.retrain_model(analysis_id)
         resp = make_response(jsonify({"result" : theme_document_connection_result}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -321,6 +338,7 @@ def delete_theme_document_connection():
         theme_document_connection_result =  mongo_con.delete_theme_document_connection(theme_id, document_id, analysis_id)
         theme_sort.retrain_model(analysis_id)
         resp = make_response(jsonify({"result" : theme_document_connection_result}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -334,6 +352,7 @@ def get_theme_ranking_for_document():
         analysis_id = request.values.get("analysis_id")
         ranked_themes = theme_sort.rank_themes_for_document(analysis_id, document_id)
         resp = make_response(jsonify({"result" : ranked_themes}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
@@ -347,6 +366,7 @@ def export_analysis():
         data_dir =  mongo_con.save_analysis_to_file_for_analysis_id(analysis_id)
         saved_data = {"analysis_id": analysis_id, "data_dir" : data_dir}
         resp = make_response(jsonify({"result" : saved_data}))
+        resp.headers['Cache-Control'] = 'no-cache'
         return resp
     except Exception as e:
         return get_exception_info(e)
