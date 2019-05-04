@@ -265,6 +265,7 @@ function enableCreateModel() {
 
 function enableAnalysisChoices(){
     $("#newAnalysis").removeClass("disabled");
+    $("#newAnalysis").attr("disabled", false);
     
     $("#analysisVersion").removeClass("disabled");
     $("#analysisVersion").attr("disabled", false);
@@ -874,12 +875,12 @@ function getAdditionalLabel(text){
 
 // Populates a theme element
 function populateThemeElement(d, i) {
-	let element = $(this);
+    let element = $(this);
     element.empty() // Since this function is used also for repopulation, start with removing current content
-	element.addClass("theme-element");
-	element.attr("title", "Theme #" + d.id + ": " + d.label);
+    element.addClass("theme-element");
+    element.attr("title", "Theme #" + d.id + ": " + d.label);
 	
-	let removeButton = $("<button type=\"button\" class=\"btn btn-default btn-xs theme-remove-button\" aria-label=\"Remove theme without associated texts\" title=\"Remove theme without associated texts\">"
+    let removeButton = $("<button type=\"button\" class=\"btn btn-default btn-xs theme-remove-button\" aria-label=\"Remove theme without associated texts\" title=\"Remove theme without associated texts\">"
 		+ "<span class=\"glyphicon glyphicon-remove\" aria-hidden=\"true\"></span>"
 		+ "</button>");
     
@@ -889,29 +890,29 @@ function populateThemeElement(d, i) {
         removeButton.addClass("disabled");
     }
         
-	let indexLabel = $("<span>Theme #</span>");
-	indexLabel.addClass("index-label");
-	indexLabel.append(d.id);
-	indexLabel.addClass("pull-right");
+    let indexLabel = $("<span>Theme #</span>");
+    indexLabel.addClass("index-label");
+    indexLabel.append(d.id);
+    indexLabel.addClass("pull-right");
      
-	let themeTextContainer = $("<div></div>");
-	themeTextContainer.addClass("theme-texts-container");
+    let themeTextContainer = $("<div></div>");
+    themeTextContainer.addClass("theme-texts-container");
 	
     if(showLabels){
         // Add the topic labels for the theme
         populateThemeTextsContainer(d, themeTextContainer);
     }
     
-	let titleLabel = $("<textarea type=\"text\" class=\"form-control\"></textarea>");
-	titleLabel.addClass("title-label");
-	titleLabel.attr("placeholder", "Theme #" + d.id + " (click to add description)");
-	titleLabel.val(d.label);
+    let titleLabel = $("<textarea type=\"text\" class=\"form-control\"></textarea>");
+    titleLabel.addClass("title-label");
+    titleLabel.attr("placeholder", "Theme #" + d.id + " (click to add description)");
+    titleLabel.val(d.label);
     
 	
-	element.append(removeButton);
-	element.append(indexLabel);
+    element.append(removeButton);
+    element.append(indexLabel);
     element.append(titleLabel);
-	element.append(themeTextContainer);
+    element.append(themeTextContainer);
 }
 
 
@@ -1925,6 +1926,7 @@ function controllerSelectChosenAnalysis(name_of_created_analysis){
 }
 
 function controllerDoPopulateThemes(doSorting){
+    alert("populating " + modelThemes.length + " themes.");
     $("#themesList").empty();
 	// Update the list elements with D3
 	d3.select("#themesList").selectAll("li")
@@ -1943,15 +1945,15 @@ function controllerDoPopulateThemes(doSorting){
     // Resize the containers
     resizeContainers();
     
-	// Redraw the links
-	renderLinks();
+    // Redraw the links
+    renderLinks();
     
     enableThemeButtons();
 }
 
 // Removes a theme
 function onThemeRemove() {
-	let themeElement = $(this).parentsUntil("#themesList", ".theme-element");
+    let themeElement = $(this).parentsUntil("#themesList", ".theme-element");
 	
 	// Get the corresponding data element
 	let theme = d3.select(themeElement.get(0)).datum();
