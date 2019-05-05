@@ -39,6 +39,7 @@ var showLabels = true;
 var doThemesSorting = true;
 var lockTextsSorting = false;
 var lockTermsSorting = false;
+var lockTopicsSorting = false;
 
 // Holds terms selected, splitted for "/" and "_" into different terms
 var splittedTerms = [];
@@ -166,7 +167,10 @@ $(document).ready(function(){
     // Button for lock and unlock the sorting of terms
     $("#lockTermsSorting").click(onLockTermsSorting);
 
-                  
+      // Button for lock and unlock the sorting of terms
+    $("#lockTopicsSorting").click(onLockTopicsSorting);
+
+             
     // Drag'n'drop handlers
     	$("#textsList")
 		.on("dragstart", ".text-element", onTextElementDragStart)
@@ -1376,10 +1380,16 @@ function onSortTermsList(event) {
     renderLinks();
 }
 
+
+
 // Reacts to the sort trigger
 function onSortTopicsList(event) {
     event.preventDefault();
     modelResetClickedChoices();
+
+    lockTopicsSorting = true;
+    onLockTopicsSorting(); // onLockTopicsSorting always toggles the value of lockTermsSorting, so these two will unlock it
+
 	
     let sortKey = $(this).data("sortkey");
 	
@@ -2825,6 +2835,20 @@ function onLockTermsSorting(){
         $("#lockTermsSorting").addClass("button-active");
     }
 }
+
+
+function onLockTopicsSorting(){
+    if (lockTopicsSorting){
+        lockTopicsSorting = false;
+        $("#lockTopicsSorting").removeClass("button-active");
+	doResetHighlightAfterStateChange();
+    }
+    else{
+        lockTopicsSorting = true;
+        $("#lockTopicsSorting").addClass("button-active");
+    }
+}
+
 
 /*******************/
 

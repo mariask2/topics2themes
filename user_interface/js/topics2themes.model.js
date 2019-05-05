@@ -910,8 +910,12 @@ function sortTextScoreAsc(textElements) {
 // (descending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTopicScoreDesc(topicElements) {
-    var des = sortElements(topicElements, calculateTopicScore, compareValuesDesc, null);
-    return des
+    if (lockTopicsSorting){
+	return sortElements(topicElements, calculateTopicScore, null, null);
+    }
+    else{
+	return sortElements(topicElements, calculateTopicScore, compareValuesDesc, null);
+    }
 }
 
 // Returns a sorted copy of the provided array of topic list elements
@@ -919,7 +923,12 @@ function sortTopicScoreDesc(topicElements) {
 // (ascending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTopicScoreAsc(topicElements) {
-    return sortElements(topicElements, calculateTopicScore, compareValuesAsc, null);
+    if (lockTopicsSorting){
+	return sortElements(topicElements, calculateTopicScore, null, null);
+    }
+    else{
+	return sortElements(topicElements, calculateTopicScore, compareValuesAsc, null);
+    }
 }
 
 
