@@ -38,6 +38,7 @@ var SELECTANALYSISTEXT = "Select analysis";
 var showLabels = true;
 var doThemesSorting = true;
 var lockTextsSorting = false;
+var lockTermsSorting = false;
 
 // Holds terms selected, splitted for "/" and "_" into different terms
 var splittedTerms = [];
@@ -162,6 +163,9 @@ $(document).ready(function(){
     // Button for lock and unlock the sorting of texts
     $("#lockTextSorting").click(onLockTextSorting);
 
+    // Button for lock and unlock the sorting of terms
+    $("#lockTermsSorting").click(onLockTermsSorting);
+
                   
     // Drag'n'drop handlers
     	$("#textsList")
@@ -251,15 +255,6 @@ function enableCreateModel() {
     
     $("#newModel").removeClass("disabled");
     $("#newModel").attr("disabled", false);
-    
-    /*
-    if (modelDisableModelCreation == undefined){
-	$("#newModel").removeClass("disabled");
-    }
-    else{
-        alert("not allowed to create model");
-    }
-     */
 }
 
 
@@ -1370,46 +1365,46 @@ function sortDocumentsList(sortKey) {
 
 // Reacts to the sort trigger
 function onSortTermsList(event) {
-	event.preventDefault();
+    event.preventDefault();
     modelResetClickedChoices();
 	
-	let sortKey = $(this).data("sortkey");
+    let sortKey = $(this).data("sortkey");
 	
-	// Update the global sort mode
-	termSortMode = sortKey;
+    // Update the global sort mode
+    termSortMode = sortKey;
 	
-	// Update the visible checkmark
-	$(".sort-terms-trigger > span.checkmark").empty();
-	$(".sort-terms-trigger[data-sortkey='" + sortKey + "']").children("span.checkmark").html("&#x2713;");
+    // Update the visible checkmark
+    $(".sort-terms-trigger > span.checkmark").empty();
+    $(".sort-terms-trigger[data-sortkey='" + sortKey + "']").children("span.checkmark").html("&#x2713;");
 		
-	sortTermsList(sortKey);
+    sortTermsList(sortKey);
 	
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-	renderLinks();
+    renderLinks();
 }
 
 // Reacts to the sort trigger
 function onSortTopicsList(event) {
-	event.preventDefault();
+    event.preventDefault();
     modelResetClickedChoices();
 	
-	let sortKey = $(this).data("sortkey");
+    let sortKey = $(this).data("sortkey");
 	
-	// Update the global sort mode
-	topicSortMode = sortKey;
+    // Update the global sort mode
+    topicSortMode = sortKey;
 	
-	// Update the visible checkmark
-	$(".sort-topics-trigger > span.checkmark").empty();
-	$(".sort-topics-trigger[data-sortkey='" + sortKey + "']").children("span.checkmark").html("&#x2713;");
+    // Update the visible checkmark
+    $(".sort-topics-trigger > span.checkmark").empty();
+    $(".sort-topics-trigger[data-sortkey='" + sortKey + "']").children("span.checkmark").html("&#x2713;");
 		
-	sortTopicsList(sortKey);
+    sortTopicsList(sortKey);
 	
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-	renderLinks();
+    renderLinks();
 }
 
 // Reacts to the sort trigger
@@ -1536,7 +1531,6 @@ function onTermElementClick(){
     let term = d3.select($(this).get(0)).datum();
     
     toggleChosenElement(term.term, modelToggleTermElement);
-    //alert(currentTermIds)
     
     if (currentTermIds.indexOf(term.term) > -1){ // if chosen
         $(this).addClass(DIRECTCHOOSEN);
@@ -1926,7 +1920,6 @@ function controllerSelectChosenAnalysis(name_of_created_analysis){
 }
 
 function controllerDoPopulateThemes(doSorting){
-    alert("populating " + modelThemes.length + " themes.");
     $("#themesList").empty();
 	// Update the list elements with D3
 	d3.select("#themesList").selectAll("li")
@@ -2000,7 +1993,6 @@ function resetHighlightAfterStateChange(){
 }
 
 function doResetHighlightAfterStateChange(){
-    
     // If a term is not selected
     if (currentTermIds.length == 0){
         sortTermsList(termSortMode);
@@ -2827,6 +2819,18 @@ function onLockTextSorting(){
     else{
         lockTextsSorting = true;
         $("#lockTextSorting").addClass("button-active");
+    }
+}
+
+function onLockTermsSorting(){
+    if (lockTermsSorting){
+        lockTermsSorting = false;
+        $("#lockTermsSorting").removeClass("button-active");
+	doResetHighlightAfterStateChange();
+    }
+    else{
+        lockTermsSorting = true;
+        $("#lockTermsSorting").addClass("button-active");
     }
 }
 

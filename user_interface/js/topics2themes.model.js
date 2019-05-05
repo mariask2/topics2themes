@@ -593,7 +593,6 @@ function modelSortThemesWithMachineLearningIfTextChosen(){
 
 // Called via callback from modelSortThemesWithMachineLearningIfTextChosen
 function resortThemes(themeSorting){
-    //alert(themeSorting);
     modelThemeRankingForMostRecentlyClickedText = themeSorting;
     sortThemesList(themeSortMode);
     renderLinks();
@@ -719,11 +718,13 @@ function calculateTextScore(textElements) {
 function calculateTopicScore(topicElements) {
     return $.map(topicElements, function(element, i){
                  let d = d3.select(element).datum();
-                 
- 
+
                 // The flag below is used to sort the selected elements separately
-         		// to ensure proper sorting for all sorting modes (desc/asc)
-         		let isSelected = false;
+         	// to ensure proper sorting for all sorting modes (desc/asc)
+                 let isSelected = false;
+ 
+
+         		
                  
                  // TODO: Enable a sorting based on total term score as well
                 // Code for computing the total term score for a topic
@@ -768,7 +769,7 @@ function calculateTopicScore(topicElements) {
                         }
                 });
                 let totTextScore = 0;
-                for (let j = 0; j < currentTermIds.length; j++){
+                for (let j = 0; j < textScores.length; j++){
                     totTextScore = totTextScore + textScores[j];
                 }
                 let finalTextScore = totTextScore/textScores.length;
@@ -795,9 +796,7 @@ function calculateTopicScore(topicElements) {
                         isSelected = true;
                  }}
                  
-                 
-                 
-
+                
                  return { index: i, element: element, value: finalTextScore, isSelected: isSelected};
        });
     
@@ -869,8 +868,8 @@ function sortElements(elements, calculateScoreFunction, compareValuesFunctionSel
         otherSortValues.sort(compareValuesFunctionOther);
     }
     else{
-	//TODO: I removed this to speed up sorting. But I don't know if it has any bad effects for the user.
-        //otherSortValues.sort(compareValuesFunctionSelected)
+	//TODO: Perhaps this can be changed to speed up sorting
+        otherSortValues.sort(compareValuesFunctionSelected)
     }
     let sortedOtherElements = otherSortValues.map(function(element){
                                                   return elements[element.index];
@@ -911,7 +910,8 @@ function sortTextScoreAsc(textElements) {
 // (descending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTopicScoreDesc(topicElements) {
-    return sortElements(topicElements, calculateTopicScore, compareValuesDesc, null);
+    var des = sortElements(topicElements, calculateTopicScore, compareValuesDesc, null);
+    return des
 }
 
 // Returns a sorted copy of the provided array of topic list elements
@@ -928,7 +928,12 @@ function sortTopicScoreAsc(topicElements) {
 // (descending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTermsScoreDesc(termElements) {
-    return sortElements(termElements, calculateTermsScore, compareValuesDesc, null);
+    if (lockTermsSorting){
+	return sortElements(termElements, calculateTermsScore, null, null);
+    }
+    else{
+	return sortElements(termElements, calculateTermsScore, compareValuesDesc, null);
+    }
 }
 
 // Returns a sorted copy of the provided array of term list elements
@@ -936,7 +941,12 @@ function sortTermsScoreDesc(termElements) {
 // (ascending order)
 // Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
 function sortTermsScoreAsc(termElements) {
-    return sortElements(termElements, calculateTermsScore, compareValuesAsc, null);
+      if (lockTermsSorting){
+	return sortElements(termElements, calculateTermsScore, null, null);
+    }
+    else{
+	return sortElements(termElements, calculateTermsScore, compareValuesAsc, null);
+    }
 }
 
 // TODO: There is a lot of duplicated code for the sorting, this could be fixed

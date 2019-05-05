@@ -52,11 +52,12 @@ hr {
 
 .lock-text-button{
     margin-left: 0px !important;
-    margin-right: 13px !important;
+    margin-right: 4px !important;
     padding-left: 4px !important;
     padding-right: 3px !important;
     padding-bottom: 3px !important;
     padding-top: 1px !important;
+    background-color: green;
 }
 
 
