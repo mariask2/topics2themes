@@ -76,6 +76,8 @@ var modelThemeRankingForMostRecentlyClickedText = [];
 
 var modelShowArgumentation = undefined;
 
+var modelShowSentiment = undefined;
+
 var modelDisableModelCreation = undefined;
 
 ////////////////
@@ -329,6 +331,12 @@ function doInitializeData(res){
     }
     else{
 	modelShowArgumentation = undefined;
+    }
+    if (jsonData["meta_data"]["SHOW_SENTIMENT"] == "True"){
+	modelShowSentiment = 1;
+    }
+    else{
+	modelShowSentiment = undefined;
     }
     
    
@@ -841,7 +849,7 @@ function calculateThemesScore(themeElements) {
 // Help function for sorting element, called by all sorting functions
 function sortElements(elements, calculateScoreFunction, compareValuesFunctionSelected, compareValuesFunctionOther){
 
-    // Don't do any sorting
+    // Don't do any sorting (because lock sorting has been selected
     if (compareValuesFunctionSelected == null){
 	return elements;
     }

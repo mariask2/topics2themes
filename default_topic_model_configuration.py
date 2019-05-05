@@ -72,9 +72,14 @@ The maximumn number of features to include when vectorizing the texts
 MAX_NR_OF_FEATURES = None
 
 """
-Whether to show the argumentation buttons or not
+    Whether to show the argumentation buttons or not
 """
 SHOW_ARGUMENTATION = True
+
+"""
+    Whether to show the sentiment button or not
+"""
+SHOW_SENTIMENT = True
 
 
 """

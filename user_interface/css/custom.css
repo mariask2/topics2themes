@@ -863,8 +863,20 @@ span.checkmark {
     color: black;
 }
 
+.oppose-button{
+    font-size: 11px;
+    margin-left: 0px !important;
+    margin-right: 15px;
+    padding-left: 3px !important;
+    padding-right: 3px !important;
+    padding-bottom: 4px !important;
+    padding-top: 4px !important;
+    color: black;
+}
+
+
 .sentiment-button{
-     margin-right: 15px;
+     margin-left: 15px;
 }
 
 .sentiment-marker{

@@ -2880,18 +2880,20 @@ function adaptArgumentationButtonsToModel(){
 
     // Button for showing positive markers
     if (modelShowArgumentation == undefined){
-	d3.select("#sentiment").style("visibility", "hidden");
 	d3.select("#claim").style("visibility", "hidden");
 	d3.select("#supporting").style("visibility", "hidden");
 	d3.select("#opposing").style("visibility", "hidden");
     }
     else{
-	d3.select("#sentiment").style("visibility", "visible");
 	d3.select("#claim").style("visibility", "visible");
 	d3.select("#supporting").style("visibility", "visible");
 	d3.select("#opposing").style("visibility", "visible");
-
-
+    }
+    if (modelShowSentiment == undefined){
+	d3.select("#sentiment").style("visibility", "hidden");
+    }
+    else{
+	d3.select("#sentiment").style("visibility", "visible");
     }
 }
 

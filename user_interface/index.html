@@ -161,7 +161,12 @@
                                             class="form-control search-input" placeholder="Search">
                                             <span id="topicSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
                                     </div>
-                                    
+                                    <button id="lockTopicsSorting" type="button"
+                                        title="When activated, the automatic sort of topics is disabled."
+                                        class="btn btn-default btn-xs
+                                        header-button pull-left" aria-label="Lock resorting of topics">
+                                        <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
+                                    </button>
                                     <button id="topicSearchButton" type="button" title="Search for topic" class="btn btn-default btn-xs header-button" aria-label="Search for topic">
                                         <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                                     </button>
@@ -196,13 +201,7 @@
                                 <div class="btn-group pull-right">
                                     
                                     
-                                    <div class="btn-group pull-left">
-                                        <button id="sentiment" type="button"
-                                            title="Show markers for sentiment"
-                                            class="btn btn-default btn-xs
-                                            header-button argumentation-button pull-left sentiment-button" aria-label="Show markers for sentiment">
-                                            <span aria-hidden="true">Sentiment</span>
-                                        </button>
+
                                         
                                         
                                         <button id="claim" type="button"
@@ -222,11 +221,18 @@
                                         <button id="opposing" type="button"
                                             title="Show opposing arguments"
                                             class="btn btn-default btn-xs
-                                            header-button argumentation-button pull-left" aria-label="Show opposing arguments">
+                                            header-button argumentation-button pull-left oppose-button" aria-label="Show opposing arguments">
                                             <span aria-hidden="true">Oppose</span>
                                         </button>
+                                        <div class="btn-group pull-left">
+                                            <button id="sentiment" type="button"
+                                                title="Show markers for sentiment"
+                                                class="btn btn-default btn-xs
+                                                header-button argumentation-button pull-left sentiment-button" aria-label="Show markers for sentiment">
+                                                <span aria-hidden="true">Sentiment</span>
+                                            </button>
                                         
-                                    </div>
+                                    </div><!-- button group -->
                                     
                                     
                                     

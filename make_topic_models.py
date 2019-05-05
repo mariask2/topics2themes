@@ -70,6 +70,7 @@ MODEL = "MODEL"
 PRE_PROCESS_COLLOCATION_MARKER = "PREPROCESSCOLLOCATIONMARKER"
 NO_TOPIC_CHOSEN = "NOTOPIC"
 SHOW_ARGUMENTATION = "SHOW_ARGUMENTATION"
+SHOW_SENTIMENT = "SHOW_SENTIMENT"
 
 
 #####
@@ -294,7 +295,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               most_typical_model,\
                                                               tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD,\
                                                               properties.MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM,\
-                                                              properties.SHOW_ARGUMENTATION)
+                                                              properties.SHOW_ARGUMENTATION,\
+                                                              properties.SHOW_SENTIMENT)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
@@ -341,7 +343,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               most_typical_model, \
                                                               tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD,\
                                                               properties.MIN_FREQUENCY_IN_COLLECTION_TO_INCLUDE_AS_TERM,\
-                                                              properties.SHOW_ARGUMENTATION)
+                                                              properties.SHOW_ARGUMENTATION,\
+                                                              properties.SHOW_SENTIMENT)
         return result_dict, time, post_id, most_typical_model
 
     
@@ -971,7 +974,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                              are_these_two_terms_to_be_considered_the_same,\
                              most_typical_model, tf_vectorizer, additional_labels_method,\
                              min_term_frequency_in_collection_to_include_as_term,\
-                             show_argumentation):
+                             show_argumentation, show_sentiment):
     """
         Prints output/returns from the topic model in txt and json format (depending on whether it is run as server or as a program), with topic terms in bold face
         
@@ -1085,9 +1088,9 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                                 "configuration" : json_properties, \
                                     "user" : "dummy_user",\
                                     MODEL_NAME : model_name,\
-                                    SHOW_ARGUMENTATION : str(show_argumentation)
+                                    SHOW_ARGUMENTATION : str(show_argumentation),\
+                                    SHOW_SENTIMENT : str(show_sentiment)
     }
-
 
 
     if save_in_database:

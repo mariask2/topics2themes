@@ -165,6 +165,11 @@ class PropertiesContainer:
             self.SHOW_ARGUMENTATION = properties.SHOW_ARGUMENTATION
         except AttributeError:
             self.SHOW_ARGUMENTATION = default_topic_model_configuration.SHOW_ARGUMENTATION
+        
+        try:
+            self.SHOW_SENTIMENT = properties.SHOW_SENTIMENT
+        except AttributeError:
+            self.SHOW_SENTIMENT = default_topic_model_configuration.SHOW_SENTIMENT
 
 
         try:
