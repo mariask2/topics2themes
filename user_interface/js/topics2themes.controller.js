@@ -1313,61 +1313,52 @@ function onTopicRename() {
 
 // Reacts to the theme label change
 function onThemeRename() {
-	let newLabel = $(this).val();
-	let themeElement = $(this).parent(".theme-element");
+    let newLabel = $(this).val();
+    let themeElement = $(this).parent(".theme-element");
 	
-	// Update the corresponding data element
-	let theme = d3.select(themeElement.get(0)).datum();
-	theme.label = newLabel;
-	// Update the tooltip
-	themeElement.attr("title", "Theme #" + theme.id + ": " + theme.label);
+    // Update the corresponding data element
+    let theme = d3.select(themeElement.get(0)).datum();
+    theme.label = newLabel;
+    // Update the tooltip
+    themeElement.attr("title", "Theme #" + theme.id + ": " + theme.label);
 	
     modelRenameTheme(theme.id, newLabel)
 }
 
 // Reacts to the sort trigger
 function onSortDocumentsList(event) {
-	event.preventDefault();
+    event.preventDefault();
     modelResetClickedChoices();
     
+    lockTextsSorting = true;
+    onLockTextSorting(); // onLockTextSorting always toggles the value of lockTextsSorting, so these two will unlock it
+
+    let sortKey = $(this).data("sortkey");
 	
-	let sortKey = $(this).data("sortkey");
+    // Update the global sort mode
+    textSortMode = sortKey;
 	
-	// Update the global sort mode
-	textSortMode = sortKey;
+    // Update the visible checkmark
+    $(".sort-documents-trigger > span.checkmark").empty();
+    $(".sort-documents-trigger[data-sortkey='" + sortKey + "']").children("span.checkmark").html("&#x2713;");
 	
-	// Update the visible checkmark
-	$(".sort-documents-trigger > span.checkmark").empty();
-	$(".sort-documents-trigger[data-sortkey='" + sortKey + "']").children("span.checkmark").html("&#x2713;");
+    sortTextsList(sortKey);
 	
-	sortTextsList(sortKey);
-	
-	// Redraw the links and reset highlight
+    // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-	renderLinks();
+    renderLinks();
 }
 
-/*
-// Sorts the documents list
-function sortDocumentsList(sortKey) {
-	if (!(sortKey in SORT_DOCUMENTS))
-		return;
-	
-	let documentsContainer = $("#documentsContainer > tbody");
-	let documentElements = documentsContainer.children("tr.document-element").detach();
-	documentElements.sort(SORT_DOCUMENTS[sortKey]);
-	// Reset the scrolling for the container before reattaching the elements
-	documentsContainer.scrollTop(0);
-	documentsContainer.append(documentElements);
-}
-*/
 
 // Reacts to the sort trigger
 function onSortTermsList(event) {
     event.preventDefault();
     modelResetClickedChoices();
-	
+
+    lockTermsSorting = true;
+    onLockTermsSorting(); // onLockTermsSorting always toggles the value of lockTermsSorting, so these two will unlock it
+
     let sortKey = $(this).data("sortkey");
 	
     // Update the global sort mode
@@ -2811,6 +2802,7 @@ function onLockThemesSorting(){
 
 
 function onLockTextSorting(){
+    alert(lockTextsSorting);
     if (lockTextsSorting){
         lockTextsSorting = false;
         $("#lockTextSorting").removeClass("button-active");
