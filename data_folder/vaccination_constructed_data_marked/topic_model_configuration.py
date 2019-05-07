@@ -1,18 +1,21 @@
 import os
 from sklearn.feature_extraction import text
-
-"""
-from topics2themes.topic_model_constants import *
-from topics2themes.word2vec_term_similarity import *
-from topics2themes.environment_configuration import *
-"""
-from topic_model_constants import *
-from word2vec_term_similarity import *
-from environment_configuration import *
-
 from nltk.corpus import stopwords
 
+# An import that should function both locally and when running an a remote server
+try:
+    from environment_configuration import *
+except:
+    from topics2themes.environment_configuration import *
 
+if RUN_LOCALLY:
+    from topic_model_constants import *
+    from word2vec_term_similarity import *
+
+else:
+    from topics2themes.topic_model_constants import *
+    from topics2themes.word2vec_term_similarity import *
+    
 
 """
 Nr of topics to retrieve
