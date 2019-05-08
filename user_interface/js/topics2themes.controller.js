@@ -2812,7 +2812,6 @@ function onLockThemesSorting(){
 
 
 function onLockTextSorting(){
-    alert(lockTextsSorting);
     if (lockTextsSorting){
         lockTextsSorting = false;
         $("#lockTextSorting").removeClass("button-active");
