@@ -480,12 +480,11 @@ function onModelVersionListChange(element) {
         return;
     
     resetInterface();
+    disableThemeButtons();
     modelInitializeData(newModelVersionId);
     modelLoadAnalysesForSelectedModel(newModelVersionId);
     enableModelChoices();
     enableAnalysisChoices();
-    disableThemeButtons();
-    
    
     // leads to controllerDoPopulateInterface and controllerDoPopulateAnalysisChoices via call-backs to the model function 'doInitializeData'
     //resetDataWhenNewAnalysisIsSelected()
@@ -610,6 +609,7 @@ function controllerDoPopulateInterface() {
     // topics
     // only populate topics if no analysis is chosen. If an analysis is chosen, this will instead be performed in from the callback when loading an analysis version
     if (modelCurrentAnalysisVersionId == null){
+
         controllerDoPopulateTopicElements();
         disableThemeButtons(); // To disable the text areas of the topics, as they should be be changed when no theme is chosen
     }
