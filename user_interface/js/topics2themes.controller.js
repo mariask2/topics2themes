@@ -173,9 +173,8 @@ $(document).ready(function(){
              
     // Drag'n'drop handlers
     	$("#textsList")
-		.on("dragstart", ".text-element", onTextElementDragStart)
-		.on("dragend", ".text-element", onTextElementDragEnd);
-
+	.on("dragstart", ".label-button-container", onTextElementDragStart)
+		.on("dragend", ".label-button-container", onTextElementDragEnd);
                   
 	$("#themesList")
 		.on("dragenter", ".theme-element", onThemeElementDragEnterOver)
@@ -642,7 +641,7 @@ function controllerDoPopulateTextElements(){
     .enter()
     .append("li")
     .classed("list-group-item", true)
-    .attr("draggable", true)
+    //.attr("draggable", true)
     .each(populateTextElement);
 }
 
@@ -723,19 +722,21 @@ function populateTextElement(d, i){
     let buttonGroupContainer = $("<span></span>");
     buttonGroupContainer.append(buttonGroup);
     buttonGroupContainer.addClass("label-button-container");
+    buttonGroupContainer.attr("draggable", true)
     
-    let textContainer = $("<div></div>");
+    let textContainer = $("<p></p>");
     textContainer.append(buttonGroupContainer);
     textContainer.addClass("text-container");
+    //textContainer.attr("draggable", true)
     element.append(textContainer);
     
-    let textLabel = $("<span></span>");
+    let textLabel = $("<div></div>");
     textLabel.append(d.marked_text_tok);
     textLabel.addClass("full-text");
     textLabel.addClass("not-displayed-text");
     textContainer.append(textLabel);
     
-    let snippetLabel = $("<span></span>");
+    let snippetLabel = $("<div></div>");
     snippetLabel.append(d.snippet);
     snippetLabel.addClass("snippet-text")
     snippetLabel.addClass("displayed-text")
@@ -1588,7 +1589,7 @@ function onTopicElementClick(){
 
 function onTextElementClick(){
     let eventClass = $(event.target).attr("class");
-    if (eventClass.includes("choose-label-trigger") || eventClass.includes("theme-text-remove-button") || eventClass.includes("text-theme-remove-glyph")){
+    if (eventClass.includes("choose-label-trigger") || eventClass.includes("theme-text-remove-button") || eventClass.includes("text-theme-remove-glyph") || eventClass.includes("text-container")){
         // Discard clicks on the subcomponents within a text element
         return;
     }
@@ -1696,15 +1697,23 @@ function doDefaultSort(){
 // Drag texts
 // Handles the text element drag start event
 function onTextElementDragStart(event) {
+    let eventClass = $(event.target).attr("class");
+    if (eventClass.includes("text-container")){
+        // Discard drag on text element
+        return;
+    }
+    
 	let originalEvent = event.originalEvent;
-	let textElement = $(event.target);
-	
+	let textElement = $(event.target).parentsUntil("#textsList", ".text-element");
+    //alert(textElement);
 	// Mark the element as the source of dragged data
 	// (used for filtering in dragover handlers, since there is no way to access the data)
     textElement.addClass("dragged");
-		
+
+ 		
 	let transferData = {
-		textId: d3.select(event.target).datum().id
+	    //textId: d3.select(event.target).datum().id
+	    textId: d3.select(textElement.get(0)).datum().id
 	};
    
 	originalEvent.dataTransfer.setData("text-element", JSON.stringify(transferData));
@@ -1973,7 +1982,7 @@ function onThemeRemove() {
 // Resets highlighting
 function resetHighlight() {
     
-	d3.selectAll("." + HIGHLIGHT)
+    d3.selectAll("." + HIGHLIGHT)
      .classed(HIGHLIGHT, false);
     
     d3.selectAll("." + DIRECTHIGHLIGHT)
