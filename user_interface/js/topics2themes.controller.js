@@ -149,10 +149,12 @@ $(document).ready(function(){
     $(".sort-themes-trigger").click(onSortThemesList);
                   
 	// list click events to select a items as active
-    $("#termsList").on("click", ".term-element", onTermElementClick)
-    $("#topicsList").on("click", ".topic-element", onTopicElementClick)
-    $("#textsList").on("click", ".text-element", onTextElementClick)
-    $("#themesList").on("click", ".theme-element", onThemeElementClick)
+    $("#termsList").on("dblclick", ".term-element", onTermElementClick);
+    $("#topicsList").on("dblclick", ".topic-element", onTopicElementClick);
+    $("#textsList").on("dblclick", ".text-element", onTextElementClick);
+    $("#themesList").on("dblclick", ".theme-element", onThemeElementClick);
+
+    //$("#textsList").on("dblclick", ".jp_lemma", onTextDoubleClick);
     
                  
     // Button for hide and show labels on themes
@@ -212,6 +214,14 @@ $(document).ready(function(){
 });
 
 
+function onTextDoubleClick(){
+    //let text = d3.select($(this));
+    //alert("clicked");
+    var el = d3.select($(this))  //.attr("class");
+    alert(d3.select(el.get(0)))
+    //var el = document.getElementById("someId");
+    //alert(attribute);
+}
 function getAuthenticationKey(){
     // TODO: Use localStorage.setItem to save item
     let key = prompt("Please enter authentication key");
