@@ -216,9 +216,7 @@ $(document).ready(function(){
 
 function onSelectionChange(){
     let explanation = $(this).attr("exp")
-    if (explanation != undefined){
-	alert(explanation);
-    }
+    // TODO: Future version, care about if something is selected. Not implemented now
 }
 
 function getAuthenticationKey(){
