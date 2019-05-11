@@ -154,7 +154,7 @@ $(document).ready(function(){
     $("#textsList").on("dblclick", ".text-element", onTextElementClick);
     $("#themesList").on("dblclick", ".theme-element", onThemeElementClick);
 
-    //$("#textsList").on("dblclick", ".jp_lemma", onTextDoubleClick);
+    $("#textsList").on("mouseup", ".jp_lemma", onSelectionChange);
     
                  
     // Button for hide and show labels on themes
@@ -214,14 +214,13 @@ $(document).ready(function(){
 });
 
 
-function onTextDoubleClick(){
-    //let text = d3.select($(this));
-    //alert("clicked");
-    var el = d3.select($(this))  //.attr("class");
-    alert(d3.select(el.get(0)))
-    //var el = document.getElementById("someId");
-    //alert(attribute);
+function onSelectionChange(){
+    let explanation = $(this).attr("exp")
+    if (explanation != undefined){
+	alert(explanation);
+    }
 }
+
 function getAuthenticationKey(){
     // TODO: Use localStorage.setItem to save item
     let key = prompt("Please enter authentication key");
