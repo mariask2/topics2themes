@@ -1,0 +1,28 @@
+Output of evaluation performed with Japanese language teacher:
+
+
+1) Previously created themes that are relevant for the topic and texts that are being analysed are typically sorted as the top-ranked elements in the Themes panel. However, when the user creates a new theme element, this new element is positioned at the bottom of the Themes panel. As this causes unnecessary scrolling, newly created themes should instead be positioned at the top of the panel.
+
+2) The content of the Terms panel was used in the process of improving the output of the topic modelling algorithm, i.e., when it was determined whether the stop word list or the list of words to exclude from the automatic clustering should be extended. This panel was also used for gaining an initial overview of the output of the topic modelling algorithm. However,  this panel was not perceived as useful for performing the actual analysis of the texts. Functionality for hiding the Terms panel should, therefore, be added, to be able to use more screen space for the other three panels during the text analysis.
+
+3) There is no functionality for determining whether there are texts for which no themes have yet been assigned. As there is a functionality for sorting the elements in the Themes panel according to the number of texts which have been assigned to the theme, a similar functionality should be added to the Texts panel. That is, the functionality of sorting texts according to the number of themes which have been assigned to the text.
+
+4) The default sorting of themes is time of creation. That is a bit strange. When a theme is selected. The associated topics should be sorted according to how often it is associated to the theme. Similarly, when a topic is selected, its associated themes should be sorted according to how frequent this theme occurs in texts with which the topic is associated.
+
+5) When all elements in a panel are de-selected, the panels returns the focus to the first element in the list. This is often not the desired functionality. Instead, the focus should stay as it was, before the de-selection was carried out.
+
+6) When the display of dynamic labels are turned on and off, the themes are resorted. This functionality is typically not desired. Instead the sorting should be kept.
+
+7) If the creating of a theme takes a long time, and the user thereby has time to order the creation of new themes before the first has been created, this will have the effect that several themes with the same theme number are created.
+
+8) The search functionality does seem to work most of the times, but not always. I have not been able to figure out when it doesn't work.
+
+9) If a the analysis is loaded to quickly (before the model has had time to be loaded properly), the content of the analysis will not be shown.
+
+10) There might be a future need to further collapse themes, e.g. to add another panel to the right to collapse themes into smaller categories.
+
+11) There might also be a need to hide theme elements, e.g., to hide themes only rarely occurring from the list.
+
+12) There is no functionality for sorting texts according to their static and dynamic labels.
+
+
