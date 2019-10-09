@@ -32,11 +32,13 @@ if RUN_LOCALLY:
     import handle_properties
     from mongo_connector import MongoConnector
     from word2vecwrapper import Word2vecWrapper
+    from termvisualiser import TermVisualiser
 else:
     from topics2themes.topic_model_constants import *
     import topics2themes.handle_properties as handle_properties
     from topics2themes.mongo_connector import MongoConnector
     from topics2themes.word2vecwrapper import Word2vecWrapper
+    from topics2themes.termvisualiser import TermVisualiser
 try:
     sent_tokenize("Check if punkt is imported")
 except:
@@ -978,6 +980,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         
         """
   
+    term_visualiser = TermVisualiser()
     
     document_dict = {}
     topic_info_list = []
@@ -993,6 +996,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 max_weight_dict[term] = score
 
     for nr, el in enumerate(topic_info):
+        
         
         term_list_sorted_on_score = sorted(el[TERM_LIST], key=lambda x: x[1], reverse=True)
         start_label = '"' + " - ".join([term.split(SYNONYM_BINDER)[0] for (term,score) in term_list_sorted_on_score[:3]]) + '"'
@@ -1016,6 +1020,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             term_object["score"] = item
             topic_info_object["topic_terms"].append(term_object)
         
+        term_visualiser.add_terms(topic_info_object["topic_terms"], nr)
 
 
         for nr, document in enumerate(el[DOCUMENT_LIST]):
@@ -1062,7 +1067,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             # It is only the terms that are actually included in the document that are added here
             document_topic_obj["terms_in_topic"] = []
 
-            # Only include term that have occurred frequently enough in the document collection (they are in frequent_comb_term_set)
+            # Only include terms that have occurred in the document
             for term, score in topic_terms_score_dict.items():
                 if term in terms_found_in_document:
                     term_object = {}
@@ -1161,6 +1166,8 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         terms_open.flush()
         terms_open.close()
         print("Written to folder " + TOPIC_MODEL_EVALUATION_FOLDER)
+
+    term_visualiser.dump_term_dict()
 
     return result_dict, saved_time, post_id
 
