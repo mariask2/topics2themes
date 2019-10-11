@@ -102,7 +102,7 @@ class StopwordHandler():
 
 stopword_handler = StopwordHandler()
 
-
+term_visualiser = TermVisualiser()
 
 ####
 # Main 
@@ -533,13 +533,13 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
 
 def pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper, stop_word_file, stop_word_set):
 
-    word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set), min_df= 1)
+    word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set), min_df= 0.005)
     #word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set)) #, max_features = max_features)
     word_vectorizer.fit_transform(documents)
     word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names())
     word2vecwrapper.load_clustering("temp_clustering_output.txt")
     
-
+    term_visualiser.set_vocabulary(word_vectorizer.get_feature_names())
     
     pre_processed_documents = []
     for document in documents:
@@ -980,7 +980,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         
         """
   
-    term_visualiser = TermVisualiser()
+  
     
     document_dict = {}
     topic_info_list = []
