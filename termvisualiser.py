@@ -101,7 +101,10 @@ class TermVisualiser:
         main_fig = plt.figure()
         main_fig.set_size_inches(15, 7)
         #ax = plt.axes(projection='3d')
-
+        plt.axis('off')
+        plt.tick_params(axis='both', left='off', top='off', right='off', bottom='off',\
+                            labelleft='off', labeltop='off', labelright='off', labelbottom='off')
+        
         word_vec_dict = {}
         for point, found_word in zip(DX, found_words):
             word_vec_dict[found_word] = point
@@ -116,20 +119,21 @@ class TermVisualiser:
             for nr, term in enumerate(terms[::-1]):
                 print(term)
                 if term["term"] in word_vec_dict:
-                    strength = min(1, (float(term["score"])/max_score)*1.5 + 0.2)
+                    strength = min(0.6, (float(term["score"])/max_score)*1.5 + 0.1)
                     point = word_vec_dict[term["term"]]
-                    extra = 0.1
+                    extra = 0.01
+                    fontsize=6 + term["score"]*7
                     if term["term"] in nr_of_occurrences_for_term:
-                        extra = extra + nr_of_occurrences_for_term[term["term"]] * 1
-                    plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.1)
+                        extra = extra + nr_of_occurrences_for_term[term["term"]]
+                    plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.001)
                     #print(point[0], point[1], -1*(nr+1)/100)
                     #ax.text(point[0], point[1], -1*(nr+1)/100,  '%s' % (term["term"]), size=20, zorder=1, color='k')
-                    plt.annotate(term["term"], (point[0], point[1]), xytext=(point[0]+extra, point[1]+extra), zorder = -1*nr, color = (0, 0, 0, strength), fontsize=10 + term["score"]*7)
+                    plt.annotate(term["term"], (point[0], point[1]), xytext=(point[0] + extra, point[1]+extra), zorder = -1*nr, color = (0, 0, 0, strength), fontsize=fontsize)
                 
                     if term["term"] not in nr_of_occurrences_for_term:
-                        nr_of_occurrences_for_term[term["term"]]  =  1
+                        nr_of_occurrences_for_term[term["term"]]  =  fontsize*0.1
                     else:
-                        nr_of_occurrences_for_term[term["term"]]  =  nr_of_occurrences_for_term[term["term"]] + 1
+                        nr_of_occurrences_for_term[term["term"]]  =  nr_of_occurrences_for_term[term["term"]]  + fontsize*0.1
                 else:
                     print(term["term"] + " not found")
         """
@@ -148,3 +152,7 @@ class TermVisualiser:
 if __name__ == '__main__':
     tv = TermVisualiser()
     tv.produce_term_visualisation()
+
+
+
+#https://www.w3schools.com/howto/howto_js_image_magnifier_glass.asp
