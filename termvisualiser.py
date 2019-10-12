@@ -5,6 +5,7 @@ import numpy as np
 import os
 import joblib
 import math
+import random
 
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
@@ -62,7 +63,6 @@ class TermVisualiser:
         terms_several_occurrences_dict = {}
         for key, item in loaded_term_dict.items():
             for i in item:
-                #print(i["score"], i["term"])
                 if i["term"] not in terms_several_occurrences_dict:
                     terms_several_occurrences_dict[i["term"]] = [i["score"]]
                 else:
@@ -80,12 +80,12 @@ class TermVisualiser:
             found_words = []
             word2vec_model = gensim.models.KeyedVectors.load_word2vec_format(SPACE_FOR_PATH, binary=True, unicode_errors='ignore')
             for word in all_terms_in_corpus:
-                try:
+                if word in word2vec_model:
                     vec_raw  = word2vec_model[word]
                     norm_vector = list(preprocessing.normalize(np.reshape(vec_raw, newshape = (1, 300)), norm='l2')[0])
                     all_vectors_list.append(norm_vector)
                     found_words.append(word)
-                except KeyError:
+                else:
                     print(word + " not found")
 
             all_vectors_np = np.array(all_vectors_list)
@@ -107,10 +107,23 @@ class TermVisualiser:
                             labelleft='off', labeltop='off', labelright='off', labelbottom='off')
         
         word_vec_dict = {}
+        min_x = 100
+        min_y = 100
+        max_x = -100
+        max_y = -100
         for point, found_word in zip(DX, found_words):
             word_vec_dict[found_word] = point
+            if point[0] < min_x:
+                min_x = point[0]
+            if point[0] > max_x:
+                max_x = point[0]
+            if point[1] < min_y:
+                min_y = point[1]
+            if point[1] > max_y:
+                max_y = point[1]
 
-        nr_of_occurrences_for_term = {}
+        print(min_x, max_x, min_y, max_y)
+
         total_nr_of_topics = len(loaded_term_dict.items()) + 1
         for nr, (topic, terms) in enumerate(loaded_term_dict.items()):
             #fig = main_fig.add_subplot(1, total_nr_of_topics, nr +1)
@@ -118,10 +131,10 @@ class TermVisualiser:
             max_score = max([float(el["score"]) for el in terms])
             
             for nr, term in enumerate(terms[::-1]):
+                point = self.get_point_for_term(term["term"], word_vec_dict, min_x, max_x, min_y, max_y)
                 
-                if term["term"] in word_vec_dict:
+                if point != None:
                     strength = min(0.6, (float(term["score"])/max_score)*1.5 + 0.1)
-                    point = word_vec_dict[term["term"]]
                     extra = 0.01
                     fontsize=6 + term["score"]*7
                     
@@ -134,19 +147,13 @@ class TermVisualiser:
                         else:
                             extrax = extrax + (10 + s*7)*0.04 #
                             extray = extray + (13 + s*7)*0.04 #
-                    #extra = terms_several_occurrences_dict[term["term"]].index(term["score"])*0.1
-                    
-                    #if term["term"] in nr_of_occurrences_for_term:
-                    #    extra = extra + nr_of_occurrences_for_term[term["term"]]
+
+
                     plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.001)
-                    #print(point[0], point[1], -1*(nr+1)/100)
+
                     #ax.text(point[0], point[1], -1*(nr+1)/100,  '%s' % (term["term"]), size=20, zorder=1, color='k')
                     plt.annotate(term["term"], (point[0], point[1]), xytext=(point[0] - extrax, point[1]+extray), zorder = -1*nr, color = (0, 0, 0, strength), fontsize=fontsize)
                 
-                    if term["term"] not in nr_of_occurrences_for_term:
-                        nr_of_occurrences_for_term[term["term"]]  =  fontsize*0.1
-                    else:
-                        nr_of_occurrences_for_term[term["term"]]  =  nr_of_occurrences_for_term[term["term"]]  + fontsize*0.1
                 else:
                     print(term["term"] + " not found")
         """
@@ -161,6 +168,26 @@ class TermVisualiser:
     
         plt.close('all')
 
+    def get_point_for_term(self, term, word_vec_dict, min_x, max_x, min_y, max_y):
+        point = None
+        if term in word_vec_dict:
+            point = word_vec_dict[term]
+        else:
+            for w in term.split(" / "):
+                if w in word_vec_dict:
+                    point = word_vec_dict[w]
+        if point == None:
+            if self.has_number(term):
+                point = (min_x + 10*random.random(), max_y - 10*random.random())
+            else:
+                point = (min_x + 10*random.random(), min_y + 10*random.random())
+        return point
+
+    def has_number(self, term):
+        for el in range(0,9):
+            if str(el) in term:
+                return True
+        return False
 
 if __name__ == '__main__':
     tv = TermVisualiser()
