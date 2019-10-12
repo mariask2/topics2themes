@@ -55,19 +55,20 @@ class TermVisualiser:
         
         f = open(TEMP_FILE)
         j = f.read().strip()
-        print("******")
-        loaded_term_dict = json.loads(j)
-        print(loaded_term_dict)
-        all_terms = []
-        for key, item in loaded_term_dict.items():
-            all_terms.extend([el["term"] for el in item])
         
-        #print(loaded_term_dict)
-        all_terms = sorted(list(set(all_terms))) # sort just for printing
-        #all_terms = set(all_terms)
-        #print(all_terms)
-        print("********")
-        all_terms = set(all_terms)
+        loaded_term_dict = json.loads(j)
+        
+        # To position terms that occur several times with a little distance
+        terms_several_occurrences_dict = {}
+        for key, item in loaded_term_dict.items():
+            for i in item:
+                #print(i["score"], i["term"])
+                if i["term"] not in terms_several_occurrences_dict:
+                    terms_several_occurrences_dict[i["term"]] = [i["score"]]
+                else:
+                    terms_several_occurrences_dict[i["term"]].append(i["score"])
+                    terms_several_occurrences_dict[i["term"]].sort(reverse=True)
+    
 
         if os.path.exists(TSNE_NAME) and os.path.exists(SAVED_FOUND_WORDS_NAME):
             print("Model already created")
@@ -115,20 +116,32 @@ class TermVisualiser:
             #fig = main_fig.add_subplot(1, total_nr_of_topics, nr +1)
             print(topic)
             max_score = max([float(el["score"]) for el in terms])
-            print(max_score)
+            
             for nr, term in enumerate(terms[::-1]):
-                print(term)
+                
                 if term["term"] in word_vec_dict:
                     strength = min(0.6, (float(term["score"])/max_score)*1.5 + 0.1)
                     point = word_vec_dict[term["term"]]
                     extra = 0.01
                     fontsize=6 + term["score"]*7
-                    if term["term"] in nr_of_occurrences_for_term:
-                        extra = extra + nr_of_occurrences_for_term[term["term"]]
+                    
+                    # The position in the list, shows how much to move the term (the lower score, the further from original point is it to be positioned).
+                    extrax = 0
+                    extray = 0
+                    for s in terms_several_occurrences_dict[term["term"]]:
+                        if s == term["score"]:
+                            break
+                        else:
+                            extrax = extrax + (10 + s*7)*0.04 #
+                            extray = extray + (13 + s*7)*0.04 #
+                    #extra = terms_several_occurrences_dict[term["term"]].index(term["score"])*0.1
+                    
+                    #if term["term"] in nr_of_occurrences_for_term:
+                    #    extra = extra + nr_of_occurrences_for_term[term["term"]]
                     plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.001)
                     #print(point[0], point[1], -1*(nr+1)/100)
                     #ax.text(point[0], point[1], -1*(nr+1)/100,  '%s' % (term["term"]), size=20, zorder=1, color='k')
-                    plt.annotate(term["term"], (point[0], point[1]), xytext=(point[0] + extra, point[1]+extra), zorder = -1*nr, color = (0, 0, 0, strength), fontsize=fontsize)
+                    plt.annotate(term["term"], (point[0], point[1]), xytext=(point[0] - extrax, point[1]+extray), zorder = -1*nr, color = (0, 0, 0, strength), fontsize=fontsize)
                 
                     if term["term"] not in nr_of_occurrences_for_term:
                         nr_of_occurrences_for_term[term["term"]]  =  fontsize*0.1
