@@ -67,7 +67,7 @@ class TermVisualiser:
                 if i["term"] not in terms_several_occurrences_dict:
                     terms_several_occurrences_dict[i["term"]] = [i["score"]]
                 else:
-                    terms_several_occurrences_dict[i["term"]].append(i["score"])
+                    terms_several_occurrences_dict[i["term"]].append(float(i["score"]))
                     terms_several_occurrences_dict[i["term"]].sort(reverse=True)
     
 
@@ -139,18 +139,20 @@ class TermVisualiser:
                     strength = min(0.6, (float(term["score"])/max_score)*1.5 + 0.1)
                     extra = 0.01
                     fontsize=SMALLEST_FONT_SIZE + term["score"]*6
-                    
+                   
                     # The position in the list, shows how much to move the term (the lower score, the further from original point is it to be positioned).
                     extrax = 0
                     extray = 0
+                    """
                     for s in terms_several_occurrences_dict[term["term"]]:
                         if s == term["score"]:
                             break
                         else:
-                            extrax = extrax + (10 + s*7)*0.04 #
-                            extray = extray + (13 + s*7)*0.04 #
-
-
+                            #extrax = extrax + (10 + s*7)*0.04 #
+                            #extray = extray + (13 + s*7)*0.04 #
+                            extrax = extrax + (SMALLEST_FONT_SIZE + s)*0.05
+                            extray = extray + (SMALLEST_FONT_SIZE + s)*0.5
+                    """
                     plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.001)
 
                     #ax.text(point[0], point[1], -1*(nr+1)/100,  '%s' % (term["term"]), size=20, zorder=1, color='k')
@@ -160,7 +162,7 @@ class TermVisualiser:
                     plt.annotate(term["term"], (point[0], point[1]), xytext=(annotate_x, annotate_y), zorder = zorder, color = (0, 0, 0, strength), fontsize=fontsize)
                 
                 
-                    all_points_with_original_position_info.append((annotate_y, annotate_x, zorder, strength, fontsize, term["term"], nr, topic))
+                    all_points_with_original_position_info.append((annotate_y, float(term["score"]), annotate_x, zorder, strength, fontsize, term["term"], nr, topic))
                 else:
                     print(term["term"] + " not found")
         """
@@ -180,12 +182,26 @@ class TermVisualiser:
         all_points_with_original_position_info.sort(reverse=True)
         all_points_processed_position_info = []
         y_added_so_far = 0
-        for (annotate_y, annotate_x, zorder, strength, fontsize, term, nr, topic) in all_points_with_original_position_info:
-            to_add = (fontsize - SMALLEST_FONT_SIZE)**1.5
+        for (annotate_y, score, annotate_x, zorder, strength, fontsize, term, nr, topic) in all_points_with_original_position_info:
+            extrax = 0
+            extray = 0
+            
+            for s in terms_several_occurrences_dict[term]:
+                if s == score:
+                    break
+                else:
+                    extrax = extrax + (fontsize - SMALLEST_FONT_SIZE)*0.1
+                    extray = extray + (fontsize - SMALLEST_FONT_SIZE)**2
+
+            if extray == 0:
+                to_add = (fontsize - SMALLEST_FONT_SIZE)**1.5
+            else:
+                to_add = extray
             y_added_so_far = y_added_so_far - to_add
-            all_points_processed_position_info.append((annotate_y + y_added_so_far, annotate_x, zorder, strength, fontsize, term, nr, topic))
+            all_points_processed_position_info.append((annotate_y + y_added_so_far, annotate_x - extrax, zorder, strength, fontsize, term, nr, topic))
             y_added_so_far = y_added_so_far - to_add/2
-            print(y_added_so_far)
+            if extrax != 0 or extray != 0:
+                print(extrax, extray)
 
 
         main_fig_processed = plt.figure()
