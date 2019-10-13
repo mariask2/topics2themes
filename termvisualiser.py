@@ -3,7 +3,6 @@ import gensim
 from sklearn import preprocessing
 import numpy as np
 import os
-import joblib
 import math
 import random
 
@@ -18,6 +17,7 @@ SAVED_FOUND_WORDS_NAME = "temp_saved_words"
 TSNE_NAME = "temp_tsne_name"
 SPACE_FOR_PATH = "/Users/maria/mariaskeppstedtdsv/post-doc/gavagai/googlespace/GoogleNews-vectors-negative300.bin"
 
+SMALLEST_FONT_SIZE = 3
 
 class TermVisualiser:
     
@@ -47,6 +47,7 @@ class TermVisualiser:
         import matplotlib.pyplot as plt
         import matplotlib.font_manager as mfm
         from mpl_toolkits import mplot3d
+        import joblib
     
         all_f = open(TEMP_ALL_TERMS_FILE)
         all_j = all_f.read().strip()
@@ -124,6 +125,7 @@ class TermVisualiser:
 
         print(min_x, max_x, min_y, max_y)
 
+        all_points_with_original_position_info = []
         total_nr_of_topics = len(loaded_term_dict.items()) + 1
         for nr, (topic, terms) in enumerate(loaded_term_dict.items()):
             #fig = main_fig.add_subplot(1, total_nr_of_topics, nr +1)
@@ -136,7 +138,7 @@ class TermVisualiser:
                 if point != None:
                     strength = min(0.6, (float(term["score"])/max_score)*1.5 + 0.1)
                     extra = 0.01
-                    fontsize=6 + term["score"]*7
+                    fontsize=SMALLEST_FONT_SIZE + term["score"]*6
                     
                     # The position in the list, shows how much to move the term (the lower score, the further from original point is it to be positioned).
                     extrax = 0
@@ -152,8 +154,13 @@ class TermVisualiser:
                     plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.001)
 
                     #ax.text(point[0], point[1], -1*(nr+1)/100,  '%s' % (term["term"]), size=20, zorder=1, color='k')
-                    plt.annotate(term["term"], (point[0], point[1]), xytext=(point[0] - extrax, point[1]+extray), zorder = -1*nr, color = (0, 0, 0, strength), fontsize=fontsize)
+                    zorder = -1*nr
+                    annotate_y = point[1]+extray
+                    annotate_x = point[0] - extrax
+                    plt.annotate(term["term"], (point[0], point[1]), xytext=(annotate_x, annotate_y), zorder = zorder, color = (0, 0, 0, strength), fontsize=fontsize)
                 
+                
+                    all_points_with_original_position_info.append((annotate_y, annotate_x, zorder, strength, fontsize, term["term"], nr, topic))
                 else:
                     print(term["term"] + " not found")
         """
@@ -167,6 +174,35 @@ class TermVisualiser:
         print("Saved plot in " + save_figure_file_name)
     
         plt.close('all')
+
+        # Process to avoid to close
+
+        all_points_with_original_position_info.sort(reverse=True)
+        all_points_processed_position_info = []
+        y_added_so_far = 0
+        for (annotate_y, annotate_x, zorder, strength, fontsize, term, nr, topic) in all_points_with_original_position_info:
+            to_add = (fontsize - SMALLEST_FONT_SIZE)**1.5
+            y_added_so_far = y_added_so_far - to_add
+            all_points_processed_position_info.append((annotate_y + y_added_so_far, annotate_x, zorder, strength, fontsize, term, nr, topic))
+            y_added_so_far = y_added_so_far - to_add/2
+            print(y_added_so_far)
+
+
+        main_fig_processed = plt.figure()
+        main_fig_processed.set_size_inches(15, 7)
+        plt.axis('off')
+        plt.tick_params(axis='both', left='off', top='off', right='off', bottom='off',\
+                        labelleft='off', labeltop='off', labelright='off', labelbottom='off')
+
+        for point_info in all_points_processed_position_info:
+            plt.scatter(point_info[1], point_info[0], zorder = -100,  color = "red", marker = "o", s=0.001)
+            plt.annotate(point_info[5], (point_info[1], point_info[0]), xytext=(point_info[1], point_info[0]), zorder = point_info[2], color = (0, 0, 0, point_info[3]), fontsize=point_info[4])
+            
+        save_figure_file_name_processed = "processed_figure.png"
+        plt.savefig(save_figure_file_name_processed, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
+        print("Saved plot in " + save_figure_file_name_processed)
+        plt.close('all')
+        
 
     def get_point_for_term(self, term, word_vec_dict, min_x, max_x, min_y, max_y):
         point = None
