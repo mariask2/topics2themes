@@ -136,7 +136,7 @@ class TermVisualiser:
                 point = self.get_point_for_term(term["term"], word_vec_dict, min_x, max_x, min_y, max_y)
                 
                 if point != None:
-                    strength = min(0.6, (float(term["score"])/max_score)*1.5 + 0.1)
+                    strength = min(0.6, (float(term["score"])/max_score)*1.5)
                     extra = 0.01
                     fontsize=SMALLEST_FONT_SIZE + term["score"]*2
                    
@@ -182,33 +182,43 @@ class TermVisualiser:
         all_points_with_original_position_info.sort(reverse=True)
         all_points_processed_position_info = []
         y_added_so_far = 0
+        previous_x = min_x
+        prevoius_x_room = 0
+        previous_term = ""
         for (annotate_y, score, annotate_x, zorder, strength, fontsize, term, nr, topic) in all_points_with_original_position_info:
             extrax = 0
             extray = 0
             
-            VERTICAL_STRETCH = 3
+            x_room = 0.1*fontsize*len(term)
+            VERTICAL_STRETCH = 1.5
             if len(terms_several_occurrences_dict[term]) > 1:
                 for s in terms_several_occurrences_dict[term]:
                     if s == score:
                         break
                     else:
-                        extrax = extrax + (fontsize)*0.0005*len(term)
+                        extrax = extrax + (fontsize)*len(term)*0.0005
                         extray = extray + (fontsize)**VERTICAL_STRETCH
 
 
             if extray == 0: # No double occurrence of the same term. Add to y both before and after the term.
                 to_add = (fontsize)**VERTICAL_STRETCH
-                to_add_after = to_add
             else: # Double occurrence of the same term. Add more both before and after the term
                 to_add = extray
-                to_add_after = to_add
+
             
+            current_min =  annotate_x
+            current_max =  annotate_x + x_room
+            previous_min = previous_x
+            previous_max = previous_x + prevoius_x_room
+            if current_min > previous_max or current_max < previous_min: # if the previous is far away horiontally, don't add any y-stretch
+                to_add = 0
+ 
             y_added_so_far = y_added_so_far - to_add
             all_points_processed_position_info.append((annotate_y + y_added_so_far, annotate_x - extrax, zorder, strength, fontsize, term, nr, topic))
-            y_added_so_far = y_added_so_far - to_add_after
-            if extrax != 0 or extray != 0:
-                print(extrax, extray)
-
+    
+            previous_x = annotate_x
+            prevoius_x_room = x_room
+            previous_term = term
 
         main_fig_processed = plt.figure()
         main_fig_processed.set_size_inches(15, 7)
