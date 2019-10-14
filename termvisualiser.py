@@ -182,15 +182,16 @@ class TermVisualiser:
         all_points_with_original_position_info.sort(reverse=True)
         all_points_processed_position_info = []
         y_added_so_far = 0
-        previous_x = min_x
-        prevoius_x_room = 0
+        previous_x_list = []
+        prevoius_x_room_list = []
+        previous_y_list = []
         previous_term = ""
         for (annotate_y, score, annotate_x, zorder, strength, fontsize, term, nr, topic) in all_points_with_original_position_info:
             extrax = 0
             extray = 0
             
             x_room = 0.1*fontsize*len(term)
-            VERTICAL_STRETCH = 1.5
+            VERTICAL_STRETCH = 4
             if len(terms_several_occurrences_dict[term]) > 1:
                 for s in terms_several_occurrences_dict[term]:
                     if s == score:
@@ -205,19 +206,29 @@ class TermVisualiser:
             else: # Double occurrence of the same term. Add more both before and after the term
                 to_add = extray
 
-            
+            # If there is space above the term, do an anti-strech instead
+            to_add_to_use = -to_add
             current_min =  annotate_x
             current_max =  annotate_x + x_room
-            previous_min = previous_x
-            previous_max = previous_x + prevoius_x_room
-            if current_min > previous_max or current_max < previous_min: # if the previous is far away horiontally, don't add any y-stretch
-                to_add = 0
+            for previous_x, previous_x_room, previous_y in zip(previous_x_list, prevoius_x_room_list, previous_y_list):
+                previous_min = previous_x
+                previous_max = previous_x + previous_x_room
+                y_diff = previous_y - annotate_y
+                if not(current_min > previous_max or current_max < previous_min) and y_diff < fontsize*10: # if the previous is NOT far away horiontally, do an y-stretch
+                    to_add_to_use = to_add
+                    break
  
-            y_added_so_far = y_added_so_far - to_add
+            y_added_so_far = y_added_so_far - to_add_to_use
             all_points_processed_position_info.append((annotate_y + y_added_so_far, annotate_x - extrax, zorder, strength, fontsize, term, nr, topic))
     
-            previous_x = annotate_x
-            prevoius_x_room = x_room
+            if to_add_to_use != 0:
+                print(to_add_to_use)
+                print(term)
+                print()
+                    
+            previous_x_list.append(annotate_x)
+            prevoius_x_room_list.append(x_room)
+            previous_y_list.append(annotate_y)
             previous_term = term
 
         main_fig_processed = plt.figure()
