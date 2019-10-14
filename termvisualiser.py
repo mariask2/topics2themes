@@ -138,7 +138,7 @@ class TermVisualiser:
                 if point != None:
                     strength = min(0.6, (float(term["score"])/max_score)*1.5 + 0.1)
                     extra = 0.01
-                    fontsize=SMALLEST_FONT_SIZE + term["score"]*6
+                    fontsize=SMALLEST_FONT_SIZE + term["score"]*2
                    
                     # The position in the list, shows how much to move the term (the lower score, the further from original point is it to be positioned).
                     extrax = 0
@@ -186,20 +186,26 @@ class TermVisualiser:
             extrax = 0
             extray = 0
             
-            for s in terms_several_occurrences_dict[term]:
-                if s == score:
-                    break
-                else:
-                    extrax = extrax + (fontsize - SMALLEST_FONT_SIZE)*0.1
-                    extray = extray + (fontsize - SMALLEST_FONT_SIZE)**2
+            VERTICAL_STRETCH = 3
+            if len(terms_several_occurrences_dict[term]) > 1:
+                for s in terms_several_occurrences_dict[term]:
+                    if s == score:
+                        break
+                    else:
+                        extrax = extrax + (fontsize)*0.0005*len(term)
+                        extray = extray + (fontsize)**VERTICAL_STRETCH
 
-            if extray == 0:
-                to_add = (fontsize - SMALLEST_FONT_SIZE)**1.5
-            else:
+
+            if extray == 0: # No double occurrence of the same term. Add to y both before and after the term.
+                to_add = (fontsize)**VERTICAL_STRETCH
+                to_add_after = to_add
+            else: # Double occurrence of the same term. Add more both before and after the term
                 to_add = extray
+                to_add_after = to_add
+            
             y_added_so_far = y_added_so_far - to_add
             all_points_processed_position_info.append((annotate_y + y_added_so_far, annotate_x - extrax, zorder, strength, fontsize, term, nr, topic))
-            y_added_so_far = y_added_so_far - to_add/2
+            y_added_so_far = y_added_so_far - to_add_after
             if extrax != 0 or extray != 0:
                 print(extrax, extray)
 
