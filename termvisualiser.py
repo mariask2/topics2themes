@@ -125,6 +125,7 @@ class TermVisualiser:
 
         print(min_x, max_x, min_y, max_y)
 
+        FONTSIZE_FACTOR = 3
         all_points_with_original_position_info = []
         total_nr_of_topics = len(loaded_term_dict.items()) + 1
         for nr, (topic, terms) in enumerate(loaded_term_dict.items()):
@@ -138,39 +139,21 @@ class TermVisualiser:
                 if point != None:
                     strength = min(0.6, (float(term["score"])/max_score)*1.5)
                     extra = 0.01
-                    fontsize=SMALLEST_FONT_SIZE + term["score"]*2
+                    fontsize=SMALLEST_FONT_SIZE + term["score"]*FONTSIZE_FACTOR
                    
-                    # The position in the list, shows how much to move the term (the lower score, the further from original point is it to be positioned).
-                    extrax = 0
-                    extray = 0
-                    """
-                    for s in terms_several_occurrences_dict[term["term"]]:
-                        if s == term["score"]:
-                            break
-                        else:
-                            #extrax = extrax + (10 + s*7)*0.04 #
-                            #extray = extray + (13 + s*7)*0.04 #
-                            extrax = extrax + (SMALLEST_FONT_SIZE + s)*0.05
-                            extray = extray + (SMALLEST_FONT_SIZE + s)*0.5
-                    """
                     plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.001)
 
                     #ax.text(point[0], point[1], -1*(nr+1)/100,  '%s' % (term["term"]), size=20, zorder=1, color='k')
                     zorder = -1*nr
-                    annotate_y = point[1]+extray
-                    annotate_x = point[0] - extrax
+                    annotate_y = point[1]
+                    annotate_x = point[0]
                     plt.annotate(term["term"], (point[0], point[1]), xytext=(annotate_x, annotate_y), zorder = zorder, color = (0, 0, 0, strength), fontsize=fontsize)
                 
                 
                     all_points_with_original_position_info.append((annotate_y, float(term["score"]), annotate_x, zorder, strength, fontsize, term["term"], nr, topic))
                 else:
                     print(term["term"] + " not found")
-        """
-        for point, found_word in zip(DX, found_words):
-            if found_word in all_terms:
-                plt.scatter(point[0], point[1], color = "red", marker = "o", s=2)
-                plt.annotate(found_word, (point[0], point[1]), xytext=(point[0], point[1]), color = "black", fontsize=9)
-           """
+
         save_figure_file_name = "temp_figure.png"
         plt.savefig(save_figure_file_name, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
         print("Saved plot in " + save_figure_file_name)
@@ -191,7 +174,7 @@ class TermVisualiser:
             extray = 0
             
             x_room = 0.1*fontsize*len(term)
-            VERTICAL_STRETCH = 4
+            VERTICAL_STRETCH = FONTSIZE_FACTOR*1.2
             if len(terms_several_occurrences_dict[term]) > 1:
                 for s in terms_several_occurrences_dict[term]:
                     if s == score:
@@ -219,33 +202,66 @@ class TermVisualiser:
                     break
  
             y_added_so_far = y_added_so_far - to_add_to_use
-            all_points_processed_position_info.append((annotate_y + y_added_so_far, annotate_x - extrax, zorder, strength, fontsize, term, nr, topic))
+            all_points_processed_position_info.append((annotate_y + y_added_so_far, score, annotate_x - extrax, zorder, strength, fontsize, term, nr, topic))
     
-            if to_add_to_use != 0:
-                print(to_add_to_use)
-                print(term)
-                print()
+
                     
             previous_x_list.append(annotate_x)
             prevoius_x_room_list.append(x_room)
             previous_y_list.append(annotate_y)
             previous_term = term
 
+
+
+        # Sort points with the new co-ordinates according to their topic
+        topic_line_dict = {}
+        for annotate_y, score, annotate_x, zorder, strength, fontsize, term, nr, topic in all_points_processed_position_info:
+            if topic not in topic_line_dict:
+                topic_line_dict[topic] = []
+            topic_line_dict[topic].append((score, annotate_x, annotate_y, strength, term, fontsize, zorder))
+
+
+        self.plot_topic_line_dict(topic_line_dict)
+
+
+
+        for topic, line_points in topic_line_dict.items():
+            main_fig_processed = plt.figure()
+            main_fig_processed.set_size_inches(15, 7)
+            plt.axis('off')
+            plt.tick_params(axis='both', left='off', top='off', right='off', bottom='off',\
+                labelleft='off', labeltop='off', labelright='off', labelbottom='off')
+            
+            plt.close('all')
+
+    def plot_topic_line_dict(self, topic_line_dict):
+        from matplotlib.pyplot import plot, show, bar, grid, axis, savefig, clf
+        import matplotlib.markers
+        import matplotlib.pyplot as plt
+        import matplotlib.font_manager as mfm
+        from mpl_toolkits import mplot3d
+        import joblib
+        
         main_fig_processed = plt.figure()
         main_fig_processed.set_size_inches(15, 7)
         plt.axis('off')
         plt.tick_params(axis='both', left='off', top='off', right='off', bottom='off',\
                         labelleft='off', labeltop='off', labelright='off', labelbottom='off')
-
-        for point_info in all_points_processed_position_info:
-            plt.scatter(point_info[1], point_info[0], zorder = -100,  color = "red", marker = "o", s=0.001)
-            plt.annotate(point_info[5], (point_info[1], point_info[0]), xytext=(point_info[1], point_info[0]), zorder = point_info[2], color = (0, 0, 0, point_info[3]), fontsize=point_info[4])
-            
-        save_figure_file_name_processed = "processed_figure.png"
+        for topic, line_points in topic_line_dict.items():
+            print(topic)
+            zorder = -10000
+            line_points.sort(reverse = True)
+            for point_a, point_b in zip(line_points[:-1], line_points[1:]):
+                #print(point_a, point_b)
+                plt.plot([point_a[1], point_b[1]], [point_a[2], point_b[2]], zorder = zorder,  color = (0.2, 0.2, 0.8, point_b[3]), linewidth=min(point_b[0], 0.5))
+                zorder = zorder - 1
+            for (score, annotate_x, annotate_y, strength, term, fontsize, zorder) in line_points:
+                plt.scatter(annotate_x, annotate_y, zorder = -100000,  color = (0.2, 0.2, 0.8, strength), marker = "o", s=0.1)
+                plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x, annotate_y), zorder = zorder, color = (0, 0, 0, strength), fontsize=fontsize)
+        save_figure_file_name_processed = "processed_figure_all.png"
         plt.savefig(save_figure_file_name_processed, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
         print("Saved plot in " + save_figure_file_name_processed)
         plt.close('all')
-        
 
     def get_point_for_term(self, term, word_vec_dict, min_x, max_x, min_y, max_y):
         point = None
