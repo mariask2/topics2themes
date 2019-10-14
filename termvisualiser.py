@@ -125,7 +125,7 @@ class TermVisualiser:
 
         print(min_x, max_x, min_y, max_y)
 
-        FONTSIZE_FACTOR = 10
+        FONTSIZE_FACTOR = 5
         all_points_with_original_position_info = []
         total_nr_of_topics = len(loaded_term_dict.items()) + 1
         for nr, (topic, terms) in enumerate(loaded_term_dict.items()):
@@ -137,9 +137,9 @@ class TermVisualiser:
                 point = self.get_point_for_term(term["term"], word_vec_dict, min_x, max_x, min_y, max_y)
                 
                 if point != None:
-                    strength = min(0.6, (float(term["score"])/(max_score-0.1))*1.5)
+                    strength = min(0.6, (float(term["score"])/(max_score*0.7))*1.5)
                     extra = 0.01
-                    fontsize=SMALLEST_FONT_SIZE + term["score"]/(max_score-0.1)*FONTSIZE_FACTOR
+                    fontsize=SMALLEST_FONT_SIZE + term["score"]/(max_score*0.7)*FONTSIZE_FACTOR
                    
                     plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.001)
 
@@ -174,7 +174,7 @@ class TermVisualiser:
             extray = 0
             
             x_room = 0.1*fontsize*len(term)
-            VERTICAL_STRETCH = FONTSIZE_FACTOR*0.4
+            VERTICAL_STRETCH = FONTSIZE_FACTOR*0.6
             if len(terms_several_occurrences_dict[term]) > 1:
                 for s in terms_several_occurrences_dict[term]:
                     if s == score:
@@ -182,7 +182,6 @@ class TermVisualiser:
                     else:
                         extrax = extrax + (fontsize)*len(term)*0.0005
                         extray = extray + (fontsize)**VERTICAL_STRETCH
-
 
             if extray == 0: # No double occurrence of the same term. Add to y both before and after the term.
                 to_add = (fontsize)**VERTICAL_STRETCH
@@ -203,14 +202,11 @@ class TermVisualiser:
  
             y_added_so_far = y_added_so_far - to_add_to_use
             all_points_processed_position_info.append((annotate_y + y_added_so_far, score, annotate_x - extrax, zorder, strength, fontsize, term, nr, topic))
-    
 
-                    
             previous_x_list.append(annotate_x)
             prevoius_x_room_list.append(x_room)
             previous_y_list.append(annotate_y)
             previous_term = term
-
 
 
         # Sort points with the new co-ordinates according to their topic
@@ -220,15 +216,13 @@ class TermVisualiser:
                 topic_line_dict[topic] = []
             topic_line_dict[topic].append((score, annotate_x, annotate_y, strength, term, fontsize, zorder))
 
-
         self.plot_topic_line_dict(topic_line_dict, file_name = "processed_figure_all.png")
-
-
 
         for topic, line_points in topic_line_dict.items():
             file_name = "processed_figure_" + str(topic)
             self.plot_topic_line_dict(topic_line_dict, file_name, current_topic=topic)
-
+            
+                
     def plot_topic_line_dict(self, topic_line_dict, file_name, current_topic=None):
         from matplotlib.pyplot import plot, show, bar, grid, axis, savefig, clf
         import matplotlib.markers
@@ -248,7 +242,11 @@ class TermVisualiser:
             line_points.sort(reverse = True)
             if current_topic == None or topic == current_topic: #only print lines when the general is generated and for the current topic
                 for point_a, point_b in zip(line_points[:-1], line_points[1:]):
-                    plt.plot([point_a[1], point_b[1]], [point_a[2], point_b[2]], zorder = zorder,  color = (0.2, 0.2, 0.8, point_b[3]), linewidth=min(point_b[0], 0.5))
+                    if topic == current_topic:
+                        linecolor = (0.2, 0.2, 0.8, min(1, point_b[3]*1.5))
+                    else:
+                        linecolor = (0.2, 0.2, 0.8, point_b[3])
+                    plt.plot([point_a[1], point_b[1]], [point_a[2], point_b[2]], zorder = zorder,  color= linecolor, linewidth=min(point_b[0], 0.5))
                     zorder = zorder - 1
             for (score, annotate_x, annotate_y, strength, term, fontsize, zorder) in line_points:
                 if current_topic != None and topic !=current_topic: # draw the other terms in the back and with a weak colour
@@ -257,11 +255,11 @@ class TermVisualiser:
                 
                 if topic == current_topic:
                     strenth = 1.0
-                    color = (1.0, 0.0, 0.0, strength)
+                    weight = 'bold'
                 else:
-                    color = (0.0, 0.0, 0.0, strength)
+                    weight = 'normal'
                 plt.scatter(annotate_x, annotate_y, zorder = -100000,  color = (0.2, 0.2, 0.8, strength), marker = "o", s=0.1)
-                plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x, annotate_y), zorder = zorder, color=color, fontsize=fontsize)
+                plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x, annotate_y), zorder = zorder, color=(0.0, 0.0, 0.0, strength), fontsize=fontsize, weight=weight)
         plt.savefig(file_name, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
         print("Saved plot in " + file_name)
         plt.close('all')
