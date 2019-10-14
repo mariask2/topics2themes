@@ -221,20 +221,15 @@ class TermVisualiser:
             topic_line_dict[topic].append((score, annotate_x, annotate_y, strength, term, fontsize, zorder))
 
 
-        self.plot_topic_line_dict(topic_line_dict)
+        self.plot_topic_line_dict(topic_line_dict, file_name = "processed_figure_all.png")
 
 
 
         for topic, line_points in topic_line_dict.items():
-            main_fig_processed = plt.figure()
-            main_fig_processed.set_size_inches(15, 7)
-            plt.axis('off')
-            plt.tick_params(axis='both', left='off', top='off', right='off', bottom='off',\
-                labelleft='off', labeltop='off', labelright='off', labelbottom='off')
-            
-            plt.close('all')
+            file_name = "processed_figure_" + str(topic)
+            self.plot_topic_line_dict(topic_line_dict, file_name, current_topic=topic)
 
-    def plot_topic_line_dict(self, topic_line_dict):
+    def plot_topic_line_dict(self, topic_line_dict, file_name, current_topic=None):
         from matplotlib.pyplot import plot, show, bar, grid, axis, savefig, clf
         import matplotlib.markers
         import matplotlib.pyplot as plt
@@ -251,16 +246,24 @@ class TermVisualiser:
             print(topic)
             zorder = -10000
             line_points.sort(reverse = True)
-            for point_a, point_b in zip(line_points[:-1], line_points[1:]):
-                #print(point_a, point_b)
-                plt.plot([point_a[1], point_b[1]], [point_a[2], point_b[2]], zorder = zorder,  color = (0.2, 0.2, 0.8, point_b[3]), linewidth=min(point_b[0], 0.5))
-                zorder = zorder - 1
+            if current_topic == None or topic == current_topic: #only print lines when the general is generated and for the current topic
+                for point_a, point_b in zip(line_points[:-1], line_points[1:]):
+                    plt.plot([point_a[1], point_b[1]], [point_a[2], point_b[2]], zorder = zorder,  color = (0.2, 0.2, 0.8, point_b[3]), linewidth=min(point_b[0], 0.5))
+                    zorder = zorder - 1
             for (score, annotate_x, annotate_y, strength, term, fontsize, zorder) in line_points:
+                if current_topic != None and topic !=current_topic: # draw the other terms in the back and with a weak colour
+                    zorder = -100000
+                    strength = 0.2
+                
+                if topic == current_topic:
+                    strenth = 1.0
+                    color = (1.0, 0.0, 0.0, strength)
+                else:
+                    color = (0.0, 0.0, 0.0, strength)
                 plt.scatter(annotate_x, annotate_y, zorder = -100000,  color = (0.2, 0.2, 0.8, strength), marker = "o", s=0.1)
-                plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x, annotate_y), zorder = zorder, color = (0, 0, 0, strength), fontsize=fontsize)
-        save_figure_file_name_processed = "processed_figure_all.png"
-        plt.savefig(save_figure_file_name_processed, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
-        print("Saved plot in " + save_figure_file_name_processed)
+                plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x, annotate_y), zorder = zorder, color=color, fontsize=fontsize)
+        plt.savefig(file_name, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
+        print("Saved plot in " + file_name)
         plt.close('all')
 
     def get_point_for_term(self, term, word_vec_dict, min_x, max_x, min_y, max_y):
