@@ -125,7 +125,7 @@ class TermVisualiser:
 
         print(min_x, max_x, min_y, max_y)
 
-        FONTSIZE_FACTOR = 3
+        FONTSIZE_FACTOR = 10
         all_points_with_original_position_info = []
         total_nr_of_topics = len(loaded_term_dict.items()) + 1
         for nr, (topic, terms) in enumerate(loaded_term_dict.items()):
@@ -137,9 +137,9 @@ class TermVisualiser:
                 point = self.get_point_for_term(term["term"], word_vec_dict, min_x, max_x, min_y, max_y)
                 
                 if point != None:
-                    strength = min(0.6, (float(term["score"])/max_score)*1.5)
+                    strength = min(0.6, (float(term["score"])/(max_score-0.1))*1.5)
                     extra = 0.01
-                    fontsize=SMALLEST_FONT_SIZE + term["score"]*FONTSIZE_FACTOR
+                    fontsize=SMALLEST_FONT_SIZE + term["score"]/(max_score-0.1)*FONTSIZE_FACTOR
                    
                     plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.001)
 
@@ -174,7 +174,7 @@ class TermVisualiser:
             extray = 0
             
             x_room = 0.1*fontsize*len(term)
-            VERTICAL_STRETCH = FONTSIZE_FACTOR*1.2
+            VERTICAL_STRETCH = FONTSIZE_FACTOR*0.4
             if len(terms_several_occurrences_dict[term]) > 1:
                 for s in terms_several_occurrences_dict[term]:
                     if s == score:
