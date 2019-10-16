@@ -172,8 +172,9 @@ class TermVisualiser:
             extrax = 0
             extray = 0
             
-            x_room = 0.005*fontsize*len(term)
+            
             VERTICAL_STRETCH = 1.2
+            x_room = fontsize*len(term)**1.2
             to_add = 0
             
             # Check double occurrence of the same term.
