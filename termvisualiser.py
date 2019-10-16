@@ -173,7 +173,10 @@ class TermVisualiser:
             extray = 0
             
             x_room = 0.005*fontsize*len(term)
-            VERTICAL_STRETCH = 1/7
+            VERTICAL_STRETCH = 1.2
+            to_add = 0
+            
+            # Check double occurrence of the same term.
             if len(terms_several_occurrences_dict[term]) > 1:
                 for s in terms_several_occurrences_dict[term]:
                     if s == score:
@@ -181,25 +184,24 @@ class TermVisualiser:
                     else:
                         extrax = extrax + (fontsize)*len(term)*0.0005
                         extray = extray + (fontsize)**VERTICAL_STRETCH
-
-            if extray == 0: # No double occurrence of the same term. Add to y both before and after the term.
-                to_add = (fontsize)**VERTICAL_STRETCH
-            else: # Double occurrence of the same term. Add more both before and after the term
                 to_add = extray
-
-            # If there is space above the term, do an anti-strech instead
-            to_add_to_use = -to_add
-            current_min =  annotate_x
-            current_max =  annotate_x + x_room
-            for previous_x, previous_x_room, previous_y in zip(previous_x_list, prevoius_x_room_list, previous_y_list):
-                previous_min = previous_x
-                previous_max = previous_x + previous_x_room
-                y_diff = previous_y - annotate_y
-                if not(current_min > previous_max or current_max < previous_min) and y_diff < fontsize*10: # if the previous is NOT far away horiontally, do an y-stretch
-                    to_add_to_use = to_add
-                    break
- 
-            y_added_so_far = y_added_so_far - to_add_to_use
+            if to_add == 0:
+            #to_add = (fontsize)**VERTICAL_STRETCH
+            
+            
+                # If there is space above the term, do an anti-strech instead
+                to_add = -(fontsize)**VERTICAL_STRETCH
+                current_min =  annotate_x
+                current_max =  annotate_x + x_room
+                for previous_x, previous_x_room, previous_y in zip(previous_x_list, prevoius_x_room_list, previous_y_list):
+                    previous_min = previous_x
+                    previous_max = previous_x + previous_x_room
+                    y_diff = previous_y - annotate_y
+                    if not(current_min > previous_max or current_max < previous_min) and y_diff < fontsize**VERTICAL_STRETCH: # if the previous is NOT far away horiontally, do an y-stretch
+                        to_add = (fontsize)**VERTICAL_STRETCH
+                        break
+            
+            y_added_so_far = y_added_so_far - to_add
             all_points_processed_position_info.append((annotate_y + y_added_so_far, score, annotate_x - extrax, zorder, strength, fontsize, term, nr, topic))
 
             previous_x_list.append(annotate_x)
