@@ -138,7 +138,6 @@ class TermVisualiser:
                 
                 if point != None:
                     strength = min(0.6, (float(term["score"])/(max_score*HOW_MUCH_TO_NORMALIZE_FOR_TERMS_HAVING_DIFFERENT_WEIGHT_IN_DIFFERENT_TOPICS))*1.5)
-                    extra = 0.01
                     fontsize=SMALLEST_FONT_SIZE + term["score"]/(max_score*HOW_MUCH_TO_NORMALIZE_FOR_TERMS_HAVING_DIFFERENT_WEIGHT_IN_DIFFERENT_TOPICS)*FONTSIZE_FACTOR
                    
                     plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.001)
@@ -174,7 +173,7 @@ class TermVisualiser:
             extray = 0
             
             x_room = 0.005*fontsize*len(term)
-            VERTICAL_STRETCH = 1.5
+            VERTICAL_STRETCH = 1/7
             if len(terms_several_occurrences_dict[term]) > 1:
                 for s in terms_several_occurrences_dict[term]:
                     if s == score:
@@ -246,9 +245,12 @@ class TermVisualiser:
                     if topic == current_topic:
                         linecolor = (0.2, 0.2, 0.8, min(1, point_b[3]*1.5))
                     else:
-                        linecolor = (0.2, 0.2, 0.2, max(0.3, point_b[3]*0.3))
+                        linecolor = (0.2, 0.2, 0.2, min(0.5, point_b[3]*0.5))
                             #linecolor = (topic_color[0], topic_color[1], topic_color[2], point_b[3])
-                    plt.plot([point_a[1], point_b[1]], [point_a[2], point_b[2]], zorder = zorder,  color= linecolor, linewidth=min(point_b[0], 0.5))
+                    colored_linecolor = (topic_color[0], topic_color[1], topic_color[2], min(0.3, point_b[3]*0.3))
+                    plt.plot([point_a[1], point_b[1]], [point_a[2], point_b[2]], zorder = zorder,  color= colored_linecolor, linewidth=min(point_b[0], 0.5))
+                    zorder = zorder - 1
+                    plt.plot([point_a[1], point_b[1]], [point_a[2], point_b[2]], zorder = zorder,  color= linecolor, linewidth=min(point_a[0], 0.5))
                     zorder = zorder - 1
         
             for (score, annotate_x, annotate_y, strength, term, fontsize, zorder) in line_points:
@@ -262,7 +264,9 @@ class TermVisualiser:
                 else:
                     weight = 'normal'
                 plt.scatter(annotate_x, annotate_y, zorder = -100000,  color = (0.2, 0.2, 0.8, strength), marker = "o", s=0.1)
-                plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x, annotate_y), zorder = zorder, color=(topic_color[0], topic_color[1], topic_color[2], strength), fontsize=fontsize, weight=weight)
+                plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x, annotate_y), zorder = zorder-0.5, color=(0.2, 0.2, 0.2, strength), fontsize=fontsize, weight=weight)
+                plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x+0.001*fontsize, annotate_y+0.001*fontsize), zorder = zorder, color=(topic_color[0], topic_color[1], topic_color[2], strength), fontsize=fontsize, weight=weight)
+
         plt.savefig(file_name, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
         print("Saved plot in " + file_name)
         plt.close('all')
