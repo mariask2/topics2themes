@@ -236,36 +236,35 @@ class TermVisualiser:
         plt.axis('off')
         plt.tick_params(axis='both', left='off', top='off', right='off', bottom='off',\
                         labelleft='off', labeltop='off', labelright='off', labelbottom='off')
-        for (topic, line_points), topic_color in zip(topic_line_dict.items(), matplotlib.cm.rainbow(np.linspace(0, 1, len(topic_line_dict.items())))):
+        
+        for (topic, line_points), (nr, topic_color) in zip(topic_line_dict.items(), enumerate(matplotlib.cm.rainbow(np.linspace(0, 1, len(topic_line_dict.items()))))):
+            SHADOWFACTOR = 0.0015
+            MAX_LINEWIDTH = 0.3
+            LINEWIDTH_FACTOR = 0.9
             print(topic_color)
             zorder = -10000
             line_points.sort(reverse = True)
-            if current_topic == None or topic == current_topic: #only print lines when the general is generated and for the current topic
-                for point_a, point_b in zip(line_points[:-1], line_points[1:]):
-                    if topic == current_topic:
-                        linecolor = (0.2, 0.2, 0.8, min(1, point_b[3]*1.5))
-                    else:
-                        linecolor = (0.2, 0.2, 0.2, min(0.5, point_b[3]*0.5))
-                            #linecolor = (topic_color[0], topic_color[1], topic_color[2], point_b[3])
-                    colored_linecolor = (topic_color[0], topic_color[1], topic_color[2], min(0.3, point_b[3]*0.3))
-                    plt.plot([point_a[1], point_b[1]], [point_a[2], point_b[2]], zorder = zorder,  color= colored_linecolor, linewidth=min(point_b[0], 0.5))
-                    zorder = zorder - 1
-                    plt.plot([point_a[1], point_b[1]], [point_a[2], point_b[2]], zorder = zorder,  color= linecolor, linewidth=min(point_a[0], 0.5))
-                    zorder = zorder - 1
+           
+            for point_a, point_b in zip(line_points[:-1], line_points[1:]):
+                colored_linecolor = (topic_color[0], topic_color[1], topic_color[2], min(MAX_LINEWIDTH, point_b[3]*LINEWIDTH_FACTOR))
+                gray_linecolor = (0.1, 0.1, 0.1, min(MAX_LINEWIDTH, point_b[3]*LINEWIDTH_FACTOR))
+                plt.plot([point_a[1], point_b[1]], [point_a[2], point_b[2]], zorder = zorder,  color= colored_linecolor, linewidth=min(LINEWIDTH_FACTOR*point_a[0], MAX_LINEWIDTH))
+                zorder = zorder - 1
+                plt.plot([point_a[1] + SHADOWFACTOR, point_b[1] + SHADOWFACTOR], [point_a[2] + SHADOWFACTOR, point_b[2] + SHADOWFACTOR], zorder = zorder,  color=gray_linecolor , linewidth=min(point_b[0]*LINEWIDTH_FACTOR, MAX_LINEWIDTH))
+                zorder = zorder - 1
+        
         
             for (score, annotate_x, annotate_y, strength, term, fontsize, zorder) in line_points:
-                if current_topic != None and topic !=current_topic: # draw the other terms in the back and with a weak colour
-                    zorder = -100000
-                    strength = 0.2
-                
-                if topic == current_topic:
-                    strenth = 1.0
-                    weight = 'bold'
-                else:
-                    weight = 'normal'
-                plt.scatter(annotate_x, annotate_y, zorder = -100000,  color = (0.2, 0.2, 0.8, strength), marker = "o", s=0.1)
-                plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x, annotate_y), zorder = zorder-0.5, color=(0.2, 0.2, 0.2, strength), fontsize=fontsize, weight=weight)
-                plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x+0.001*fontsize, annotate_y+0.001*fontsize), zorder = zorder, color=(topic_color[0], topic_color[1], topic_color[2], strength), fontsize=fontsize, weight=weight)
+                colored_color = (topic_color[0], topic_color[1], topic_color[2], strength)
+                gray_color = (0.1, 0.1, 0.1, strength)
+                plt.scatter(annotate_x, annotate_y, zorder = -100000,  color = colored_color, marker = "o", s=strength)
+                plt.scatter(annotate_x+SHADOWFACTOR, annotate_y+SHADOWFACTOR, zorder = -100001,  color = gray_color, marker = "o", s=strength)
+                # Make a small black shadow for the texts
+                # Make every other topic display in italics so that it is easier to distinguish the different topics
+                if nr % 2 == 0:
+                    term = "$\it{" + term  + "}$"
+                plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x, annotate_y), zorder = zorder-0.5, color=gray_color, fontsize=fontsize, weight="normal")
+                plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x+SHADOWFACTOR*fontsize, annotate_y+SHADOWFACTOR*fontsize), zorder = zorder, color = colored_color, fontsize=fontsize, weight="normal")
 
         plt.savefig(file_name, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
         print("Saved plot in " + file_name)
