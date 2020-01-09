@@ -130,11 +130,12 @@ class ThemeSorter:
 
     def rank_themes_for_document(self, analysis_id, document_id):
         themes = self.mongo_connector.get_saved_themes(analysis_id)
-        all_theme_nrs = sorted([int(theme[THEME_NUMBER]) for theme in themes])
+        all_theme_nrs = sorted([int(theme[THEME_NUMBER]) for theme in themes], reverse=True)
+        # Show the most recently created themes first, if there are no other constrains (therefore do reverse sorting)
         
         document_dict, potential_theme_dict = self.mongo_connector.get_documents_for_analysis(analysis_id)
         
-        # No trained model available, return themes sorted according to theme number
+        # No trained model available, return themes sorted according to reversed theme number
         if not os.path.exists(self.get_model_file(analysis_id)) or \
                 not os.path.exists(self.get_vectorizer_file(analysis_id)) or \
                     not os.path.exists(self.get_class_list_file(analysis_id)):

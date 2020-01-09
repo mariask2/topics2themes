@@ -367,7 +367,7 @@ class MongoConnector:
                 find_one({self.THEME_NUMBER : theme_number_int, self.ANALYSIS_ID : analysis_id})[self.DOCUMENT_IDS]
         return new_document_ids
 
-    ## For retrieving theme document connections
+    ## For retrieving an id-text dict for an analysis, as well as a list of potential themes for each text (given that they share topic with another document that has this theme)
     def get_documents_for_analysis(self, analysis_id):
         model_id = self.get_model_for_analysis(analysis_id)
         topic_model_output = self.get_model_for_model_id(model_id)[self.TOPIC_MODEL_OUTPUT]
