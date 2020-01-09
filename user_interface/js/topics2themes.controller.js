@@ -2821,7 +2821,7 @@ function onShowLabels(){
         showLabels = true;
         $("#showLabels").addClass("button-active");
     }
-    controllerDoPopulateThemes();
+    controllerDoPopulateThemes(true);
 }
 
 function onLockThemesSorting(){

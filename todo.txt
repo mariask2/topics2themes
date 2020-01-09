@@ -15,6 +15,7 @@ COMMENT: NOT SURE ANYMORE IF THIS IS SENSIBLE. IT MIGHT BE MORE LOGICAL TO THE U
 FIXED: 9 JAN 2020
 
 6) When the display of dynamic labels are turned on and off, the themes are resorted. This functionality is typically not desired. Instead the sorting should be kept.
+FIXED: 9 JAN 2020
 
 7) If the creating of a theme takes a long time, and the user thereby has time to order the creation of new themes before the first has been created, this will have the effect that several themes with the same theme number are created.
 
