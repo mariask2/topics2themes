@@ -1502,6 +1502,7 @@ function sortThemesList(sortKey) {
     
     // Use the external sorting function for the terms list
     let sortFunction = SORT_THEME[sortKey];
+
     
     let themesContainer = $("#themesList");
     let themesElements = themesContainer.children("li.theme-element").detach();
@@ -1684,7 +1685,7 @@ function doDefaultSort(){
 	termSortMode = "score/desc";
 	topicSortMode = "score/desc";
 	textSortMode = "score/desc";
-	themeSortMode = "time/asc";
+	themeSortMode = "time/desc";
 	
 	// Update the visible checkmarks
 	$("span.checkmark").empty();

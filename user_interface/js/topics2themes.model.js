@@ -265,7 +265,7 @@ function modelCreateNewTheme(){
 
 function doCreateNewTheme(themeId){
     addNewTheme(themeId, "");
-    controllerDoPopulateThemes(false);
+    controllerDoPopulateThemes(true);  // do default sorting
 }
 
 //
@@ -849,6 +849,7 @@ function calculateThemesScore(themeElements) {
 // Help function for sorting element, called by all sorting functions
 function sortElements(elements, calculateScoreFunction, compareValuesFunctionSelected, compareValuesFunctionOther){
 
+    
     // Don't do any sorting (because lock sorting has been selected
     if (compareValuesFunctionSelected == null){
 	return elements;
