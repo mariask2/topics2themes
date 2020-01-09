@@ -9,8 +9,10 @@ FIXED: 9 JAN 2020
 3) There is no functionality for determining whether there are texts for which no themes have yet been assigned. As there is a functionality for sorting the elements in the Themes panel according to the number of texts which have been assigned to the theme, a similar functionality should be added to the Texts panel. That is, the functionality of sorting texts according to the number of themes which have been assigned to the text.
 
 4) The default sorting of themes is time of creation. That is a bit strange. When a theme is selected. The associated topics should be sorted according to how often it is associated to the theme. Similarly, when a topic is selected, its associated themes should be sorted according to how frequent this theme occurs in texts with which the topic is associated.
+COMMENT: NOT SURE ANYMORE IF THIS IS SENSIBLE. IT MIGHT BE MORE LOGICAL TO THE USER IF THE THEMES ARE SORTED ACCORDING TO HOW RECENTLY THEY WERE CREATED (AS IMPLEMENTED ABOVE FOR POINT 1). THIS IS LEFT AS-IS FOR THE MOMENT, AND MORE USER TESTS ARE TO BE PERFORMED.
 
 5) When all elements in a panel are de-selected, the panels returns the focus to the first element in the list. This is often not the desired functionality. Instead, the focus should stay as it was, before the de-selection was carried out.
+FIXED: 9 JAN 2020
 
 6) When the display of dynamic labels are turned on and off, the themes are resorted. This functionality is typically not desired. Instead the sorting should be kept.
 

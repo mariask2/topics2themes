@@ -1447,6 +1447,30 @@ function onSortThemesList(event) {
 // Sort functions
 //////
 
+function scrollTopForAllExceptRecentlyClicked(recentlyClicked){
+
+    if (! (recentlyClicked == "#termsList")){
+        let termsContainer = $("#termsList");
+        termsContainer.scrollTop(0);
+    }
+    
+    if (! (recentlyClicked == "#textsList")){
+        let textsContainer = $("#textsList");
+        textsContainer.scrollTop(0);
+        }
+    
+    if (! (recentlyClicked == "#topicsList")){
+        let topicsContainer = $("#topicsList");
+        topicsContainer.scrollTop(0);
+    }
+    
+    if (! (recentlyClicked == "#themesList")){
+        let themesContainer = $("#themesList");
+        themesContainer.scrollTop(0);
+    }
+    
+}
+
 // Sorts the terms list
 function sortTermsList(sortKey) {
 	if (!(sortKey in SORT_TERMS))
@@ -1459,9 +1483,11 @@ function sortTermsList(sortKey) {
 	let termElements = termsContainer.children("li.term-element").detach();
 	let sortedElements = sortFunction(termElements);
 	// Reset the scrolling for the container before reattaching the elements
-	termsContainer.scrollTop(0);
+	//termsContainer.scrollTop(0);
 	termsContainer.append(sortedElements);
 }
+
+
 
 // Sorts the text list
 function sortTextsList(sortKey) {
@@ -1475,7 +1501,7 @@ function sortTextsList(sortKey) {
     let textsElements = textsContainer.children("li.text-element").detach();
     let sortedElements = sortFunction(textsElements);
     // Reset the scrolling for the container before reattaching the elements
-    textsContainer.scrollTop(0);
+    //textsContainer.scrollTop(0);
     textsContainer.append(sortedElements);
 }
 
@@ -1491,7 +1517,7 @@ function sortTopicsList(sortKey) {
     let topicsElements = topicsContainer.children("li.topic-element").detach();
     let sortedElements = sortFunction(topicsElements);
     // Reset the scrolling for the container before reattaching the elements
-    topicsContainer.scrollTop(0);
+    //topicsContainer.scrollTop(0);
     topicsContainer.append(sortedElements);
 }
 
@@ -1508,7 +1534,7 @@ function sortThemesList(sortKey) {
     let themesElements = themesContainer.children("li.theme-element").detach();
     let sortedElements = sortFunction(themesElements);
     // Reset the scrolling for the container before reattaching the elements
-    themesContainer.scrollTop(0);
+    //themesContainer.scrollTop(0);
     themesContainer.append(sortedElements);
 }
 
@@ -1535,9 +1561,7 @@ function fillSplittedCurrentTermList(){
 }
 
 function onTermElementClick(){
-	// Remember the scrolling for the corresponding list
-	let currentScroll = $("#termsList").scrollTop();
-	
+
     let term = d3.select($(this).get(0)).datum();
     
     toggleChosenElement(term.term, modelToggleTermElement);
@@ -1551,8 +1575,9 @@ function onTermElementClick(){
         setTimeout(highlightTermElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
     
-    // Restore the scrolling
-    setTimeout($("#termsList").scrollTop(currentScroll), 0);
+    // For the other panels, which were not recently clicked, they should show the beginning of the panel, so scroll up
+    scrollTopForAllExceptRecentlyClicked("#termsList");
+
     
     // Sort other lists and render the links
     
@@ -1568,18 +1593,10 @@ function onTopicElementClick(){
         // Discard clicks on the subcomponents within a topic element
         return;
     }
-    
-    // Remember the scrolling for the corresponding list
-	let currentScroll = $("#topicsList").scrollTop();
 	
     let topic = d3.select($(this).get(0)).datum();
     toggleChosenElement(topic.id, modelToggleTopicElement);
 
-    
-    // Restore the scrolling
-    $("#topicsList").scrollTop(currentScroll);
-    
-    
     if (currentTopicIds.indexOf(topic.id) > -1){ // if chosen
         $(this).addClass(DIRECTCHOOSEN);
         setTimeout(highlightTopicElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
@@ -1588,6 +1605,9 @@ function onTopicElementClick(){
         $(this).removeClass(DIRECTCHOOSEN);
         setTimeout(highlightTopicElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
+    
+    // For the other panels, which were not recently clicked, they should show the beginning of the panel, so scroll up
+    scrollTopForAllExceptRecentlyClicked("#topicsList");
     
     setTimeout(resetPanelHeadings(), 0);
     setTimeout(setPanelHeadings(), 0);
@@ -1602,15 +1622,8 @@ function onTextElementClick(){
         return;
     }
     
-    // Remember the scrolling for the corresponding list
-	let currentScroll = $("#textsList").scrollTop();
-    
-    
     let text = d3.select($(this).get(0)).datum();
     toggleChosenElement(text.id, modelToggleTextElement);
-    
-    // Restore the scrolling
-    $("#textsList").scrollTop(currentScroll);
     
     
     // Sort other lists and render the links
@@ -1623,6 +1636,9 @@ function onTextElementClick(){
         $(this).removeClass(DIRECTCHOOSEN);
         setTimeout(highlightTextElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
+    
+    // For the other panels, which were not recently clicked, they should show the beginning of the panel, so scroll up
+    scrollTopForAllExceptRecentlyClicked("#textsList");
     
     modelSetMostRecentlyClickedForThemeRanking(text.id);
     //This sorting the rendering is not done here, but in a call-back from modelGetThemeRankingForText
@@ -1643,14 +1659,8 @@ function onThemeElementClick(event){
         return;
     }
     
-    // Remember the scrolling for the corresponding list
-	let currentScroll = $("#themesList").scrollTop();
-	
     let theme = d3.select($(this).get(0)).datum();
     toggleChosenElement(theme.id, modelToggleThemeElement);
-    
-    // Restore the scrolling
-    $("#themesList").scrollTop(currentScroll);
     
     if (currentThemeIds.indexOf(theme.id) > -1){ // if chosen
         $(this).addClass(DIRECTCHOOSEN);
@@ -1661,6 +1671,8 @@ function onThemeElementClick(event){
         setTimeout(highlightThemeElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
     
+    // For the other panels, which were not recently clicked, they should show the beginning of the panel, so scroll up
+    scrollTopForAllExceptRecentlyClicked("#themesList");
     setTimeout(resetPanelHeadings(), 0);
     setTimeout(setPanelHeadings(), 0);
     
