@@ -2,6 +2,7 @@ Output of evaluation performed with Japanese language teacher:
 
 
 1) Previously created themes that are relevant for the topic and texts that are being analysed are typically sorted as the top-ranked elements in the Themes panel. However, when the user creates a new theme element, this new element is positioned at the bottom of the Themes panel. As this causes unnecessary scrolling, newly created themes should instead be positioned at the top of the panel.
+FIXED: 9 JAN 2020
 
 2) The content of the Terms panel was used in the process of improving the output of the topic modelling algorithm, i.e., when it was determined whether the stop word list or the list of words to exclude from the automatic clustering should be extended. This panel was also used for gaining an initial overview of the output of the topic modelling algorithm. However,  this panel was not perceived as useful for performing the actual analysis of the texts. Functionality for hiding the Terms panel should, therefore, be added, to be able to use more screen space for the other three panels during the text analysis.
 
