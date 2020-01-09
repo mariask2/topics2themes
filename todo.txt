@@ -18,8 +18,10 @@ FIXED: 9 JAN 2020
 FIXED: 9 JAN 2020
 
 7) If the creating of a theme takes a long time, and the user thereby has time to order the creation of new themes before the first has been created, this will have the effect that several themes with the same theme number are created.
+FIXED: 9 JAN 2020
 
 8) The search functionality does seem to work most of the times, but not always. I have not been able to figure out when it doesn't work.
+I HAVE NOT BEEN ABLE TO REPEAT THIS BUG. WILL NOT DO ANYTHING ABOUT IT AT THE MOMENT
 
 9) If a the analysis is loaded to quickly (before the model has had time to be loaded properly), the content of the analysis will not be shown.
 FIXED: 9 JAN 2020

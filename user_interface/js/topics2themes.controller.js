@@ -1938,6 +1938,7 @@ function onThemeAdd() {
 
 // Creates a new theme with an optionally provided list of text IDs
 function createNewTheme(textIds) {
+    disableThemeButtons(); // To prevent the user from creating several themes at the same time
     modelCreateNewTheme(textIds);
 }
 
