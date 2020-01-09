@@ -22,6 +22,7 @@ FIXED: 9 JAN 2020
 8) The search functionality does seem to work most of the times, but not always. I have not been able to figure out when it doesn't work.
 
 9) If a the analysis is loaded to quickly (before the model has had time to be loaded properly), the content of the analysis will not be shown.
+FIXED: 9 JAN 2020
 
 10) There might be a future need to further collapse themes, e.g. to add another panel to the right to collapse themes into smaller categories.
 

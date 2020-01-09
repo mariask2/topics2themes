@@ -489,9 +489,7 @@ function onModelVersionListChange(element) {
     disableThemeButtons();
     modelInitializeData(newModelVersionId);
     modelLoadAnalysesForSelectedModel(newModelVersionId);
-    enableModelChoices();
-    enableAnalysisChoices();
-   
+    
     // leads to controllerDoPopulateInterface and controllerDoPopulateAnalysisChoices via call-backs to the model function 'doInitializeData'
     //resetDataWhenNewAnalysisIsSelected()
 }
