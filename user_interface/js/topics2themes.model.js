@@ -56,6 +56,10 @@ var modelTermsToDocuments;
 var modelTopicsToDocuments;
 // Mapping of texts to themes
 var modelThemesToTexts;
+// Mapping of themes to texts
+var modelTextsToThemes;
+
+
 // The topics that have been given user names
 var modelTopicNames;
 //
@@ -219,6 +223,7 @@ function resetModelData(){
 function resetUserAnalysisData(){
     modelThemes = [];
     modelThemesToTexts = {};
+    modelTextsToThemes = {};
     modelTopicNames = {};
     modelUserTextLabels = {};
     
@@ -378,21 +383,23 @@ function doInitializeData(res){
 	for (let i = 0; i < documents.length; i++) {
 		// NOTE: "document" is a pretty important DOM object,
 		// so better use other local variable names
-		var doc = documents[i];
+	    var doc = documents[i];
   
-        // TODO: This code (and the check if snippet exists below) is only here for historic reasons. Remove in later version
-        let dot_splitted = doc.marked_text_tok.split(".").slice(0,2);
-        let snippet = dot_splitted.join(".") + "... [TEMPORARY SUM.]"
+
+
+            // TODO: This code (and the check if snippet exists below) is only here for historic reasons. Remove in later version
+            let dot_splitted = doc.marked_text_tok.split(".").slice(0,2);
+            let snippet = dot_splitted.join(".") + "... [TEMPORARY SUM.]"
   
-        if("snippet" in doc){
-            snippet = doc.snippet
-        }
+            if("snippet" in doc){
+		snippet = doc.snippet
+            }
         /*
         let snippetVersion = doc.marked_text_tok
         if doc.marked_text_tok.length > 100:
             snippetVersion = doc.marked_text_tok.substring()
             */
-        modelDocuments.push({"id" : doc.id, "text" : doc.text, "label": doc.label, "marked_text_tok": doc.marked_text_tok, "additional_labels" : doc.additional_labels, "snippet": snippet, "base_name" : doc.base_name})
+            modelDocuments.push({"id" : doc.id, "text" : doc.text, "label": doc.label, "marked_text_tok": doc.marked_text_tok, "additional_labels" : doc.additional_labels, "snippet": snippet, "base_name" : doc.base_name})
 		
 		if (doc.document_topics == undefined)
 			continue;
@@ -519,6 +526,15 @@ function modelAddTextThemeLink(themeId, textId){
     if (modelThemesToTexts[themeId].texts.indexOf(textId) == -1){
         modelThemesToTexts[themeId].texts.push(textId)
     }
+
+    if (!(textId in modelTextsToThemes)){
+	// For storing connections between texts and themes
+	modelTextsToThemes[textId] = {"themes" : []};
+    }
+
+    if (modelTextsToThemes[textId].themes.indexOf(themeId) == -1){
+        modelTextsToThemes[textId].themes.push(themeId)
+    }
     
     let addTextThemeLinkUrl = "add_theme_document_connection";
     let data = {"theme_number" :themeId,
@@ -563,6 +579,9 @@ function removeTextThemeLink(themeId, textId){
     let indexToRemove = modelThemesToTexts[themeId].texts.indexOf(textId);
     modelThemesToTexts[themeId].texts.splice(indexToRemove, 1);
     
+    let themeIndexToRemove = modelTextsToThemes[textId].themes.indexOf(themeId);
+    modelTextsToThemes[textId].themes.splice(themeIndexToRemove, 1);
+
     deleteDatabaseTextThemeLink(themeId, textId);
 }
 
@@ -717,6 +736,52 @@ function calculateTextScore(textElements) {
                  return { index: i, element: element, value: accScore, isSelected: isSelected, secondaryValue: -1*d.text.length};
       });
     
+}
+
+
+function calculateTextThemesScore(textElements) {
+	return $.map(textElements, function(element, i){
+
+	    let number = 0;
+	    let d = d3.select(element).datum();
+	    if (d.id in modelTextsToThemes){
+		number = modelTextsToThemes[d.id].themes.length;
+	     }
+	   
+	    // The flag below is used to sort the selected elements separately
+	    // to ensure proper sorting for all sorting modes (desc/asc)
+	    let isSelected = false;
+
+	    for (let j = 0; j < modelTopics.length; j++ ){
+		let topic = modelTopics[j];
+		if (isAssociatedTextTopic(d.id, topic.id)){
+				if (currentTopicIds.indexOf(topic.id) > -1){
+					isSelected = true;
+				}
+			}
+		}
+
+		for (let j = 0; j < modelTerms.length; j++ ){
+			let term = modelTerms[j];
+			if (isAssociatedTextTerm(d.id, term.term)){
+				if (currentTermIds.indexOf(term.term) > -1){
+					isSelected = true;
+				}
+			}
+		}
+
+		for (let j = 0; j < modelThemes.length; j++ ){
+			let theme = modelThemes[j];
+			if (isAssociatedTextTheme(d.id, theme.id)){
+				if (currentThemeIds.indexOf(theme.id) > -1){
+					isSelected = true;
+				}
+			}
+		}
+				
+		// Prepare the resulting element
+		return { index: i, element: element, value: number, isSelected: isSelected};
+	});
 }
 
 
@@ -887,6 +952,8 @@ function sortElements(elements, calculateScoreFunction, compareValuesFunctionSel
     
     return result;
 }
+//// Sort texts:
+
 // Returns a sorted copy of the provided array of document list elements
 // by the total score in corresponding topics
 // (descending order)
@@ -899,6 +966,7 @@ function sortTextScoreDesc(textElements) {
 	return sortElements(textElements, calculateTextScore, compareValuesDesc, null);
     }
 }
+
 
 // Returns a sorted copy of the provided array of document list elements
 // by the total score in corresponding topics
@@ -913,6 +981,36 @@ function sortTextScoreAsc(textElements) {
     }
 }
 
+// Returns a sorted copy of the provided array of document list elements
+// by the total number of associated  themes
+// (descending order)
+// Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
+function sortTextThemesDesc(textElements) {
+    if (lockTextsSorting){
+	return sortElements(textElements, calculateTextThemesScore, null, null);
+    }
+    else{
+	return sortElements(textElements, calculateTextThemesScore, compareValuesDesc, null);
+    }
+}
+
+// Returns a sorted copy of the provided array of document list elements
+// by the total number of associated  themes
+// (descending order)
+// Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
+function sortTextThemesAsc(textElements) {
+    if (lockTextsSorting){
+	return sortElements(textElements, calculateTextThemesScore, null, null);
+    }
+    else{
+	return sortElements(textElements, calculateTextThemesScore, compareValuesAsc, null);
+    }
+}
+
+
+
+//// Sort texts ends
+ 
 
 // Returns a sorted copy of the provided array of topic list elements
 // by the total score
@@ -1427,7 +1525,16 @@ function doGetSavedThemes(themes){
             if (modelThemesToTexts[themeId].texts.indexOf(textId) == -1){
                 modelThemesToTexts[themeId].texts.push(textId)
             }
-            //addTextThemeLink(themeId, textId);
+
+	    // Also store the reverse connection
+	     if (!(textId in modelTextsToThemes)){
+		 modelTextsToThemes[textId] = {"themes" : []};
+	     }
+
+	    if (modelTextsToThemes[textId].themes.indexOf(themeId) == -1){
+		modelTextsToThemes[textId].themes.push(themeId)
+	    }
+
         }
     }
     controllerDoPopulateThemes(true);

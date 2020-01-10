@@ -67,7 +67,9 @@ var SORT_TERMS = {
 
 var SORT_TEXT= {
     "score/desc": sortTextScoreDesc,
-    "score/asc": sortTextScoreAsc
+    "score/asc": sortTextScoreAsc,
+    "themes/desc": sortTextThemesDesc,
+    "themes/acs": sortTextThemesAsc,
 };
 
 var SORT_TOPIC= {
@@ -1723,7 +1725,7 @@ function onTextElementDragStart(event) {
     
 	let originalEvent = event.originalEvent;
 	let textElement = $(event.target).parentsUntil("#textsList", ".text-element");
-    //alert(textElement);
+
 	// Mark the element as the source of dragged data
 	// (used for filtering in dragover handlers, since there is no way to access the data)
     textElement.addClass("dragged");
