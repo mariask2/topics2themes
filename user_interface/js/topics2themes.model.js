@@ -785,6 +785,50 @@ function calculateTextThemesScore(textElements) {
 }
 
 
+function getLabelForSort(textElements) {
+	return $.map(textElements, function(element, i){
+
+
+	    let d = d3.select(element).datum();
+
+	   
+	    // The flag below is used to sort the selected elements separately
+	    // to ensure proper sorting for all sorting modes (desc/asc)
+	    let isSelected = false;
+
+	    for (let j = 0; j < modelTopics.length; j++ ){
+		let topic = modelTopics[j];
+		if (isAssociatedTextTopic(d.id, topic.id)){
+				if (currentTopicIds.indexOf(topic.id) > -1){
+					isSelected = true;
+				}
+			}
+		}
+
+		for (let j = 0; j < modelTerms.length; j++ ){
+			let term = modelTerms[j];
+			if (isAssociatedTextTerm(d.id, term.term)){
+				if (currentTermIds.indexOf(term.term) > -1){
+					isSelected = true;
+				}
+			}
+		}
+
+		for (let j = 0; j < modelThemes.length; j++ ){
+			let theme = modelThemes[j];
+			if (isAssociatedTextTheme(d.id, theme.id)){
+				if (currentThemeIds.indexOf(theme.id) > -1){
+					isSelected = true;
+				}
+			}
+		}
+				
+		// Prepare the resulting element
+		return { index: i, element: element, value: d.label, isSelected: isSelected};
+	});
+}
+
+
 // Calculates the total score for the provided array of text list elements
 // TODO: When a term or a document is chosen, no ordering of which topic is MOST related to this term or document is given (all related get same score)
 // perhaps this should be added
@@ -1007,7 +1051,31 @@ function sortTextThemesAsc(textElements) {
     }
 }
 
+// Returns a sorted copy of the provided array of document list elements
+// by the name of the label
+// (descending order)
+// Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
+function sortTextLabelAsc(textElements) {
+    if (lockTextsSorting){
+	return sortElements(textElements, getLabelForSort, null, null);
+    }
+    else{
+	return sortElements(textElements, getLabelForSort, compareStringValuesAsc, null);
+    }
+}
 
+// Returns a sorted copy of the provided array of document list elements
+// by the name of the label
+// (descending order)
+// Uses the mapping idea from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Sorting_with_map
+function sortTextLabelDesc(textElements) {
+    if (lockTextsSorting){
+	return sortElements(textElements, getLabelForSort, null, null);
+    }
+    else{
+	return sortElements(textElements, getLabelForSort, compareStringValuesDesc, null);
+    }
+}
 
 //// Sort texts ends
  

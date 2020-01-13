@@ -70,6 +70,8 @@ var SORT_TEXT= {
     "score/asc": sortTextScoreAsc,
     "themes/desc": sortTextThemesDesc,
     "themes/acs": sortTextThemesAsc,
+    "label/desc": sortTextLabelDesc,
+    "label/acs": sortTextLabelAsc,
 };
 
 var SORT_TOPIC= {
