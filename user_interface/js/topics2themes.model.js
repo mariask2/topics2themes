@@ -788,10 +788,13 @@ function calculateTextThemesScore(textElements) {
 function getLabelForSort(textElements) {
 	return $.map(textElements, function(element, i){
 
-
 	    let d = d3.select(element).datum();
+	    let label = d.label;
 
-	   
+	    if (d.id in modelUserTextLabels){
+		label = modelUserTextLabels[d.id]
+	    }
+
 	    // The flag below is used to sort the selected elements separately
 	    // to ensure proper sorting for all sorting modes (desc/asc)
 	    let isSelected = false;
@@ -824,7 +827,7 @@ function getLabelForSort(textElements) {
 		}
 				
 		// Prepare the resulting element
-		return { index: i, element: element, value: d.label, isSelected: isSelected};
+		return { index: i, element: element, value: label, isSelected: isSelected};
 	});
 }
 
