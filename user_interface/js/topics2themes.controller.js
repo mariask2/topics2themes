@@ -35,6 +35,7 @@ var SELECTDATASETTEXT = "Select data set";
 var SELECTMODELTEXT = "Select model";
 var SELECTANALYSISTEXT = "Select analysis";
 
+var termsSmall = false;
 var showLabels = true;
 var doThemesSorting = true;
 var lockTextsSorting = false;
@@ -161,6 +162,10 @@ $(document).ready(function(){
     $("#textsList").on("mouseup", ".jp_lemma", onSelectionChange);
     
                  
+
+    // Button for resizing terms panel
+    $("#resizeTerms").click(onResizeTerms);
+
     // Button for hide and show labels on themes
     $("#showLabels").click(onShowLabels);
                   
@@ -2880,6 +2885,46 @@ function onLockTopicsSorting(){
     }
 }
 
+function onResizeTerms(){
+    if (termsSmall){
+        termsSmall = false;
+        $("#resizeTerms").removeClass("button-active");
+        $("#resizeTerms").removeClass("header-button-small");
+        $("#resizeTerms").addClass("header-button");
+	$("#termsContainerColumn").removeClass("col-xs-1");
+	$("#termsContainerColumn").addClass("col-xs-2");
+
+	$("#themesContainerColumn").removeClass("col-xs-4");
+	$("#themesContainerColumn").addClass("col-xs-3");
+
+	d3.select("#lockTermsSorting").style("visibility", "visible");
+	d3.select("#termSearchButton").style("visibility", "visible");
+	d3.select("#termSortButton").style("visibility", "visible");
+
+	d3.select("#termsTitle").text("Terms");
+	hideSearchFields();
+	doResetHighlightAfterStateChange();
+    }
+    else{
+        termsSmall = true;
+	$("#termsContainerColumn").removeClass("col-xs-2");
+	$("#termsContainerColumn").addClass("col-xs-1");
+        $("#resizeTerms").addClass("button-active");
+
+	$("#themesContainerColumn").removeClass("col-xs-3");
+	$("#themesContainerColumn").addClass("col-xs-4");
+
+	d3.select("#lockTermsSorting").style("visibility", "hidden");
+	d3.select("#termSearchButton").style("visibility", "hidden");
+	d3.select("#termSortButton").style("visibility", "hidden");
+
+	d3.select("#termsTitle").text("");
+
+	hideSearchFields();
+	doResetHighlightAfterStateChange();
+
+    }
+}
 
 /*******************/
 
