@@ -2897,9 +2897,9 @@ function onResizeTerms(){
 	$("#themesContainerColumn").removeClass("col-xs-4");
 	$("#themesContainerColumn").addClass("col-xs-3");
 
-	d3.select("#lockTermsSorting").style("visibility", "visible");
-	d3.select("#termSearchButton").style("visibility", "visible");
-	d3.select("#termSortButton").style("visibility", "visible");
+	$("#lockTermsSorting").removeClass("header-button-hidden");
+	$("#termSearchButton").removeClass("header-button-hidden");
+	$("#termSortButton").removeClass("header-button-hidden");
 
 	d3.select("#termsTitle").text("Terms");
 	hideSearchFields();
@@ -2914,9 +2914,9 @@ function onResizeTerms(){
 	$("#themesContainerColumn").removeClass("col-xs-3");
 	$("#themesContainerColumn").addClass("col-xs-4");
 
-	d3.select("#lockTermsSorting").style("visibility", "hidden");
-	d3.select("#termSearchButton").style("visibility", "hidden");
-	d3.select("#termSortButton").style("visibility", "hidden");
+	$("#lockTermsSorting").addClass("header-button-hidden");
+	$("#termSearchButton").addClass("header-button-hidden");
+	$("#termSortButton").addClass("header-button-hidden");
 
 	d3.select("#termsTitle").text("");
 
