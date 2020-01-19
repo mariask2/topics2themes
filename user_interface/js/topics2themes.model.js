@@ -265,7 +265,7 @@ function modelCreateNewTheme(){
     }
     let createThemeUrl = "create_new_theme";
     let data = {"analysis_id" : modelCurrentAnalysisVersionId};
-    get_data(createThemeUrl, doCreateNewTheme, data);
+    save_data(createThemeUrl, doCreateNewTheme, data);
 }
 
 function doCreateNewTheme(themeId){
@@ -289,7 +289,9 @@ function addNewTheme(themeId, newLabel){
     }
 }
 
-
+/////////
+// General functionality used for communicating with server
+///////
 
 function get_data(url, success_function, dataToSend) {
     dataToSend["authentication_key"] = authenticationKey
@@ -303,6 +305,20 @@ function get_data(url, success_function, dataToSend) {
        alert("Something went wrong with " + url + " " + error)
        }
        });
+}
+
+function save_data(url, success_function, dataToSend) {
+    dataToSend["authentication_key"] = authenticationKey
+    $.ajax({url:BASEURL + url, dataType: "json",
+           data: dataToSend,
+           type: "POST",
+           success: function(json, status) {
+           success_function(json["result"]);
+           },
+           error: function(xhr,status,error) {
+           alert("Something went wrong with " + url + " " + error)
+           }
+           });
 }
 
 
@@ -540,7 +556,7 @@ function modelAddTextThemeLink(themeId, textId){
     let data = {"theme_number" :themeId,
         "document_id":textId, "analysis_id": modelCurrentAnalysisVersionId};
     
-    get_data(addTextThemeLinkUrl, doAddTextThemeLink, data);
+    save_data(addTextThemeLinkUrl, doAddTextThemeLink, data);
 }
 
 function doAddTextThemeLink(res){
@@ -1529,7 +1545,7 @@ function modelRenameTopic(topicId, newLabel){
     let updateTopicNameUrl = "update_topic_name";
     let data = {"topic_id" : topicId, "topic_name" : newLabel, "analysis_id" : modelCurrentAnalysisVersionId};
     
-    get_data(updateTopicNameUrl, updateTopicNameList, data);
+    save_data(updateTopicNameUrl, updateTopicNameList, data);
 }
 
 function updateTopicNameList(dummy){
@@ -1567,7 +1583,7 @@ function modelGetTopicNameForId(topic_id){
 function deleteDatabaseTheme(themeId){
     let deleteThemeUrl = "delete_theme";
     let data = {"analysis_id": modelCurrentAnalysisVersionId, "theme_number": themeId};
-    get_data(deleteThemeUrl, doDeleteDatabaseTheme, data);
+    save_data(deleteThemeUrl, doDeleteDatabaseTheme, data);
 }
 
 function doDeleteDatabaseTheme(res){
@@ -1621,7 +1637,7 @@ function modelRenameTheme(themeId, newLabel){
     let updateThemeNameUrl = "update_theme_name";
     let data = {"theme_number": themeId, "theme_name" : newLabel, "analysis_id" : modelCurrentAnalysisVersionId}
     
-    get_data(updateThemeNameUrl, doRenameTheme, data);
+    save_data(updateThemeNameUrl, doRenameTheme, data);
 }
 
 function doRenameTheme(res){
@@ -1640,7 +1656,7 @@ function deleteDatabaseTextThemeLink(themeId, textId){
     let deleteDatabaseTextThemeLinkUrl = "delete_theme_document_connection";
     let data = {"theme_number" : themeId, "document_id" : textId, "analysis_id" : modelCurrentAnalysisVersionId};
     
-    get_data(deleteDatabaseTextThemeLinkUrl, doDeleteDatabaseTextThemeLink, data);
+    save_data(deleteDatabaseTextThemeLinkUrl, doDeleteDatabaseTextThemeLink, data);
 }
 
 function doDeleteDatabaseTextThemeLink(res){
@@ -1680,7 +1696,7 @@ function doLoadModelsForSelectedDataSet(modelsForCurrentDatasetFromDataBase){
 function modelConstructNewModel(modelName){
     let contructNewModelUrl = "make_model_for_collection";
     let data = {"collection_name" : modelCurrentDataset, "model_name" : modelName};
-    get_data(contructNewModelUrl, modelLoadModelForCurrentDataSet, data);
+    save_data(contructNewModelUrl, modelLoadModelForCurrentDataSet, data);
 }
 
 // A dummy parameter, as the function that is submitted to get_data expects a parameter
@@ -1736,7 +1752,7 @@ function modelLoadNewAnalysis(newAnalysisVersionId){
 function modelConstructNewAnalysis(analysisName){
     let constructNewAnalysisUrl = "create_new_analysis";
     let data = {"model_id" : modelCurrentModelId, "analysis_name" : analysisName};
-    get_data(constructNewAnalysisUrl, modelLoadAnalysisForCurrentModel, data);
+    save_data(constructNewAnalysisUrl, modelLoadAnalysisForCurrentModel, data);
 }
 
 
@@ -1759,7 +1775,7 @@ function modelExportAnalysis(){
     }
     let exportAnalysisUrl = "export_analysis";
     let data = {"analysis_id" : modelCurrentAnalysisVersionId};
-    get_data(exportAnalysisUrl, doNotifyExportedAnalysis, data);
+    save_data(exportAnalysisUrl, doNotifyExportedAnalysis, data);
 }
 
 function doNotifyExportedAnalysis(savedData){
@@ -1785,7 +1801,7 @@ function modelDefineUserLabel(textId, userDefinedLabel){
     let updateUserLabelUrl = "update_user_defined_label";
     let data = {"text_id" : textId, "user_defined_label" : userDefinedLabel, "analysis_id" : modelCurrentAnalysisVersionId};
     
-    get_data(updateUserLabelUrl, updateUserDefinedLabel, data);
+    save_data(updateUserLabelUrl, updateUserDefinedLabel, data);
 }
 
 function updateUserDefinedLabel(data){

@@ -548,6 +548,9 @@ function controllerDoPopulateAnalysisChoices(modelAnalysesForCurrentModel){
     else{
         $("#analysisVersion").addClass("disabled");
         $("#analysisVersion").attr("disabled", true);
+
+	$("#newAnalysis").removeClass("disabled");
+	$("#newAnalysis").attr("disabled", false);
     }
 }
 
