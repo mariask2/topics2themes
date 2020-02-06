@@ -471,9 +471,11 @@ def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_p
                                                     stop_word_file, stop_word_set, max_features)
     model_list = []
     for i in range(0, number_of_runs):
+        print("Running topic model nr " + str(i))
         #nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='random').fit(tfidf)
         nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='nndsvd', shuffle = True).fit(tfidf)
         model_list.append(nmf)
+    print("Start getting topic model info")
     topic_info, most_typical_model = get_scikit_topics(model_list, tfidf_vectorizer, tfidf, documents, nr_of_top_words, nr_of_to_documents, overlap_cut_off)
     return topic_info, most_typical_model, tfidf_vectorizer
 
@@ -533,14 +535,15 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
 
 def pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper, stop_word_file, stop_word_set):
 
-    word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set), min_df= 0.005)
-    #word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set)) #, max_features = max_features)
+    #word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set), min_df= 0.005)
+    word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set), max_features = max_features)
     word_vectorizer.fit_transform(documents)
     word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names())
     word2vecwrapper.load_clustering("temp_clustering_output.txt")
     
     term_visualiser.set_vocabulary(word_vectorizer.get_feature_names())
     
+    print("Start replacing with similars")
     pre_processed_documents = []
     for document in documents:
         pre_processed_document = []
@@ -550,7 +553,7 @@ def pre_process_word2vec(documents, min_document_frequency, max_features, word2v
             pre_processed_document.append(word2vecwrapper.get_similars(token))
         pre_processed_documents.append(" ".join(pre_processed_document))
     
-    
+    print("End replacing with similars")
     return pre_processed_documents
 
 
