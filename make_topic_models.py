@@ -230,13 +230,13 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
 
 
     manual_made_cluster_dict = {}
-    if properties.MANUAL_CLUSTER_FILE ! = None:
+    if properties.MANUAL_CLUSTER_FILE != None:
         if not os.path.isfile(os.path.join(path_slash_format, properties.MANUAL_CLUSTER_FILE)):
             raise FileNotFoundError("The file for specifying manually constructed words doesn't exist. Filename given in configuration is: " + \
                                     properties.MANUAL_CLUSTER_FILE)
         with open(os.path.join(path_slash_format, properties.MANUAL_CLUSTER_FILE)) as manual_cluster_file:
             for line in manual_cluster_file:
-                cluster_words = line.strip().split(" "):
+                cluster_words = line.strip().split(" ")
                 for word in cluster_words:
                     manual_made_cluster_dict[word] = SYNONYM_BINDER.join(cluster_words)
 
