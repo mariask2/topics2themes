@@ -123,7 +123,7 @@ class Word2vecWrapper:
         labels = db.labels_
 
         for label, term, vector in zip(labels, cluster_words, X_vectors):
-            if term in self.no_match: # User defined to exclude from clustering
+            if term in self.no_match or term in self.manual_made_dict: # User defined to exclude from clustering or in a user-defined dict
                 continue
             if label != -1:                
                 if label not in self.cluster_dict:
@@ -132,13 +132,13 @@ class Word2vecWrapper:
 
         self.term_similar_dict = self.manual_made_dict
         for label, items in self.cluster_dict.items():
-            if len(items) > 1:
+            if len(items) > 1: # only include clusters with at least 2 items
                 for term in items:
                     self.term_similar_dict[term] = SYNONYM_BINDER.join(items)
 
         f = open(output_file, "w")
         for item in list(set(self.term_similar_dict.values())):
-            f.write(item + "\n")
+            f.write(item.replace(SYNONYM_BINDER, " ") + "\n")
         f.close()   
         self.nr_of_clusters = len(set(labels)) 
         print("Clustered vectors")
@@ -147,9 +147,10 @@ class Word2vecWrapper:
     def get_similars(self, word):
         if self.term_similar_dict == None:
             raise Exception("load_clustering is not yet run")
-        try: # TODO: Check that all is initialised here
-            similars = self.term_similar_dict[word]
-            return similars
-        except KeyError:
+        if word in self.manual_made_dict:
+            return self.manual_made_dict[word]
+        elif word in self.term_similar_dict:
+            return self.term_similar_dict[word]
+        else:
             return word
         

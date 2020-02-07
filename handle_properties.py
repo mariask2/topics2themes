@@ -183,7 +183,12 @@ class PropertiesContainer:
         except AttributeError:
             print("No file specified for cluster exceptions")
             self.WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE = None # Then all words are included in clustering
-            
+        try:
+            self.MANUAL_CLUSTER_FILE = properties.MANUAL_CLUSTER_FILE
+        except AttributeError:
+            print("No file specified with manually constructed clusters")
+            self.MANUAL_CLUSTER_FILE = None # Then no manually constructed clusters will be used
+
         try:
             self.BINARY_SPACE = properties.BINARY_SPACE
         except AttributeError:
