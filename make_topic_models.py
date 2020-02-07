@@ -713,9 +713,17 @@ def get_scikit_bow(documents, vectorizer, min_document_frequency,\
         max_document_frequency = 1.0
 
     ngram_length = 1
-    tf_vectorizer = vectorizer(max_df= max_document_frequency, min_df=min_document_frequency,\
+    
+    if type(vectorizer) == TfidfVectorizer:
+        # Use sublinear_tf, which used log(tf), to lower the advantage for long documents
+        tf_vectorizer = vectorizer(sublinear_tf = True, max_df= max_document_frequency, min_df=min_document_frequency,\
                                    ngram_range = (1, ngram_length), stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set),\
                                max_features = max_features)
+    else:
+        tf_vectorizer = vectorizer(max_df= max_document_frequency, min_df=min_document_frequency,\
+                                   ngram_range = (1, ngram_length), stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set),\
+                               max_features = max_features)
+        
     tf = tf_vectorizer.fit_transform(documents)
     inversed = tf_vectorizer.inverse_transform(tf)
     to_return = []
