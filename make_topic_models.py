@@ -100,7 +100,7 @@ class StopwordHandler():
             self.stop_word_set = set(stop_words_from_configuration_file).union(additional_stop_words)
         return self.stop_word_set
 
-stopword_handler = StopwordHandler()
+
 
 term_visualiser = TermVisualiser()
 
@@ -215,7 +215,9 @@ def get_min_score_for_collocation_part(synonym, original_term_dict):
 
 
 def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, save_in_database = True):
-
+    
+    stopword_handler = StopwordHandler()
+    
     # TODO: fix empty argument
     words_not_to_include_in_clustering = []
     if properties.WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE != None:
@@ -277,7 +279,10 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                        properties.OVERLAP_CUT_OFF,\
                                                                        properties.MAX_NR_OF_FEATURES,\
                                                                         properties.CLEANING_METHOD,\
-                                                                                   word2vecwrapper)
+                                                                                   word2vecwrapper,\
+                                                                                   path_slash_format,\
+                                                                                   model_name,\
+                                                                                   stopword_handler)
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
             if (number_of_topics - len(topic_info) <= max_less_than_requested_models_returned) or len(topic_info) < 3: #Assume there is at least two topics
@@ -297,7 +302,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               most_typical_model,\
                                                               tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD,\
                                                               properties.SHOW_ARGUMENTATION,\
-                                                              properties.SHOW_SENTIMENT)
+                                                              properties.SHOW_SENTIMENT,\
+                                                              stopword_handler)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
@@ -324,7 +330,10 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                        properties.OVERLAP_CUT_OFF,\
                                                                     properties.MAX_NR_OF_FEATURES,\
                                                                                    properties.CLEANING_METHOD,\
-                                                                                   word2vecwrapper)
+                                                                                   word2vecwrapper,\
+                                                                                   path_slash_format,\
+                                                                                   model_name,\
+                                                                                   stopword_handler)
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
             if number_of_topics - len(topic_info) <= max_less_than_requested_models_returned:
@@ -344,7 +353,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               most_typical_model, \
                                                               tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD,\
                                                               properties.SHOW_ARGUMENTATION,\
-                                                              properties.SHOW_SENTIMENT)
+                                                              properties.SHOW_SENTIMENT,\
+                                                              stopword_handler)
         return result_dict, time, post_id, most_typical_model
 
     
@@ -442,13 +452,18 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
                         stop_word_set, min_document_frequency, max_document_frequency,\
-                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, max_features, cleaning_method, word2vecwrapper):
+                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, \
+                           max_features, cleaning_method, word2vecwrapper,\
+                           path_slash_format, model_name, stopword_handler):
     
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                           stop_word_set, min_document_frequency, max_features, cleaning_method, word2vecwrapper)
+                                           stop_word_set, min_document_frequency, max_features, \
+                                           cleaning_method, word2vecwrapper,
+                                           path_slash_format, model_name, stopword_handler)
+                                           
     texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, CountVectorizer,\
                                               min_document_frequency, max_document_frequency, stop_word_file,\
-                                              stop_word_set, max_features)
+                                              stop_word_set, max_features, stopword_handler)
     model_list = []
     for i in range(0, number_of_runs):
         lda = LatentDirichletAllocation(n_components=number_of_topics, max_iter=10, learning_method='online', learning_offset=50.).fit(tf)
@@ -461,14 +476,20 @@ def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_p
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
 def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
                         stop_word_set, min_document_frequency, max_document_frequency,\
-                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, max_features, cleaning_method, word2vecwrapper):
+                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, \
+                           max_features, cleaning_method, word2vecwrapper, \
+                           path_slash_format, model_name, stopword_handler):
+                           
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                           stop_word_set, min_document_frequency, max_features, cleaning_method, word2vecwrapper)
+                                           stop_word_set, min_document_frequency, max_features,\
+                                           cleaning_method, word2vecwrapper,\
+                                           path_slash_format, model_name, stopword_handler)
                                           
     
     texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, TfidfVectorizer,\
                                                     min_document_frequency, max_document_frequency,\
-                                                    stop_word_file, stop_word_set, max_features)
+                                                    stop_word_file, stop_word_set, max_features, \
+                                                    stopword_handler)
     model_list = []
     for i in range(0, number_of_runs):
         print("Running topic model nr " + str(i))
@@ -500,25 +521,19 @@ def replace_spaces(text):
 
 #TODO: Check if stop words should be used here. They are ot used currently
 def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, stop_word_set, \
-                    min_document_frequency, max_features, cleaning_method, word2vecwrapper):
-    
-    # TODO: Not very reliable html-tag removal. Fix that
-    
-    
-    
+                    min_document_frequency, max_features, cleaning_method, word2vecwrapper,\
+                    path_slash_format, model_name, stopword_handler):
+
     documents = []
     for d in raw_documents:
         documents.append(cleaning_method(d))
     
-    # Always remove html tags for now
     if not do_pre_process:
         return documents
     
     #documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off,\
     #                                                         max_occurrence_outside_collocation=min_document_frequency,\
     #                                                          collocation_marker = PRE_PROCESS_COLLOCATION_MARKER)
-
-
 
 
     #vectorizer = CountVectorizer(binary = True, min_df=collocation_cut_off, max_features = max_features)
@@ -528,18 +543,27 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
 
 
 
-    pre_processed_documents = pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper, stop_word_file, stop_word_set)
+    pre_processed_documents = pre_process_word2vec(documents, min_document_frequency,\
+                    max_features, word2vecwrapper, stop_word_file, stop_word_set, \
+                    path_slash_format, model_name, stopword_handler)
 
     print("***************")
     return pre_processed_documents
 
-def pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper, stop_word_file, stop_word_set):
+def pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper,\
+                    stop_word_file, stop_word_set, \
+                    path_slash_format, model_name, stopword_handler):
 
+    synonym_output_dir = os.path.join(path_slash_format, SYNONYM_FOLDER_NAME)
+    if not os.path.exists(synonym_output_dir):
+        os.makedirs(synonym_output_dir)
+    synonym_file = os.path.join(synonym_output_dir, model_name + "_synonyms.txt")
+        
     #word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set), min_df= 0.005)
     word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set), max_features = max_features)
     word_vectorizer.fit_transform(documents)
     word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names())
-    word2vecwrapper.load_clustering("temp_clustering_output.txt")
+    word2vecwrapper.load_clustering(synonym_file)
     
     term_visualiser.set_vocabulary(word_vectorizer.get_feature_names())
     
@@ -656,7 +680,9 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
 
     
 
-def get_scikit_bow(documents, vectorizer, min_document_frequency, max_document_frequency, stop_word_file, stop_word_set, max_features):
+def get_scikit_bow(documents, vectorizer, min_document_frequency,\
+            max_document_frequency, stop_word_file,
+            stop_word_set, max_features, stopword_handler):
     """
     Will tranform the list of documents that are given as input, to a list of terms
     that occurr in these documents
@@ -977,7 +1003,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                              json_properties, data_set_name, model_name, save_in_database,\
                              are_these_two_terms_to_be_considered_the_same,\
                              most_typical_model, tf_vectorizer, additional_labels_method,\
-                             show_argumentation, show_sentiment):
+                             show_argumentation, show_sentiment, stopword_handler):
     """
         Prints output/returns from the topic model in txt and json format (depending on whether it is run as server or as a program), with topic terms in bold face
         

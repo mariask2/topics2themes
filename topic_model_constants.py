@@ -32,6 +32,10 @@ COLLOCATION_BINDER = "_"
 # Export and import data
 
 EXPORT_DIR = "topics2themes_exports_folder_created_by_system"
+
+SYNONYM_FOLDER_NAME = "topics2themes_synonym_folder_created_by_system"
+
+
 ####
 ## Database dictionary keys
 ####
