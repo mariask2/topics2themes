@@ -7,6 +7,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import NMF, LatentDirichletAllocation
 from nltk.tokenize import sent_tokenize
 from html.parser import HTMLParser
+from pathlib import Path
 
 import os
 import numpy as np
@@ -372,9 +373,7 @@ def read_discussion_documents(data_label_list, data_set_name, whether_to_remove_
         data_dir = os.path.join(WORKSPACE_FOLDER, DATA_FOLDER, data_set_name, data_info[DIRECTORY_NAME])
         if not os.path.isdir(data_dir):
             print(os.path.abspath(data_dir), " does not exist")
-        files = []
-
-        files.extend(glob(os.path.join(data_dir, "*.txt")))
+        files = Path(data_dir).rglob("*.txt")
 
         print("Reading", os.path.join(data_dir))
 
