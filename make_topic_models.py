@@ -294,7 +294,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                                    word2vecwrapper,\
                                                                                    path_slash_format,\
                                                                                    model_name,\
-                                                                                   stopword_handler)
+                                                                                   stopword_handler,\
+                                                                                   properties.BINARY_TF)
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
             if (number_of_topics - len(topic_info) <= max_less_than_requested_models_returned) or len(topic_info) < 3: #Assume there is at least two topics
@@ -345,7 +346,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                                                    word2vecwrapper,\
                                                                                    path_slash_format,\
                                                                                    model_name,\
-                                                                                   stopword_handler)
+                                                                                   stopword_handler,\
+                                                                                   properties.BINARY_TF)
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
             if number_of_topics - len(topic_info) <= max_less_than_requested_models_returned:
@@ -464,7 +466,7 @@ def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_p
                         stop_word_set, min_document_frequency, max_document_frequency,\
                            nr_of_top_words, nr_of_to_documents, overlap_cut_off, \
                            max_features, cleaning_method, word2vecwrapper,\
-                           path_slash_format, model_name, stopword_handler):
+                           path_slash_format, model_name, stopword_handler, binary):
     
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
                                            stop_word_set, min_document_frequency, max_features, \
@@ -473,7 +475,7 @@ def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_p
                                            
     texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, CountVectorizer,\
                                               min_document_frequency, max_document_frequency, stop_word_file,\
-                                              stop_word_set, max_features, stopword_handler)
+                                              stop_word_set, max_features, stopword_handler, binary)
     model_list = []
     for i in range(0, number_of_runs):
         lda = LatentDirichletAllocation(n_components=number_of_topics, max_iter=10, learning_method='online', learning_offset=50.).fit(tf)
@@ -488,7 +490,7 @@ def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_p
                         stop_word_set, min_document_frequency, max_document_frequency,\
                            nr_of_top_words, nr_of_to_documents, overlap_cut_off, \
                            max_features, cleaning_method, word2vecwrapper, \
-                           path_slash_format, model_name, stopword_handler):
+                           path_slash_format, model_name, stopword_handler, binary):
                            
     pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
                                            stop_word_set, min_document_frequency, max_features,\
@@ -499,7 +501,7 @@ def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_p
     texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, TfidfVectorizer,\
                                                     min_document_frequency, max_document_frequency,\
                                                     stop_word_file, stop_word_set, max_features, \
-                                                    stopword_handler)
+                                                    stopword_handler, binary)
     model_list = []
     for i in range(0, number_of_runs):
         print("Running topic model nr " + str(i))
@@ -692,7 +694,7 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
 
 def get_scikit_bow(documents, vectorizer, min_document_frequency,\
             max_document_frequency, stop_word_file,
-            stop_word_set, max_features, stopword_handler):
+            stop_word_set, max_features, stopword_handler, binary):
     """
     Will tranform the list of documents that are given as input, to a list of terms
     that occurr in these documents
@@ -718,11 +720,11 @@ def get_scikit_bow(documents, vectorizer, min_document_frequency,\
         # Use sublinear_tf, which used log(tf), to lower the advantage for long documents
         tf_vectorizer = vectorizer(sublinear_tf = True, max_df= max_document_frequency, min_df=min_document_frequency,\
                                    ngram_range = (1, ngram_length), stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set),\
-                               max_features = max_features)
+                               max_features = max_features, binary = binary)
     else:
         tf_vectorizer = vectorizer(max_df= max_document_frequency, min_df=min_document_frequency,\
                                    ngram_range = (1, ngram_length), stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set),\
-                               max_features = max_features)
+                               max_features = max_features, binary = binary)
         
     tf = tf_vectorizer.fit_transform(documents)
     inversed = tf_vectorizer.inverse_transform(tf)

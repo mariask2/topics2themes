@@ -63,10 +63,13 @@ Whether to use pre-processing (collocation detection and synonym clustering)
 """
 #PRE_PROCESS = True
 PRE_PROCESS = False
-VECTOR_LENGTH = 300
-SPACE_FOR_PATH = "/Users/maria/mariaskeppstedtdsv/post-doc/gavagai/googlespace/GoogleNews-vectors-negative300.bin"
+VECTOR_LENGTH = 400
+SPACE_FOR_PATH = "/Users/marsk757/wordspaces/word2vec_twitter_tokens.bin"
 MAX_DIST_FOR_CLUSTERING = 0.7
 WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE = "not_cluster.txt"
+MANUAL_CLUSTER_FILE = "manual_clusters.txt"
+BINARY_TF = True
+
 """
 Mininimum occurrence in the corpus for a term to be included in the topic modelling
 """
@@ -77,10 +80,6 @@ Maximum occurrence in the corpus for a term to be included in the topic modellin
 """
 MAX_DOCUMENT_FREQUENCY = 0.95
 
-"""
-Search path to the vector space
-"""
-SPACE_FOR_PATH = "/Users/maria/mariaskeppstedtdsv/post-doc/gavagai/googlespace/GoogleNews-vectors-negative300.bin"
 
 """
 Minimum proportion of documents that are to contain a term sequence for it to be counted as a collocation

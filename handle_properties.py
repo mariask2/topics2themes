@@ -198,6 +198,11 @@ class PropertiesContainer:
             self.GENSIM_FORMAT = properties.GENSIM_FORMAT
         except AttributeError:
             self.GENSIM_FORMAT = default_topic_model_configuration.GENSIM_FORMAT
+            
+        try:
+            self.BINARY_TF = properties.BINARY_TF
+        except AttributeError:
+            self.BINARY_TF = False
 
 
     def get_properties_in_json(self):
