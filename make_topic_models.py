@@ -1062,7 +1062,11 @@ def get_snippet_text(marked_document, terms_found_in_processed_documents_so_far)
         print(sentences_to_keep)
         print(marked_document)
         
-    return " ".join(sentences_to_keep).replace("]MARKING MARKING[", "").replace("MARKING[","[").replace("]MARKING","]")
+    snippet_str = " ".join(sentences_to_keep).replace("]MARKING MARKING[", "").replace("MARKING[","[").replace("]MARKING","]")
+    snippet_str = snippet_str.replace("..........","....") # Don't make it too loong
+
+   
+    return snippet_str
 
 # This is not used in the moment, but could be useful in the future if short summaries are to be created
 def get_snippet_text_short_snippet(text, most_typical_model, tf_vectorizer):

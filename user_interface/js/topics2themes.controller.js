@@ -2348,9 +2348,9 @@ function highlightTextElement(textElement, direct, indirect) {
     // First of all, highlight the element under cursor
     textElement.addClass(direct);
     
-    //if(direct == DIRECTCHOOSEN){
-    //    showFullText(textElement);
-    //}
+    if(direct == DIRECTCHOOSEN){
+        showFullTextChosen(textElement);
+    }
     
     //d3.select(textElement.get(0)).selectAll('.snippet-text').classed("textchosen", true);
     //d3.select(textElement.get(0)).selectAll('.full-text').classed("textchosen", true);
@@ -2376,9 +2376,9 @@ function colorAllTagsWithTheSameColor(textElement){
        d3.select(textElement.get(0)).selectAll(".term-to-mark").classed("specifictermchosen", true);
 }
 
-/*
-function showFullText(textElement){
-    d3.select(textElement.get(0)).selectAll('.text-label').classed("text-border", true);
+
+function showFullTextChosen(textElement){
+    //d3.select(textElement.get(0)).selectAll('.text-label').classed("text-border", true);
     d3.select(textElement.get(0)).selectAll('.snippet-text').classed("not-displayed-text", true);
     d3.select(textElement.get(0)).selectAll('.full-text').classed("not-displayed-text", false);
 
@@ -2389,11 +2389,11 @@ function showFullText(textElement){
     let textId = d3.select(textElement.get(0)).datum().id;
     
     // if current text is selected
-    if (currentTextIds.indexOf(textId) > -1){
-        colorAllTagsWithTheSameColor(textElement);
-    }
+    //if (currentTextIds.indexOf(textId) > -1){
+   //     colorAllTagsWithTheSameColor(textElement);
+   // }
 }
-*/
+
 
 function secondaryHighlightTermsInText(textElement){
     let textId = d3.select(textElement.get(0)).datum().id;
@@ -2878,22 +2878,33 @@ function onLockThemesSorting(){
 
 function onShowFullText(){
     if (showFullText){
-        showFullText = false;
+        showFullText = false; // show snippet text
+	d3.selectAll('.snippet-text').classed("not-displayed-text", false);
+	d3.selectAll('.full-text').classed("not-displayed-text", true);
+	
+	d3.selectAll('.snippet-text').classed("displayed-text", true);
+	d3.selectAll('.full-text').classed("displayed-text", false);
+
 	$("#showFullText").removeClass("button-active");
     }
     else{
         showFullText = true;
+
+	d3.selectAll('.snippet-text').classed("not-displayed-text", true);
+	d3.selectAll('.full-text').classed("not-displayed-text", false);
+	
+	d3.selectAll('.snippet-text').classed("displayed-text", false);
+	d3.selectAll('.full-text').classed("displayed-text", true);
+
+	
 	$("#showFullText").addClass("button-active");
 
     }
 
-
-    d3.select("#textsList").selectAll("li")
-    .each(populateTextElement);
-    
-    addChoiceBasedHighlight();
-    resizeContainers();
-    renderLinks();
+    modelResetClickedChoices();
+    resetPanelHeadings();
+    doResetHighlightAfterStateChange();
+    controllerDoPopulateInterface();
 }
 
 function onLockTextSorting(){
