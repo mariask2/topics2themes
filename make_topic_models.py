@@ -1044,6 +1044,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
             if score > max_weight_dict[term]:
                 max_weight_dict[term] = score
 
+    
     for nr, el in enumerate(topic_info):
         
         
@@ -1072,25 +1073,30 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
         term_visualiser.add_terms(topic_info_object["topic_terms"], nr)
 
 
+        # The same document can appear in several topic_infos
+        terms_found_in_processed_documents_so_far = set()
         for nr, document in enumerate(el[DOCUMENT_LIST]):
+            
             if document[DOC_ID] not in document_dict:
                 #marked_document_for_snippet, terms_found_in_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT],\
                     #                                                             el[TERM_LIST], NO_TOPIC_CHOSEN, original_terms_with_combined_dict, new_terms_with_score_dict, max_weight_dict)
 
                 marked_document, terms_found_in_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT],\
                                                                   el[TERM_LIST], el[TOPIC_NUMBER], max_weight_dict)
+                terms_found_in_processed_documents_so_far.union(set(terms_found_in_document))
                 #snippet_text = get_snippet_text(marked_document_for_snippet, most_typical_model, tf_vectorizer)
 
             else:
                 marked_document, terms_found_in_document = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
                                                                                   el[TERM_LIST], el[TOPIC_NUMBER], max_weight_dict)
+                terms_found_in_processed_documents_so_far.union(set(terms_found_in_document))
             
-            snippet_text = get_snippet_text(marked_document)
+            
             
             if document[DOC_ID] not in document_dict:
                 document_obj = {}
                 document_obj["text"] = document[ORIGINAL_DOCUMENT]
-                document_obj["snippet"] = snippet_text
+                document_obj["snippet"] = get_snippet_text(marked_document, terms_found_in_processed_documents_so_far)
                 document_obj["id"] = int(str(document[DOC_ID]))
                 document_obj["marked_text_tok"] = marked_document
                 document_obj["id_source"] = int(str(document[DOC_ID]))
@@ -1105,7 +1111,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
 
             else:
                 document_dict[document[DOC_ID]]["marked_text_tok"] = marked_document
-                document_dict[document[DOC_ID]]["snippet"] = marked_document
+                document_dict[document[DOC_ID]]["snippet"] = get_snippet_text(marked_document, terms_found_in_processed_documents_so_far)
 
 
             document_topic_obj = {}
@@ -1221,20 +1227,49 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
     return result_dict, saved_time, post_id
 
 
-def get_snippet_text(marked_document):
+def get_snippet_text(marked_document, terms_found_in_processed_documents_so_far):
     
+    NORMAL_MAX_SENTENCE_LENGTH = 3
+
+    
+    terms_represented_in_summary = set()
     # Keep sentences which include a term marking
     sentences_to_keep = []
     # TODO: This is not language independent
     sentence_list = sent_tokenize(marked_document)
+    kept_sentences = 0
     for sent in sentence_list:
-        keep_sentence = True
-        #TODO: Now all sentences are kept
-    
+        # Default choice, if sentence doesn't contain relevant content
+        keep_sentence = False
+        
+        #only keep sentence with a marked word
+        # Also, make sure the summary isn't too long
+        if "term-to-mark" in sent and kept_sentences < NORMAL_MAX_SENTENCE_LENGTH:
+            keep_sentence = True
+        # If the summary is too long, but some of the terms found for the topic has not
+        # yet been present in the summary, include it anyway
+        elif "term-to-mark" in sent and len(sentence_list) >= NORMAL_MAX_SENTENCE_LENGTH:
+            for term in terms_found_in_processed_documents_so_far:
+                if term in sent.lower() and term not in terms_represented_in_summary:
+                    keep_sentence = True
+                    
         if keep_sentence:
+            # Record which terms that have been represented in the summary
+            for term in terms_found_in_processed_documents_so_far:
+                if term in sent.lower():
+                    terms_represented_in_summary.add(term)
+                    
             sentences_to_keep.append(sent)
+            kept_sentences = kept_sentences + 1
         else:
             sentences_to_keep.append("MARKING[..]MARKING")
+        
+    if kept_sentences < 1:
+        print("******")
+        print(terms_found_in_processed_documents_so_far)
+        print(sentences_to_keep)
+        print(marked_document)
+        
     return " ".join(sentences_to_keep).replace("]MARKING MARKING[", "").replace("MARKING[","[").replace("]MARKING","]")
 
 # This is not used in the moment, but could be useful in the future if short summaries are to be created

@@ -750,12 +750,14 @@ function populateTextElement(d, i){
     let textLabel = $("<div></div>");
     textLabel.append(d.marked_text_tok);
     textLabel.addClass("full-text");
+    textLabel.addClass("text-label");
     textLabel.addClass("not-displayed-text");
     textContainer.append(textLabel);
     
     let snippetLabel = $("<div></div>");
     snippetLabel.append(d.snippet);
     snippetLabel.addClass("snippet-text")
+    snippetLabel.addClass("text-label");
     snippetLabel.addClass("displayed-text")
     textContainer.append(snippetLabel);
     //textLabel.append("marked_text_tok" in d ? d.marked_text_tok : d.text);
@@ -1625,12 +1627,15 @@ function onTopicElementClick(){
     setTimeout(resetHighlightAfterStateChange(), 0);
 }
 
-function onTextElementClick(){
+function onTextElementClick(event){
     let eventClass = $(event.target).attr("class");
-    if (eventClass.includes("choose-label-trigger") || eventClass.includes("theme-text-remove-button") || eventClass.includes("text-theme-remove-glyph") || eventClass.includes("text-container")){
+    if (eventClass.includes("choose-label-trigger") || eventClass.includes("theme-text-remove-button") ||
+	eventClass.includes("text-theme-remove-glyph") || eventClass.includes("full-text") || eventClass.includes("snippet-text")){
         // Discard clicks on the subcomponents within a text element
         return;
     }
+
+    event.preventDefault();
     
     let text = d3.select($(this).get(0)).datum();
     toggleChosenElement(text.id, modelToggleTextElement);
@@ -2138,7 +2143,7 @@ function addChoiceBasedHighlight(){
     d3.selectAll('.full-text').classed("displayed-text", false);
 
 
-    d3.selectAll('.text-container').classed("text-border", false);
+    d3.selectAll('.text-label').classed("text-border", false);
     
     // Reset highlight of terms that stem from topics that are not chosen
     
@@ -2353,7 +2358,7 @@ function colorAllTagsWithTheSameColor(textElement){
 }
 
 function showFullText(textElement){
-    d3.select(textElement.get(0)).selectAll('.text-container').classed("text-border", true);
+    d3.select(textElement.get(0)).selectAll('.text-label').classed("text-border", true);
     d3.select(textElement.get(0)).selectAll('.snippet-text').classed("not-displayed-text", true);
     d3.select(textElement.get(0)).selectAll('.full-text').classed("not-displayed-text", false);
 

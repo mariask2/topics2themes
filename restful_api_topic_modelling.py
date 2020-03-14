@@ -1,9 +1,10 @@
-from flask import Flask, jsonify, abort, make_response, request, json, request, current_app
+from flask import Flask, jsonify, abort, make_response, request, json, request, current_app, render_template
 import sys
 import os
 import traceback
 import linecache
 import logging
+import hashlib
 from datetime import timedelta
 from functools import update_wrapper
 from flask import send_from_directory
@@ -29,7 +30,7 @@ else:
     from topics2themes.topic_model_constants import *
 
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="user_interface")
 
 if RUN_LOCALLY:
     CORS(app)
@@ -373,17 +374,45 @@ def export_analysis():
 
 
 
+def get_hash(path):
+    hash = hashlib.sha1()
+    with open(path, "rb") as f:
+        b = f.read1(65536)
+        while len(b):
+            hash.update(b)
+            b = f.read1(65536)
+    return hash.hexdigest()
+
+@app.template_filter('staticfile')
+def staticfile_hash(filename):
+    h = get_hash("user_interface/js/" + filename)
+    return "js/" + h + "/" + filename
+
+@app.template_filter('staticfile_css')
+def staticfile_css_hash(filename):
+    h = get_hash("user_interface/css/" + filename)
+    return "css/" + h + "/" + filename
+    
 @app.route('/topics2themes/')
 def start_page():
-    return send_from_directory("user_interface", "index.html")
+    return render_template("index.html")
 
 @app.route('/topics2themes/js/<filename>')
 def js_files(filename):
     return send_from_directory("user_interface/js", filename)
 
+@app.route('/topics2themes/js/<hash>/<filename>')
+def js_files_hash(filename, hash):
+    return send_from_directory("user_interface/js", filename)
+    
 @app.route('/topics2themes/css/<filename>')
 def css_files(filename):
     return send_from_directory("user_interface/css", filename)
+
+@app.route('/topics2themes/css/<hash>/<filename>')
+def css_files_hash(filename, hash):
+    return send_from_directory("user_interface/css", filename)
+
 
 @app.route('/topics2themes/fonts/<filename>')
 def fonts_files(filename):
@@ -417,7 +446,7 @@ if __name__ == '__main__':
         print("http://127.0.0.1:" + str(current_port) + "/topics2themes/")
     applogger = app.logger
     applogger.setLevel(logging_level_to_use)
-    app.run(port=current_port)
+    app.run(port=current_port,debug=True)
     
     # When the server is stopped
     print("Closes database connection")

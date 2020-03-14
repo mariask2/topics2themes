@@ -720,12 +720,12 @@ span.checkmark {
     max-width: 100%;
 }
 .text-container{
-    background-color: white;
     display: table;
     padding:7px;
     padding-left:9px;
     border-radius: 7px;
     max-width: 100%;
+    user-select: none;
 }
 
 .text-border{
@@ -746,21 +746,15 @@ span.checkmark {
     margin-top: 5px;
 }
 
-.full-text{
+.text-label{
+    border-radius: 9px;
+    padding: 9px;
+    background-color: white;
     font-size: 105%;
     color: #606060;
     max-width: 85%;
     float: left;
-    margin-right: 20px;
-
-}
-
-.snippet-text{
-    font-size: 105%;
-    color: #606060;
-    margin-right: 20px;
-    max-width: 85%;
-    float: left;
+    margin-right: 5px;
 }
 
 .city{

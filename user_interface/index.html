@@ -17,9 +17,10 @@
 	<link href="css/jquery.nouislider.min.css" rel="stylesheet">
 	 
 	<!-- Custom styles used for this page -->
-    <link href="css/custom.css" rel="stylesheet">
-    
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <link href="{{"custom.css" | staticfile_css }}" rel="stylesheet">
+
+
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
       <script src="js/html5shiv.js"></script>
@@ -413,7 +414,7 @@
     <script src="js/moment.min.js"></script>
     
     <!-- Custom JS code -->
-    <script src="js/topics2themes.model.js"></script>
-    <script src="js/topics2themes.controller.js"></script>
+    <script src="{{"topics2themes.model.js" | staticfile }}"></script>
+    <script src="{{"topics2themes.controller.js" | staticfile }}"></script>
   </body>
 </html>
