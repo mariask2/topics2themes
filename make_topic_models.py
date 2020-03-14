@@ -90,11 +90,11 @@ class StopwordHandler():
     def get_entire_used_stop_word_list(self):
         return self.stop_word_set
     
-    def get_stop_word_set(self, stop_word_file, stop_words_from_configuration_file):
+    def get_stop_word_set(self, stop_word_file, stop_words_from_configuration_file, path_slash_format):
         if stop_word_file == None:
             return None
         if self.stop_word_set == None:
-            f = open(stop_word_file)
+            f = open(os.path.join(path_slash_format, stop_word_file))
             additional_stop_words = [word.strip() for word in f.readlines()]
             self.user_stop_word_list = additional_stop_words
             f.close()
@@ -120,92 +120,6 @@ def can_model_be_created():
     return str(can_model_be_created)
 
 
-# This function is only kept for the writing to file functionality. Should perhaps be removed in the future
-def get_collocations_from_documents(documents, term_set, are_these_two_terms_to_be_considered_the_same, min_term_frequency_in_collection_to_include_as_term):
-    collocation_features, original_term_weigth_dict =  get_collocations_from_documents_before_synonyms(documents, term_set, min_term_frequency_in_collection_to_include_as_term)
-
-    collocation_features_list_list = [collocation_features, collocation_features]
-    original_term_weigth_dict_list = [original_term_weigth_dict, original_term_weigth_dict]
-
-    return find_synonyms_from_collocation_features(collocation_features_list_list, original_term_weigth_dict_list, are_these_two_terms_to_be_considered_the_same)
-
-def get_collocations_from_documents_before_synonyms(documents, term_set, min_term_frequency_in_collection_to_include_as_term):
-    original_term_dict = {}
-    for t in term_set:
-        original_term_dict[t[0]] = t[1]
-    extracted_term_set = original_term_dict.keys() #  set([t[0] for t in term_set])
-    cutoff = 2
-    
-    # TODO: max_occurrence_outside_collocation could be set to a higher value if more collocations are wanted
-    # perhaps this should be configurable
-    documents_with_collocation_marked, ngrams, all_features = find_frequent_n_grams(documents, collocation_cut_off=cutoff,\
-                                                                      nr_of_words_that_have_occurred_outside_n_gram_cutoff = 1,\
-                                                                      allowed_n_gram_components = extracted_term_set,\
-                                                                        max_occurrence_outside_collocation = 0,\
-                                                                                    collocation_marker = COLLOCATION_BINDER)
-    return all_features, original_term_dict
-
-
-def find_synonyms_from_collocation_features(collocation_features_list, original_term_dict_list, are_these_two_terms_to_be_considered_the_same):
-    
-    collocation_features = set() # Features are combined from each element in collocation_features_list
-    for feature_list in  collocation_features_list:
-        for feature in feature_list:
-            collocation_features.add(feature)
-
-    original_term_dict = {}
-    for dict in original_term_dict_list:
-        for term_key, term_score in dict.items():
-            if term_key not in original_term_dict:
-                original_term_dict[term_key] = term_score
-            else:
-                if term_score > original_term_dict[term_key]:
-                    original_term_dict[term_key] = term_score
-
-
-    final_features = set()
-
-    for c in collocation_features:
-        add = True
-        c = c.replace(SYNONYM_BINDER, ",")
-        for already_added in final_features:
-            if should_this_be_added_to_synonyms_cluster(already_added, c, are_these_two_terms_to_be_considered_the_same) and add:
-                final_features.remove(already_added)
-                already_added_modified = already_added + SYNONYM_JSON_BINDER + c
-                final_features.add(already_added_modified)
-                add = False
-        if add:
-            final_features.add(c)
-
-    new_terms_with_score = []
-    new_terms_with_score_dict = {}
-    original_terms_with_combined_dict = {}
-
-    for term in final_features:
-        best_score = 0
-        original_terms_for_combined_term = []
-        for synonym in term.split(SYNONYM_JSON_BINDER):
-            score_for_synonoym = get_min_score_for_collocation_part(synonym, original_term_dict) # If the synonym is a collocation, use the lowest score for the collocation component
-            for collocation_part in synonym.split(COLLOCATION_BINDER):
-                original_terms_for_combined_term.append(collocation_part)
-            # but use the highest score for the synonym
-            if score_for_synonoym > best_score:
-                best_score = score_for_synonoym # use the highest score among its included parts
-        new_terms_with_score.append((term, best_score))
-        new_terms_with_score_dict[term] = best_score
-
-        for original in original_terms_for_combined_term:
-            if original not in original_terms_with_combined_dict:
-                original_terms_with_combined_dict[original] = [term]
-            else:
-                original_terms_with_combined_dict[original].append(term)
-    return new_terms_with_score, original_terms_with_combined_dict, new_terms_with_score_dict
-
-def should_this_be_added_to_synonyms_cluster(already_added, c, are_these_two_terms_to_be_considered_the_same):
-    for syn in already_added.split(SYNONYM_JSON_BINDER):
-        if are_these_two_terms_to_be_considered_the_same(syn, c):
-            return True
-    return False
 
 def get_min_score_for_collocation_part(synonym, original_term_dict):
     for syn in synonym.split(COLLOCATION_BINDER):
@@ -248,7 +162,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
     
     data_set_name = os.path.basename(path_slash_format)
  
-    stop_word_file = os.path.join(path_slash_format, properties.STOP_WORD_FILE)
+    #stop_word_file = os.path.join(path_slash_format, properties.STOP_WORD_FILE)
     
     if save_in_database:
         print("Model will be saved in database as: " + data_set_name)
@@ -279,23 +193,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
             print("max_less_than_requested_models_returned", max_less_than_requested_models_returned)
             
             print("Training model with " + str(number_of_topics) + " requested topics")
-            topic_info, most_typical_model, tf_vectorizer = train_scikit_nmf_model(documents, number_of_topics,\
-                                                                       properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
-                                                                       properties.COLLOCATION_CUT_OFF,\
-                                                                       stop_word_file,\
-                                                                       properties.STOP_WORD_SET,\
-                                                                       properties.MIN_DOCUMENT_FREQUENCY,\
-                                                                       properties.MAX_DOCUMENT_FREQUENCY,\
-                                                                       properties.NR_OF_TOP_WORDS,\
-                                                                       properties.NR_OF_TOP_DOCUMENTS,\
-                                                                       properties.OVERLAP_CUT_OFF,\
-                                                                       properties.MAX_NR_OF_FEATURES,\
-                                                                        properties.CLEANING_METHOD,\
-                                                                                   word2vecwrapper,\
-                                                                                   path_slash_format,\
-                                                                                   model_name,\
-                                                                                   stopword_handler,\
-                                                                                   properties.BINARY_TF)
+            topic_info, most_typical_model, tf_vectorizer =\
+                train_scikit_nmf_model(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
             if (number_of_topics - len(topic_info) <= max_less_than_requested_models_returned) or len(topic_info) < 3: #Assume there is at least two topics
@@ -307,16 +206,9 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
 
         print("Using model with " + str(len(topic_info)) + " stable topics")
         
-        result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
-                                                              properties.TOPIC_MODEL_ALGORITHM,\
-                                                              properties.get_properties_in_json(),\
-                                                              data_set_name, model_name, save_in_database,\
-                                                              properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME,\
-                                                              most_typical_model,\
-                                                              tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD,\
-                                                              properties.SHOW_ARGUMENTATION,\
-                                                              properties.SHOW_SENTIMENT,\
-                                                              stopword_handler)
+        result_dict, time, post_id = \
+            print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_set_name, model_name, save_in_database,\
+                                                              most_typical_model, tf_vectorizer, stopword_handler, path_slash_format)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
         
@@ -331,23 +223,9 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
             print("max_less_than_requested_models_returned", max_less_than_requested_models_returned)
             
             print("Training model with " + str(number_of_topics) + " requested topics")
-            topic_info, most_typical_model, tf_vectorizer = train_scikit_lda_model(documents, properties.NUMBER_OF_TOPICS,\
-                                                                       properties.NUMBER_OF_RUNS, properties.PRE_PROCESS,\
-                                                                       properties.COLLOCATION_CUT_OFF,\
-                                                                       stop_word_file,\
-                                                                       properties.STOP_WORD_SET,\
-                                                                       properties.MIN_DOCUMENT_FREQUENCY,\
-                                                                       properties.MAX_DOCUMENT_FREQUENCY,\
-                                                                       properties.NR_OF_TOP_WORDS,\
-                                                                       properties.NR_OF_TOP_DOCUMENTS,\
-                                                                       properties.OVERLAP_CUT_OFF,\
-                                                                    properties.MAX_NR_OF_FEATURES,\
-                                                                                   properties.CLEANING_METHOD,\
-                                                                                   word2vecwrapper,\
-                                                                                   path_slash_format,\
-                                                                                   model_name,\
-                                                                                   stopword_handler,\
-                                                                                   properties.BINARY_TF)
+            topic_info, most_typical_model, tf_vectorizer = \
+                train_scikit_lda_model(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
+            
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
             if number_of_topics - len(topic_info) <= max_less_than_requested_models_returned:
@@ -359,16 +237,9 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
         
         
         print("Using model with " + str(len(topic_info)) + " stable topics")
-        result_dict, time, post_id = print_and_get_topic_info(topic_info, file_list, mongo_con,\
-                                                              properties.TOPIC_MODEL_ALGORITHM,\
-                                                              properties.get_properties_in_json(),\
-                                                              data_set_name, model_name, save_in_database,\
-                                                              properties.ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME,\
-                                                              most_typical_model, \
-                                                              tf_vectorizer, properties.ADDITIONAL_LABELS_METHOD,\
-                                                              properties.SHOW_ARGUMENTATION,\
-                                                              properties.SHOW_SENTIMENT,\
-                                                              stopword_handler)
+        result_dict, time, post_id = \
+            print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_set_name, model_name, save_in_database,\
+                                                          most_typical_model, tf_vectorizer, stopword_handler, path_slash_format)
         return result_dict, time, post_id, most_typical_model
 
     
@@ -462,54 +333,35 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
 
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
-def train_scikit_lda_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
-                        stop_word_set, min_document_frequency, max_document_frequency,\
-                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, \
-                           max_features, cleaning_method, word2vecwrapper,\
-                           path_slash_format, model_name, stopword_handler, binary):
+def train_scikit_lda_model(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
     
-    pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                           stop_word_set, min_document_frequency, max_features, \
-                                           cleaning_method, word2vecwrapper,
-                                           path_slash_format, model_name, stopword_handler)
-                                           
-    texts, tf_vectorizer, tf = get_scikit_bow(pre_processed_documents, CountVectorizer,\
-                                              min_document_frequency, max_document_frequency, stop_word_file,\
-                                              stop_word_set, max_features, stopword_handler, binary)
+    pre_processed_documents = pre_process(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
+    texts, tf_vectorizer, tf = get_scikit_bow(properties, pre_processed_documents, CountVectorizer, stopword_handler, path_slash_format)
+    
     model_list = []
-    for i in range(0, number_of_runs):
-        lda = LatentDirichletAllocation(n_components=number_of_topics, max_iter=10, learning_method='online', learning_offset=50.).fit(tf)
+    for i in range(0, properties.NUMBER_OF_RUNS):
+        lda = LatentDirichletAllocation(n_components= properties.NUMBER_OF_TOPICS, max_iter=10, learning_method='online', learning_offset=50.).fit(tf)
         model_list.append(lda)
     
-    topic_info, most_typical_model = get_scikit_topics(model_list, tf_vectorizer, tf, documents, nr_of_top_words, nr_of_to_documents, overlap_cut_off)
+    topic_info, most_typical_model = get_scikit_topics(properties, model_list, tf_vectorizer, tf, documents)
     return topic_info, most_typical_model, tf_vectorizer
 
 # Copied (and modified) from
 #https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
-def train_scikit_nmf_model(documents, number_of_topics, number_of_runs, do_pre_process, collocation_cut_off, stop_word_file,\
-                        stop_word_set, min_document_frequency, max_document_frequency,\
-                           nr_of_top_words, nr_of_to_documents, overlap_cut_off, \
-                           max_features, cleaning_method, word2vecwrapper, \
-                           path_slash_format, model_name, stopword_handler, binary):
+
+def train_scikit_nmf_model(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
                            
-    pre_processed_documents = pre_process(documents, do_pre_process, collocation_cut_off, stop_word_file,\
-                                           stop_word_set, min_document_frequency, max_features,\
-                                           cleaning_method, word2vecwrapper,\
-                                           path_slash_format, model_name, stopword_handler)
-                                          
+    pre_processed_documents = pre_process(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
+    texts, tfidf_vectorizer, tfidf = get_scikit_bow(properties, pre_processed_documents, TfidfVectorizer, stopword_handler, path_slash_format)
     
-    texts, tfidf_vectorizer, tfidf = get_scikit_bow(pre_processed_documents, TfidfVectorizer,\
-                                                    min_document_frequency, max_document_frequency,\
-                                                    stop_word_file, stop_word_set, max_features, \
-                                                    stopword_handler, binary)
     model_list = []
-    for i in range(0, number_of_runs):
+    for i in range(0, properties.NUMBER_OF_RUNS):
         print("Running topic model nr " + str(i))
         #nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='random').fit(tfidf)
-        nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='nndsvd', shuffle = True).fit(tfidf)
+        nmf = NMF(n_components= properties.NUMBER_OF_TOPICS, alpha=.1, l1_ratio=.5, init='nndsvd', shuffle = True).fit(tfidf)
         model_list.append(nmf)
     print("Start getting topic model info")
-    topic_info, most_typical_model = get_scikit_topics(model_list, tfidf_vectorizer, tfidf, documents, nr_of_top_words, nr_of_to_documents, overlap_cut_off)
+    topic_info, most_typical_model = get_scikit_topics(properties, model_list, tfidf_vectorizer, tfidf, documents)
     return topic_info, most_typical_model, tfidf_vectorizer
 
 
@@ -527,20 +379,20 @@ def untokenize(simple_tokenised):
 def replace_spaces(text):
     return text.replace(" .", ".").replace(' " ', '"').replace(" ,", ",").\
         replace(" :", ":").replace(" ;", ";").replace(" !", "!").replace(" ?", "?").replace(" ( ", "(").replace(" ) ", ")")
+
+
 #####
 # Pre-process and turn the documents into lists of terms to feed to the topic models
 #####
 
-#TODO: Check if stop words should be used here. They are ot used currently
-def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_file, stop_word_set, \
-                    min_document_frequency, max_features, cleaning_method, word2vecwrapper,\
-                    path_slash_format, model_name, stopword_handler):
+
+def pre_process(properties, raw_documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
 
     documents = []
     for d in raw_documents:
-        documents.append(cleaning_method(d))
+        documents.append(properties.CLEANING_METHOD (d))
     
-    if not do_pre_process:
+    if not properties.PRE_PROCESS:
         return documents
     
     #documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off,\
@@ -555,16 +407,12 @@ def pre_process(raw_documents, do_pre_process, collocation_cut_off, stop_word_fi
 
 
 
-    pre_processed_documents = pre_process_word2vec(documents, min_document_frequency,\
-                    max_features, word2vecwrapper, stop_word_file, stop_word_set, \
-                    path_slash_format, model_name, stopword_handler)
+    pre_processed_documents = pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
 
     print("***************")
     return pre_processed_documents
 
-def pre_process_word2vec(documents, min_document_frequency, max_features, word2vecwrapper,\
-                    stop_word_file, stop_word_set, \
-                    path_slash_format, model_name, stopword_handler):
+def pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
 
     synonym_output_dir = os.path.join(path_slash_format, SYNONYM_FOLDER_NAME)
     if not os.path.exists(synonym_output_dir):
@@ -572,7 +420,8 @@ def pre_process_word2vec(documents, min_document_frequency, max_features, word2v
     synonym_file = os.path.join(synonym_output_dir, model_name + "_synonyms.txt")
         
     #word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set), min_df= 0.005)
-    word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set), max_features = max_features)
+    word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(properties.STOP_WORD_FILE, properties.STOP_WORD_SET, path_slash_format),\
+        max_features = properties.MAX_NR_OF_FEATURES)
     word_vectorizer.fit_transform(documents)
     word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names())
     word2vecwrapper.load_clustering(synonym_file)
@@ -692,9 +541,7 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
 
     
 
-def get_scikit_bow(documents, vectorizer, min_document_frequency,\
-            max_document_frequency, stop_word_file,
-            stop_word_set, max_features, stopword_handler, binary):
+def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_slash_format):
     """
     Will tranform the list of documents that are given as input, to a list of terms
     that occurr in these documents
@@ -716,14 +563,19 @@ def get_scikit_bow(documents, vectorizer, min_document_frequency,\
 
     ngram_length = 1
     
+    stop_words=stopword_handler.get_stop_word_set(properties.STOP_WORD_FILE, properties.STOP_WORD_SET, path_slash_format)
+    max_document_frequency = properties.MAX_DOCUMENT_FREQUENCY
+    min_document_frequency = properties.MIN_DOCUMENT_FREQUENCY
+    max_features = properties.MAX_NR_OF_FEATURES
+    binary = properties.BINARY_TF
+    
     if type(vectorizer) == TfidfVectorizer:
         # Use sublinear_tf, which used log(tf), to lower the advantage for long documents
         tf_vectorizer = vectorizer(sublinear_tf = True, max_df= max_document_frequency, min_df=min_document_frequency,\
-                                   ngram_range = (1, ngram_length), stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set),\
-                               max_features = max_features, binary = binary)
+                                   ngram_range = (1, ngram_length), stop_words = stop_words, max_features = max_features, binary = binary)
     else:
         tf_vectorizer = vectorizer(max_df= max_document_frequency, min_df=min_document_frequency,\
-                                   ngram_range = (1, ngram_length), stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set),\
+                                   ngram_range = (1, ngram_length), stop_words=stop_words,
                                max_features = max_features, binary = binary)
         
     tf = tf_vectorizer.fit_transform(documents)
@@ -741,12 +593,15 @@ def get_scikit_bow(documents, vectorizer, min_document_frequency,\
 ######
 
 
-    
-def get_scikit_topics(model_list, vectorizer, transformed, documents, nr_of_top_words, no_top_documents, overlap_cut_off):
+def get_scikit_topics(properties, model_list, vectorizer, transformed, documents):
     
     """
     Return info from topics that were stable enough to appear in all models in model_list
     """
+    
+    nr_of_top_words = properties.NR_OF_TOP_WORDS
+    no_top_documents = properties.NR_OF_TOP_DOCUMENTS
+    overlap_cut_off = properties.OVERLAP_CUT_OFF
     
     previous_topic_list_list = [] # list in which each element when the code is run will
     #consist of a list containing the topics that are similar from the different runs
@@ -1019,17 +874,20 @@ def is_term_combination_in_document(comb_term, document):
 """
 Filelist is a list of document-info-dict, with the same order as for the documents sent to the topic modelling
 """
-def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
-                             json_properties, data_set_name, model_name, save_in_database,\
-                             are_these_two_terms_to_be_considered_the_same,\
-                             most_typical_model, tf_vectorizer, additional_labels_method,\
-                             show_argumentation, show_sentiment, stopword_handler):
+def print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_set_name, model_name, save_in_database,\
+    most_typical_model, tf_vectorizer, stopword_handler, path_slash_format):
+
+#def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
+#                             json_properties, data_set_name, model_name, save_in_database,\
+#                             are_these_two_terms_to_be_considered_the_same,\
+#                             most_typical_model, tf_vectorizer, additional_labels_method,\
+#                             show_argumentation, show_sentiment, stopword_handler):
     """
-        Prints output/returns from the topic model in txt and json format (depending on whether it is run as server or as a program), with topic terms in bold face
+        Prints output/returns from the topic model in txt and json format (depending on whether it is run as server or as a program)
         
         """
   
-  
+    json_properties = properties.get_properties_in_json()
     
     document_dict = {}
     topic_info_list = []
@@ -1104,7 +962,7 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                 document_obj["document_topics"] = []
                 document_obj["label"] = file_list[document[DOC_ID]][LABEL]
                 document_obj["base_name"] = file_list[document[DOC_ID]][BASE_NAME]
-                document_obj["additional_labels"] = sorted(additional_labels_method(file_list[document[DOC_ID]][FULL_NAME]))
+                document_obj["additional_labels"] = sorted(properties.ADDITIONAL_LABELS_METHOD(file_list[document[DOC_ID]][FULL_NAME]))
                 document_dict[document[DOC_ID]] = document_obj
                 if document_obj["text"] != file_list[document[DOC_ID]][TEXT]:
                     print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(file_list[document[DOC_ID]][TEXT]))
@@ -1146,81 +1004,15 @@ def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algor
                                 "configuration" : json_properties, \
                                     "user" : "dummy_user",\
                                     MODEL_NAME : model_name,\
-                                    SHOW_ARGUMENTATION : str(show_argumentation),\
-                                    SHOW_SENTIMENT : str(show_sentiment)
+                                    SHOW_ARGUMENTATION : str(properties.SHOW_ARGUMENTATION),\
+                                    SHOW_SENTIMENT : str(properties.SHOW_SENTIMENT)
     }
 
 
     if save_in_database:
         saved_time, post_id = mongo_con.insert_new_model(result_dict, data_set_name)
     else:
-        saved_time, post_id = None, None
-
-        # If results are not saved in a database, save to a folder instead
-        # Make a subfolder from folderwhere the program was run:
-        TOPIC_MODEL_EVALUATION_FOLDER_BASE = "topic_model_evalutation"
-        if not os.path.exists(TOPIC_MODEL_EVALUATION_FOLDER_BASE):
-            os.mkdir(TOPIC_MODEL_EVALUATION_FOLDER_BASE)
-
-        data_set_results_folder = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER_BASE, data_set_name)
-
-        if not os.path.exists(data_set_results_folder):
-            os.mkdir(data_set_results_folder)
-
-        TOPIC_MODEL_EVALUATION_FOLDER = os.path.join(data_set_results_folder, str(time.time()))
-        if not os.path.exists(TOPIC_MODEL_EVALUATION_FOLDER):
-            os.mkdir(TOPIC_MODEL_EVALUATION_FOLDER)
-        else:
-            print(TOPIC_MODEL_EVALUATION_FOLDER  + " already exists. Exists without saving models")
-            exit(1)
-
-        label_dict = {}
-        for l in [el[LABEL] for el in file_list]:
-            if l not in label_dict:
-                label_dict[l] = 0
-            label_dict[l] = label_dict[l] + 1
-
-        result_file_labels = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, data_set_name + "_label_info.txt")
-        result_file_labels_file = open(result_file_labels, "w")
-        result_file_labels_file.write(str(label_dict))
-        result_file_labels_file.close()
-
-        result_file_terms = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, data_set_name + "_terms.txt")
-
-        terms_open = open(result_file_terms, "w")
-
-
-        for el in topic_info:
-            result_file_csv = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, data_set_name + "_documents_" + str(el[TOPIC_NUMBER]) + ".txt")
-            result_file_csv_no_classification = os.path.join(TOPIC_MODEL_EVALUATION_FOLDER, "no_class_" + data_set_name + "_documents_" + str(el[TOPIC_NUMBER]) + ".txt")
-            
-            csv_open = open(result_file_csv, "w")
-            csv_open_no_class = open(result_file_csv_no_classification, "w")
-            
-            topic_texts_write_to_file = [doc[ORIGINAL_DOCUMENT] for doc in el[DOCUMENT_LIST]]
-            terms_scores_with_colloctations_write_to_file, original_terms_with_combined, new_terms_with_score_dict = \
-                get_collocations_from_documents(topic_texts_write_to_file, el[TERM_LIST], are_these_two_terms_to_be_considered_the_same, min_term_frequency_in_collection_to_include_as_term)
-            terms_open.write(str(el[TOPIC_NUMBER]) + "\n")
-            terms_open.write("----\n")
-            terms_open.write(str(sorted([(strength, term) for (term, strength) in terms_scores_with_colloctations_write_to_file])[::-1]) + "\n")
-            terms_open.write("********\n\n")
-
-            for (strength, document) in sorted([(doc[DOCUMENT_TOPIC_STRENGTH], doc) for doc in el[DOCUMENT_LIST]], key=get_first_in_tuple)[::-1]:
-                output = [document[DOC_ID], strength, document_dict[document[DOC_ID]][LABEL], document[FOUND_CONCEPTS], document[ORIGINAL_DOCUMENT]]
-                csv_open.write("\t".join([str(el) for el in output]) + "\n")
-            
-                output_no_class = [document[DOC_ID], strength, document[FOUND_CONCEPTS], document[ORIGINAL_DOCUMENT]]
-                csv_open_no_class.write("\t".join([str(el) for el in output_no_class]) + "\n")
-            
-            csv_open.flush()
-            csv_open.close()
-
-            csv_open_no_class.flush()
-            csv_open_no_class.close()
-
-        terms_open.flush()
-        terms_open.close()
-        print("Written to folder " + TOPIC_MODEL_EVALUATION_FOLDER)
+        print("Don't save in database (for debugging)")
 
     term_visualiser.dump_term_dict()
 
