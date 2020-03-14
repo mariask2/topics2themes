@@ -45,7 +45,7 @@
 						</select>
                         <button id="newModel" type="button" title="Construct new model" class="btn btn-default btn-xs header-button create-button-button" aria-label="Construct new model">
                             <!-- glyphicon-cog -->
-                            <span class="glyphicon glyphicon-cog create-buttons-cog" aria-hidden="true"></span>
+                            <span class="glyphicon glyphicon-plus create-buttons-plus" aria-hidden="true"></span>
                         </button>
             
                         
@@ -252,7 +252,14 @@
                                             class="form-control search-input" placeholder="Search">
                                             <span id="textSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
                                     </div>
-                                    
+
+				    <button id="showFullText" type="button"
+                                        title="When activated, full texts (not summaries) are shown."
+                                        class="btn btn-default btn-xs
+                                        header-button pull-left" aria-label="Lock resorting of texts">
+                                        <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+				    </button>
+				    
                                     <button id="lockTextSorting" type="button"
                                         title="When activated, the automatic sort of texts is disable."
                                         class="btn btn-default btn-xs

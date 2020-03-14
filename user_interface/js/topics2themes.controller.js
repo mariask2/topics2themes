@@ -41,6 +41,8 @@ var doThemesSorting = true;
 var lockTextsSorting = false;
 var lockTermsSorting = false;
 var lockTopicsSorting = false;
+var showFullText = false;
+
 
 // Holds terms selected, splitted for "/" and "_" into different terms
 var splittedTerms = [];
@@ -161,7 +163,9 @@ $(document).ready(function(){
 
     $("#textsList").on("mouseup", ".jp_lemma", onSelectionChange);
     
-                 
+
+    // Button for showing full text
+    $("#showFullText").click(onShowFullText);
 
     // Button for resizing terms panel
     $("#resizeTerms").click(onResizeTerms);
@@ -751,15 +755,29 @@ function populateTextElement(d, i){
     textLabel.append(d.marked_text_tok);
     textLabel.addClass("full-text");
     textLabel.addClass("text-label");
-    textLabel.addClass("not-displayed-text");
+    if(!showFullText){
+	textLabel.addClass("not-displayed-text");
+    }
+    else{
+	textLabel.addClass("displayed-text");
+    }
     textContainer.append(textLabel);
     
     let snippetLabel = $("<div></div>");
     snippetLabel.append(d.snippet);
     snippetLabel.addClass("snippet-text")
     snippetLabel.addClass("text-label");
-    snippetLabel.addClass("displayed-text")
+    if(showFullText){
+	snippetLabel.addClass("not-displayed-text");
+    }
+    else{   
+	snippetLabel.addClass("displayed-text")
+    }
+    
     textContainer.append(snippetLabel);
+
+
+    
     //textLabel.append("marked_text_tok" in d ? d.marked_text_tok : d.text);
     
     
@@ -2135,13 +2153,14 @@ function addChoiceBasedHighlight(){
     
     d3.selectAll("." + NOTCHOSEN)
     .classed(NOTCHOSEN, false);
-    
+
+    /*
     d3.selectAll('.snippet-text').classed("not-displayed-text", false);
     d3.selectAll('.full-text').classed("not-displayed-text", true);
 
     d3.selectAll('.snippet-text').classed("displayed-text", true);
     d3.selectAll('.full-text').classed("displayed-text", false);
-
+    */
 
     d3.selectAll('.text-label').classed("text-border", false);
     
@@ -2329,9 +2348,9 @@ function highlightTextElement(textElement, direct, indirect) {
     // First of all, highlight the element under cursor
     textElement.addClass(direct);
     
-    if(direct == DIRECTCHOOSEN){
-        showFullText(textElement);
-    }
+    //if(direct == DIRECTCHOOSEN){
+    //    showFullText(textElement);
+    //}
     
     //d3.select(textElement.get(0)).selectAll('.snippet-text').classed("textchosen", true);
     //d3.select(textElement.get(0)).selectAll('.full-text').classed("textchosen", true);
@@ -2357,6 +2376,7 @@ function colorAllTagsWithTheSameColor(textElement){
        d3.select(textElement.get(0)).selectAll(".term-to-mark").classed("specifictermchosen", true);
 }
 
+/*
 function showFullText(textElement){
     d3.select(textElement.get(0)).selectAll('.text-label').classed("text-border", true);
     d3.select(textElement.get(0)).selectAll('.snippet-text').classed("not-displayed-text", true);
@@ -2373,6 +2393,7 @@ function showFullText(textElement){
         colorAllTagsWithTheSameColor(textElement);
     }
 }
+*/
 
 function secondaryHighlightTermsInText(textElement){
     let textId = d3.select(textElement.get(0)).datum().id;
@@ -2460,7 +2481,7 @@ function secondaryHighlightTexts(associationMethod, highlightClass, key){
     .classed(highlightClass, true)
     .each(function(d, i){
           if (highlightClass == CHOOSEN){
-          secondaryHighlightTermsInText($(this));
+              secondaryHighlightTermsInText($(this));
         }
           });
 }
@@ -2855,6 +2876,25 @@ function onLockThemesSorting(){
     }
 }
 
+function onShowFullText(){
+    if (showFullText){
+        showFullText = false;
+	$("#showFullText").removeClass("button-active");
+    }
+    else{
+        showFullText = true;
+	$("#showFullText").addClass("button-active");
+
+    }
+
+
+    d3.select("#textsList").selectAll("li")
+    .each(populateTextElement);
+    
+    addChoiceBasedHighlight();
+    resizeContainers();
+    renderLinks();
+}
 
 function onLockTextSorting(){
     if (lockTextsSorting){
