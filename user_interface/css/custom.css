@@ -389,7 +389,7 @@ h3 {
 }
 
 #termsList, #topicsList, #themesList {
-	overflow-y: auto;
+	overflow-y: scroll;
 }
 
 #textsList{

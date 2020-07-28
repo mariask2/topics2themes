@@ -1292,9 +1292,10 @@ function drawLinks(leftElement, rightElement, termScore,
     // Draw the links from terms to topics
     let offsetLeft = $("#" + svgId).offset().left;
     let offsetTop = $("#" + svgId).offset().top;
-    
+
+    let scrollbarWidth = 8;
     // Get the port position (this is only needed  to be calculated once, so if things get slow, do earlier)
-    let leftPortX = leftElement.offset().left - offsetLeft + leftElement.outerWidth();
+    let leftPortX = leftElement.offset().left - offsetLeft + leftElement.outerWidth() + scrollbarWidth;
     let leftPortY = leftElement.offset().top - offsetTop + Math.floor(leftElement.outerHeight()/2);
               
     // Get the port position
