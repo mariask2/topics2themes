@@ -2154,15 +2154,14 @@ function addChoiceBasedHighlight(){
     
     d3.selectAll("." + NOTCHOSEN)
     .classed(NOTCHOSEN, false);
-
-    /*
+                                                                        
     d3.selectAll('.snippet-text').classed("not-displayed-text", false);
     d3.selectAll('.full-text').classed("not-displayed-text", true);
-
+        
     d3.selectAll('.snippet-text').classed("displayed-text", true);
     d3.selectAll('.full-text').classed("displayed-text", false);
-    */
 
+                                                            
     d3.selectAll('.text-label').classed("text-border", false);
     
     // Reset highlight of terms that stem from topics that are not chosen
@@ -2902,10 +2901,10 @@ function onShowFullText(){
 
     }
 
-    modelResetClickedChoices();
-    resetPanelHeadings();
-    doResetHighlightAfterStateChange();
-    controllerDoPopulateInterface();
+    //modelResetClickedChoices();
+    //resetPanelHeadings();
+    //doResetHighlightAfterStateChange();
+    //controllerDoPopulateInterface();
 }
 
 function onLockTextSorting(){
