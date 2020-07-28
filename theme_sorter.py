@@ -1,7 +1,9 @@
 import os
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.externals import joblib
+import joblib
+# Deprecated:
+#from sklearn.externals import joblib
 
 
 # An import that should function both locally and when running an a remote server

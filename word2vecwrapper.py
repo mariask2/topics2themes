@@ -7,7 +7,6 @@ from sklearn import preprocessing
 import numpy as np
 import gc
 from sklearn.cluster import DBSCAN
-from sklearn.neighbors.nearest_centroid import NearestCentroid
 from sklearn.metrics.pairwise import euclidean_distances
 
 

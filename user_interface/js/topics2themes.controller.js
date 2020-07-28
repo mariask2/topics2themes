@@ -1719,9 +1719,6 @@ function onThemeElementClick(event){
 function toggleChosenElement(id, modelToggleFunction){
     modelToggleFunction(id);
     fillSplittedCurrentTermList();
-    //doDefaultSort(); // Note: appropriate sorting is triggered elsewhere
-    //HERE
-    //resetHighlightAfterStateChange();
     resetHighlight();
 }
 
@@ -2154,13 +2151,14 @@ function addChoiceBasedHighlight(){
     
     d3.selectAll("." + NOTCHOSEN)
     .classed(NOTCHOSEN, false);
-                                                                        
+
+    // Reset to show snippet texts only
     d3.selectAll('.snippet-text').classed("not-displayed-text", false);
     d3.selectAll('.full-text').classed("not-displayed-text", true);
-        
     d3.selectAll('.snippet-text').classed("displayed-text", true);
     d3.selectAll('.full-text').classed("displayed-text", false);
-
+    showFullText = false;
+    $("#showFullText").removeClass("button-active");
                                                             
     d3.selectAll('.text-label').classed("text-border", false);
     
