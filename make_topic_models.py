@@ -421,7 +421,7 @@ def pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_form
         
     #word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set), min_df= 0.005)
     word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(properties.STOP_WORD_FILE, properties.STOP_WORD_SET, path_slash_format),\
-        max_features = properties.MAX_NR_OF_FEATURES)
+        min_df = properties.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING)
     word_vectorizer.fit_transform(documents)
     word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names())
     word2vecwrapper.load_clustering(synonym_file)
@@ -572,7 +572,7 @@ def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_sla
     if type(vectorizer) == TfidfVectorizer:
         # Use sublinear_tf, which used log(tf), to lower the advantage for long documents
         tf_vectorizer = vectorizer(sublinear_tf = True, max_df= max_document_frequency, min_df=min_document_frequency,\
-                                   ngram_range = (1, ngram_length), stop_words = stop_words, max_features = max_features, binary = binary)
+                                   ngram_range = (1, ngram_length), stop_words = stop_words, max_features = max_features, binary = binary, use_idf=False)
     else:
         tf_vectorizer = vectorizer(max_df= max_document_frequency, min_df=min_document_frequency,\
                                    ngram_range = (1, ngram_length), stop_words=stop_words,
@@ -1063,7 +1063,8 @@ def get_snippet_text(marked_document, terms_found_in_processed_documents_so_far)
         print(marked_document)
         
     snippet_str = " ".join(sentences_to_keep).replace("]MARKING MARKING[", "").replace("MARKING[","[").replace("]MARKING","]")
-    snippet_str = snippet_str.replace("..........","....") # Don't make it too loong
+    while ".........." in snippet_str:
+        snippet_str = snippet_str.replace("..........","....") # Don't make it too loong
 
    
     return snippet_str

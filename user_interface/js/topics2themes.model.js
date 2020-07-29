@@ -1806,7 +1806,8 @@ function modelDefineUserLabel(textId, userDefinedLabel){
 
 function updateUserDefinedLabel(data){
     controllerDoPopulateOneTextElement(data);
-    controllerDoPopulateThemes(false);
+    //controllerDoPopulateThemes(false);
+    controllerRepopulateTheme();
 }
 
 function getSavedUserDefinedLabels(){

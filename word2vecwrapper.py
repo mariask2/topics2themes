@@ -136,7 +136,7 @@ class Word2vecWrapper:
                     self.term_similar_dict[term] = SYNONYM_BINDER.join(items)
 
         f = open(output_file, "w")
-        for item in list(set(self.term_similar_dict.values())):
+        for item in sorted(list(set(self.term_similar_dict.values()))):
             f.write(item.replace(SYNONYM_BINDER, " ") + "\n")
         f.close()   
         self.nr_of_clusters = len(set(labels)) 

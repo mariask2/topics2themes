@@ -2005,6 +2005,11 @@ function controllerDoPopulateThemes(doSorting){
     
     enableThemeButtons();
 }
+                                                                        
+function controllerRepopulateTheme(){
+    d3.select("#themesList").selectAll("li").each(populateThemeElement);
+}
+                                                                        
 
 // Removes a theme
 function onThemeRemove() {

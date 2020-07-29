@@ -202,7 +202,13 @@ class PropertiesContainer:
         try:
             self.BINARY_TF = properties.BINARY_TF
         except AttributeError:
-            self.BINARY_TF = False
+            self.BINARY_TF = default_topic_model_configuration.BINARY_TF
+        
+        try:
+            self.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING = properties.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING
+        except AttributeError:
+            self.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING = default_topic_model_configuration.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING
+
 
 
     def get_properties_in_json(self):

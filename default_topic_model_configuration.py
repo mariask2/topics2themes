@@ -57,9 +57,17 @@ PRE_PROCESS = False
 
 
 """
-Mininimum occurrence in the corpus for a term to be included in the topic modelling
+Mininimum occurrence in the corpus for a term to be included in the topic modelling.
+If word clustering is chosen, the frequency is counted after that.
+MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING governs what words are included in clustering
 """
-MIN_DOCUMENT_FREQUENCY = 3
+MIN_DOCUMENT_FREQUENCY = 10
+
+"""
+Mininimum occurrence in the corpus for a term to be included in the clustering.
+"""
+MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING = 5
+
 
 """
 Maximum occurrence in the corpus for a term to be included in the topic modelling
@@ -70,6 +78,12 @@ MAX_DOCUMENT_FREQUENCY = 0.95
 The maximumn number of features to include when vectorizing the texts
 """
 MAX_NR_OF_FEATURES = None
+
+"""
+If the same word occurs several times in a document, should that be countet just once (binary)
+or should it be counted several times
+"""
+BINARY_TF = False
 
 """
     Whether to show the argumentation buttons or not
