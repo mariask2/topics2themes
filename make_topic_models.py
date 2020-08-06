@@ -169,8 +169,20 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
     else:
         print("Model will not be saved in database")
     
-    file_list = read_discussion_documents(properties.DATA_LABEL_LIST, data_set_name, \
-                                          properties.REMOVE_DUPLICATES, properties.MIN_NGRAM_LENGTH_FOR_DUPLICATE, properties.CLEANING_METHOD)
+    manual_collocations = []
+    if properties.MANUAL_COLLOCATIONS != None:
+          if not os.path.isfile(os.path.join(path_slash_format, properties.MANUAL_COLLOCATIONS)):
+              raise FileNotFoundError("The file for specifying manual collocations doesn't exist. Filename given in configuration is: " + \
+                                      properties.MANUAL_COLLOCATIONS)
+          with open(os.path.join(path_slash_format, properties.MANUAL_COLLOCATIONS)) as manual_collocations_file:
+              for word in manual_collocations_file.readlines():
+                  manual_collocations.append(word.strip())
+                  
+    
+    file_list = read_discussion_documents(properties.DATA_LABEL_LIST,
+                                            data_set_name,
+                                          properties.REMOVE_DUPLICATES, properties.MIN_NGRAM_LENGTH_FOR_DUPLICATE, properties.CLEANING_METHOD,
+                                          manual_collocations)
 
     documents = [el[TEXT] for el in file_list]
 
@@ -249,7 +261,7 @@ def get_current_file_name(name, topic_model_algorithm):
 ######
 # Read documents from file
 ######
-def read_discussion_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method):
+def read_discussion_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method, manual_collocations):
     file_list = []
 
     print("data_label_list", data_label_list)
@@ -265,6 +277,18 @@ def read_discussion_documents(data_label_list, data_set_name, whether_to_remove_
             base_name = os.path.basename(f)
             opened = open(f)
             text = opened.read()
+            text.replace("  ", " ")
+            
+            for collocation in sorted(manual_collocations, reverse=True):
+                if collocation in text:
+                    to_replace = collocation.replace(" ", COLLOCATION_BINDER)
+                    text = text.replace(collocation, to_replace)
+                elif collocation in text.lower():
+                    to_replace = collocation.replace(" ", COLLOCATION_BINDER)
+                    text = text.replace(collocation, to_replace)
+                    print(to_replace)
+                    print(text)
+                
             file_list.append({TEXT: text, LABEL: data_info[DATA_LABEL], BASE_NAME: base_name, FULL_NAME: f})
             opened.close()
 
@@ -598,10 +622,11 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
     """
     Return info from topics that were stable enough to appear in all models in model_list
     """
-    
+    print(properties)
     nr_of_top_words = properties.NR_OF_TOP_WORDS
     no_top_documents = properties.NR_OF_TOP_DOCUMENTS
     overlap_cut_off = properties.OVERLAP_CUT_OFF
+    percentage_none_outliers = properties.PERCENTATE_NONE_OUTLIERS
     
     previous_topic_list_list = [] # list in which each element when the code is run will
     #consist of a list containing the topics that are similar from the different runs
@@ -635,7 +660,7 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
         overlap_prop_avg = overlap_prop_sum/len(term_results)
         overlap_averages.append((overlap_prop_avg, nr))
     overlap_averages_sorted = sorted(overlap_averages, reverse=True)
-    overlap_averages_sorted_removed_outliers = [nr for (overl, nr) in overlap_averages_sorted[:math.ceil(len(overlap_averages_sorted)*0.90)]]
+    overlap_averages_sorted_removed_outliers = [nr for (overl, nr) in overlap_averages_sorted[:math.ceil(len(overlap_averages_sorted)*percentage_none_outliers)]]
 
     most_typical_model = None
     model_results_filtered = []
@@ -1141,6 +1166,8 @@ def get_hex_for_term(score, max_score):
     return h.upper()
 
 def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
+
+    text = text.replace(COLLOCATION_BINDER, " ")
     
     all_scores = list(set([score for key, score in max_weight_dict.items()]))
 
@@ -1152,7 +1179,8 @@ def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
     term_list_splitted_synonyms_dict = {}
     for word in term_list_replace:
         for sub_word in word.split(SYNONYM_BINDER):
-            term_list_splitted_synonyms_dict[sub_word] = word
+            for sub_sub_word in sub_word.split(COLLOCATION_BINDER):
+                term_list_splitted_synonyms_dict[sub_sub_word] = word
 
     simple_tokenised = get_tokenised(text)
     simple_tokenised_marked = []

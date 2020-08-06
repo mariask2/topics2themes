@@ -51,6 +51,11 @@ the same topic of a another one
 OVERLAP_CUT_OFF = 0.7
 
 """
+When counting overlap, outliers are removed. This sets percentage for what is to be retained
+"""
+PERCENTATE_NONE_OUTLIERS = 0.9
+
+"""
 Whether to use pre-processing (collocation detection and synonym clustering)
 """
 PRE_PROCESS = False

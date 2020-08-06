@@ -61,6 +61,12 @@ class PropertiesContainer:
             self.OVERLAP_CUT_OFF = default_topic_model_configuration.OVERLAP_CUT_OFF
             print("Using default OVERLAP_CUT_OFF")
 
+        try:
+            self.PERCENTATE_NONE_OUTLIERS = properties.PERCENTATE_NONE_OUTLIERS
+        except AttributeError:
+            self.PERCENTATE_NONE_OUTLIERS = default_topic_model_configuration.PERCENTATE_NONE_OUTLIERS
+            print("Using default PERCENTATE_NONE_OUTLIERS")
+            
         try:    
             self.PRE_PROCESS = properties.PRE_PROCESS
         except AttributeError:
@@ -188,6 +194,13 @@ class PropertiesContainer:
         except AttributeError:
             print("No file specified with manually constructed clusters")
             self.MANUAL_CLUSTER_FILE = None # Then no manually constructed clusters will be used
+            
+        try:
+            self.MANUAL_COLLOCATIONS = properties.MANUAL_COLLOCATIONS
+        except AttributeError:
+            print("No file specified with manually constructed collocations")
+            self.MANUAL_COLLOCATIONS = None # Then no manually constructed clusters will be used
+            
 
         try:
             self.BINARY_SPACE = properties.BINARY_SPACE
