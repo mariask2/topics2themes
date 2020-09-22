@@ -450,7 +450,7 @@ def pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_form
     word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names())
     word2vecwrapper.load_clustering(synonym_file)
     
-    term_visualiser.set_vocabulary(word_vectorizer.get_feature_names())
+    term_visualiser.set_vocabulary(word_vectorizer.get_feature_names(), path_slash_format)
     
     print("Start replacing with similars")
     pre_processed_documents = []
@@ -649,6 +649,7 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
 
         term_results.append(term_set)
 
+    print(term_results)
     overlap_averages = []
     for nr, terms in enumerate(term_results):
         set_size = len(terms)
@@ -979,7 +980,7 @@ def print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_
             if document[DOC_ID] not in document_dict:
                 document_obj = {}
                 document_obj["text"] = document[ORIGINAL_DOCUMENT]
-                document_obj["snippet"] = get_snippet_text(marked_document, terms_found_in_processed_documents_so_far)
+                document_obj["snippet"] = get_snippet_text(marked_document, terms_found_in_processed_documents_so_far, properties)
                 document_obj["id"] = int(str(document[DOC_ID]))
                 document_obj["marked_text_tok"] = marked_document
                 document_obj["id_source"] = int(str(document[DOC_ID]))
@@ -994,7 +995,7 @@ def print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_
 
             else:
                 document_dict[document[DOC_ID]]["marked_text_tok"] = marked_document
-                document_dict[document[DOC_ID]]["snippet"] = get_snippet_text(marked_document, terms_found_in_processed_documents_so_far)
+                document_dict[document[DOC_ID]]["snippet"] = get_snippet_text(marked_document, terms_found_in_processed_documents_so_far, properties)
 
 
             document_topic_obj = {}
@@ -1039,15 +1040,14 @@ def print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_
     else:
         print("Don't save in database (for debugging)")
 
-    term_visualiser.dump_term_dict()
+    term_visualiser.dump_term_dict(path_slash_format)
 
     return result_dict, saved_time, post_id
 
 
-def get_snippet_text(marked_document, terms_found_in_processed_documents_so_far):
+def get_snippet_text(marked_document, terms_found_in_processed_documents_so_far, properties):
     
-    NORMAL_MAX_SENTENCE_LENGTH = 3
-
+    NORMAL_MAX_SENTENCE_LENGTH = properties.NUMBER_OF_SENTENCES_IN_SUMMARY
     
     terms_represented_in_summary = set()
     # Keep sentences which include a term marking

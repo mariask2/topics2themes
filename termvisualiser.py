@@ -5,18 +5,18 @@ import numpy as np
 import os
 import math
 import random
+import sys
 
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
 
-
-TEMP_FILE = "temp_term_dump.txt"
-TEMP_ALL_TERMS_FILE = "temp_all_terms_dump.txt"
+TERM_FILE = "term_dump.txt"
+ALL_TERMS_FILE = "all_terms_dump.txt"
+OUTPUT_DIR = "visualisation_folder_created_by_system"
 SAVED_FOUND_WORDS_NAME = "temp_saved_words"
 TSNE_NAME = "temp_tsne_name"
-SPACE_FOR_PATH = "/Users/maria/mariaskeppstedtdsv/post-doc/gavagai/googlespace/GoogleNews-vectors-negative300.bin"
-
+SPACE_FOR_PATH = "/Users/marsk757/wordspaces/69/model.bin"
 SMALLEST_FONT_SIZE = 3
 
 class TermVisualiser:
@@ -24,23 +24,31 @@ class TermVisualiser:
     def __init__(self):
         self.termdict_dict = {}
 
-    def set_vocabulary(self, terms_in_corpus):
+    def set_vocabulary(self, terms_in_corpus, path_slash_format):
         self.terms_in_corpus = terms_in_corpus
         j = json.dumps(self.terms_in_corpus)
-        f = open(TEMP_ALL_TERMS_FILE, "w")
+        file_name = os.path.join(self.get_working_dir(path_slash_format), ALL_TERMS_FILE)
+        f = open(file_name, "w")
         f.write(j)
         f.close()
     
     def add_terms(self, term_dict, nr):
         self.termdict_dict[nr] = term_dict
 
-    def dump_term_dict(self):
+    def get_working_dir(self, path_slash_format):
+        dir = os.path.join(path_slash_format, OUTPUT_DIR)
+        if not os.path.exists(dir):
+            os.mkdir(dir)
+        return dir
+        
+    def dump_term_dict(self, path_slash_format):
         j = json.dumps(self.termdict_dict)
-        f = open(TEMP_FILE, "w")
+        file_name = os.path.join(self.get_working_dir(path_slash_format), TERM_FILE)
+        f = open(file_name, "w")
         f.write(j)
         f.close()
     
-    def produce_term_visualisation(self):
+    def produce_term_visualisation(self, data_dir):
         
         from matplotlib.pyplot import plot, show, bar, grid, axis, savefig, clf
         import matplotlib.markers
@@ -49,13 +57,15 @@ class TermVisualiser:
         from mpl_toolkits import mplot3d
         import joblib
     
-        all_f = open(TEMP_ALL_TERMS_FILE)
+        file_name_all_terms = os.path.join(self.get_working_dir(data_dir), ALL_TERMS_FILE)
+        all_f = open(file_name_all_terms)
         all_j = all_f.read().strip()
         all_terms_in_corpus = json.loads(all_j)
         print("Nr of terms in documents " + str(all_terms_in_corpus))
         all_f.close()
         
-        f = open(TEMP_FILE)
+        file_name = os.path.join(self.get_working_dir(data_dir), TERM_FILE)
+        f = open(file_name)
         j = f.read().strip()
         
         loaded_term_dict = json.loads(j)
@@ -296,7 +306,7 @@ class TermVisualiser:
 
 if __name__ == '__main__':
     tv = TermVisualiser()
-    tv.produce_term_visualisation()
+    tv.produce_term_visualisation(sys.argv[1])
 
 
 

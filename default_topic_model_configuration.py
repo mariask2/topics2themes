@@ -53,7 +53,7 @@ OVERLAP_CUT_OFF = 0.7
 """
 When counting overlap, outliers are removed. This sets percentage for what is to be retained
 """
-PERCENTATE_NONE_OUTLIERS = 0.9
+PERCENTATE_NONE_OUTLIERS = 0.90
 
 """
 Whether to use pre-processing (collocation detection and synonym clustering)
@@ -148,6 +148,12 @@ BINARY_SPACE = True
    True if the vectors are provided in Gensim format
 """
 GENSIM_FORMAT = False
+
+"""
+  How many sentences to keep in the summary
+"""
+NUMBER_OF_SENTENCES_IN_SUMMARY = 3
+
 
 def no_term_clustering(x, y):
     return False

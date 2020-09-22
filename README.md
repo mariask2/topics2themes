@@ -23,11 +23,13 @@ conda install nltk
 
 conda install joblib
 
-If you want to use the functionality of running the topic modelling as a flask server, you also need to have the following installed:
-
 pip install Flask
 
 pip install -U flask-cors
+
+If you want to plot extracted terms, you also need:
+
+conda install matplotlib
 
 When you run the code the first time, you'll get the following error message:
 

@@ -221,6 +221,13 @@ class PropertiesContainer:
             self.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING = properties.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING
         except AttributeError:
             self.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING = default_topic_model_configuration.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING
+            
+        try:
+            self.NUMBER_OF_SENTENCES_IN_SUMMARY = properties.NUMBER_OF_SENTENCES_IN_SUMMARY
+        except AttributeError:
+            self.NUMBER_OF_SENTENCES_IN_SUMMARY = default_topic_model_configuration.NUMBER_OF_SENTENCES_IN_SUMMARY
+            
+        
 
 
 
