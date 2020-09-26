@@ -18,9 +18,9 @@ SAVED_FOUND_WORDS_NAME = "temp_saved_words"
 TSNE_NAME = "temp_tsne_name"
 #SPACE_FOR_PATH = "/Users/marsk757/wordspaces/69/model.bin"
 SPACE_FOR_PATH = "/Users/marsk757/wordspaces/GoogleNews-vectors-negative300.bin"
-SMALLEST_FONT_SIZE = 3
+SMALLEST_FONT_SIZE = 5
 FIG_NAME = "terms_plot.png"
-PREL_FIG_NAME = "prel_terms_plot.png"
+PREL_FIG_NAME = "prel_terms_plot"
 
 class TermVisualiser:
     
@@ -74,10 +74,10 @@ class TermVisualiser:
         
         loaded_term_dict = json.loads(j)
         
+        """
         # To position terms that occur several times with a little distance
         terms_several_occurrences_dict = {}
         for key, item in loaded_term_dict.items():
-            print(key, item)
             item = item[:terms_per_topic]
             for i in item:
                 if i["term"] not in terms_several_occurrences_dict:
@@ -85,10 +85,11 @@ class TermVisualiser:
                 else:
                     terms_several_occurrences_dict[i["term"]].append(float(i["score"]))
                     terms_several_occurrences_dict[i["term"]].sort(reverse=True)
-    
+        """
+        
         # file paths
         final_file_name = os.path.join(self.get_working_dir(data_dir), FIG_NAME)
-        prel_save_figure_file_name = os.path.join(self.get_working_dir(data_dir), PREL_FIG_NAME)
+        prel_save_figure_file_name_no_png = os.path.join(self.get_working_dir(data_dir), PREL_FIG_NAME)
         tsne_path = os.path.join(self.get_working_dir(data_dir), TSNE_NAME)
         saved_found_words_name = os.path.join(self.get_working_dir(data_dir), SAVED_FOUND_WORDS_NAME)
 
@@ -122,12 +123,7 @@ class TermVisualiser:
 
         
         
-        main_fig = plt.figure()
-        main_fig.set_size_inches(15, 7)
-        #ax = plt.axes(projection='3d')
-        plt.axis('off')
-        plt.tick_params(axis='both', left='off', top='off', right='off', bottom='off',\
-                            labelleft='off', labeltop='off', labelright='off', labelbottom='off')
+
         
         word_vec_dict = {}
         min_x = 100
@@ -147,50 +143,60 @@ class TermVisualiser:
 
         print(min_x, max_x, min_y, max_y)
 
-        FONTSIZE_FACTOR = 7
-        HOW_MUCH_TO_NORMALIZE_FOR_TERMS_HAVING_DIFFERENT_WEIGHT_IN_DIFFERENT_TOPICS = 0.6
+        FONTSIZE_FACTOR = 3
+        HOW_MUCH_TO_NORMALIZE_FOR_TERMS_HAVING_DIFFERENT_WEIGHT_IN_DIFFERENT_TOPICS = 0.9
         all_points_with_original_position_info = []
         total_nr_of_topics = len(loaded_term_dict.items()) + 1
         colors = matplotlib.cm.rainbow(np.linspace(0, 1, len(loaded_term_dict.items())))
         
         from adjustText import adjust_text
-        texts = []
-        for nr, (topic, terms) in enumerate(loaded_term_dict.items()):
+        
+        for topic_nr, (topic, terms) in enumerate(loaded_term_dict.items()):
+        
+            texts = []
+            
+            main_fig = plt.figure()
+            main_fig.set_size_inches(5, 5)
+            plt.axis('off')
+            plt.tick_params(axis='both', left='off', top='off', right='off', bottom='off',\
+                                labelleft='off', labeltop='off', labelright='off', labelbottom='off')
+                                
             print(topic)
             terms = terms[:terms_per_topic]
             max_score = max([float(el["score"]) for el in terms])
             
-            topic_color = colors[nr]
+            topic_color = colors[topic_nr]
             
             
             for nr, term in enumerate(terms[::-1]):
-                point = self.get_point_for_term(term["term"], word_vec_dict, min_x, max_x, min_y, max_y)
+                point, term_to_use = self.get_point_for_term(term["term"], word_vec_dict, min_x, max_x, min_y, max_y)
                 
                 if True:
-                    strength = min(0.6, (float(term["score"])/(max_score*HOW_MUCH_TO_NORMALIZE_FOR_TERMS_HAVING_DIFFERENT_WEIGHT_IN_DIFFERENT_TOPICS))*1.5)
+                    strength = min(1, (float(term["score"])/(max_score*HOW_MUCH_TO_NORMALIZE_FOR_TERMS_HAVING_DIFFERENT_WEIGHT_IN_DIFFERENT_TOPICS))*1.5)
                     fontsize=SMALLEST_FONT_SIZE + term["score"]/(max_score*HOW_MUCH_TO_NORMALIZE_FOR_TERMS_HAVING_DIFFERENT_WEIGHT_IN_DIFFERENT_TOPICS)*FONTSIZE_FACTOR
                    
-                    plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.001)
+                    print("strength", strength)
+                    plt.scatter(min_x, min_y, zorder = -100,  color = "red", marker = "o", s=0.001)
+                    plt.scatter(max_x, max_y, zorder = -100,  color = "red", marker = "o", s=0.001)
 
-                    colored_color = (topic_color[0], topic_color[1], topic_color[2], strength)
-                    zorder = -1*nr
+                    colored_color = (topic_color[0], topic_color[1], topic_color[2])
+                    zorder = -1*nr/strength
                     annotate_y = point[1]
                     annotate_x = point[0]
                     #plt.annotate(term["term"], (point[0], point[1]), xytext=(annotate_x, annotate_y), zorder = zorder, color = (0, 0, 0, strength), fontsize=fontsize)
-                    gray_color = (0.1, 0.1, 0.1, strength)
-                    box = dict(facecolor=colored_color, alpha=strength, boxstyle="round", ec=gray_color)
-                    texts.append(plt.text(point[0], point[1], term["term"], zorder = zorder, color = (0, 0, 0, strength), fontsize=fontsize, bbox = box))
-                
-                    all_points_with_original_position_info.append((annotate_y, float(term["score"]), annotate_x, zorder, strength, fontsize, term["term"], nr, topic))
+                    gray_color = (0.1, 0.1, 0.1, strength/10)
+                    box = dict(facecolor=colored_color, boxstyle="round", ec=colored_color, alpha=strength/10)
+                    t = plt.text(point[0], point[1], term_to_use, zorder = zorder, color = "black", fontsize=fontsize, bbox = box)
+                    texts.append(t)
+                #horizontalalignment='center', verticalalignment='center'
+                    all_points_with_original_position_info.append((annotate_y, float(term["score"]), annotate_x, zorder, strength, fontsize, term_to_use, nr, topic))
         
-        print(texts)
-        adjust_text(texts)
-        plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.001)
+            #
+            adjust_text(texts, precision=0.001, expand_text=(1.5, 1.2))
         
-        plt.savefig(prel_save_figure_file_name, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
-        print("Saved plot in " + prel_save_figure_file_name)
+            plt.savefig(prel_save_figure_file_name_no_png + "_" + str(topic_nr) + ".png", dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
     
-        plt.close('all')
+            plt.close('all')
 
         # Process to avoid to close
 
@@ -210,6 +216,7 @@ class TermVisualiser:
             x_room = fontsize*len(term)**1.2
             to_add = 0
             
+            """
             # Check double occurrence of the same term.
             if len(terms_several_occurrences_dict[term]) > 1:
                 for s in terms_several_occurrences_dict[term]:
@@ -219,6 +226,8 @@ class TermVisualiser:
                         extrax = extrax + (fontsize)*len(term)*0.0005
                         extray = extray + (fontsize)**VERTICAL_STRETCH
                 to_add = extray
+            """
+            
             if to_add == 0:
            
                 # If there is space above the term, do an anti-strech instead
@@ -276,7 +285,6 @@ class TermVisualiser:
             SHADOWFACTOR = 0.0015
             MAX_LINEWIDTH = 0.3
             LINEWIDTH_FACTOR = 0.9
-            print(topic_color)
             zorder = -10000
             line_points.sort(reverse = True)
            
@@ -313,20 +321,47 @@ class TermVisualiser:
     def get_point_for_term(self, term, word_vec_dict, min_x, max_x, min_y, max_y):
         found_vector = False
         point = None
+        to_return_term = term
         if term in word_vec_dict:
             point = word_vec_dict[term]
             found_vector = True
-        else:
-            for w in term.split(" / "):
-                if w in word_vec_dict:
-                    point = word_vec_dict[w]
-                    found_vector = True
-        if not found_vector:
-            if self.has_number(term):
-                point = (min_x + 10*random.random(), max_y - 10*random.random())
-            else:
-                point = (min_x + 10*random.random(), min_y + 10*random.random())
-        return point
+        elif "/" in term:
+                condensed_cluster = []
+                for w in term.split(" / "):
+                    if w in word_vec_dict:
+                        point = word_vec_dict[w]
+                        found_vector = True
+                        
+                        """
+                        add_w_to_condensed_cluster = True
+                        for i in range(0, len(condensed_cluster)):
+                            # TODO: Not language independent
+                            if condensed_cluster[i].startswith(w[:-3]):
+                                add_w_to_condensed_cluster = False
+                            
+                                if len(w) < len(condensed_cluster[i]):
+                                # If they are similar, only retain the shortest
+                                    condensed_cluster[i] = w
+                                    break
+                            
+                        if add_w_to_condensed_cluster:
+                            condensed_cluster.append(w)
+                        
+                to_return_term = " / ".join(condensed_cluster)
+                """
+        elif "_" in term:
+            first = term.split("_")[0]
+            if first in word_vec_dict:
+                point = word_vec_dict[first]
+                found_vector = True
+                
+            
+        if not found_vector: # Put it on a random location
+            random_key = (random.sample(list(word_vec_dict), 1))[0]
+            point = word_vec_dict[random_key]
+        
+        to_return_term = to_return_term.replace("_", " ")
+        return point, to_return_term
 
     def has_number(self, term):
         for el in range(0,9):
