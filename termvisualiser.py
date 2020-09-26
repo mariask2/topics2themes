@@ -16,8 +16,11 @@ ALL_TERMS_FILE = "all_terms_dump.txt"
 OUTPUT_DIR = "visualisation_folder_created_by_system"
 SAVED_FOUND_WORDS_NAME = "temp_saved_words"
 TSNE_NAME = "temp_tsne_name"
-SPACE_FOR_PATH = "/Users/marsk757/wordspaces/69/model.bin"
+#SPACE_FOR_PATH = "/Users/marsk757/wordspaces/69/model.bin"
+SPACE_FOR_PATH = "/Users/marsk757/wordspaces/GoogleNews-vectors-negative300.bin"
 SMALLEST_FONT_SIZE = 3
+FIG_NAME = "terms_plot.png"
+PREL_FIG_NAME = "prel_terms_plot.png"
 
 class TermVisualiser:
     
@@ -48,7 +51,7 @@ class TermVisualiser:
         f.write(j)
         f.close()
     
-    def produce_term_visualisation(self, data_dir):
+    def produce_term_visualisation(self, data_dir, terms_per_topic):
         
         from matplotlib.pyplot import plot, show, bar, grid, axis, savefig, clf
         import matplotlib.markers
@@ -61,7 +64,7 @@ class TermVisualiser:
         all_f = open(file_name_all_terms)
         all_j = all_f.read().strip()
         all_terms_in_corpus = json.loads(all_j)
-        print("Nr of terms in documents " + str(all_terms_in_corpus))
+        print("Nr of terms in documents " + str(len(all_terms_in_corpus)))
         all_f.close()
         
         file_name = os.path.join(self.get_working_dir(data_dir), TERM_FILE)
@@ -73,6 +76,8 @@ class TermVisualiser:
         # To position terms that occur several times with a little distance
         terms_several_occurrences_dict = {}
         for key, item in loaded_term_dict.items():
+            print(key, item)
+            item = item[:terms_per_topic]
             for i in item:
                 if i["term"] not in terms_several_occurrences_dict:
                     terms_several_occurrences_dict[i["term"]] = [i["score"]]
@@ -80,11 +85,17 @@ class TermVisualiser:
                     terms_several_occurrences_dict[i["term"]].append(float(i["score"]))
                     terms_several_occurrences_dict[i["term"]].sort(reverse=True)
     
+        # file paths
+        final_file_name = os.path.join(self.get_working_dir(data_dir), FIG_NAME)
+        prel_save_figure_file_name = os.path.join(self.get_working_dir(data_dir), PREL_FIG_NAME)
+        tsne_path = os.path.join(self.get_working_dir(data_dir), TSNE_NAME)
+        saved_found_words_name = os.path.join(self.get_working_dir(data_dir), SAVED_FOUND_WORDS_NAME)
 
-        if os.path.exists(TSNE_NAME) and os.path.exists(SAVED_FOUND_WORDS_NAME):
+        
+        if os.path.exists(tsne_path) and os.path.exists(saved_found_words_name):
             print("Model already created")
-            DX = joblib.load(TSNE_NAME)
-            found_words = joblib.load(SAVED_FOUND_WORDS_NAME)
+            DX = joblib.load(tsne_path)
+            found_words = joblib.load(saved_found_words_name)
         
         else:
             all_vectors_list = []
@@ -105,8 +116,8 @@ class TermVisualiser:
             DX_pca = pca_model.fit_transform(all_vectors_np)
             DX = tsne_model.fit_transform(DX_pca)
 
-            joblib.dump(DX, TSNE_NAME, compress=9)
-            joblib.dump(found_words, SAVED_FOUND_WORDS_NAME, compress=9)
+            joblib.dump(DX, tsne_path, compress=9)
+            joblib.dump(found_words, saved_found_words_name, compress=9)
 
         
         
@@ -141,12 +152,13 @@ class TermVisualiser:
         total_nr_of_topics = len(loaded_term_dict.items()) + 1
         for nr, (topic, terms) in enumerate(loaded_term_dict.items()):
             print(topic)
+            terms = terms[:terms_per_topic]
             max_score = max([float(el["score"]) for el in terms])
             
             for nr, term in enumerate(terms[::-1]):
                 point = self.get_point_for_term(term["term"], word_vec_dict, min_x, max_x, min_y, max_y)
                 
-                if point != None:
+                if True:
                     strength = min(0.6, (float(term["score"])/(max_score*HOW_MUCH_TO_NORMALIZE_FOR_TERMS_HAVING_DIFFERENT_WEIGHT_IN_DIFFERENT_TOPICS))*1.5)
                     fontsize=SMALLEST_FONT_SIZE + term["score"]/(max_score*HOW_MUCH_TO_NORMALIZE_FOR_TERMS_HAVING_DIFFERENT_WEIGHT_IN_DIFFERENT_TOPICS)*FONTSIZE_FACTOR
                    
@@ -163,9 +175,9 @@ class TermVisualiser:
                 else:
                     print(term["term"] + " not found")
 
-        save_figure_file_name = "temp_figure.png"
-        plt.savefig(save_figure_file_name, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
-        print("Saved plot in " + save_figure_file_name)
+        
+        plt.savefig(prel_save_figure_file_name, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
+        print("Saved plot in " + prel_save_figure_file_name)
     
         plt.close('all')
 
@@ -228,7 +240,7 @@ class TermVisualiser:
                 topic_line_dict[topic] = []
             topic_line_dict[topic].append((score, annotate_x, annotate_y, strength, term, fontsize, zorder))
 
-        self.plot_topic_line_dict(topic_line_dict, file_name = "processed_figure_all.png")
+        self.plot_topic_line_dict(topic_line_dict, file_name = final_file_name)
 
         """
         for topic, line_points in topic_line_dict.items():
@@ -247,6 +259,7 @@ class TermVisualiser:
         main_fig_processed = plt.figure()
         main_fig_processed.set_size_inches(15, 7)
         plt.axis('off')
+        #fig, axs = plt.subplots(len(topic_line_dict.items()))
         plt.tick_params(axis='both', left='off', top='off', right='off', bottom='off',\
                         labelleft='off', labeltop='off', labelright='off', labelbottom='off')
         
@@ -284,14 +297,17 @@ class TermVisualiser:
         plt.close('all')
 
     def get_point_for_term(self, term, word_vec_dict, min_x, max_x, min_y, max_y):
+        found_vector = False
         point = None
         if term in word_vec_dict:
             point = word_vec_dict[term]
+            found_vector = True
         else:
             for w in term.split(" / "):
                 if w in word_vec_dict:
                     point = word_vec_dict[w]
-        if point == None:
+                    found_vector = True
+        if not found_vector:
             if self.has_number(term):
                 point = (min_x + 10*random.random(), max_y - 10*random.random())
             else:
@@ -306,7 +322,7 @@ class TermVisualiser:
 
 if __name__ == '__main__':
     tv = TermVisualiser()
-    tv.produce_term_visualisation(sys.argv[1])
+    tv.produce_term_visualisation(sys.argv[1], int(sys.argv[2]))
 
 
 

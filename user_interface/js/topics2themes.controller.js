@@ -875,8 +875,8 @@ function getBadgeLabel(stanceCategory){
             badgeLabel.addClass("badge");
             badgeLabel.addClass("text-badge");
             badgeLabel.attr("id", stanceCategory);
-            if (stanceCategory.length > 2) {
-            badgeLabel.append(stanceCategory.substring(0, 2))
+            if (stanceCategory.length > 3) {
+            badgeLabel.append(stanceCategory.substring(0, 3))
             }
             //else if (stanceCategory.length == 2){
             //    badgeLabel.append(stanceCategory + " ");
