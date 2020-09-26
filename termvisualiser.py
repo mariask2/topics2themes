@@ -59,6 +59,7 @@ class TermVisualiser:
         import matplotlib.font_manager as mfm
         from mpl_toolkits import mplot3d
         import joblib
+        
     
         file_name_all_terms = os.path.join(self.get_working_dir(data_dir), ALL_TERMS_FILE)
         all_f = open(file_name_all_terms)
@@ -150,10 +151,17 @@ class TermVisualiser:
         HOW_MUCH_TO_NORMALIZE_FOR_TERMS_HAVING_DIFFERENT_WEIGHT_IN_DIFFERENT_TOPICS = 0.6
         all_points_with_original_position_info = []
         total_nr_of_topics = len(loaded_term_dict.items()) + 1
+        colors = matplotlib.cm.rainbow(np.linspace(0, 1, len(loaded_term_dict.items())))
+        
+        from adjustText import adjust_text
+        texts = []
         for nr, (topic, terms) in enumerate(loaded_term_dict.items()):
             print(topic)
             terms = terms[:terms_per_topic]
             max_score = max([float(el["score"]) for el in terms])
+            
+            topic_color = colors[nr]
+            
             
             for nr, term in enumerate(terms[::-1]):
                 point = self.get_point_for_term(term["term"], word_vec_dict, min_x, max_x, min_y, max_y)
@@ -164,17 +172,20 @@ class TermVisualiser:
                    
                     plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.001)
 
-                    #ax.text(point[0], point[1], -1*(nr+1)/100,  '%s' % (term["term"]), size=20, zorder=1, color='k')
+                    colored_color = (topic_color[0], topic_color[1], topic_color[2], strength)
                     zorder = -1*nr
                     annotate_y = point[1]
                     annotate_x = point[0]
-                    plt.annotate(term["term"], (point[0], point[1]), xytext=(annotate_x, annotate_y), zorder = zorder, color = (0, 0, 0, strength), fontsize=fontsize)
-                
+                    #plt.annotate(term["term"], (point[0], point[1]), xytext=(annotate_x, annotate_y), zorder = zorder, color = (0, 0, 0, strength), fontsize=fontsize)
+                    gray_color = (0.1, 0.1, 0.1, strength)
+                    box = dict(facecolor=colored_color, alpha=strength, boxstyle="round", ec=gray_color)
+                    texts.append(plt.text(point[0], point[1], term["term"], zorder = zorder, color = (0, 0, 0, strength), fontsize=fontsize, bbox = box))
                 
                     all_points_with_original_position_info.append((annotate_y, float(term["score"]), annotate_x, zorder, strength, fontsize, term["term"], nr, topic))
-                else:
-                    print(term["term"] + " not found")
-
+        
+        print(texts)
+        adjust_text(texts)
+        plt.scatter(point[0], point[1], zorder = -100,  color = "red", marker = "o", s=0.001)
         
         plt.savefig(prel_save_figure_file_name, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
         print("Saved plot in " + prel_save_figure_file_name)
@@ -209,9 +220,7 @@ class TermVisualiser:
                         extray = extray + (fontsize)**VERTICAL_STRETCH
                 to_add = extray
             if to_add == 0:
-            #to_add = (fontsize)**VERTICAL_STRETCH
-            
-            
+           
                 # If there is space above the term, do an anti-strech instead
                 to_add = -(fontsize)**VERTICAL_STRETCH
                 current_min =  annotate_x
@@ -249,7 +258,7 @@ class TermVisualiser:
             break
              """
     def plot_topic_line_dict(self, topic_line_dict, file_name, current_topic=None):
-        from matplotlib.pyplot import plot, show, bar, grid, axis, savefig, clf
+        from matplotlib.pyplot import plot, show, bar, grid, axis, savefig, clf, text
         import matplotlib.markers
         import matplotlib.pyplot as plt
         import matplotlib.font_manager as mfm
@@ -259,10 +268,10 @@ class TermVisualiser:
         main_fig_processed = plt.figure()
         main_fig_processed.set_size_inches(15, 7)
         plt.axis('off')
-        #fig, axs = plt.subplots(len(topic_line_dict.items()))
         plt.tick_params(axis='both', left='off', top='off', right='off', bottom='off',\
                         labelleft='off', labeltop='off', labelright='off', labelbottom='off')
         
+        texts = []
         for (topic, line_points), (nr, topic_color) in zip(topic_line_dict.items(), enumerate(matplotlib.cm.rainbow(np.linspace(0, 1, len(topic_line_dict.items()))))):
             SHADOWFACTOR = 0.0015
             MAX_LINEWIDTH = 0.3
@@ -289,9 +298,14 @@ class TermVisualiser:
                 # Make every other topic display in italics so that it is easier to distinguish the different topics
                 if nr % 2 == 0:
                     term = "$\it{" + term  + "}$"
+                #box = dict(facecolor=colored_color, alpha=strength, boxstyle="round", ec=gray_color)
+            
+                #texts.append(text(annotate_x, annotate_y, term, zorder = zorder, color=gray_color, fontsize=fontsize, weight="normal", bbox=box))
                 plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x, annotate_y), zorder = zorder-0.5, color=gray_color, fontsize=fontsize, weight="normal")
                 plt.annotate(term, (annotate_x, annotate_y), xytext=(annotate_x+SHADOWFACTOR*fontsize, annotate_y+SHADOWFACTOR*fontsize), zorder = zorder, color = colored_color, fontsize=fontsize, weight="normal")
 
+        #from adjustText import adjust_text
+        #adjust_text(texts)
         plt.savefig(file_name, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
         print("Saved plot in " + file_name)
         plt.close('all')
