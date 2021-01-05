@@ -967,14 +967,19 @@ def print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_
 
                 marked_document, terms_found_in_document = add_markings_for_terms(document[ORIGINAL_DOCUMENT],\
                                                                   el[TERM_LIST], el[TOPIC_NUMBER], max_weight_dict)
-                terms_found_in_processed_documents_so_far.union(set(terms_found_in_document))
+                for tfid in terms_found_in_document:
+                    terms_found_in_processed_documents_so_far.add(tfid)
+            
+
                 #snippet_text = get_snippet_text(marked_document_for_snippet, most_typical_model, tf_vectorizer)
 
             else:
                 marked_document, terms_found_in_document = add_markings_for_terms(document_dict[document[DOC_ID]]["marked_text_tok"],\
                                                                                   el[TERM_LIST], el[TOPIC_NUMBER], max_weight_dict)
-                terms_found_in_processed_documents_so_far.union(set(terms_found_in_document))
-            
+              
+                for tfid in terms_found_in_document:
+                    terms_found_in_processed_documents_so_far.add(tfid)
+                    
             
             
             if document[DOC_ID] not in document_dict:
@@ -1046,35 +1051,47 @@ def print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_
 
 
 def get_snippet_text(marked_document, terms_found_in_processed_documents_so_far, properties):
+     # TODO: Snippet text processing is not language independent
+    NORMAL_MAX_SENTENCES = properties.NUMBER_OF_SENTENCES_IN_SUMMARY
     
-    NORMAL_MAX_SENTENCE_LENGTH = properties.NUMBER_OF_SENTENCES_IN_SUMMARY
-    
+    MARKED_TERM_CLASS = "term-to-mark"
     terms_represented_in_summary = set()
     # Keep sentences which include a term marking
     sentences_to_keep = []
-    # TODO: This is not language independent
+   
     sentence_list = sent_tokenize(marked_document)
     kept_sentences = 0
     for sent in sentence_list:
+        
+        print("terms_found_in_processed_documents_so_far ", terms_found_in_processed_documents_so_far)
+        print("terms_represented_in_summary ", terms_represented_in_summary)
+        
         # Default choice, if sentence doesn't contain relevant content
         keep_sentence = False
         
         #only keep sentence with a marked word
         # Also, make sure the summary isn't too long
-        if "term-to-mark" in sent and kept_sentences < NORMAL_MAX_SENTENCE_LENGTH:
+        if MARKED_TERM_CLASS in sent and kept_sentences < NORMAL_MAX_SENTENCES:
             keep_sentence = True
         # If the summary is too long, but some of the terms found for the topic has not
         # yet been present in the summary, include it anyway
-        elif "term-to-mark" in sent and len(sentence_list) >= NORMAL_MAX_SENTENCE_LENGTH:
+        elif MARKED_TERM_CLASS in sent: #and len(sentence_list) >= NORMAL_MAX_SENTENCE_LENGTH:
             for term in terms_found_in_processed_documents_so_far:
-                if term in sent.lower() and term not in terms_represented_in_summary:
-                    keep_sentence = True
-                    
+                for sub_term in term.split(SYNONYM_BINDER):
+                    for sub_sub_term in sub_term.split(COLLOCATION_BINDER):
+                        print("sub sub term ", sub_sub_term)
+                        if sub_sub_term in sent.lower() and sub_sub_term not in terms_represented_in_summary:
+                            keep_sentence = True
+          
+        print()
         if keep_sentence:
             # Record which terms that have been represented in the summary
             for term in terms_found_in_processed_documents_so_far:
-                if term in sent.lower():
-                    terms_represented_in_summary.add(term)
+                for sub_term in term.split(SYNONYM_BINDER):
+                    for sub_sub_term in sub_term.split(COLLOCATION_BINDER):
+                        print("sub sub term ", sub_sub_term)
+                        if sub_sub_term in sent.lower():
+                            terms_represented_in_summary.add(sub_sub_term)
                     
             sentences_to_keep.append(sent)
             kept_sentences = kept_sentences + 1
@@ -1217,6 +1234,7 @@ def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
             marked_text_inserted_spaces = marked_text_inserted_spaces + c
         ch_nr = ch_nr + 1
 
+    print("found_terms", found_terms)
     return marked_text_inserted_spaces, found_terms
 
 # Part html, and make a very simple tokenisation
