@@ -286,8 +286,6 @@ def read_discussion_documents(data_label_list, data_set_name, whether_to_remove_
                 elif collocation in text.lower():
                     to_replace = collocation.replace(" ", COLLOCATION_BINDER)
                     text = text.replace(collocation, to_replace)
-                    print(to_replace)
-                    print(text)
                 
             file_list.append({TEXT: text, LABEL: data_info[DATA_LABEL], BASE_NAME: base_name, FULL_NAME: f})
             opened.close()
@@ -529,7 +527,6 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
         if nr_of_words_that_have_occurred_outside_n_gram <= len(sp) - nr_of_words_that_have_occurred_outside_n_gram_cutoff_to_use: # at least one of the words most not have occurred in another context than the ngram
             filtered_ngram_list.append(ngram)
 
-    #print("filtered_ngram_list", filtered_ngram_list)
     new_filtered_documents = []
     for document in documents:
         new_document = document.lower()
@@ -559,7 +556,6 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
 
     filtered_ngram_list_that_occurs_as_feature = [f for f in filtered_ngram_list if f.replace(" ", collocation_marker) in filtered_final_feautures]
 
-    #print("filtered_ngram_list_that_occurs_as_feature", filtered_ngram_list_that_occurs_as_feature)
     removed_ngrams = [f.replace(" ", collocation_marker) for f in filtered_ngram_list if f not in filtered_final_feautures]
     return new_filtered_documents, filtered_ngram_list_that_occurs_as_feature, filtered_final_feautures
 
@@ -622,7 +618,7 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
     """
     Return info from topics that were stable enough to appear in all models in model_list
     """
-    print(properties)
+    #print(properties)
     nr_of_top_words = properties.NR_OF_TOP_WORDS
     no_top_documents = properties.NR_OF_TOP_DOCUMENTS
     overlap_cut_off = properties.OVERLAP_CUT_OFF
@@ -649,7 +645,7 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
 
         term_results.append(term_set)
 
-    print(term_results)
+    #print(term_results)
     overlap_averages = []
     for nr, terms in enumerate(term_results):
         set_size = len(terms)
@@ -1063,9 +1059,6 @@ def get_snippet_text(marked_document, terms_found_in_processed_documents_so_far,
     kept_sentences = 0
     for sent in sentence_list:
         
-        print("terms_found_in_processed_documents_so_far ", terms_found_in_processed_documents_so_far)
-        print("terms_represented_in_summary ", terms_represented_in_summary)
-        
         # Default choice, if sentence doesn't contain relevant content
         keep_sentence = False
         
@@ -1079,17 +1072,14 @@ def get_snippet_text(marked_document, terms_found_in_processed_documents_so_far,
             for term in terms_found_in_processed_documents_so_far:
                 for sub_term in term.split(SYNONYM_BINDER):
                     for sub_sub_term in sub_term.split(COLLOCATION_BINDER):
-                        print("sub sub term ", sub_sub_term)
                         if sub_sub_term in sent.lower() and sub_sub_term not in terms_represented_in_summary:
                             keep_sentence = True
           
-        print()
         if keep_sentence:
             # Record which terms that have been represented in the summary
             for term in terms_found_in_processed_documents_so_far:
                 for sub_term in term.split(SYNONYM_BINDER):
                     for sub_sub_term in sub_term.split(COLLOCATION_BINDER):
-                        print("sub sub term ", sub_sub_term)
                         if sub_sub_term in sent.lower():
                             terms_represented_in_summary.add(sub_sub_term)
                     
@@ -1218,7 +1208,7 @@ def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
             simple_tokenised_marked.append(el)
                 
     marked_document = untokenize(simple_tokenised_marked)
-    #print("marked_document", marked_document)
+   
     
     # TODO Perhpas concatnating with lists is faster
     marked_text_transformed = replace_spaces(marked_document.replace(" </span>","</span> "))
@@ -1234,7 +1224,6 @@ def add_markings_for_terms(text, term_list, topic_number, max_weight_dict):
             marked_text_inserted_spaces = marked_text_inserted_spaces + c
         ch_nr = ch_nr + 1
 
-    print("found_terms", found_terms)
     return marked_text_inserted_spaces, found_terms
 
 # Part html, and make a very simple tokenisation
