@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_topics_text(topics_reps, texts_reps, topic_in_text_matrix, title):
+def plot_topics_text(topics_reps, texts_reps, topic_in_text_matrix, title, file_name):
     #marker_style = dict(color='tab:blue', linestyle=None, marker='o',
     #                markersize=10, markerfacecoloralt='tab:red')
 
@@ -27,8 +27,6 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_matrix, title):
     ax.yaxis.set_ticklabels(topics_reps)
     ax.xaxis.set_ticklabels(texts_reps)
     
-    #set_ticklabels(self, ticklabels, *, minor=False, **kwargs)[source]
-
     for x, topic_in_text in enumerate(topic_in_text_matrix):
         for y, topic_repr in enumerate(topics_reps):
             #ax.text(-0.5, y, repr(topic_repr),
@@ -37,9 +35,16 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_matrix, title):
             ax.scatter(x, y, s = topic_in_text[y]*10)
           
 
-    #ax.set_axis_off()
+    for tick in ax.get_xticklabels():
+        tick.set_rotation(90)
+    plt.xticks(ha='center')
     ax.set_title(title)
+    fig.tight_layout()
+    
+    plt.savefig(file_name, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
+    print("Saved plot in " + file_name)
+    plt.close('all')
 
-    plt.show()
 
-plot_topics_text(["tax, forrest, tree", "bush, obama, administration", "oceans, pollution", "media, science"], ["1988", "1989", "1990"], [[2, 0, 5, 7], [0, 3, 4, 5], [2, 4, 0, 7]], "test2")
+plot_topics_text(["tax, forrest, tree", "bush, obama, administration, word4, word5", "oceans, pollution", "media, science"], ["(Article nr 1) 1988", "(Article nr 1) 1989", "(Article nr 1) 1990"], [[2, 0, 5, 7], [0, 3, 4, 5], [2, 4, 0, 7]], "test2", "test2")
+
