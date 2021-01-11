@@ -47,6 +47,26 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_matrix, title, file_
     plt.close('all')
 
 
+editorial_data_list = []
+with open("../klimat/master_table.tsv") as master:
+    for line in master:
+        sp = line.split("\t")
+        try:
+            int(sp[2]) # First row with titles
+        except ValueError:
+            continue
+        id = ""
+
+        if sp[1] == "Science":
+            id = sp[5].replace("10.1126/science.", "").strip()
+        else:
+            id = sp[6].replace(".txt", "")
+
+        id = id + ".ocr.txt"
+        editorial_data = (id, sp[2], sp[3])
+        editorial_data_list.append(editorial_data)
+
+
 obj = None
 model_file =  "/Users/marsk757/topic2themes/topics2themes/data_folder/climate-editorials-graph/topics2themes_exports_folder_created_by_system/5ff8fd96dede69ec1ede953a_model.json"
 # read file
@@ -54,6 +74,7 @@ with open(model_file, 'r') as f:
     data = f.read()
     obj = json.loads(data)
 
+document_info = {}
 for el in obj["topic_model_output"]["documents"]:
     base_name = el["base_name"]
     label = el["label"]
@@ -64,13 +85,15 @@ for el in obj["topic_model_output"]["documents"]:
         topic_info["topic_index"] = t["topic_index"]
         topic_info["topic_confidence"] = t["topic_confidence"]
         document_topics.append(topic_info)
+        if len(topic_info["terms_found_in_text"]) > 1: # At least two terms included in text to include
+            document_info[base_name] = {"document_topics" : document_topics, "label": label}
     #print(json.dumps(el, indent = 1))
-    print(base_name, label)
-    for el in document_topics:
-        print(topic_info)
-    print("**********")
+    #print(base_name, label)
 
-topics = {}
+
+
+
+topics = []
 for el in obj["topic_model_output"]["topics"]:
     terms = [t['term'] for t in el['topic_terms']]
     repr_terms = []
@@ -85,9 +108,27 @@ for el in obj["topic_model_output"]["topics"]:
                     term_to_pick_as_rep = s
         repr_terms.append(term_to_pick_as_rep.strip())
         
-    topics[el['id']] = ", ".join(repr_terms).strip()
-    #print(el)
-print(topics)
+    topics.append(", ".join(repr_terms).strip())
+  
+    
 
-plot_topics_text(["tax, forrest, tree", "bush, obama, administration, word4, word5", "oceans, pollution", "media, science"], ["(Article nr 1) 1988", "(Article nr 1) 1989", "(Article nr 1) 1990"], [[2, 0, 5, 7], [0, 3, 4, 5], [2, 4, 0, 7]], "test2", "test2")
+scatter_matrix = []
+x_labels = []
+for el in editorial_data_list:
+    x_labels.append("(" + el[2] + ") " + el[1])
+    print(el)
+    scatter_for_editorial = [0]*len(topics)
+    if el[0] in document_info:
+        print(document_info[el[0]])
+        pass
+    else:
+        #print(el[0], "missing")
+        pass
+    scatter_matrix.append(scatter_for_editorial)
 
+print(scatter_matrix)
+print(x_labels)
+
+#plot_topics_text(["tax, forrest, tree", "bush, obama, administration, word4, word5", "oceans, pollution", "media, science"], ["(Article nr 1) 1988", "(Article nr 1) 1989", "(Article nr 1) 1990"], [[2, 0, 5, 7], [0, 3, 4, 5], [2, 4, 0, 7]], "test2", "test2")
+
+plot_topics_text(topics, x_labels, scatter_matrix, "test3", "test3")
