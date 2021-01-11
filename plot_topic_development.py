@@ -35,19 +35,25 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_matrix, title, file_
                 
             ax.scatter(x, y, s = topic_in_text[y]*10)
           
-
-    for tick in ax.get_xticklabels():
-        tick.set_rotation(90)
+    plt.xticks(fontsize=2, rotation=90)
+    plt.yticks(fontsize=3)
+    #for tick in ax.get_xticklabels():
+    #    tick.set_rotation(90)
+        
     plt.xticks(ha='center')
     ax.set_title(title)
-    fig.tight_layout()
+    #fig.tight_layout()
     
-    plt.savefig(file_name, dpi = 700, orientation = "landscape", transparent=True) #, bbox_inches='tight')
+    plt.gcf().subplots_adjust(bottom=0.2, wspace = 0.0, hspace = 0.0, left = 0.1, right = 1.0)
+    
+    plt.savefig(file_name, dpi = 700, transparent=True, figsize=(500, 20))
+    #, bbox_inches='tight', orientation = "landscape", )
     print("Saved plot in " + file_name)
     plt.close('all')
 
 
-editorial_data_list = []
+editorial_data_list_science = []
+editorial_data_list_nature = []
 with open("../klimat/master_table.tsv") as master:
     for line in master:
         sp = line.split("\t")
@@ -59,12 +65,14 @@ with open("../klimat/master_table.tsv") as master:
 
         if sp[1] == "Science":
             id = sp[5].replace("10.1126/science.", "").strip()
+            id = id + ".ocr.txt"
+            editorial_data = (id, sp[2], sp[3])
+            editorial_data_list_science.append(editorial_data)
         else:
             id = sp[6].replace(".txt", "")
-
-        id = id + ".ocr.txt"
-        editorial_data = (id, sp[2], sp[3])
-        editorial_data_list.append(editorial_data)
+            id = id + ".ocr.txt"
+            editorial_data = (id, sp[2], sp[3])
+            editorial_data_list_nature.append(editorial_data)
 
 
 obj = None
@@ -99,22 +107,23 @@ for el in obj["topic_model_output"]["topics"]:
     repr_terms = []
     for t in terms:
         term_to_pick_as_rep = "123456789123456789123456789123456789123456789123456789"
+        #for s in t.split("/"):
+        #    if "_" in s:
+        #        term_to_pick_as_rep = s
+        #if term_to_pick_as_rep == "123456789123456789123456789123456789123456789123456789":
         for s in t.split("/"):
-            if "_" in s:
+            if len(s) < len(term_to_pick_as_rep):
                 term_to_pick_as_rep = s
-        if term_to_pick_as_rep == "123456789123456789123456789123456789123456789123456789":
-            for s in t.split("/"):
-                if len(s) < len(term_to_pick_as_rep):
-                    term_to_pick_as_rep = s
         repr_terms.append(term_to_pick_as_rep.strip())
         
-    topics.append(", ".join(repr_terms).strip())
+    third_length = int(len(repr_terms)/3)
+    topics.append(", ".join(repr_terms[0: third_length]).strip() + "\n" + ", ".join(repr_terms[third_length:2*third_length]).strip() + "\n" + ", ".join(repr_terms[2*third_length:]).strip())
   
     
 
 scatter_matrix = []
 x_labels = []
-for el in editorial_data_list:
+for el in editorial_data_list_science:
     x_labels.append("(" + el[2] + ") " + el[1])
     print(el)
     scatter_for_editorial = [0]*len(topics)
@@ -131,4 +140,4 @@ print(x_labels)
 
 #plot_topics_text(["tax, forrest, tree", "bush, obama, administration, word4, word5", "oceans, pollution", "media, science"], ["(Article nr 1) 1988", "(Article nr 1) 1989", "(Article nr 1) 1990"], [[2, 0, 5, 7], [0, 3, 4, 5], [2, 4, 0, 7]], "test2", "test2")
 
-plot_topics_text(topics, x_labels, scatter_matrix, "test3", "test3")
+plot_topics_text(topics, x_labels, scatter_matrix, "science", "science")
