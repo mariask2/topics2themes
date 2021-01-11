@@ -1,3 +1,5 @@
+
+
 #https://matplotlib.org/3.1.3/gallery/subplots_axes_and_figures/align_labels_demo.html#sphx-glr-gallery-subplots-axes-and-figures-align-labels-demo-py
 
 #        for tick in ax.get_xticklabels():
@@ -11,10 +13,9 @@
 
 #https://matplotlib.org/3.1.3/gallery/lines_bars_and_markers/marker_fillstyle_reference.html#sphx-glr-gallery-lines-bars-and-markers-marker-fillstyle-reference-py
 
-
 import numpy as np
 import matplotlib.pyplot as plt
-
+import json
 
 def plot_topics_text(topics_reps, texts_reps, topic_in_text_matrix, title, file_name):
     #marker_style = dict(color='tab:blue', linestyle=None, marker='o',
@@ -45,6 +46,48 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_matrix, title, file_
     print("Saved plot in " + file_name)
     plt.close('all')
 
+
+obj = None
+model_file =  "/Users/marsk757/topic2themes/topics2themes/data_folder/climate-editorials-graph/topics2themes_exports_folder_created_by_system/5ff8fd96dede69ec1ede953a_model.json"
+# read file
+with open(model_file, 'r') as f:
+    data = f.read()
+    obj = json.loads(data)
+
+for el in obj["topic_model_output"]["documents"]:
+    base_name = el["base_name"]
+    label = el["label"]
+    document_topics = []
+    for t in el["document_topics"]:
+        topic_info = {}
+        topic_info["terms_found_in_text"] = t["terms_found_in_text"]
+        topic_info["topic_index"] = t["topic_index"]
+        topic_info["topic_confidence"] = t["topic_confidence"]
+        document_topics.append(topic_info)
+    #print(json.dumps(el, indent = 1))
+    print(base_name, label)
+    for el in document_topics:
+        print(topic_info)
+    print("**********")
+
+topics = {}
+for el in obj["topic_model_output"]["topics"]:
+    terms = [t['term'] for t in el['topic_terms']]
+    repr_terms = []
+    for t in terms:
+        term_to_pick_as_rep = "123456789123456789123456789123456789123456789123456789"
+        for s in t.split("/"):
+            if "_" in s:
+                term_to_pick_as_rep = s
+        if term_to_pick_as_rep == "123456789123456789123456789123456789123456789123456789":
+            for s in t.split("/"):
+                if len(s) < len(term_to_pick_as_rep):
+                    term_to_pick_as_rep = s
+        repr_terms.append(term_to_pick_as_rep.strip())
+        
+    topics[el['id']] = ", ".join(repr_terms).strip()
+    #print(el)
+print(topics)
 
 plot_topics_text(["tax, forrest, tree", "bush, obama, administration, word4, word5", "oceans, pollution", "media, science"], ["(Article nr 1) 1988", "(Article nr 1) 1989", "(Article nr 1) 1990"], [[2, 0, 5, 7], [0, 3, 4, 5], [2, 4, 0, 7]], "test2", "test2")
 
