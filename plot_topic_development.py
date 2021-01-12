@@ -35,7 +35,10 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_dict, title, file_na
     
     ax.xaxis.set_minor_locator(MultipleLocator(1))
     
-    MOVE_X = 0.05
+    for y, topic_repr in enumerate(topics_reps):
+        plt.axhline(y=y, linewidth=0.1, color='black')
+    
+    MOVE_X = 0.07
     last_iter_year = 0
     for year, t in year_title_tuple_list:
         if last_iter_year != year:
@@ -43,7 +46,7 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_dict, title, file_na
         else:
             x_moved = x_moved + MOVE_X
        
-        linewidth=0.03
+        linewidth=0.02
         x = year + x_moved
         color='black'
         if x_moved == 0.0: # first line for year
@@ -53,15 +56,20 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_dict, title, file_na
         plt.axvline(x=x, linewidth=linewidth, color=color)
         last_iter_year = year
             
-    for y, topic_repr in enumerate(topics_reps):
-        for year, texts_for_year in topic_in_text_dict.items():
+    
+    for year, texts_for_year in topic_in_text_dict.items():
+        for y, topic_repr in enumerate(topics_reps):
             y_moved = 0.0
             x_moved = 0.0
             for topic_in_text in texts_for_year:
+            
             #ax.text(-0.5, y, repr(topic_repr),
              #   horizontalalignment='center', verticalalignment='center')
                 marker = markers.MarkerStyle(marker='|', fillstyle='none')
-                ax.scatter(year+ x_moved, y + y_moved, s = topic_in_text[y]*5, edgecolors = "face", c="grey", alpha = 0.7, linewidths = 1.5, marker='s')
+                #ax.scatter(year+ x_moved, y + y_moved, s = topic_in_text[y]*10, edgecolors = "face", c="grey", alpha = 0.7, linewidths = 0.05, marker='o')
+                if topic_in_text[y] != 0:
+                    print(+ topic_in_text[y], y + topic_in_text[y])
+                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], 'r+-', linewidth=0.4, markersize=1)
                 #edgecolors="black"
                 y_moved = y_moved - 0.07
                 x_moved = x_moved + MOVE_X
