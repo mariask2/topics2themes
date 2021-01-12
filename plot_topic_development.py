@@ -17,27 +17,56 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 import matplotlib.markers as markers
+from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 
-def plot_topics_text(topics_reps, texts_reps, topic_in_text_matrix, title, file_name):
+
+def plot_topics_text(topics_reps, texts_reps, topic_in_text_dict, title, file_name, min_year, max_year, year_title_tuple_list):
     #marker_style = dict(color='tab:blue', linestyle=None, marker='o',
     #                markersize=10, markerfacecoloralt='tab:red')
 
     fig, ax = plt.subplots()
+    
+    ax.set_xlim(min_year -1 , max_year + 1)
     ax.yaxis.set_ticks(range(0, len(topics_reps)))
-    ax.xaxis.set_ticks(range(0, len(texts_reps)))
+    #ax.xaxis.set_ticks(range(0, len(texts_reps)))
     
     ax.yaxis.set_ticklabels(topics_reps)
-    ax.xaxis.set_ticklabels(texts_reps)
+    #ax.xaxis.set_ticklabels(texts_reps)
     
-    for x, topic_in_text in enumerate(topic_in_text_matrix):
-        for y, topic_repr in enumerate(topics_reps):
+    ax.xaxis.set_minor_locator(MultipleLocator(1))
+    
+    MOVE_X = 0.05
+    last_iter_year = 0
+    for year, t in year_title_tuple_list:
+        if last_iter_year != year:
+            x_moved = 0.0
+        else:
+            x_moved = x_moved + MOVE_X
+       
+        linewidth=0.03
+        x = year + x_moved
+        color='black'
+        if x_moved == 0.0: # first line for year
+            extra = 0.01
+            linewidth = linewidth + extra*4
+            x = x - extra
+        plt.axvline(x=x, linewidth=linewidth, color=color)
+        last_iter_year = year
+            
+    for y, topic_repr in enumerate(topics_reps):
+        for year, texts_for_year in topic_in_text_dict.items():
+            y_moved = 0.0
+            x_moved = 0.0
+            for topic_in_text in texts_for_year:
             #ax.text(-0.5, y, repr(topic_repr),
              #   horizontalalignment='center', verticalalignment='center')
-            marker = markers.MarkerStyle(marker='o', fillstyle='none')
-            ax.scatter(x, y, s = topic_in_text[y]*10, marker=marker, cmap=None, edgecolors="black", c="silver")
-          
-    plt.xticks(fontsize=2, rotation=90)
-    plt.yticks(fontsize=3)
+                marker = markers.MarkerStyle(marker='|', fillstyle='none')
+                ax.scatter(year+ x_moved, y + y_moved, s = topic_in_text[y]*5, edgecolors = "face", c="grey", alpha = 0.7, linewidths = 1.5, marker='s')
+                #edgecolors="black"
+                y_moved = y_moved - 0.07
+                x_moved = x_moved + MOVE_X
+    plt.xticks(fontsize=5, rotation=90)
+    plt.yticks(fontsize=5)
     #for tick in ax.get_xticklabels():
     #    tick.set_rotation(90)
         
@@ -45,7 +74,7 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_matrix, title, file_
     ax.set_title(title)
     #fig.tight_layout()
     
-    plt.gcf().subplots_adjust(bottom=0.2, wspace = 0.0, hspace = 0.0, left = 0.1, right = 1.0)
+    plt.gcf().subplots_adjust(bottom=0.2, wspace = 0.0, hspace = 0.0, left = 0.2, right = 1.0)
     
     plt.savefig(file_name, dpi = 700, transparent=True, figsize=(500, 20))
     #, bbox_inches='tight', orientation = "landscape", )
@@ -55,15 +84,22 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_matrix, title, file_
 
 editorial_data_list_science = []
 editorial_data_list_nature = []
+max_year = 0
+min_year = 200000
 with open("../klimat/master_table.tsv") as master:
     for line in master:
         sp = line.split("\t")
         try:
-            int(sp[2]) # First row with titles
+            year = int(sp[2])
         except ValueError:
             continue
         id = ""
 
+        if year > max_year:
+            max_year = year
+        if year < min_year:
+            min_year = year
+            
         if sp[1] == "Science":
             id = sp[5].replace("10.1126/science.", "").strip()
             id = id + ".ocr.txt"
@@ -126,13 +162,20 @@ for el in obj["topic_model_output"]["topics"]:
 
 
 
-scatter_matrix = []
+scatter_dict = {}
+year_title_tuple_list = []
 x_labels = []
 for el in editorial_data_list_science:
-    x_labels.append("(" + el[2] + ") " + el[1])
+    year = int(el[1])
+    if year not in scatter_dict:
+        scatter_dict[year] = []
+    title = el[2]
+    year_title_tuple_list.append((year, title))
+    #x_labels.append("(" + el[2] + ") " + str(year))
+    x_labels.append(str(year))
     scatter_for_editorial = [0]*len(topics.keys())
-    if el[0] in document_info:
-        print(document_info[el[0]])
+    if el[0] in document_info: # topic in document
+        #print(document_info[el[0]])
         for topic_in_document in document_info[el[0]]["document_topics"]:
            index_for_topic_in_scatter = sorted(topics.keys()).index(topic_in_document["topic_index"])
            scatter_for_editorial[index_for_topic_in_scatter] = topic_in_document["topic_confidence"]
@@ -140,12 +183,12 @@ for el in editorial_data_list_science:
     else:
         #print(el[0], "missing")
         pass
-    scatter_matrix.append(scatter_for_editorial)
+    scatter_dict[year].append(scatter_for_editorial)
 
-#print(scatter_matrix)
+
 #print(x_labels)
 
 #plot_topics_text(["tax, forrest, tree", "bush, obama, administration, word4, word5", "oceans, pollution", "media, science"], ["(Article nr 1) 1988", "(Article nr 1) 1989", "(Article nr 1) 1990"], [[2, 0, 5, 7], [0, 3, 4, 5], [2, 4, 0, 7]], "test2", "test2")
 
 topic_names = [topics[key] for key in sorted(topics.keys())]
-plot_topics_text(topic_names, x_labels, scatter_matrix, "science", "science")
+plot_topics_text(topic_names, x_labels, scatter_dict, "Science", "science", min_year, max_year, year_title_tuple_list)
