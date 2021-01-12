@@ -16,6 +16,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import json
+import matplotlib.markers as markers
 
 def plot_topics_text(topics_reps, texts_reps, topic_in_text_matrix, title, file_name):
     #marker_style = dict(color='tab:blue', linestyle=None, marker='o',
@@ -32,8 +33,8 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_matrix, title, file_
         for y, topic_repr in enumerate(topics_reps):
             #ax.text(-0.5, y, repr(topic_repr),
              #   horizontalalignment='center', verticalalignment='center')
-                
-            ax.scatter(x, y, s = topic_in_text[y]*10)
+            marker = markers.MarkerStyle(marker='o', fillstyle='none')
+            ax.scatter(x, y, s = topic_in_text[y]*10, marker=marker, cmap=None, edgecolors="black", c="silver")
           
     plt.xticks(fontsize=2, rotation=90)
     plt.yticks(fontsize=3)
@@ -101,7 +102,8 @@ for el in obj["topic_model_output"]["documents"]:
 
 
 
-topics = []
+topics = {}
+#topics = []
 for el in obj["topic_model_output"]["topics"]:
     terms = [t['term'] for t in el['topic_terms']]
     repr_terms = []
@@ -117,27 +119,33 @@ for el in obj["topic_model_output"]["topics"]:
         repr_terms.append(term_to_pick_as_rep.strip())
         
     third_length = int(len(repr_terms)/3)
-    topics.append(", ".join(repr_terms[0: third_length]).strip() + "\n" + ", ".join(repr_terms[third_length:2*third_length]).strip() + "\n" + ", ".join(repr_terms[2*third_length:]).strip())
-  
+    topic_name = ", ".join(repr_terms[0: third_length]).strip() + "\n" + ", ".join(repr_terms[third_length:2*third_length]).strip() + "\n" + ", ".join(repr_terms[2*third_length:]).strip()
     
+    topics[el["id"]] = topic_name
+
+
+
 
 scatter_matrix = []
 x_labels = []
 for el in editorial_data_list_science:
     x_labels.append("(" + el[2] + ") " + el[1])
-    print(el)
-    scatter_for_editorial = [0]*len(topics)
+    scatter_for_editorial = [0]*len(topics.keys())
     if el[0] in document_info:
         print(document_info[el[0]])
+        for topic_in_document in document_info[el[0]]["document_topics"]:
+           index_for_topic_in_scatter = sorted(topics.keys()).index(topic_in_document["topic_index"])
+           scatter_for_editorial[index_for_topic_in_scatter] = topic_in_document["topic_confidence"]
         pass
     else:
         #print(el[0], "missing")
         pass
     scatter_matrix.append(scatter_for_editorial)
 
-print(scatter_matrix)
-print(x_labels)
+#print(scatter_matrix)
+#print(x_labels)
 
 #plot_topics_text(["tax, forrest, tree", "bush, obama, administration, word4, word5", "oceans, pollution", "media, science"], ["(Article nr 1) 1988", "(Article nr 1) 1989", "(Article nr 1) 1990"], [[2, 0, 5, 7], [0, 3, 4, 5], [2, 4, 0, 7]], "test2", "test2")
 
-plot_topics_text(topics, x_labels, scatter_matrix, "science", "science")
+topic_names = [topics[key] for key in sorted(topics.keys())]
+plot_topics_text(topic_names, x_labels, scatter_matrix, "science", "science")
