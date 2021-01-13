@@ -21,25 +21,23 @@ from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 from matplotlib import cm
 
 
-def plot_topics_text(topics_reps, texts_reps, topic_in_text_dict, title, file_name, min_year, max_year, year_title_tuple_list):
+def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_tuple_list):
 
     colors_map = ["blue", "orange", "green", "red", "purple", "brown", "deeppink", "olive", "darkturquoise"]
     fig, ax = plt.subplots()
     
     ax.set_xlim(min_year -1 , max_year + 1)
     ax.yaxis.set_ticks(range(0, len(topics_reps)))
-    #ax.xaxis.set_ticks(range(0, len(texts_reps)))
-    
+        
     ax.yaxis.set_ticklabels(topics_reps)
-    #ax.xaxis.set_ticklabels(texts_reps)
-    
+        
     ax.xaxis.set_minor_locator(MultipleLocator(1))
     
     for y, topic_repr in enumerate(topics_reps):
         plt.axhline(y=y, linewidth=0.1, color='black')
         
     
-    MOVE_X = 0.06
+    MOVE_X = 0.025
     last_iter_year = 0
     color='black'
     for year, t in year_title_tuple_list:
@@ -54,18 +52,13 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_dict, title, file_na
             color='brown'
         else:
             color='black'
-        #if x_moved == 0.0: # first line for year
-        #    extra = 0.01
-        #    linewidth = linewidth + extra*4
-        #    x = x - extra
+        if x_moved == 0.0: # first line for year
+            extra = 0.01
+            linewidth = linewidth + extra*4
+            x = x - extra
         plt.axvline(x=x, linewidth=linewidth, color=color)
         last_iter_year = year
             
-    #colors_map = cm.get_cmap('viridis', 8)
-    #
-  
-    #colors_map = cm.tab20b(np.linspace(0, 1, len(topics_reps))) #wasnt able to find a good color map
-
     
     for year, texts_for_year in topic_in_text_dict.items():
         for y, topic_repr in enumerate(topics_reps):
@@ -73,14 +66,13 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_dict, title, file_na
             for topic_in_text in texts_for_year: # go through scatter-vector for each text for the year
                 marker = markers.MarkerStyle(marker='|', fillstyle='none')
                 if topic_in_text[y] != 0: #if the text contains the topic
-                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '+-', linewidth=0.2, markersize=topic_in_text[y]/5, color = "red")
+                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '+-', linewidth=0.3, markersize=1, color = "red")
                 x_moved = x_moved + MOVE_X
 
                     
     plt.xticks(fontsize=5, rotation=90)
     plt.yticks(fontsize=5)
-    #for tick in ax.get_xticklabels():
-    #    tick.set_rotation(90)
+
         
     plt.xticks(ha='center')
     ax.set_title(title)
@@ -93,6 +85,41 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_dict, title, file_na
     print("Saved plot in " + file_name)
     plt.close('all')
 
+def create_scatter_dict_and_year_title_tuple(editorial_data_list, document_info):
+    scatter_dict = {}
+    year_title_tuple_list = []
+    nr_documents_to_scatter_dict = 0
+    nr_documents_to_scatter_dict_with_topics_found = 0
+    nr_documents_not_associated_with_topic_in_model = 0
+    for el in editorial_data_list:
+        id = el[0]
+        topic_found = False
+        year = int(el[1])
+        if year not in scatter_dict:
+            scatter_dict[year] = []
+        title = el[2]
+        year_title_tuple_list.append((year, title))
+        scatter_for_editorial = [0]*len(topics.keys())
+        if id in document_info: # topic in document
+            #print(document_info[el[0]])
+            for topic_in_document in document_info[id]["document_topics"]:
+               index_for_topic_in_scatter = sorted(topics.keys()).index(topic_in_document["topic_index"])
+               scatter_for_editorial[index_for_topic_in_scatter] = topic_in_document["topic_confidence"]
+               topic_found = True
+        else:
+            nr_documents_not_associated_with_topic_in_model = nr_documents_not_associated_with_topic_in_model + 1
+            
+        scatter_dict[year].append(scatter_for_editorial)
+        nr_documents_to_scatter_dict = nr_documents_to_scatter_dict + 1
+        if topic_found:
+            nr_documents_to_scatter_dict_with_topics_found = nr_documents_to_scatter_dict_with_topics_found + 1
+
+    print("nr_documents_to_scatter_dict", nr_documents_to_scatter_dict)
+    print("nr_documents_to_scatter_dict_with_topics_found", nr_documents_to_scatter_dict_with_topics_found)
+    print("nr_documents_not_associated_with_topic_in_model", nr_documents_not_associated_with_topic_in_model)
+    
+    return scatter_dict, year_title_tuple_list
+    
 
 editorial_data_list_science = []
 editorial_data_list_nature = []
@@ -172,44 +199,13 @@ for el in obj["topic_model_output"]["topics"]:
     topics[el["id"]] = topic_name
 
 
-
-
-scatter_dict = {}
-year_title_tuple_list = []
-x_labels = []
-nr_documents_to_scatter_dict = 0
-nr_documents_to_scatter_dict_with_topics_found = 0
-nr_documents_not_associated_with_topic_in_model = 0
-for el in editorial_data_list_science:
-    id = el[0]
-    topic_found = False
-    year = int(el[1])
-    if year not in scatter_dict:
-        scatter_dict[year] = []
-    title = el[2]
-    year_title_tuple_list.append((year, title))
-    #x_labels.append("(" + el[2] + ") " + str(year))
-    x_labels.append(str(year))
-    scatter_for_editorial = [0]*len(topics.keys())
-    if id in document_info: # topic in document
-        #print(document_info[el[0]])
-        for topic_in_document in document_info[id]["document_topics"]:
-           index_for_topic_in_scatter = sorted(topics.keys()).index(topic_in_document["topic_index"])
-           scatter_for_editorial[index_for_topic_in_scatter] = topic_in_document["topic_confidence"]
-           topic_found = True
-    else:
-        nr_documents_not_associated_with_topic_in_model = nr_documents_not_associated_with_topic_in_model + 1
-        
-    scatter_dict[year].append(scatter_for_editorial)
-    nr_documents_to_scatter_dict = nr_documents_to_scatter_dict + 1
-    if topic_found:
-        nr_documents_to_scatter_dict_with_topics_found = nr_documents_to_scatter_dict_with_topics_found + 1
-
-print("nr_documents_to_scatter_dict", nr_documents_to_scatter_dict)
-print("nr_documents_to_scatter_dict_with_topics_found", nr_documents_to_scatter_dict_with_topics_found)
-print("nr_documents_not_associated_with_topic_in_model", nr_documents_not_associated_with_topic_in_model)
-
-#plot_topics_text(["tax, forrest, tree", "bush, obama, administration, word4, word5", "oceans, pollution", "media, science"], ["(Article nr 1) 1988", "(Article nr 1) 1989", "(Article nr 1) 1990"], [[2, 0, 5, 7], [0, 3, 4, 5], [2, 4, 0, 7]], "test2", "test2")
-
 topic_names = [topics[key] for key in sorted(topics.keys())]
-plot_topics_text(topic_names, x_labels, scatter_dict, "Science", "science", min_year, max_year, year_title_tuple_list)
+
+scatter_dict_science, year_title_tuple_list_science = create_scatter_dict_and_year_title_tuple(editorial_data_list_science, document_info)
+
+plot_topics_text(topic_names, scatter_dict_science, "Science", "science", min_year, max_year, year_title_tuple_list_science)
+
+
+scatter_dict_nature, year_title_tuple_list_nature = create_scatter_dict_and_year_title_tuple(editorial_data_list_nature, document_info)
+
+plot_topics_text(topic_names, scatter_dict_nature, "Nature", "nature", min_year, max_year, year_title_tuple_list_nature)
