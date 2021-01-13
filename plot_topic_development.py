@@ -32,42 +32,31 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     ax.set_xlim(min_year -1 , max_year + 1)
     ax.yaxis.set_ticks(range(0, len(topics_reps)))
         
-    ax.yaxis.set_ticklabels(range(len(topics_reps), 0, -1))
+    ax.yaxis.set_ticklabels(["Topic " + str(el) for el in range(1, len(topics_reps) + 1)])
         
     ax.xaxis.set_minor_locator(MultipleLocator(1))
     
-    color = "blue"
+    color = "black"
     for y, topic_repr in enumerate(topics_reps):
-        if color == "blue":
-            color = "black"
-        else:
-            color = "blue"
         plt.axhline(y=y, linewidth=0.2, color = color)
-    
-    color = "blue"
-    for ticklabel in plt.gca().get_yticklabels():
-        if color == "blue":
-            color = "black"
-        else:
-            color = "blue"
-        ticklabel.set_color(color)
+  
+    #for ticklabel in plt.gca().get_yticklabels():
+     #   ticklabel.set_color(color)
     
     MOVE_X = 0.02
     last_iter_year = 0
     color='black'
     for year in sorted(year_title_dict.keys()):
-        for titles in year_title_dict[year]:
+        title_list = year_title_dict[year]
+        move_x = 1/len(title_list)
+        for titles in title_list:
             if last_iter_year != year:
                 x_moved = 0.0
             else:
-                x_moved = x_moved + MOVE_X
+                x_moved = x_moved + move_x
        
             linewidth=0.009
             x = year + x_moved
-            if color=='black':
-                color='blue'
-            else:
-                color='black'
             if x_moved == 0.0: # first line for year
                 extra = 0.01
                 linewidth = linewidth + extra*4
@@ -78,17 +67,19 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     
     for year, texts_for_year in topic_in_text_dict.items():
         for y, topic_repr in enumerate(topics_reps):
+            move_x = 1/len(texts_for_year)
             x_moved = 0.0
             for topic_in_text in texts_for_year: # go through scatter-vector for each text for the year
                 marker = markers.MarkerStyle(marker='|', fillstyle='none')
                 if topic_in_text[y] != 0: #if the text contains the topic
                     #ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '+-', linewidth=0.3, markersize=1, color = "red")
-                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '+-', linewidth=0.3, markersize=topic_in_text[y]/10, color = "red")
-                x_moved = x_moved + MOVE_X
+                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '+-', linewidth=0.4, markersize=topic_in_text[y]/10, color = "red")
+                x_moved = x_moved + move_x
+            
 
                     
     plt.xticks(fontsize=6)#, rotation=90)
-    plt.yticks(fontsize=5)
+    plt.yticks(fontsize=4)
 
         
     plt.xticks(ha='center')
@@ -219,23 +210,18 @@ scatter_dict_science, year_title_dict_science = create_scatter_dict_and_year_tit
 
 scatter_dict_nature, year_title_dict_nature = create_scatter_dict_and_year_title_tuple(editorial_data_list_nature, document_info)
 
-ax1 = plt.subplot(311)
 
-plot_topics_text(topic_names, scatter_dict_science, "Science", "science", min_year, max_year, year_title_dict_science, ax1, xlabels=False)
-
-ax2 = plt.subplot(312)
-plot_topics_text(topic_names, scatter_dict_nature, "Nature", "nature", min_year, max_year, year_title_dict_nature, ax2, xlabels=True)
-
-ax3 = plt.subplot(313)
+ax3 = plt.subplot(311)
 plt.axis('off')
 x_jump = 0.115
-y_jump = 0.1
-current_x = 0
+y_jump = 0.16
+current_x = 0.02
+ax3.set_xlim(0 , 1)
 
 for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambda t: t["id"])):
     current_y = 1
-    ax3.text(current_x, current_y, "Topic " + str(index + 1), verticalalignment='top', fontsize=6)
-    current_y = current_y - 0.04
+    ax3.text(current_x - 0.015, current_y, "Topic " + str(index + 1), verticalalignment='top', fontsize=6)
+    current_y = current_y - 0.07
     for term in el['topic_terms']:
         #print(term["score"], term["term"])
         term_to_pick_as_rep = "123456789123456789123456789123456789123456789123456789"
@@ -243,8 +229,21 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
             if len(s) < len(term_to_pick_as_rep):
                 term_to_pick_as_rep = s.strip()
         current_y = current_y - y_jump
-        ax3.text(current_x, current_y, term_to_pick_as_rep, verticalalignment='top', fontsize=5)
+        ax3.text(current_x, current_y, term_to_pick_as_rep, verticalalignment='top', fontsize=4.5)
+        
+        score = term["score"]
+        ax3.plot([current_x-0.01, current_x-0.01], [current_y - y_jump/5 - score/30, current_y - y_jump/5 + score/30], '.-', linewidth=0.9, markersize=0, color = "red", marker=".")
+        
     current_x = current_x + x_jump
+    
+ax1 = plt.subplot(312)
+
+plot_topics_text(topic_names, scatter_dict_science, "Science", "science", min_year, max_year, year_title_dict_science, ax1, xlabels=False)
+
+ax2 = plt.subplot(313)
+plot_topics_text(topic_names, scatter_dict_nature, "Nature", "nature", min_year, max_year, year_title_dict_nature, ax2, xlabels=True)
+
+
 
 #ax3.text(0.5, 0.5, 'matplotlib', horizontalalignment='center', , transform=ax3.transAxes)
 #plt.tight_layout()
