@@ -21,21 +21,36 @@ from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 from matplotlib import cm
 
 
-def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_tuple_list):
+def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_tuple_list, ax, xlabels):
 
+
+    #if not xlabels:
+    #    ax.set(xticklabels=[])
     colors_map = ["blue", "orange", "green", "red", "purple", "brown", "deeppink", "olive", "darkturquoise"]
-    fig, ax = plt.subplots()
+    
     
     ax.set_xlim(min_year -1 , max_year + 1)
     ax.yaxis.set_ticks(range(0, len(topics_reps)))
         
-    ax.yaxis.set_ticklabels(topics_reps)
+    ax.yaxis.set_ticklabels(range(len(topics_reps), 0, -1))
         
     ax.xaxis.set_minor_locator(MultipleLocator(1))
     
+    color = "brown"
     for y, topic_repr in enumerate(topics_reps):
-        plt.axhline(y=y, linewidth=0.1, color='black')
-        
+        if color == "brown":
+            color = "black"
+        else:
+            color = "brown"
+        plt.axhline(y=y, linewidth=0.2, color = color)
+    
+    color = "brown"
+    for ticklabel in plt.gca().get_yticklabels():
+        if color == "brown":
+            color = "black"
+        else:
+            color = "brown"
+        ticklabel.set_color(color)
     
     MOVE_X = 0.025
     last_iter_year = 0
@@ -66,24 +81,20 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
             for topic_in_text in texts_for_year: # go through scatter-vector for each text for the year
                 marker = markers.MarkerStyle(marker='|', fillstyle='none')
                 if topic_in_text[y] != 0: #if the text contains the topic
-                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '+-', linewidth=0.3, markersize=1, color = "red")
+                    #ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '+-', linewidth=0.3, markersize=1, color = "red")
+                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '+-', linewidth=0.3, markersize=topic_in_text[y]/10, color = "red")
                 x_moved = x_moved + MOVE_X
 
                     
-    plt.xticks(fontsize=5, rotation=90)
+    plt.xticks(fontsize=6)#, rotation=90)
     plt.yticks(fontsize=5)
 
         
     plt.xticks(ha='center')
-    ax.set_title(title)
+    ax.set_title(title, fontsize=6, loc="right") # x=-0.41,y=0.92)# )rotation='vertical'
     #fig.tight_layout()
     
-    plt.gcf().subplots_adjust(bottom=0.2, wspace = 0.0, hspace = 0.0, left = 0.2, right = 1.0)
-    
-    plt.savefig(file_name, dpi = 700, transparent=True, figsize=(500, 20))
-    #, bbox_inches='tight', orientation = "landscape", )
-    print("Saved plot in " + file_name)
-    plt.close('all')
+
 
 def create_scatter_dict_and_year_title_tuple(editorial_data_list, document_info):
     scatter_dict = {}
@@ -194,8 +205,8 @@ for el in obj["topic_model_output"]["topics"]:
         repr_terms.append(term_to_pick_as_rep.strip())
         
     third_length = int(len(repr_terms)/3)
-    topic_name = ", ".join(repr_terms[0: third_length]).strip() + "\n" + ", ".join(repr_terms[third_length:2*third_length]).strip() + "\n" + ", ".join(repr_terms[2*third_length:]).strip()
-    
+    #topic_name = ", ".join(repr_terms[0: third_length]).strip() + "\n" + ", ".join(repr_terms[third_length:2*third_length]).strip() + "\n" + ", ".join(repr_terms[2*third_length:]).strip()
+    topic_name = ", ".join(repr_terms)[0:50].strip() +"..."
     topics[el["id"]] = topic_name
 
 
@@ -203,9 +214,22 @@ topic_names = [topics[key] for key in sorted(topics.keys())]
 
 scatter_dict_science, year_title_tuple_list_science = create_scatter_dict_and_year_title_tuple(editorial_data_list_science, document_info)
 
-plot_topics_text(topic_names, scatter_dict_science, "Science", "science", min_year, max_year, year_title_tuple_list_science)
-
-
 scatter_dict_nature, year_title_tuple_list_nature = create_scatter_dict_and_year_title_tuple(editorial_data_list_nature, document_info)
 
-plot_topics_text(topic_names, scatter_dict_nature, "Nature", "nature", min_year, max_year, year_title_tuple_list_nature)
+ax1 = plt.subplot(311)
+
+plot_topics_text(topic_names, scatter_dict_science, "Science", "science", min_year, max_year, year_title_tuple_list_science, ax1, xlabels=False)
+
+ax2 = plt.subplot(312)
+plot_topics_text(topic_names, scatter_dict_nature, "Nature", "nature", min_year, max_year, year_title_tuple_list_nature, ax2, xlabels=True)
+
+
+#plt.tight_layout()
+#plt.gcf().subplots_adjust(wspace = 0.0, hspace = 0.12, left = 0.32, right = 1.00)
+plt.gcf().subplots_adjust(hspace = 0.30)
+
+file_name = "name"
+plt.savefig(file_name, dpi = 700, transparent=False, orientation = "landscape")
+#, bbox_inches='tight', , )
+print("Saved plot in " + file_name)
+plt.close('all')
