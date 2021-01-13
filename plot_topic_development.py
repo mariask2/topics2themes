@@ -21,7 +21,7 @@ from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 from matplotlib import cm
 
 
-def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_tuple_list, ax, xlabels):
+def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_dict, ax, xlabels):
 
 
     #if not xlabels:
@@ -55,24 +55,25 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     MOVE_X = 0.02
     last_iter_year = 0
     color='black'
-    for year, t in year_title_tuple_list:
-        if last_iter_year != year:
-            x_moved = 0.0
-        else:
-            x_moved = x_moved + MOVE_X
+    for year in sorted(year_title_dict.keys()):
+        for titles in year_title_dict[year]:
+            if last_iter_year != year:
+                x_moved = 0.0
+            else:
+                x_moved = x_moved + MOVE_X
        
-        linewidth=0.009
-        x = year + x_moved
-        if color=='black':
-            color='blue'
-        else:
-            color='black'
-        if x_moved == 0.0: # first line for year
-            extra = 0.01
-            linewidth = linewidth + extra*4
-            x = x - extra
-        plt.axvline(x=x, linewidth=linewidth, color="black")
-        last_iter_year = year
+            linewidth=0.009
+            x = year + x_moved
+            if color=='black':
+                color='blue'
+            else:
+                color='black'
+            if x_moved == 0.0: # first line for year
+                extra = 0.01
+                linewidth = linewidth + extra*4
+                x = x - extra
+            plt.axvline(x=x, linewidth=linewidth, color="black")
+            last_iter_year = year
             
     
     for year, texts_for_year in topic_in_text_dict.items():
@@ -98,7 +99,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
 
 def create_scatter_dict_and_year_title_tuple(editorial_data_list, document_info):
     scatter_dict = {}
-    year_title_tuple_list = []
+    year_title_dict = {}
     nr_documents_to_scatter_dict = 0
     nr_documents_to_scatter_dict_with_topics_found = 0
     nr_documents_not_associated_with_topic_in_model = 0
@@ -108,8 +109,10 @@ def create_scatter_dict_and_year_title_tuple(editorial_data_list, document_info)
         year = int(el[1])
         if year not in scatter_dict:
             scatter_dict[year] = []
+        if year not in year_title_dict:
+            year_title_dict[year] = []
         title = el[2]
-        year_title_tuple_list.append((year, title))
+        year_title_dict[year].append(title)
         scatter_for_editorial = [0]*len(topics.keys())
         if id in document_info: # topic in document
             #print(document_info[el[0]])
@@ -129,7 +132,7 @@ def create_scatter_dict_and_year_title_tuple(editorial_data_list, document_info)
     print("nr_documents_to_scatter_dict_with_topics_found", nr_documents_to_scatter_dict_with_topics_found)
     print("nr_documents_not_associated_with_topic_in_model", nr_documents_not_associated_with_topic_in_model)
     
-    return scatter_dict, year_title_tuple_list
+    return scatter_dict, year_title_dict
     
 
 editorial_data_list_science = []
@@ -212,16 +215,16 @@ for el in obj["topic_model_output"]["topics"]:
 
 topic_names = [topics[key] for key in sorted(topics.keys())]
 
-scatter_dict_science, year_title_tuple_list_science = create_scatter_dict_and_year_title_tuple(editorial_data_list_science, document_info)
+scatter_dict_science, year_title_dict_science = create_scatter_dict_and_year_title_tuple(editorial_data_list_science, document_info)
 
-scatter_dict_nature, year_title_tuple_list_nature = create_scatter_dict_and_year_title_tuple(editorial_data_list_nature, document_info)
+scatter_dict_nature, year_title_dict_nature = create_scatter_dict_and_year_title_tuple(editorial_data_list_nature, document_info)
 
 ax1 = plt.subplot(311)
 
-plot_topics_text(topic_names, scatter_dict_science, "Science", "science", min_year, max_year, year_title_tuple_list_science, ax1, xlabels=False)
+plot_topics_text(topic_names, scatter_dict_science, "Science", "science", min_year, max_year, year_title_dict_science, ax1, xlabels=False)
 
 ax2 = plt.subplot(312)
-plot_topics_text(topic_names, scatter_dict_nature, "Nature", "nature", min_year, max_year, year_title_tuple_list_nature, ax2, xlabels=True)
+plot_topics_text(topic_names, scatter_dict_nature, "Nature", "nature", min_year, max_year, year_title_dict_nature, ax2, xlabels=True)
 
 ax3 = plt.subplot(313)
 plt.axis('off')
