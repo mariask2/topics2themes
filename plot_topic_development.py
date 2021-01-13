@@ -68,8 +68,7 @@ def plot_topics_text(topics_reps, texts_reps, topic_in_text_dict, title, file_na
                 marker = markers.MarkerStyle(marker='|', fillstyle='none')
                 #ax.scatter(year+ x_moved, y + y_moved, s = topic_in_text[y]*10, edgecolors = "face", c="grey", alpha = 0.7, linewidths = 0.05, marker='o')
                 if topic_in_text[y] != 0:
-                    print(+ topic_in_text[y], y + topic_in_text[y])
-                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], 'r+-', linewidth=0.4, markersize=1)
+                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], 'r+-', linewidth=0.4, markersize=topic_in_text[y]/5)
                 #edgecolors="black"
                 y_moved = y_moved - 0.07
                 x_moved = x_moved + MOVE_X
@@ -174,6 +173,8 @@ scatter_dict = {}
 year_title_tuple_list = []
 x_labels = []
 for el in editorial_data_list_science:
+    id = el[0]
+    topic_found = False
     year = int(el[1])
     if year not in scatter_dict:
         scatter_dict[year] = []
@@ -182,7 +183,7 @@ for el in editorial_data_list_science:
     #x_labels.append("(" + el[2] + ") " + str(year))
     x_labels.append(str(year))
     scatter_for_editorial = [0]*len(topics.keys())
-    if el[0] in document_info: # topic in document
+    if id in document_info: # topic in document
         #print(document_info[el[0]])
         for topic_in_document in document_info[el[0]]["document_topics"]:
            index_for_topic_in_scatter = sorted(topics.keys()).index(topic_in_document["topic_index"])
