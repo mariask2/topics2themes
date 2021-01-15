@@ -28,7 +28,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     #    ax.set(xticklabels=[])
     colors_map = ["blue", "orange", "green", "red", "purple", "blue", "deeppink", "olive", "darkturquoise"]
     
-    
+    ax.set_ylim(len(topics_reps)-0.5, -0.5)
     ax.set_xlim(min_year -1 , max_year + 1)
     ax.yaxis.set_ticks(range(0, len(topics_reps)))
         
@@ -57,7 +57,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
             else:
                 x_moved = x_moved + move_x
        
-            linewidth=0.03
+            linewidth=0.04
             x = year + x_moved
             if x_moved == 0.0: # first line for year
                 extra = 0.01
@@ -75,7 +75,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
                 marker = markers.MarkerStyle(marker='|', fillstyle='none')
                 if topic_in_text[y] != 0: #if the text contains the topic
                     #ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '+-', linewidth=0.3, markersize=1, color = "red")
-                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/8, y - topic_in_text[y]/8], '*-', linewidth=0.7, markersize=topic_in_text[y]/10, color = "black")
+                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/9, y - topic_in_text[y]/9], '*-', linewidth=0.7, markersize=topic_in_text[y]/10, color = "black")
                 x_moved = x_moved + move_x
             
 
