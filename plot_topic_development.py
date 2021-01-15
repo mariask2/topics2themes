@@ -220,7 +220,7 @@ for c in color_map_orig:
 ax3 = plt.subplot(311)
 plt.axis('off')
 x_jump = 0.110
-y_jump = 0.16
+y_jump = 0.18
 current_x = 0.03
 
 ax3.set_xlim(0 , 1)
@@ -246,7 +246,8 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
         
         score = term["score"]
         bar_adjust = 0.041
-        ax3.plot([current_x-0.01, current_x-0.01], [current_y - bar_adjust - score/30, current_y - bar_adjust + score/30], '.-', linewidth=1.2, markersize=0, color = "black", marker=".")
+        
+        ax3.plot([current_x-0.01, current_x-0.01], [current_y - bar_adjust - score/30, current_y - bar_adjust + score/30], '-', linewidth=2.5, markersize=0, color = "silver")
         
     current_x = current_x + x_jump
  
