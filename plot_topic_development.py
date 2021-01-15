@@ -36,10 +36,12 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
         
     ax.xaxis.set_minor_locator(MultipleLocator(1))
     
-    color = "black"
+    #y_width = 1/len(topics_reps)/2
+    y_width = 0.4
     for y, topic_repr in enumerate(topics_reps):
-        plt.axhline(y=y, linewidth=0.2, color = color)
-  
+        line_color = [color_map[y][0], color_map[y][1], color_map[y][2], 0.20]
+        plt.axhline(y=y, linewidth=0.45, color = line_color)
+        ax.fill([min_year - 1, max_year + 1, max_year + 1, min_year - 1, min_year - 1], [y - y_width, y - y_width, y + y_width, y + y_width, y - y_width], color = color_map[y], edgecolor = color_map[y])
     #for ticklabel in plt.gca().get_yticklabels():
      #   ticklabel.set_color(color)
     
@@ -55,7 +57,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
             else:
                 x_moved = x_moved + move_x
        
-            linewidth=0.009
+            linewidth=0.03
             x = year + x_moved
             if x_moved == 0.0: # first line for year
                 extra = 0.01
@@ -73,7 +75,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
                 marker = markers.MarkerStyle(marker='|', fillstyle='none')
                 if topic_in_text[y] != 0: #if the text contains the topic
                     #ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '+-', linewidth=0.3, markersize=1, color = "red")
-                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '+-', linewidth=0.4, markersize=topic_in_text[y]/10, color = "red")
+                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/8, y - topic_in_text[y]/8], '*-', linewidth=0.7, markersize=topic_in_text[y]/10, color = "black")
                 x_moved = x_moved + move_x
             
 
@@ -213,7 +215,7 @@ scatter_dict_nature, year_title_dict_nature = create_scatter_dict_and_year_title
 color_map_orig = cm.get_cmap('tab20b', len(topic_names)).colors
 color_map = []
 for c in color_map_orig:
-    color_map.append([c[0], c[1], c[2], 0.2])
+    color_map.append([c[0], c[1], c[2], 0.15])
 
 ax3 = plt.subplot(311)
 plt.axis('off')
