@@ -20,8 +20,8 @@ import matplotlib.markers as markers
 from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 from matplotlib import cm
 
-
-def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_dict, ax, xlabels):
+ 
+def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_dict, ax, xlabels, color_map):
 
 
     #if not xlabels:
@@ -210,17 +210,28 @@ scatter_dict_science, year_title_dict_science = create_scatter_dict_and_year_tit
 
 scatter_dict_nature, year_title_dict_nature = create_scatter_dict_and_year_title_tuple(editorial_data_list_nature, document_info)
 
+color_map_orig = cm.get_cmap('tab20b', len(topic_names)).colors
+color_map = []
+for c in color_map_orig:
+    color_map.append([c[0], c[1], c[2], 0.2])
 
 ax3 = plt.subplot(311)
 plt.axis('off')
-x_jump = 0.115
+x_jump = 0.110
 y_jump = 0.16
-current_x = 0.02
+current_x = 0.03
+
 ax3.set_xlim(0 , 1)
 
 for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambda t: t["id"])):
-    current_y = 1
-    ax3.text(current_x - 0.015, current_y, "Topic " + str(index + 1), verticalalignment='top', fontsize=6)
+    current_y = 0.95
+    heading_x = current_x - 0.015
+    background_x_start = heading_x - 0.005
+    background_x_end = background_x_start + x_jump - 0.005
+    background_y_start = current_y + 0.05
+    background_y_end = background_y_start - y_jump*(len(el['topic_terms'])+1) - 0.08
+    ax3.fill([background_x_start, background_x_end, background_x_end, background_x_start, background_x_start], [background_y_start, background_y_start, background_y_end, background_y_end, background_y_start], color = color_map[index])
+    ax3.text(heading_x, current_y, "Topic " + str(index + 1), verticalalignment='top', fontsize=6)
     current_y = current_y - 0.07
     for term in el['topic_terms']:
         #print(term["score"], term["term"])
@@ -229,19 +240,20 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
             if len(s) < len(term_to_pick_as_rep):
                 term_to_pick_as_rep = s.strip()
         current_y = current_y - y_jump
-        ax3.text(current_x, current_y, term_to_pick_as_rep, verticalalignment='top', fontsize=4.5)
+        ax3.text(current_x, current_y, term_to_pick_as_rep, verticalalignment='top', fontsize=4)
         
         score = term["score"]
-        ax3.plot([current_x-0.01, current_x-0.01], [current_y - y_jump/5 - score/30, current_y - y_jump/5 + score/30], '.-', linewidth=0.9, markersize=0, color = "red", marker=".")
+        bar_adjust = 0.041
+        ax3.plot([current_x-0.01, current_x-0.01], [current_y - bar_adjust - score/30, current_y - bar_adjust + score/30], '.-', linewidth=1.2, markersize=0, color = "black", marker=".")
         
     current_x = current_x + x_jump
-    
+ 
 ax1 = plt.subplot(312)
 
-plot_topics_text(topic_names, scatter_dict_science, "Science", "science", min_year, max_year, year_title_dict_science, ax1, xlabels=False)
+plot_topics_text(topic_names, scatter_dict_science, "Science", "science", min_year, max_year, year_title_dict_science, ax1, xlabels=False, color_map = color_map)
 
 ax2 = plt.subplot(313)
-plot_topics_text(topic_names, scatter_dict_nature, "Nature", "nature", min_year, max_year, year_title_dict_nature, ax2, xlabels=True)
+plot_topics_text(topic_names, scatter_dict_nature, "Nature", "nature", min_year, max_year, year_title_dict_nature, ax2, xlabels=True, color_map = color_map)
 
 
 
