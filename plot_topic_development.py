@@ -32,22 +32,26 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     ax.set_xlim(min_year -1 , max_year + 1)
     ax.yaxis.set_ticks(range(0, len(topics_reps)))
         
-    ax.yaxis.set_ticklabels(["Topic " + str(el) for el in range(1, len(topics_reps) + 1)])
-        
+    
+    ax.yaxis.set_ticklabels(["(" + el.split(",")[0][:7] + "..." for el in topics_reps])
+    ax.yaxis.tick_right()
+    ax.yaxis.set_ticks_position('none')
     ax.xaxis.set_minor_locator(MultipleLocator(1))
     
     #y_width = 1/len(topics_reps)/2
     y_width = 0.4
     for y, topic_repr in enumerate(topics_reps):
         line_color = [color_map[y][0], color_map[y][1], color_map[y][2], 0.20]
-        plt.axhline(y=y, linewidth=0.45, color = line_color)
+        plt.axhline(y=y, linewidth=0.55, color = line_color)
+        ax.text(min_year-4.7,y+0.3, "Topic " + str(y + 1), size=5.5)
         ax.fill([min_year - 1, max_year + 1, max_year + 1, min_year - 1, min_year - 1], [y - y_width, y - y_width, y + y_width, y + y_width, y - y_width], color = color_map[y], edgecolor = color_map[y])
-    #for ticklabel in plt.gca().get_yticklabels():
-     #   ticklabel.set_color(color)
+
+    plt.xticks(fontsize=6)#, rotation=90)
+    plt.yticks(fontsize=5.5)
     
     MOVE_X = 0.02
     last_iter_year = 0
-    color='black'
+    
     for year in sorted(year_title_dict.keys()):
         title_list = year_title_dict[year]
         move_x = 1/len(title_list)
@@ -74,14 +78,12 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
             for topic_in_text in texts_for_year: # go through scatter-vector for each text for the year
                 marker = markers.MarkerStyle(marker='|', fillstyle='none')
                 if topic_in_text[y] != 0: #if the text contains the topic
-                    #ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '+-', linewidth=0.3, markersize=1, color = "red")
-                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/9, y - topic_in_text[y]/9], '*-', linewidth=0.7, markersize=topic_in_text[y]/10, color = "black")
+                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '.-', linewidth=0.8, markersize=0, color = "black")
                 x_moved = x_moved + move_x
             
 
                     
-    plt.xticks(fontsize=6)#, rotation=90)
-    plt.yticks(fontsize=4)
+ 
 
         
     plt.xticks(ha='center')
@@ -196,8 +198,8 @@ for el in obj["topic_model_output"]["topics"]:
         #        term_to_pick_as_rep = s
         #if term_to_pick_as_rep == "123456789123456789123456789123456789123456789123456789":
         for s in t.split("/"):
-            if len(s) < len(term_to_pick_as_rep):
-                term_to_pick_as_rep = s
+            if len(s.strip()) < len(term_to_pick_as_rep):
+                term_to_pick_as_rep = s.strip()
         repr_terms.append(term_to_pick_as_rep.strip())
         
     third_length = int(len(repr_terms)/3)
@@ -220,36 +222,41 @@ for c in color_map_orig:
 ax3 = plt.subplot(311)
 plt.axis('off')
 x_jump = 0.110
-y_jump = 0.18
+y_jump = 0.115
 current_x = 0.03
 
 ax3.set_xlim(0 , 1)
+ax3.set_ylim(0, 1)
 
 for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambda t: t["id"])):
-    current_y = 0.95
+    current_y = 0.96
     heading_x = current_x - 0.015
     background_x_start = heading_x - 0.005
     background_x_end = background_x_start + x_jump - 0.005
-    background_y_start = current_y + 0.05
-    background_y_end = background_y_start - y_jump*(len(el['topic_terms'])+1) - 0.08
+    background_y_start = current_y + 0.04
+    background_y_end = background_y_start - y_jump*(len(el['topic_terms'])+1) - 0.18
     ax3.fill([background_x_start, background_x_end, background_x_end, background_x_start, background_x_start], [background_y_start, background_y_start, background_y_end, background_y_end, background_y_start], color = color_map[index])
     ax3.text(heading_x, current_y, "Topic " + str(index + 1), verticalalignment='top', fontsize=6)
-    current_y = current_y - 0.07
+    current_y = current_y - 0.05
     for term in el['topic_terms']:
         #print(term["score"], term["term"])
         term_to_pick_as_rep = "123456789123456789123456789123456789123456789123456789"
         for s in term["term"].split("/"):
-            if len(s) < len(term_to_pick_as_rep):
+            if len(s.strip()) < len(term_to_pick_as_rep):
                 term_to_pick_as_rep = s.strip()
         current_y = current_y - y_jump
         ax3.text(current_x, current_y, term_to_pick_as_rep, verticalalignment='top', fontsize=4)
         
         score = term["score"]
-        bar_adjust = 0.041
+        bar_adjust = 0.025
         
-        ax3.plot([current_x-0.01, current_x-0.01], [current_y - bar_adjust - score/30, current_y - bar_adjust + score/30], '-', linewidth=2.5, markersize=0, color = "silver")
+        ax3.plot([current_x-0.01, current_x-0.01], [current_y - bar_adjust - score/40, current_y - bar_adjust + score/40], '-', linewidth=2.5, markersize=0, color = "silver")
         
     current_x = current_x + x_jump
+    
+nr_of_topics = len(obj["topic_model_output"]["topics"])
+ax3.set_title("Most typical terms", fontsize=6, loc="right")
+   
  
 ax1 = plt.subplot(312)
 
