@@ -28,27 +28,57 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     #    ax.set(xticklabels=[])
     colors_map = ["blue", "orange", "green", "red", "purple", "blue", "deeppink", "olive", "darkturquoise"]
     
-    ax.set_ylim(len(topics_reps)-0.5, -0.5)
+    classification_display_size = 0.6
+    classes = ["Eco", "Dev", "Sec","Eth", "Tec", "Gov", "Sci", "Com"]
+    ax.set_ylim(len(topics_reps) + classification_display_size*len(classes) -0.1, -0.5)
     ax.set_xlim(min_year -1 , max_year + 1)
-    ax.yaxis.set_ticks(range(0, len(topics_reps)))
-        
+    ax.yaxis.set_ticks(range(0, len(topics_reps) + 1))
+    #ax.tick_params(axis='x', colors='silver')
+    #ax.tick_params(axis='y', colors='silver')
+    #ax.yaxis.label.set_color('black')
+    #ax.xaxis.label.set_color('black')
     
-    ax.yaxis.set_ticklabels(["(" + el.split(",")[0][:7] + "..." for el in topics_reps])
+    y_ticks = ["(" + el.split(",")[0][:7] + "..." for el in topics_reps] + [""]
+    ax.yaxis.set_ticklabels(y_ticks)
     ax.yaxis.tick_right()
     ax.yaxis.set_ticks_position('none')
     ax.xaxis.set_minor_locator(MultipleLocator(1))
-    
-    #y_width = 1/len(topics_reps)/2
-    y_width = 0.4
-    for y, topic_repr in enumerate(topics_reps):
-        line_color = [color_map[y][0], color_map[y][1], color_map[y][2], 0.20]
-        plt.axhline(y=y, linewidth=0.55, color = line_color)
-        ax.text(min_year-4.7,y+0.3, "Topic " + str(y + 1), size=5.5)
-        ax.fill([min_year - 1, max_year + 1, max_year + 1, min_year - 1, min_year - 1], [y - y_width, y - y_width, y + y_width, y + y_width, y - y_width], color = color_map[y], edgecolor = color_map[y])
-
+    ax.tick_params(axis="x", top=True, which="both")
     plt.xticks(fontsize=6)#, rotation=90)
     plt.yticks(fontsize=5.5)
     
+    #y_width = 1/len(topics_reps)/2
+    # The tick labels to the left are added manually
+    y_width = 0.4
+    for y, topic_repr in enumerate(topics_reps):
+        line_color = [color_map[y][0], color_map[y][1], color_map[y][2], 0.20]
+        text_color = [color_map[y][0], color_map[y][1], color_map[y][2], 1.0]
+        plt.axhline(y=y, linewidth=0.55, color = line_color)
+        ax.text(min_year-4.1,y+0.3, "Topic " + str(y + 1), size=5.0, color = "black")
+        ax.text(min_year-4.1,y+0.3, "Topic ", size=5.0, color = text_color)
+        ax.fill([min_year - 1, max_year + 1, max_year + 1, min_year - 1, min_year - 1], [y - y_width, y - y_width, y + y_width, y + y_width, y - y_width], color = color_map[y], edgecolor = color_map[y])
+
+    margin_to_topics = 0
+
+    for c_nr, class_name in enumerate(classes):
+        y = len(topics_reps) + margin_to_topics + c_nr*classification_display_size
+        
+        print(class_name, y)
+        y_width_class = classification_display_size/3
+        class_color = "whitesmoke"
+        text_color = "gray"
+        text_x_diff = 4.0
+        text = class_name
+        if c_nr % 2 == 0:
+            class_color = "gainsboro"
+            text_color = "black"
+            text_x_diff = 2.5
+            text = class_name
+        ax.text(min_year-text_x_diff,y + classification_display_size/3, text, size=4.0, color = text_color)
+        #ax.text(min_year-text_x_diff + 0.01,y + classification_display_size/2 + 0.01, text, size=3.9, color = text_color)
+        plt.axhline(y=y, linewidth=0.05, linestyle = ":", color = "black")
+        ax.fill([min_year - 1, max_year + 1, max_year + 1, min_year - 1, min_year - 1], [y - y_width_class, y - y_width_class, y + y_width_class, y + y_width_class, y - y_width_class], color = class_color, edgecolor = class_color)
+        
     MOVE_X = 0.02
     last_iter_year = 0
     
@@ -68,22 +98,35 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
                 linewidth = linewidth + extra*4
                 x = x - extra
             plt.axvline(x=x, linewidth=linewidth, color="black")
+            # Line indicating an article
+            #ax.plot([x, x], [-0.5, len(topics_reps)-0.5], '.-', linewidth=linewidth, markersize=0, color = "black")
+            # Indication of the classification
+            #ax.plot([x, x], [len(topics_reps), len(topics_reps) + classification_display_size*len(classes)], '.-', linewidth=linewidth, markersize=0, color = "red")
             last_iter_year = year
             
-    
+    # Different names in paper and in data, but same classes
+    label_list = ["A_dominant_frame", "B_dominant_frame", "C_dominant_frame", "D_dominant_frame", "E_dominant_frame", "F_dominant_frame", "G_dominant_frame", "H_dominant_frame"]
+    printed = []
     for year, texts_for_year in topic_in_text_dict.items():
         for y, topic_repr in enumerate(topics_reps):
             move_x = 1/len(texts_for_year)
             x_moved = 0.0
-            for topic_in_text in texts_for_year: # go through scatter-vector for each text for the year
+            for (topic_in_text, label) in texts_for_year: # go through scatter-vector for each text for the year
                 marker = markers.MarkerStyle(marker='|', fillstyle='none')
                 if topic_in_text[y] != 0: #if the text contains the topic
                     ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '.-', linewidth=0.8, markersize=0, color = "black")
+               
+                # plot the class (= manual label) for the text
+                label_nr = label_list.index(label)
+                label_start = len(topics_reps) + label_nr * classification_display_size - margin_to_topics
+                if (label_nr, label_start) not in printed:
+                    printed.append((label_nr, label_start))
+                ax.plot([year + x_moved, year + x_moved], [label_start, label_start], '*-', linewidth=0.04, markersize=0.05, color = "black")
+                
+                # Move the next text for the year a bit to the right
                 x_moved = x_moved + move_x
-            
-
-                    
- 
+    for el in sorted(printed):
+        print(el)
 
         
     plt.xticks(ha='center')
@@ -102,13 +145,20 @@ def create_scatter_dict_and_year_title_tuple(editorial_data_list, document_info)
         id = el[0]
         topic_found = False
         year = int(el[1])
+        label = el[3]
         if year not in scatter_dict:
             scatter_dict[year] = []
         if year not in year_title_dict:
             year_title_dict[year] = []
         title = el[2]
         year_title_dict[year].append(title)
+        
+        # Create an empty vector
         scatter_for_editorial = [0]*len(topics.keys())
+        
+        # If there are topics found for the document, fill the
+        # vector with information of how strong the topic is
+        # for this document
         if id in document_info: # topic in document
             #print(document_info[el[0]])
             for topic_in_document in document_info[id]["document_topics"]:
@@ -118,7 +168,7 @@ def create_scatter_dict_and_year_title_tuple(editorial_data_list, document_info)
         else:
             nr_documents_not_associated_with_topic_in_model = nr_documents_not_associated_with_topic_in_model + 1
             
-        scatter_dict[year].append(scatter_for_editorial)
+        scatter_dict[year].append((scatter_for_editorial, label))
         nr_documents_to_scatter_dict = nr_documents_to_scatter_dict + 1
         if topic_found:
             nr_documents_to_scatter_dict_with_topics_found = nr_documents_to_scatter_dict_with_topics_found + 1
@@ -143,6 +193,8 @@ with open("../klimat/master_table.tsv") as master:
             continue
         id = ""
 
+        dominant = sp[-2]
+        
         if year > max_year:
             max_year = year
         if year < min_year:
@@ -151,12 +203,12 @@ with open("../klimat/master_table.tsv") as master:
         if sp[1] == "Science":
             id = sp[5].replace("10.1126/science.", "").strip()
             id = id + ".ocr.txt"
-            editorial_data = (id, sp[2], sp[3])
+            editorial_data = (id, sp[2], sp[3], dominant)
             editorial_data_list_science.append(editorial_data)
         else:
             id = sp[6].replace(".txt", "")
             id = id + ".ocr.txt"
-            editorial_data = (id, sp[2], sp[3])
+            editorial_data = (id, sp[2], sp[3], dominant)
             editorial_data_list_nature.append(editorial_data)
 
 
