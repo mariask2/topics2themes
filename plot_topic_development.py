@@ -23,15 +23,18 @@ from matplotlib import cm
  
 def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_dict, ax, xlabels, color_map):
 
+    margin_to_topics = 0.2
 
     #if not xlabels:
     #    ax.set(xticklabels=[])
     colors_map = ["blue", "orange", "green", "red", "purple", "blue", "deeppink", "olive", "darkturquoise"]
     
-    classification_display_size = 0.6
-    classes = ["Eco", "Dev", "Sec","Eth", "Tec", "Gov", "Sci", "Com"]
-    ax.set_ylim(len(topics_reps) + classification_display_size*len(classes) -0.1, -0.5)
-    ax.set_xlim(min_year -1 , max_year + 1)
+    classification_display_size = 0.55
+    classes = ["eco", "dev", "sec","eth", "tec", "gov", "sci", "com"]
+    ax.set_ylim(len(topics_reps) + classification_display_size*len(classes) -0.1 + margin_to_topics, -0.5)
+    x_min_lim = min_year - 1
+    x_max_lim = max_year + 1
+    ax.set_xlim(x_min_lim , x_max_lim)
     ax.yaxis.set_ticks(range(0, len(topics_reps) + 1))
     #ax.tick_params(axis='x', colors='silver')
     #ax.tick_params(axis='y', colors='silver')
@@ -46,6 +49,11 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     ax.tick_params(axis="x", top=True, which="both")
     plt.xticks(fontsize=6)#, rotation=90)
     plt.yticks(fontsize=5.5)
+    #ax.tick_params(axis='y', colors='whitesmoke')
+    ax.spines["left"].set_color("silver")
+    ax.spines["right"].set_color("silver")
+    ax.spines["top"].set_color("silver")
+    ax.spines["bottom"].set_color("silver")
     
     #y_width = 1/len(topics_reps)/2
     # The tick labels to the left are added manually
@@ -54,30 +62,36 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
         line_color = [color_map[y][0], color_map[y][1], color_map[y][2], 0.20]
         text_color = [color_map[y][0], color_map[y][1], color_map[y][2], 1.0]
         plt.axhline(y=y, linewidth=0.55, color = line_color)
-        ax.text(min_year-4.1,y+0.3, "Topic " + str(y + 1), size=5.0, color = "black")
-        ax.text(min_year-4.1,y+0.3, "Topic ", size=5.0, color = text_color)
-        ax.fill([min_year - 1, max_year + 1, max_year + 1, min_year - 1, min_year - 1], [y - y_width, y - y_width, y + y_width, y + y_width, y - y_width], color = color_map[y], edgecolor = color_map[y])
-
-    margin_to_topics = 0
-
+        ax.text(x_min_lim-3.1,y+0.3, "Topic " + str(y + 1), size=5.0, color = "black")
+        ax.text(x_min_lim-3.1,y+0.3, "Topic ", size=5.0, color = text_color)
+        ax.fill([x_min_lim, x_max_lim, x_max_lim, x_min_lim, x_min_lim], [y - y_width, y - y_width, y + y_width, y + y_width, y - y_width], color = color_map[y], edgecolor = color_map[y])
+    for c, t in zip(color_map, ax.yaxis.get_ticklabels()):
+        text_color = [c[0], c[1], c[2], 1.0]
+        t.set_color(text_color)
+        
+    # The manually labelled classes
+    
     for c_nr, class_name in enumerate(classes):
         y = len(topics_reps) + margin_to_topics + c_nr*classification_display_size
         
         print(class_name, y)
         y_width_class = classification_display_size/3
-        class_color = "whitesmoke"
-        text_color = "gray"
-        text_x_diff = 4.0
+        class_color = "white"
+        text_color = "darkgray"
+        text_x_diff = 1.5
+        text_x_diff_right = 0.15
         text = class_name
         if c_nr % 2 == 0:
-            class_color = "gainsboro"
-            text_color = "black"
-            text_x_diff = 2.5
+            class_color = "whitesmoke"
+            text_color = "dimgray"
+            text_x_diff = 1.0
+            text_x_diff_right = 0.65
             text = class_name
-        ax.text(min_year-text_x_diff,y + classification_display_size/3, text, size=4.0, color = text_color)
+        ax.text(x_min_lim-text_x_diff,y + classification_display_size/2.5, text, size=3.5, color = text_color)
+        ax.text(x_max_lim+text_x_diff_right,y + classification_display_size/2.5, text, size=3.5, color = text_color)
         #ax.text(min_year-text_x_diff + 0.01,y + classification_display_size/2 + 0.01, text, size=3.9, color = text_color)
         plt.axhline(y=y, linewidth=0.05, linestyle = ":", color = "black")
-        ax.fill([min_year - 1, max_year + 1, max_year + 1, min_year - 1, min_year - 1], [y - y_width_class, y - y_width_class, y + y_width_class, y + y_width_class, y - y_width_class], color = class_color, edgecolor = class_color)
+        ax.fill([x_min_lim, x_max_lim, x_max_lim, x_min_lim, x_min_lim], [y - y_width_class, y - y_width_class, y + y_width_class, y + y_width_class, y - y_width_class], color = class_color, edgecolor = class_color)
         
     MOVE_X = 0.02
     last_iter_year = 0
@@ -118,10 +132,10 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
                
                 # plot the class (= manual label) for the text
                 label_nr = label_list.index(label)
-                label_start = len(topics_reps) + label_nr * classification_display_size - margin_to_topics
+                label_start = len(topics_reps) + label_nr * classification_display_size + margin_to_topics
                 if (label_nr, label_start) not in printed:
                     printed.append((label_nr, label_start))
-                ax.plot([year + x_moved, year + x_moved], [label_start, label_start], '*-', linewidth=0.04, markersize=0.05, color = "black")
+                ax.plot([year + x_moved, year + x_moved], [label_start, label_start], 'o-', linewidth=0.04, markersize=0.03, color = "black")
                 
                 # Move the next text for the year a bit to the right
                 x_moved = x_moved + move_x
