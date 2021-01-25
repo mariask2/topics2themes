@@ -47,7 +47,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     #ax.yaxis.tick_right()
     ax.yaxis.set_ticks_position('none')
     ax.xaxis.set_minor_locator(MultipleLocator(1))
-    ax.tick_params(axis="x", top=True, which="both")
+    #ax.tick_params(axis="x", top=True, which="both")
     plt.xticks(fontsize=6)#, rotation=90)
     plt.yticks(fontsize=5.5)
     #ax.xaxis.set_label_position('top')
