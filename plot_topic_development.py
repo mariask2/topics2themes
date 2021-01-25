@@ -23,7 +23,7 @@ from matplotlib import cm
  
 def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_dict, ax, xlabels, color_map):
 
-    margin_to_topics = 0.25
+    margin_to_topics = 0.20
 
     #if not xlabels:
         #ax.set(xticklabels=[])
@@ -124,12 +124,25 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
             plt.axvline(x=x, linewidth=linewidth, color="black", linestyle = linestyle)
             
             # Small numbers on the line, in order to be able to retrieve the titles
-            y_extra = len(topics_reps) -0.5 + 0.15*(article_nr_position_extra)
-            ax.text(x - 0.03, 0 + y_extra, str(article_nr + 1), size=0.001, color = "gray", rotation=-90, horizontalalignment='center',
-            verticalalignment='top')
-            article_nr_position_extra = article_nr_position_extra + 1
-            if article_nr_position_extra == 3:
-                article_nr_position_extra = 0
+            #y_extra = len(topics_reps) -0.5 + 0.15*(article_nr_position_extra)
+            for tr, top in enumerate(topics_reps):
+                if tr == 0:
+                    continue
+                #y_extra = len(topics_reps) - 0.5
+                y_extra = tr - 0.5
+                if article_nr % 2 != 0:
+                    ax.text(x - 0.03, 0 + y_extra, str(article_nr + 1), size=0.001, color = "darkgray", rotation=-90, horizontalalignment='center', verticalalignment='top')
+            
+            for ci, c in enumerate(classes):
+                if ci % 2 != 0:
+                    continue
+                y_extra = len(topics_reps) + margin_to_topics + ci*classification_display_size + 0.2
+                if article_nr % 2 != 0:
+                    ax.text(x - 0.03, 0 + y_extra, str(article_nr + 1), size=0.001, color = "darkgray", rotation=-90, horizontalalignment='center', verticalalignment='top')
+                
+            #article_nr_position_extra = article_nr_position_extra + 1
+            #if article_nr_position_extra == 3:
+                #article_nr_position_extra = 0
 
             # Line indicating an article
             #ax.plot([x, x], [-0.5, len(topics_reps)-0.5], '.-', linewidth=linewidth, markersize=0, color = "black")
