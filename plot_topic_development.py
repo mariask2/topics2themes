@@ -32,45 +32,46 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     classification_display_size = 0.55
     classes = ["eco", "dev", "sec","eth", "tec", "gov", "sci", "com"]
     ax.set_ylim(len(topics_reps) + classification_display_size*len(classes) -0.1 + margin_to_topics, -0.5)
-    x_min_lim = min_year - 1
-    x_max_lim = max_year + 1
+    x_min_lim = min_year - 0.4
+    x_max_lim = max_year + 1.1
     ax.set_xlim(x_min_lim , x_max_lim)
     ax.yaxis.set_ticks(range(0, len(topics_reps) + 1))
-    #ax.tick_params(axis='x', colors='silver')
-    #ax.tick_params(axis='y', colors='silver')
-    #ax.yaxis.label.set_color('black')
-    #ax.xaxis.label.set_color('black')
+ 
     
-    y_ticks = ["(" + el.split(",")[0][:7] + "..." for el in topics_reps] + [""]
-    ax.yaxis.set_ticklabels(y_ticks)
-    ax.yaxis.tick_right()
+    
+
+    ax.yaxis.set_ticklabels([])
+    #ax.yaxis.set_ticklabels(y_ticks)
+    #ax.yaxis.tick_right()
     ax.yaxis.set_ticks_position('none')
     ax.xaxis.set_minor_locator(MultipleLocator(1))
     ax.tick_params(axis="x", top=True, which="both")
     plt.xticks(fontsize=6)#, rotation=90)
     plt.yticks(fontsize=5.5)
-    #ax.tick_params(axis='y', colors='whitesmoke')
+ 
     ax.spines["left"].set_color("silver")
     ax.spines["right"].set_color("silver")
     ax.spines["top"].set_color("silver")
     ax.spines["bottom"].set_color("silver")
     
-    #y_width = 1/len(topics_reps)/2
-    # The tick labels to the left are added manually
+ 
+    # The tick labels for the topics
     y_width = 0.4
+    y_ticks = [el[:14] + "..." for el in topics_reps] + [""]
     for y, topic_repr in enumerate(topics_reps):
         line_color = [color_map[y][0], color_map[y][1], color_map[y][2], 0.20]
         text_color = [color_map[y][0], color_map[y][1], color_map[y][2], 1.0]
         plt.axhline(y=y, linewidth=0.55, color = line_color)
-        ax.text(x_min_lim-3.1,y+0.3, "Topic " + str(y + 1), size=5.0, color = "black")
-        ax.text(x_min_lim-3.1,y+0.3, "Topic ", size=5.0, color = text_color)
+        ax.text(x_min_lim-2.8,y+0.3, "Topic " + str(y + 1), size=5.0, color = "black")
+        ax.text(x_min_lim-2.8,y+0.3, "Topic ", size=5.0, color = text_color)
+        ax.text(x_max_lim + 0.49,y+0.3, y_ticks[y], size=4.0, color = text_color)
+        ax.text(x_max_lim + 0.20,y+0.3, "(", size=4.0, color = "black")
         ax.fill([x_min_lim, x_max_lim, x_max_lim, x_min_lim, x_min_lim], [y - y_width, y - y_width, y + y_width, y + y_width, y - y_width], color = color_map[y], edgecolor = color_map[y])
     for c, t in zip(color_map, ax.yaxis.get_ticklabels()):
         text_color = [c[0], c[1], c[2], 1.0]
         t.set_color(text_color)
         
-    # The manually labelled classes
-    
+    # The tick labels for the labelled classes
     for c_nr, class_name in enumerate(classes):
         y = len(topics_reps) + margin_to_topics + c_nr*classification_display_size
         
