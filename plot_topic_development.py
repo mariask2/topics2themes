@@ -23,23 +23,25 @@ from matplotlib import cm
  
 def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_dict, ax, xlabels, color_map):
 
-    margin_to_topics = 0.2
+    margin_to_topics = 0.25
 
     #if not xlabels:
-    #    ax.set(xticklabels=[])
+        #ax.set(xticklabels=[])
+    #ax.xaxis.tick_top()
     colors_map = ["blue", "orange", "green", "red", "purple", "blue", "deeppink", "olive", "darkturquoise"]
     
     classification_display_size = 0.55
     classes = ["eco", "dev", "sec","eth", "tec", "gov", "sci", "com"]
-    ax.set_ylim(len(topics_reps) + classification_display_size*len(classes) -0.1 + margin_to_topics, -0.5)
+    y_max_lim = len(topics_reps) + classification_display_size*len(classes) -0.1 + margin_to_topics
+    ax.set_ylim(y_max_lim, -0.5)
     x_min_lim = min_year - 0.4
     x_max_lim = max_year + 1.1
     ax.set_xlim(x_min_lim , x_max_lim)
-    ax.yaxis.set_ticks(range(0, len(topics_reps) + 1))
+    #ax.yaxis.set_ticks(range(0, len(topics_reps) + 1))
  
     
     
-
+    
     ax.yaxis.set_ticklabels([])
     #ax.yaxis.set_ticklabels(y_ticks)
     #ax.yaxis.tick_right()
@@ -48,6 +50,8 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     ax.tick_params(axis="x", top=True, which="both")
     plt.xticks(fontsize=6)#, rotation=90)
     plt.yticks(fontsize=5.5)
+    #ax.xaxis.set_label_position('top')
+    
  
     ax.spines["left"].set_color("silver")
     ax.spines["right"].set_color("silver")
@@ -97,10 +101,12 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     MOVE_X = 0.02
     last_iter_year = 0
     
+    x_moved = 0.0
     for year in sorted(year_title_dict.keys()):
+        article_nr_position_extra = 0
         title_list = year_title_dict[year]
         move_x = 1/len(title_list)
-        for titles in title_list:
+        for article_nr, article_title in enumerate(title_list):
             if last_iter_year != year:
                 x_moved = 0.0
             else:
@@ -112,7 +118,19 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
                 extra = 0.01
                 linewidth = linewidth + extra*4
                 x = x - extra
-            plt.axvline(x=x, linewidth=linewidth, color="black")
+            linestyle = "-"
+            if article_nr % 2 != 0:
+                linestyle=":"
+            plt.axvline(x=x, linewidth=linewidth, color="black", linestyle = linestyle)
+            
+            # Small numbers on the line, in order to be able to retrieve the titles
+            y_extra = len(topics_reps) -0.5 + 0.15*(article_nr_position_extra)
+            ax.text(x - 0.03, 0 + y_extra, str(article_nr + 1), size=0.001, color = "gray", rotation=-90, horizontalalignment='center',
+            verticalalignment='top')
+            article_nr_position_extra = article_nr_position_extra + 1
+            if article_nr_position_extra == 3:
+                article_nr_position_extra = 0
+
             # Line indicating an article
             #ax.plot([x, x], [-0.5, len(topics_reps)-0.5], '.-', linewidth=linewidth, markersize=0, color = "black")
             # Indication of the classification
