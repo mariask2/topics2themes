@@ -142,7 +142,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
             for word in words_not_to_include_in_clustering_file.readlines():
                 words_not_to_include_in_clustering.append(word.strip())
 
-
+    # TODO: Move to other
     manual_made_cluster_dict = {}
     if properties.MANUAL_CLUSTER_FILE != None:
         if not os.path.isfile(os.path.join(path_slash_format, properties.MANUAL_CLUSTER_FILE)):
@@ -150,7 +150,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                     properties.MANUAL_CLUSTER_FILE)
         with open(os.path.join(path_slash_format, properties.MANUAL_CLUSTER_FILE)) as manual_cluster_file:
             for line in manual_cluster_file:
-                cluster_words = line.strip().split(" ")
+                cluster_words = line.strip().split(" ") #TODO: Sort first
                 for word in cluster_words:
                     manual_made_cluster_dict[word] = SYNONYM_BINDER.join(cluster_words)
 
@@ -444,19 +444,24 @@ def pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_form
     #word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set), min_df= 0.005)
     word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(properties.STOP_WORD_FILE, properties.STOP_WORD_SET, path_slash_format),\
         min_df = properties.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING)
-    word_vectorizer.fit_transform(documents)
+    transformation = word_vectorizer.fit_transform(documents)
     word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names())
-    word2vecwrapper.load_clustering(synonym_file)
+    word2vecwrapper.load_clustering(synonym_file, transformation)
     
     term_visualiser.set_vocabulary(word_vectorizer.get_feature_names(), path_slash_format)
     
     print("Start replacing with similars")
     pre_processed_documents = []
+    vectorizer = CountVectorizer(binary = True, lowercase=True)
+    word_tokenizer = vectorizer.build_tokenizer()
     for document in documents:
+        document = document.replace("\n", " ")
         pre_processed_document = []
-        very_simple_tok = document.lower().replace(".", " .").replace(",", " ,").\
-            replace(":", " :").replace(";", " ;").replace("!", " !").replace("?", " ?").replace("(", " ( ").replace(")", " ) ").split(" ")
-        for token in very_simple_tok:
+        #very_simple_tok = document.lower().replace(".", " .").replace(",", " ,").\
+        #    replace(":", " :").replace(";", " ;").replace("!", " !").replace("?", " ?").replace("(", " ( ").replace(")", " ) ").split(" ")
+        scikit_tok = [w.lower() for w in word_tokenizer(document)]
+ 
+        for token in scikit_tok:
             pre_processed_document.append(word2vecwrapper.get_similars(token))
         pre_processed_documents.append(" ".join(pre_processed_document))
     
@@ -634,8 +639,9 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
         ret_list = get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents)
         model_results.append(ret_list)
 
+    print("Original nr of models: ", str(len(model_results)))
     # Code for removing the model re-runs with an output with the smallest overlap with other model re-runs
-    # Remove the 10% most outlier re-runs
+    # Keep the properties.PERCENTATE_NONE_OUTLIERS of the re-runs
     term_results = []
     for ret_list in model_results:
         term_set = set()
@@ -645,7 +651,6 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
 
         term_results.append(term_set)
 
-    #print(term_results)
     overlap_averages = []
     for nr, terms in enumerate(term_results):
         set_size = len(terms)
@@ -680,9 +685,10 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
 
             found_match = False
             for previous_topic_list in previous_topic_list_list:
-                # current_topic and previous_topic_list contains a list of terms
+                # current_topic and previous_topic_list are compared on their included terms
                 if is_overlap(current_topic, previous_topic_list, overlap_cut_off):
                     previous_topic_list.append(current_topic) # if an existing similar topic is found, attach to this one
+                    break
             if not found_match: # if there is no existing topic to which to assign the currently searched topic result, create a new one
                 previous_topic_list_list.append([current_topic])
 
@@ -703,7 +709,7 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
             average_info = {}
             
             #TERM
-            minimum_topics_for_a_term_to_be_kept = round(len(previous_topic_list) * overlap_cut_off)
+            #minimum_topics_for_a_term_to_be_kept = round(len(previous_topic_list) * overlap_cut_off)
             final_terms_for_topic = []
             only_terms = [list(el[TERM_LIST].keys()) for el in previous_topic_list]
             flattened_uniqe = list(set(np.concatenate(only_terms)))
@@ -714,8 +720,8 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
                     if term in previous_topic[TERM_LIST]:
                         nr_of_models_the_term_occurred_in = nr_of_models_the_term_occurred_in + 1
                         sum_score_for_term = sum_score_for_term + previous_topic[TERM_LIST][term]
-                if nr_of_models_the_term_occurred_in >= minimum_topics_for_a_term_to_be_kept:
-                    final_terms_for_topic.append((term, sum_score_for_term / nr_of_models_the_term_occurred_in))
+                #if nr_of_models_the_term_occurred_in >= #minimum_topics_for_a_term_to_be_kept:
+                final_terms_for_topic.append((term, sum_score_for_term / nr_of_models_the_term_occurred_in))
         
 
             #DOCUMENTS
@@ -740,22 +746,12 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
                 construct_document_info_average(documents, selected_documents_strength, final_terms_for_topic)
             average_info[DOCUMENT_LIST] = document_info
 
-
-            average_info[TERM_LIST] = final_terms_for_topic_filtered_for_document_occurrence
+            average_info[TERM_LIST] = final_terms_for_topic_filtered_for_document_occurrence[:nr_of_top_words]
 
             average_info[TOPIC_NUMBER] = nr + 1
             average_list.append(average_info)
             
 
-    """
-    print("***********")
-    for el in average_list:
-        print(sorted([term for (term, s) in el[TERM_LIST]]))
-        print("----")
-    print(len(average_list))
-    print("***********")
-
-    """
     return average_list, most_typical_model
 
 
@@ -864,6 +860,8 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 
     current_set = Counter(current_topic[TERM_LIST].keys())
 
+    # It need to match with all of the previous similar topics found in
+    # previous runs
     for previous_topic in previous_topic_list:
         previous_set = Counter(previous_topic[TERM_LIST].keys())
         overlap = list((current_set & previous_set).elements())
@@ -1089,10 +1087,11 @@ def get_snippet_text(marked_document, terms_found_in_processed_documents_so_far,
             sentences_to_keep.append("MARKING[..]MARKING")
         
     if kept_sentences < 1:
-        print("******")
-        print(terms_found_in_processed_documents_so_far)
-        print(sentences_to_keep)
-        print(marked_document)
+        pass
+        #print("******")
+        #print(terms_found_in_processed_documents_so_far)
+        #print(sentences_to_keep)
+        #print(marked_document)
         
     snippet_str = " ".join(sentences_to_keep).replace("]MARKING MARKING[", "").replace("MARKING[","[").replace("]MARKING","]")
     while ".........." in snippet_str:

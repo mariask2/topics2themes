@@ -42,18 +42,18 @@ Number of runs to check the stability of the retrieved topics.
 Only topics that occur in all NUMBER_OF_RUNS runs will be
 considered valid
 """
-NUMBER_OF_RUNS = 10
+NUMBER_OF_RUNS = 20
 
 """
 Mininimum overlap of retrieved terms to considered the retrieved topic as
 the same topic of a another one
 """
-OVERLAP_CUT_OFF = 0.7
+OVERLAP_CUT_OFF = 0.6
 
 """
 When counting overlap, outliers are removed. This sets percentage for what is to be retained
 """
-PERCENTATE_NONE_OUTLIERS = 0.90
+PERCENTATE_NONE_OUTLIERS = 0.75
 
 """
 Whether to use pre-processing (collocation detection and synonym clustering)

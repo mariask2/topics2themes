@@ -46,6 +46,8 @@ class Word2vecWrapper:
             self.default_vector = [0] * self.semantic_vector_length
 
         self.term_similar_dict = None
+        
+        
             
     def load(self):
         """
@@ -99,12 +101,18 @@ class Word2vecWrapper:
         except KeyError:
                 return self.default_vector
 
-    def load_clustering(self, output_file):
+    def load_clustering(self, output_file, transformation):
         print("Clustering vectors, this might take a while ....")
+        
+        frequencies = transformation.toarray().sum(axis=0)
         
         if self._vocabulary_list is None:
             raise Exception("set_vocabulary is not yet run")
 
+        word_freq_dict = {}
+        for word, count in zip(self._vocabulary_list, frequencies):
+            word_freq_dict[word] = count
+            
         X_vectors = []
         cluster_words = []
         for word in self._vocabulary_list:
@@ -131,6 +139,7 @@ class Word2vecWrapper:
 
         self.term_similar_dict = self.manual_made_dict
         for label, items in self.cluster_dict.items():
+            #TODO: sort items
             if len(items) > 1: # only include clusters with at least 2 items
                 for term in items:
                     self.term_similar_dict[term] = SYNONYM_BINDER.join(items)
