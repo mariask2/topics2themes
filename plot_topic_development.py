@@ -308,8 +308,10 @@ for el in obj["topic_model_output"]["topics"]:
 
 topic_names = [topics[key] for key in sorted(topics.keys())]
 
+print("Creating data for science")
 scatter_dict_science, year_title_dict_science = create_scatter_dict_and_year_title_tuple(editorial_data_list_science, document_info)
 
+print("Creating data for nature")
 scatter_dict_nature, year_title_dict_nature = create_scatter_dict_and_year_title_tuple(editorial_data_list_nature, document_info)
 
 color_map_orig = cm.get_cmap('tab20b', len(topic_names)).colors

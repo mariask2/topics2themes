@@ -283,9 +283,9 @@ def read_discussion_documents(data_label_list, data_set_name, whether_to_remove_
                 if collocation in text:
                     to_replace = collocation.replace(" ", COLLOCATION_BINDER)
                     text = text.replace(collocation, to_replace)
-                elif collocation in text.lower():
-                    to_replace = collocation.replace(" ", COLLOCATION_BINDER)
-                    text = text.replace(collocation, to_replace)
+                #elif collocation in text.lower():
+                #    to_replace = collocation.replace(" ", COLLOCATION_BINDER)
+                #    text = text.replace(collocation, to_replace)
                 
             file_list.append({TEXT: text, LABEL: data_info[DATA_LABEL], BASE_NAME: base_name, FULL_NAME: f})
             opened.close()
@@ -683,13 +683,17 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
                 current_topic[TERM_LIST][term] = prob
             current_topic[MODEL_INFO] = el
 
-            found_match = False
+            maximum_overlap = 0
+            previous_topic_list_to_append_to = None
             for previous_topic_list in previous_topic_list_list:
                 # current_topic and previous_topic_list are compared on their included terms
-                if is_overlap(current_topic, previous_topic_list, overlap_cut_off):
-                    previous_topic_list.append(current_topic) # if an existing similar topic is found, attach to this one
-                    break
-            if not found_match: # if there is no existing topic to which to assign the currently searched topic result, create a new one
+                previous_topic_list_overlap = is_overlap(current_topic, previous_topic_list, overlap_cut_off)
+                if previous_topic_list_overlap > maximum_overlap:
+                    maximum_overlap = previous_topic_list_overlap
+                    previous_topic_list_to_append_to = previous_topic_list
+            if previous_topic_list_to_append_to != None:
+                previous_topic_list_to_append_to.append(current_topic) # if an existing similar topic is found, attach to this one
+            else: # if there is no existing topic to which to assign the currently searched topic result, create a new one
                 previous_topic_list_list.append([current_topic])
 
 
@@ -862,16 +866,23 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
 
     # It need to match with all of the previous similar topics found in
     # previous runs
+    over_lap_previous_topic_list = []
     for previous_topic in previous_topic_list:
         previous_set = Counter(previous_topic[TERM_LIST].keys())
         overlap = list((current_set & previous_set).elements())
         if overlap == []:
-            return False
+            return 0 # it needs to be an overlap with all previous
         
         overlap_figure = len(overlap)/((len(previous_topic[TERM_LIST].keys()) + len(current_topic[TERM_LIST].keys()))/2)
+        
         if overlap_figure < overlap_cut_off:
-            return False
-    return True
+            return 0
+        else:
+            over_lap_previous_topic_list.append(overlap_figure)
+    
+
+    mean_over_lap_for_previous_topic_list = sum(over_lap_previous_topic_list)/len(over_lap_previous_topic_list)
+    return mean_over_lap_for_previous_topic_list
 
 #######
 # Print output from the model
