@@ -19,6 +19,7 @@ import json
 import matplotlib.markers as markers
 from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 from matplotlib import cm
+import math
 
  
 def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_dict, ax, xlabels, color_map):
@@ -79,7 +80,6 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     for c_nr, class_name in enumerate(classes):
         y = len(topics_reps) + margin_to_topics + c_nr*classification_display_size
         
-        print(class_name, y)
         y_width_class = classification_display_size/3
         class_color = "white"
         text_color = "darkgray"
@@ -171,9 +171,6 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
                 
                 # Move the next text for the year a bit to the right
                 x_moved = x_moved + move_x
-    for el in sorted(printed):
-        print(el)
-
         
     plt.xticks(ha='center')
     ax.set_title(title, fontsize=6, loc="right") # x=-0.41,y=0.92)# )rotation='vertical'
@@ -259,7 +256,7 @@ with open("../klimat/master_table.tsv") as master:
 
 
 obj = None
-model_file =  "/Users/marsk757/topic2themes/topics2themes/data_folder/climate-editorials-graph/topics2themes_exports_folder_created_by_system/5ff8fd96dede69ec1ede953a_model.json"
+model_file = "/Users/marsk757/topic2themes/topics2themes/data_folder/climate-editorials-graph/topics2themes_exports_folder_created_by_system/6025902c414336b264581333_model.json" #"/Users/marsk757/topic2themes/topics2themes/data_folder/climate-editorials-graph/topics2themes_exports_folder_created_by_system/5ff8fd96dede69ec1ede953a_model.json"
 # read file
 with open(model_file, 'r') as f:
     data = f.read()
@@ -319,25 +316,51 @@ color_map = []
 for c in color_map_orig:
     color_map.append([c[0], c[1], c[2], 0.15])
 
-ax3 = plt.subplot(311)
-plt.axis('off')
-x_jump = 0.110
-y_jump = 0.115
-current_x = 0.03
 
-ax3.set_xlim(0 , 1)
-ax3.set_ylim(0, 1)
+
+# The terms for each of the topics
+nr_of_topics = len(obj["topic_model_output"]["topics"])
+topic_per_row = 8
+rows = math.ceil(nr_of_topics / topic_per_row)
+current_row = 0
+
+nr_of_terms = len(obj["topic_model_output"]["topics"][0]["topic_terms"])
+print(nr_of_terms)
+y_lim = 1.0
+x_lim = 1.0
+y_heading_margin = 0.03
+x_jump = x_lim/topic_per_row
+#ax3 = plt.subplot(rows,1,current_row)
+#x_jump = 0.110
+#y_jump = 0.115
+heading_space = 0.05
+y_jump = (y_lim - heading_space)/(nr_of_terms + 1)
+print(x_jump)
+plt.axis('off')
+
+
+#ax3.set_xlim(0 , 1)
+#ax3.set_ylim(0, 1)
 
 for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambda t: t["id"])):
-    current_y = 0.96
+    if (index) % topic_per_row == 0:
+           current_row = current_row + 1
+           ax3 = plt.subplot(rows,1,current_row)
+           ax3.set_xlim(0, x_lim)
+           ax3.set_ylim(0, y_lim)
+           current_x = 0.03
+           plt.axis('off')
+           if index == 0:
+            ax3.set_title("Most typical terms", fontsize=6, loc="right")
+    current_y = y_lim - y_heading_margin
     heading_x = current_x - 0.015
-    background_x_start = heading_x - 0.005
+    background_x_start = heading_x - 0.015
     background_x_end = background_x_start + x_jump - 0.005
-    background_y_start = current_y + 0.04
-    background_y_end = background_y_start - y_jump*(len(el['topic_terms'])+1) - 0.18
+    background_y_start = y_lim
+    background_y_end = 0.0
     ax3.fill([background_x_start, background_x_end, background_x_end, background_x_start, background_x_start], [background_y_start, background_y_start, background_y_end, background_y_end, background_y_start], color = color_map[index])
     ax3.text(heading_x, current_y, "Topic " + str(index + 1), verticalalignment='top', fontsize=6)
-    current_y = current_y - 0.05
+    current_y = current_y - heading_space + y_heading_margin
     for term in el['topic_terms']:
         #print(term["score"], term["term"])
         term_to_pick_as_rep = "123456789123456789123456789123456789123456789123456789"
@@ -345,24 +368,30 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
             if len(s.strip()) < len(term_to_pick_as_rep):
                 term_to_pick_as_rep = s.strip()
         current_y = current_y - y_jump
+        term_to_pick_as_rep = term_to_pick_as_rep.replace("_", " ")
         ax3.text(current_x, current_y, term_to_pick_as_rep, verticalalignment='top', fontsize=4)
         
         score = term["score"]
-        bar_adjust = 0.025
+        bar_adjust = 0.015
         
         ax3.plot([current_x-0.01, current_x-0.01], [current_y - bar_adjust - score/40, current_y - bar_adjust + score/40], '-', linewidth=2.5, markersize=0, color = "silver")
         
     current_x = current_x + x_jump
-    
-nr_of_topics = len(obj["topic_model_output"]["topics"])
-ax3.set_title("Most typical terms", fontsize=6, loc="right")
    
+        
+nr_of_topics = len(obj["topic_model_output"]["topics"])
+
+file_name_topics = "topics_terms"
+plt.savefig(file_name_topics, dpi = 700, transparent=False, orientation = "landscape")
+   #, bbox_inches='tight', , )
+print("Saved plot in " + file_name_topics)
+plt.close('all')
  
-ax1 = plt.subplot(312)
+ax1 = plt.subplot(211)
 
 plot_topics_text(topic_names, scatter_dict_science, "Science", "science", min_year, max_year, year_title_dict_science, ax1, xlabels=False, color_map = color_map)
 
-ax2 = plt.subplot(313)
+ax2 = plt.subplot(212)
 plot_topics_text(topic_names, scatter_dict_nature, "Nature", "nature", min_year, max_year, year_title_dict_nature, ax2, xlabels=True, color_map = color_map)
 
 
