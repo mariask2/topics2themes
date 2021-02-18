@@ -320,20 +320,20 @@ for c in color_map_orig:
 
 # The terms for each of the topics
 nr_of_topics = len(obj["topic_model_output"]["topics"])
-topic_per_row = 8
-rows = math.ceil(nr_of_topics / topic_per_row)
+TOPICS_PER_ROW = 5
+rows = math.ceil(nr_of_topics / TOPICS_PER_ROW)
 current_row = 0
 
 nr_of_terms = len(obj["topic_model_output"]["topics"][0]["topic_terms"])
 print(nr_of_terms)
 y_lim = 1.0
 x_lim = 1.0
-y_heading_margin = 0.03
-x_jump = x_lim/topic_per_row
+y_heading_margin = 0.12
+x_jump = x_lim/TOPICS_PER_ROW
 #ax3 = plt.subplot(rows,1,current_row)
 #x_jump = 0.110
 #y_jump = 0.115
-heading_space = 0.05
+heading_space = 0.17
 y_jump = (y_lim - heading_space)/(nr_of_terms + 1)
 print(x_jump)
 plt.axis('off')
@@ -343,14 +343,15 @@ plt.axis('off')
 #ax3.set_ylim(0, 1)
 
 for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambda t: t["id"])):
-    if (index) % topic_per_row == 0:
-           current_row = current_row + 1
-           ax3 = plt.subplot(rows,1,current_row)
-           ax3.set_xlim(0, x_lim)
-           ax3.set_ylim(0, y_lim)
-           current_x = 0.03
-           plt.axis('off')
-           if index == 0:
+    if (index) % TOPICS_PER_ROW == 0:
+        #jump to next row
+        current_row = current_row + 1
+        ax3 = plt.subplot(rows,1,current_row)
+        ax3.set_xlim(0, x_lim)
+        ax3.set_ylim(0, y_lim)
+        current_x = 0.03
+        plt.axis('off')
+        if index == 0: # only for first row
             ax3.set_title("Most typical terms", fontsize=6, loc="right")
     current_y = y_lim - y_heading_margin
     heading_x = current_x - 0.015
@@ -359,22 +360,37 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
     background_y_start = y_lim
     background_y_end = 0.0
     ax3.fill([background_x_start, background_x_end, background_x_end, background_x_start, background_x_start], [background_y_start, background_y_start, background_y_end, background_y_end, background_y_start], color = color_map[index])
-    ax3.text(heading_x, current_y, "Topic " + str(index + 1), verticalalignment='top', fontsize=6)
+    ax3.text(heading_x, current_y, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=6)
     current_y = current_y - heading_space + y_heading_margin
     for term in el['topic_terms']:
-        #print(term["score"], term["term"])
-        term_to_pick_as_rep = "123456789123456789123456789123456789123456789123456789"
-        for s in term["term"].split("/"):
-            if len(s.strip()) < len(term_to_pick_as_rep):
-                term_to_pick_as_rep = s.strip()
+        # Construct the term representation to use
+        terms_to_keep = set()
+        for s_not_stripped in term["term"].split("/"):
+            s = s_not_stripped.strip()
+            add_term = True
+            term_to_remove = None
+            for kept in terms_to_keep:
+                if len(s) < len(kept) and s[:3] in kept:
+                    term_to_remove = kept #if longer, similiar exists remove this one
+                elif kept[:3] in s:
+                    add_term = False # if shorter, similar already exists don't add new one
+            if add_term:
+                terms_to_keep.add(s)
+            if term_to_remove:
+                terms_to_keep.remove(term_to_remove)
+        terms_to_keep_list = sorted(list(terms_to_keep), key = lambda t: len(t))
+        string_rep_terms = " / ".join([el.replace("_", " ") for el in (terms_to_keep_list)])
+        MAX_STRING_LENGTH = 26
+        if len(string_rep_terms) > MAX_STRING_LENGTH:
+            string_rep_terms = string_rep_terms[:MAX_STRING_LENGTH] + "..."
         current_y = current_y - y_jump
         term_to_pick_as_rep = term_to_pick_as_rep.replace("_", " ")
-        ax3.text(current_x, current_y, term_to_pick_as_rep, verticalalignment='top', fontsize=4)
+        ax3.text(current_x, current_y, string_rep_terms, verticalalignment='bottom', fontsize=4)
         
         score = term["score"]
-        bar_adjust = 0.015
+        bar_adjust = y_jump/3 - 0.001
         
-        ax3.plot([current_x-0.01, current_x-0.01], [current_y - bar_adjust - score/40, current_y - bar_adjust + score/40], '-', linewidth=2.5, markersize=0, color = "silver")
+        ax3.plot([current_x-0.01, current_x-0.01], [current_y + bar_adjust, current_y + bar_adjust + score/40], '-', linewidth=2.5, markersize=0, color = "silver")
         
     current_x = current_x + x_jump
    
