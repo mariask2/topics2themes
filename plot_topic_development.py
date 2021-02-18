@@ -22,18 +22,16 @@ from matplotlib import cm
 import math
 
  
-def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_dict, ax, xlabels, color_map):
+def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_dict, ax, xlabels, color_map, max_topic_confidence):
 
     margin_to_topics = 0.20
-
-    #if not xlabels:
-        #ax.set(xticklabels=[])
-    #ax.xaxis.tick_top()
-    colors_map = ["blue", "orange", "green", "red", "purple", "blue", "deeppink", "olive", "darkturquoise"]
+    
+    # To
+    #plot_right_margin = 0.0
     
     classification_display_size = 0.55
     classes = ["eco", "dev", "sec","eth", "tec", "gov", "sci", "com"]
-    y_max_lim = len(topics_reps) + classification_display_size*len(classes) -0.1 + margin_to_topics
+    y_max_lim = len(topics_reps) + classification_display_size*len(classes) - 0.1 + margin_to_topics
     ax.set_ylim(y_max_lim, -0.5)
     x_min_lim = min_year - 0.4
     x_max_lim = max_year + 1.1
@@ -60,17 +58,18 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     ax.spines["bottom"].set_color("silver")
     
  
-    # The tick labels for the topics
-    y_width = 0.4
-    y_ticks = [el[:14] + "..." for el in topics_reps] + [""]
+    # The tick labels for the topics (y axis), and horisontal color bars
+    TOPIC_DESCRIPTION_LENGTH = 20
+    y_width = 0.35
+    y_ticks = [el[:20].replace("_", " ") + "..." for el in topics_reps] + [""]
     for y, topic_repr in enumerate(topics_reps):
         line_color = [color_map[y][0], color_map[y][1], color_map[y][2], 0.20]
         text_color = [color_map[y][0], color_map[y][1], color_map[y][2], 1.0]
         plt.axhline(y=y, linewidth=0.55, color = line_color)
-        ax.text(x_min_lim-2.8,y+0.3, "Topic " + str(y + 1), size=5.0, color = "black")
-        ax.text(x_min_lim-2.8,y+0.3, "Topic ", size=5.0, color = text_color)
-        ax.text(x_max_lim + 0.49,y+0.3, y_ticks[y], size=4.0, color = text_color)
-        ax.text(x_max_lim + 0.20,y+0.3, "(", size=4.0, color = "black")
+        ax.text(x_min_lim-3,y, "Topic " + str(y + 1), size=5.0, color = "black", verticalalignment='center')
+        ax.text(x_min_lim-3,y, "Topic ", size=5.0, color = text_color, verticalalignment='center')
+        ax.text(x_max_lim + 0.25, y, y_ticks[y], size=3.5, color = text_color, verticalalignment='center')
+        #ax.text(x_max_lim + 0.1 - plot_right_margin, y+0.3, "(", size=4.0, color = "black")
         ax.fill([x_min_lim, x_max_lim, x_max_lim, x_min_lim, x_min_lim], [y - y_width, y - y_width, y + y_width, y + y_width, y - y_width], color = color_map[y], edgecolor = color_map[y])
     for c, t in zip(color_map, ax.yaxis.get_ticklabels()):
         text_color = [c[0], c[1], c[2], 1.0]
@@ -92,8 +91,8 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
             text_x_diff = 1.0
             text_x_diff_right = 0.65
             text = class_name
-        ax.text(x_min_lim-text_x_diff,y + classification_display_size/2.5, text, size=3.5, color = text_color)
-        ax.text(x_max_lim+text_x_diff_right,y + classification_display_size/2.5, text, size=3.5, color = text_color)
+        ax.text(x_min_lim-text_x_diff,y, text, size=3.5, color = text_color, verticalalignment='center')
+        ax.text(x_max_lim+text_x_diff_right,y, text, size=3.5, color = text_color, verticalalignment='center')
         #ax.text(min_year-text_x_diff + 0.01,y + classification_display_size/2 + 0.01, text, size=3.9, color = text_color)
         plt.axhline(y=y, linewidth=0.05, linestyle = ":", color = "black")
         ax.fill([x_min_lim, x_max_lim, x_max_lim, x_min_lim, x_min_lim], [y - y_width_class, y - y_width_class, y + y_width_class, y + y_width_class, y - y_width_class], color = class_color, edgecolor = class_color)
@@ -101,6 +100,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     MOVE_X = 0.02
     last_iter_year = 0
     
+    # vertical lines representing papers
     x_moved = 0.0
     for year in sorted(year_title_dict.keys()):
         article_nr_position_extra = 0
@@ -153,6 +153,10 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     # Different names in paper and in data, but same classes
     label_list = ["A_dominant_frame", "B_dominant_frame", "C_dominant_frame", "D_dominant_frame", "E_dominant_frame", "F_dominant_frame", "G_dominant_frame", "H_dominant_frame"]
     printed = []
+    
+    topic_strength_f = (y_width*2)/max_topic_confidence
+    print("topic_strength_f", topic_strength_f)
+    # Plot topics and manual labels
     for year, texts_for_year in topic_in_text_dict.items():
         for y, topic_repr in enumerate(topics_reps):
             move_x = 1/len(texts_for_year)
@@ -160,7 +164,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
             for (topic_in_text, label) in texts_for_year: # go through scatter-vector for each text for the year
                 marker = markers.MarkerStyle(marker='|', fillstyle='none')
                 if topic_in_text[y] != 0: #if the text contains the topic
-                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y]/10, y - topic_in_text[y]/10], '.-', linewidth=0.8, markersize=0, color = "black")
+                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y] * topic_strength_f/2, y - topic_in_text[y] * topic_strength_f/2], '.-', linewidth=0.8, markersize=0, color = "black")
                
                 # plot the class (= manual label) for the text
                 label_nr = label_list.index(label)
@@ -174,6 +178,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
         
     plt.xticks(ha='center')
     ax.set_title(title, fontsize=6, loc="right") # x=-0.41,y=0.92)# )rotation='vertical'
+              
     #fig.tight_layout()
     
 
@@ -181,6 +186,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
 def create_scatter_dict_and_year_title_tuple(editorial_data_list, document_info):
     scatter_dict = {}
     year_title_dict = {}
+    max_topic_confidence = 0
     nr_documents_to_scatter_dict = 0
     nr_documents_to_scatter_dict_with_topics_found = 0
     nr_documents_not_associated_with_topic_in_model = 0
@@ -206,7 +212,9 @@ def create_scatter_dict_and_year_title_tuple(editorial_data_list, document_info)
             #print(document_info[el[0]])
             for topic_in_document in document_info[id]["document_topics"]:
                index_for_topic_in_scatter = sorted(topics.keys()).index(topic_in_document["topic_index"])
-               scatter_for_editorial[index_for_topic_in_scatter] = topic_in_document["topic_confidence"]
+               scatter_for_editorial[index_for_topic_in_scatter] =      topic_in_document["topic_confidence"]
+               if (topic_in_document["topic_confidence"] > max_topic_confidence):
+                    max_topic_confidence = topic_in_document["topic_confidence"]
                topic_found = True
         else:
             nr_documents_not_associated_with_topic_in_model = nr_documents_not_associated_with_topic_in_model + 1
@@ -220,7 +228,7 @@ def create_scatter_dict_and_year_title_tuple(editorial_data_list, document_info)
     print("nr_documents_to_scatter_dict_with_topics_found", nr_documents_to_scatter_dict_with_topics_found)
     print("nr_documents_not_associated_with_topic_in_model", nr_documents_not_associated_with_topic_in_model)
     
-    return scatter_dict, year_title_dict
+    return scatter_dict, year_title_dict, max_topic_confidence
     
 
 editorial_data_list_science = []
@@ -306,11 +314,13 @@ for el in obj["topic_model_output"]["topics"]:
 topic_names = [topics[key] for key in sorted(topics.keys())]
 
 print("Creating data for science")
-scatter_dict_science, year_title_dict_science = create_scatter_dict_and_year_title_tuple(editorial_data_list_science, document_info)
+scatter_dict_science, year_title_dict_science, max_topic_confidence_science = create_scatter_dict_and_year_title_tuple(editorial_data_list_science, document_info)
 
 print("Creating data for nature")
-scatter_dict_nature, year_title_dict_nature = create_scatter_dict_and_year_title_tuple(editorial_data_list_nature, document_info)
+scatter_dict_nature, year_title_dict_nature, max_topic_confidence_nature = create_scatter_dict_and_year_title_tuple(editorial_data_list_nature, document_info)
 
+max_topic_confidence = max(max_topic_confidence_science, max_topic_confidence_nature)
+print("max_topic_confidence", max_topic_confidence)
 color_map_orig = cm.get_cmap('tab20b', len(topic_names)).colors
 color_map = []
 for c in color_map_orig:
@@ -330,17 +340,11 @@ y_lim = 1.0
 x_lim = 1.0
 y_heading_margin = 0.12
 x_jump = x_lim/TOPICS_PER_ROW
-#ax3 = plt.subplot(rows,1,current_row)
-#x_jump = 0.110
-#y_jump = 0.115
 heading_space = 0.17
 y_jump = (y_lim - heading_space)/(nr_of_terms + 1)
 print(x_jump)
 plt.axis('off')
 
-
-#ax3.set_xlim(0 , 1)
-#ax3.set_ylim(0, 1)
 
 for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambda t: t["id"])):
     if (index) % TOPICS_PER_ROW == 0:
@@ -405,17 +409,17 @@ plt.close('all')
  
 ax1 = plt.subplot(211)
 
-plot_topics_text(topic_names, scatter_dict_science, "Science", "science", min_year, max_year, year_title_dict_science, ax1, xlabels=False, color_map = color_map)
+plot_topics_text(topic_names, scatter_dict_science, "Science", "science", min_year, max_year, year_title_dict_science, ax1, xlabels=False, color_map = color_map, max_topic_confidence = max_topic_confidence)
 
 ax2 = plt.subplot(212)
-plot_topics_text(topic_names, scatter_dict_nature, "Nature", "nature", min_year, max_year, year_title_dict_nature, ax2, xlabels=True, color_map = color_map)
+plot_topics_text(topic_names, scatter_dict_nature, "Nature", "nature", min_year, max_year, year_title_dict_nature, ax2, xlabels=True, color_map = color_map, max_topic_confidence = max_topic_confidence)
 
 
 
 #ax3.text(0.5, 0.5, 'matplotlib', horizontalalignment='center', , transform=ax3.transAxes)
 #plt.tight_layout()
 #plt.gcf().subplots_adjust(wspace = 0.0, hspace = 0.12, left = 0.32, right = 1.00)
-plt.gcf().subplots_adjust(hspace = 0.40)
+plt.gcf().subplots_adjust(hspace = 0.2, wspace = 0.0, left = 0.06, bottom = 0.1)
 
 file_name = "name"
 plt.savefig(file_name, dpi = 700, transparent=False, orientation = "landscape")
