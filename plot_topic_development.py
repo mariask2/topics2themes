@@ -365,7 +365,6 @@ x_jump = x_lim/TOPICS_PER_ROW
 row_height = y_lim/rows
 
 heading_space = 0.09/rows
-#y_jump = (y_lim - heading_space)/(nr_of_terms + 1 + 5/2)
 nr_of_texts = 5
 title_height_part = 0.95
 y_jump = (row_height - heading_space)/(nr_of_terms + 1 + nr_of_texts*title_height_part )
@@ -389,19 +388,21 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
         current_x = 0.03
         plt.axis('off')
         if index == 0: # only for first row
-            ax3.set_title("Most typical terms", fontsize=5, loc="right")
+            ax3.set_title("The most typical terms and the most typical texts (i.e. text titles and the texts manual classification), for the topics detected", fontsize=5, loc="right")
     current_y = y_lim - (current_row - 1)*row_height
     heading_x = current_x + x_jump/2 #- 0.015
     background_x_start = current_x - 0.015*2
     background_x_end = background_x_start + x_jump - 0.005
-    #background_y_start = y_lim
-    #background_y_end = 0.0
     background_y_start = current_y  - row_height*0.98
     background_y_end = current_y   # the top of the rectangle
     ax3.fill([background_x_start, background_x_end, background_x_end, background_x_start, background_x_start], [background_y_start, background_y_start, background_y_end, background_y_end, background_y_start], color = color_map[index])
     
     current_y = current_y - y_heading_margin
-    ax3.text(heading_x, current_y, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=4.5)
+    #ax3.text(heading_x, current_y, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=4.5, rotation='vertical')
+    heading_y = current_y - 2.5*y_jump
+    if index + 1 < 10:
+        heading_y = current_y - 1.95*y_jump
+    ax3.text(current_x + x_jump*0.735, heading_y, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=4.7, rotation='vertical')
     current_y = current_y - heading_space + y_heading_margin
     for term in el['topic_terms']:
         # Construct the term representation to use
@@ -437,10 +438,10 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
     current_y = current_y - y_jump*title_height_part/3
     for (strength, title, cls) in combined_typical_document_list_top_5:
         current_y = current_y - y_jump*title_height_part
-        if len(title) > 33:
-            title = title[:30] + "..."
-        ax3.text(current_x, current_y, '"' + title + '"', verticalalignment='bottom', fontsize=3.1)
-        
+        if len(title) > 32:
+            title = title[:29] + "..."
+        ax3.text(current_x-0.02, current_y, '"' + title + '"', verticalalignment='bottom', fontsize=3.1)
+        ax3.text(current_x + x_jump-0.06, current_y, cls, verticalalignment='bottom', fontsize=3.7)
         
     current_x = current_x + x_jump
    
