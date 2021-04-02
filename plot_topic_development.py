@@ -336,6 +336,16 @@ for el in obj["topic_model_output"]["topics"]:
 
 topic_names = [topics[key] for key in sorted(topics.keys())]
 
+
+topic_description_file = "/Users/marsk757/topic2themes/topics2themes/data_folder/climate-editorials-graph/topics2themes_exports_folder_created_by_system/602f89d39962f2a59e2653c4_topic_name.json"
+
+topic_name_dict = {}
+with open(topic_description_file, 'r') as f:
+    data = f.read()
+    topic_name_obj = json.loads(data)
+    for el in topic_name_obj:
+        topic_name_dict[el["topic_id"]] = el["topic_name"]
+
 print("Creating data for science")
 scatter_dict_science, year_title_dict_science, max_topic_confidence_science, most_typical_documents_for_topics_top_5_science = create_scatter_dict_and_year_title_tuple(editorial_data_list_science, document_info)
 
@@ -351,7 +361,7 @@ for c in color_map_orig:
 
 
 
-# The terms for each of the topics
+# Plot the terms for each of the topics
 nr_of_topics = len(obj["topic_model_output"]["topics"])
 TOPICS_PER_ROW = 5
 rows = math.ceil(nr_of_topics / TOPICS_PER_ROW)
@@ -360,11 +370,11 @@ current_row = 0
 nr_of_terms = len(obj["topic_model_output"]["topics"][0]["topic_terms"])
 y_lim = 1.0
 x_lim = 1.0
-y_heading_margin = 0.09/rows
+y_heading_margin = 0.05/rows
 x_jump = x_lim/TOPICS_PER_ROW
 row_height = y_lim/rows
 
-heading_space = 0.09/rows
+heading_space = 0.17/rows
 nr_of_texts = 5
 title_height_part = 0.95
 y_jump = (row_height - heading_space)/(nr_of_terms + 1 + nr_of_texts*title_height_part )
@@ -388,7 +398,7 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
         current_x = 0.03
         plt.axis('off')
         if index == 0: # only for first row
-            ax3.set_title("The most typical terms and the most typical texts (i.e. text titles and the texts manual classification), for the topics detected", fontsize=5, loc="right")
+            ax3.set_title("The most typical terms and the most typical texts (i.e. text titles and the manual classification of the texts), for the topics detected", fontsize=5, loc="right")
     current_y = y_lim - (current_row - 1)*row_height
     heading_x = current_x + x_jump/2 #- 0.015
     background_x_start = current_x - 0.015*2
@@ -396,14 +406,38 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
     background_y_start = current_y  - row_height*0.98
     background_y_end = current_y   # the top of the rectangle
     ax3.fill([background_x_start, background_x_end, background_x_end, background_x_start, background_x_start], [background_y_start, background_y_start, background_y_end, background_y_end, background_y_start], color = color_map[index])
+
+    
+    MAX_DESC_LEN = 30
+    topic_desc = topic_name_dict[str(index + 1)]
+    topic_desc_row_1 = ""
+    topic_desc_row_2 = ""
+    topic_desc_row_3 = ""
+    for chunk in topic_desc.split(" "):
+        if len(topic_desc_row_1) < MAX_DESC_LEN:
+            topic_desc_row_1 = topic_desc_row_1 +  " " + chunk
+        elif len(topic_desc_row_2) < MAX_DESC_LEN:
+            topic_desc_row_2 = topic_desc_row_2 + " " + chunk
+        elif len(topic_desc_row_3) < MAX_DESC_LEN:
+            topic_desc_row_3 = topic_desc_row_3 + " " + chunk
+        else:
+            pass
     
     current_y = current_y - y_heading_margin
-    #ax3.text(heading_x, current_y, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=4.5, rotation='vertical')
+    description_x = current_x - 0.025
+    ax3.text(description_x, current_y, topic_desc_row_1, verticalalignment='bottom', fontsize=3)
+    ax3.text(description_x, current_y - y_jump, topic_desc_row_2, verticalalignment='bottom', fontsize=3)
+    ax3.text(description_x, current_y - y_jump*2, topic_desc_row_3, verticalalignment='bottom', fontsize=3)
+     
     heading_y = current_y - 2.5*y_jump
     if index + 1 < 10:
         heading_y = current_y - 1.95*y_jump
-    ax3.text(current_x + x_jump*0.735, heading_y, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=4.7, rotation='vertical')
+    ax3.text(current_x + x_jump*0.735, current_y - y_jump*nr_of_terms, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=4.7, rotation='vertical')
+
     current_y = current_y - heading_space + y_heading_margin
+
+
+
     for term in el['topic_terms']:
         # Construct the term representation to use
         terms_to_keep = set()
@@ -427,7 +461,7 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
             string_rep_terms = string_rep_terms[:MAX_STRING_LENGTH] + "..."
         current_y = current_y - y_jump
         term_to_pick_as_rep = term_to_pick_as_rep.replace("_", " ")
-        ax3.text(current_x, current_y, string_rep_terms, verticalalignment='bottom', fontsize=3.5)
+        ax3.text(current_x, current_y, string_rep_terms, verticalalignment='bottom', fontsize=3.2)
         
         score = term["score"]
         bar_adjust = y_jump/3 - 0.001
