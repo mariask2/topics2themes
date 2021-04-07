@@ -376,10 +376,10 @@ y_heading_margin = 0.07/rows
 x_jump = x_lim/TOPICS_PER_ROW
 row_height = y_lim/rows
 
-heading_space = 0.25/rows
+heading_space = 0.24/rows
 nr_of_texts = 5
 title_height_part = 1.1
-y_jump = (row_height - heading_space-y_heading_margin/8)/(nr_of_terms + 1 + nr_of_texts*title_height_part )
+y_jump = (row_height - heading_space-y_heading_margin/2)/(nr_of_terms + 1 + nr_of_texts*title_height_part )
 plt.axis('off')
 
 
@@ -399,7 +399,7 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
         current_x = 0.03
         plt.axis('off')
         if index == 0: # only for first row
-            ax3.set_title("The most typical terms and the most typical texts (i.e. text titles and the manual classification of the texts), for the topics detected", fontsize=5, loc="left")
+            ax3.set_title("The most typical texts (i.e. text titles and the manual classification of the texts) and the most typical terms, for the topics detected", fontsize=5, loc="left")
     current_y = y_lim - (current_row - 1)*row_height
     heading_x = current_x + x_jump/2 #- 0.015
     background_x_start = current_x - 0.015*2
@@ -425,17 +425,21 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
     description_x = current_x - 0.022
     for nr, str_el in enumerate(string_list):
         ax3.text(description_x, current_y - y_jump*topic_description_extra_jump*nr, str_el.strip(), verticalalignment='bottom', fontsize=topic_description_font_size)
-   
-     
-    heading_y = current_y - 2.5*y_jump
-    if index + 1 < 10:
-        heading_y = current_y - 1.95*y_jump
-    ax3.text(current_x + x_jump*0.735, current_y - y_jump*nr_of_terms, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=3.8, rotation='vertical')
+    
+    ax3.text(current_x + x_jump*0.75, current_y - row_height + 2.6*y_jump, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=4.1, rotation='vertical')
+    #ax3.text(current_x + x_jump*0.735, current_y - y_jump*nr_of_terms, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=3.8, rotation='vertical')
 
     current_y = current_y - heading_space + y_heading_margin
 
+    for (strength, title, cls) in combined_typical_document_list_top_5:
+        current_y = current_y - y_jump*title_height_part
+        MAX_TITLE_LENGTH = 33
+        if len(title) > MAX_TITLE_LENGTH:
+            title = title[:MAX_TITLE_LENGTH-2] + "..."
+        ax3.text(current_x-0.022, current_y, '"' + title + '"', verticalalignment='center', fontsize=3.0)
+        ax3.text(current_x + x_jump-0.057, current_y, cls, verticalalignment='center', fontsize=3.3)
 
-
+    current_y = current_y - y_jump*title_height_part/3
     for term in el['topic_terms']:
         # Construct the term representation to use
         terms_to_keep = set()
@@ -459,23 +463,16 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
             string_rep_terms = string_rep_terms[:MAX_STRING_LENGTH] + "..."
         current_y = current_y - y_jump
         term_to_pick_as_rep = term_to_pick_as_rep.replace("_", " ")
-        ax3.text(current_x, current_y, string_rep_terms, verticalalignment='bottom', fontsize=2.9)
+        ax3.text(current_x, current_y, string_rep_terms, verticalalignment='center', fontsize=2.9)
         
         # The bar showing the term weight
         score = term["score"]
-        bar_adjust = y_jump/2.8
+        bar_adjust = 0 #y_jump/2.8
         bar_height_divider = 150
         #ax3.plot([current_x-0.01, current_x-0.01], [current_y + bar_adjust, current_y + bar_adjust + score/bar_height_divider], '-', linewidth=2.5, markersize=0, color = "silver")
-        ax3.plot([current_x-0.008, current_x-0.008 - score/bar_height_divider], [current_y + bar_adjust, current_y + bar_adjust], '-', linewidth=2.5, markersize=0, color = "silver")
+        ax3.plot([current_x-0.008, current_x-0.008 - score/bar_height_divider], [current_y + bar_adjust, current_y + bar_adjust], '-', linewidth=2.0, markersize=0, color = "silver")
         
-    current_y = current_y - y_jump*title_height_part/3
-    for (strength, title, cls) in combined_typical_document_list_top_5:
-        current_y = current_y - y_jump*title_height_part
-        MAX_TITLE_LENGTH = 33
-        if len(title) > MAX_TITLE_LENGTH:
-            title = title[:MAX_TITLE_LENGTH-2] + "..."
-        ax3.text(current_x-0.022, current_y, '"' + title + '"', verticalalignment='bottom', fontsize=3.0)
-        ax3.text(current_x + x_jump-0.057, current_y, cls, verticalalignment='bottom', fontsize=3.3)
+
         
     current_x = current_x + x_jump
    
