@@ -376,7 +376,7 @@ y_heading_margin = 0.07/rows
 x_jump = x_lim/TOPICS_PER_ROW
 row_height = y_lim/rows
 
-heading_space = 0.24/rows
+heading_space = 0.23/rows
 nr_of_texts = 5
 title_height_part = 1.1
 y_jump = (row_height - heading_space-y_heading_margin/2)/(nr_of_terms + 1 + nr_of_texts*title_height_part )
@@ -467,7 +467,7 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
         
         # The bar showing the term weight
         score = term["score"]
-        bar_adjust = 0 #y_jump/2.8
+        bar_adjust = y_jump/40
         bar_height_divider = 150
         #ax3.plot([current_x-0.01, current_x-0.01], [current_y + bar_adjust, current_y + bar_adjust + score/bar_height_divider], '-', linewidth=2.5, markersize=0, color = "silver")
         ax3.plot([current_x-0.008, current_x-0.008 - score/bar_height_divider], [current_y + bar_adjust, current_y + bar_adjust], '-', linewidth=2.0, markersize=0, color = "silver")
