@@ -43,15 +43,15 @@ for el in l:
             topic_freq_dict[topic_id] = topic_freq_dict[topic_id] + 1
             topic_list.append(int(document_info[id]["topic_index"]))
         if len(topic_freq_dict.keys()) == 1:
-            found_topics = "associated with Topic " + str(list(topic_freq_dict.keys())[0])
+            found_topics = "associated with \\underline{Topic~" + str(list(topic_freq_dict.keys())[0]) + "} "
         else:
             found_topics = "associated with "
             found_topics_list = []
             for key in sorted(topic_freq_dict.keys()):
                 if topic_freq_dict[key] > 1:
-                    found_topics_list.append("Topic " + str(key) + " (" + str(topic_freq_dict[key]) + " texts)")
+                    found_topics_list.append("\\underline{Topic~" + str(key) + "} (" + str(topic_freq_dict[key]) + "~texts)")
                 else:
-                    found_topics_list.append("Topic " + str(key) + " (" + str(topic_freq_dict[key]) + " text)")
+                    found_topics_list.append("\\underline{Topic~" + str(key) + "} (" + str(topic_freq_dict[key]) + "~text)")
             found_topics = found_topics + ", ".join(found_topics_list)
                     
             #found_topics = found_topics + " " + ", ".join([str(e) for e in sorted(list(topic_list))])
@@ -87,20 +87,28 @@ for el in l:
         text = text.strip()
         if text[-1] == ".":
             text = text[0:-1]
-        text_dict[frame].append(text.strip() + " [in " + str(el[0]) + " texts] " + topic_string + ".")
+        text_dict[frame].append(text.strip() + " [in " + str(el[0]) + "~texts] " + topic_string + ".")
         
 
         
 for el in frames:
     if el in text_dict:
         el_print = el
-        if el_print == "ECO":
-            el_print = "ECON"
-        if el_print == "TEC":
-            el_print = "TECH"
-        print("\item[" + el_print + "] " + " ".join(text_dict[el]))
+        if el_print == "SCI":
+            el_print = "SCI~"
+        
+        #if el_print == "ECO":
+        #    el_print = "ECON"
+        #if el_print == "TEC":
+        #    el_print = "TECH"
+        #TODO: more roman
+        text_list_print = []
+        #for s, nr in zip(text_dict[el], ["i", "ii", "iii", "iv", "v", "vi", "vii", "ix", "x"]):
+        for s, nr in zip(text_dict[el], ["--"]*10):
+            text_list_print.append(nr + " " + s)
+        print("\item[" + el_print + "] " + " \\\\".join(text_list_print))
 
 for t in text_dict["NEW"]:
-    print("\item[" + "NEW" + "] " + t)
+    print("\item[" + "NEW" + "] " + "-- " + t)
 # Closing file
 f.close()
