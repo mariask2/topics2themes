@@ -426,8 +426,12 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
     for nr, str_el in enumerate(string_list):
         ax3.text(description_x, current_y - y_jump*topic_description_extra_jump*nr, str_el.strip(), verticalalignment='bottom', fontsize=topic_description_font_size)
     
-    ax3.text(current_x + x_jump*0.75, current_y - row_height + 2.6*y_jump, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=4.1, rotation='vertical')
-    #ax3.text(current_x + x_jump*0.735, current_y - y_jump*nr_of_terms, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=3.8, rotation='vertical')
+    #ax3.text(current_x + x_jump*0.75, current_y - row_height + 2.6*y_jump, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=4.1, rotation='vertical')
+    x_jump_proportion = 0.60
+    if index + 1 < 10:
+        x_jump_proportion = 0.63
+    ax3.text(current_x + x_jump*x_jump_proportion, current_y - row_height + 2.6*y_jump, "Topic " + str(index + 1), verticalalignment='bottom', fontsize=3.5)
+   
 
     current_y = current_y - heading_space + y_heading_margin
 
@@ -437,7 +441,7 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
         if len(title) > MAX_TITLE_LENGTH:
             title = title[:MAX_TITLE_LENGTH-2] + "..."
         ax3.text(current_x-0.022, current_y, '"' + title + '"', verticalalignment='center', fontsize=3.0)
-        ax3.text(current_x + x_jump-0.057, current_y, cls, verticalalignment='center', fontsize=3.3)
+        ax3.text(current_x + x_jump-0.057, current_y, cls, verticalalignment='center', fontsize=3.3, color = "k")
 
     current_y = current_y - y_jump*title_height_part/3
     for term in el['topic_terms']:
@@ -458,9 +462,11 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
                 terms_to_keep.remove(term_to_remove)
         terms_to_keep_list = sorted(list(terms_to_keep), key = lambda t: len(t))
         string_rep_terms = " / ".join([el.replace("_", " ") for el in (terms_to_keep_list)])
-        MAX_STRING_LENGTH = 30
+        MAX_STRING_LENGTH = 28
         if len(string_rep_terms) > MAX_STRING_LENGTH:
-            string_rep_terms = string_rep_terms[:MAX_STRING_LENGTH] + "..."
+            string_rep_terms = string_rep_terms[:MAX_STRING_LENGTH].strip() + "..."
+            if string_rep_terms.endswith("/..."):
+                string_rep_terms = string_rep_terms[:-4]
         current_y = current_y - y_jump
         term_to_pick_as_rep = term_to_pick_as_rep.replace("_", " ")
         ax3.text(current_x, current_y, string_rep_terms, verticalalignment='center', fontsize=2.9)
@@ -470,7 +476,7 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
         bar_adjust = y_jump/40
         bar_height_divider = 150
         #ax3.plot([current_x-0.01, current_x-0.01], [current_y + bar_adjust, current_y + bar_adjust + score/bar_height_divider], '-', linewidth=2.5, markersize=0, color = "silver")
-        ax3.plot([current_x-0.008, current_x-0.008 - score/bar_height_divider], [current_y + bar_adjust, current_y + bar_adjust], '-', linewidth=2.0, markersize=0, color = "silver")
+        ax3.plot([current_x-0.008, current_x-0.008 - score/bar_height_divider], [current_y + bar_adjust, current_y + bar_adjust], '-', linewidth=2.0, markersize=0, color = "gray")
         
 
         
