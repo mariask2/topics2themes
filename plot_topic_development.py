@@ -154,13 +154,12 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
             # Indication of the classification
             #ax.plot([x, x], [len(topics_reps), len(topics_reps) + classification_display_size*len(classes)], '.-', linewidth=linewidth, markersize=0, color = "red")
             last_iter_year = year
-            
-
-    
+    for era_year in [1988, 1993, 1999, 2005, 2011]:
+        #ax.text(era_year, y_max_lim + 0.9, str(era_year), horizontalalignment='center', size=2.9)
+        ax.text(era_year, -1.0, str(era_year), horizontalalignment='center', size=2.9)
     printed = []
     
     topic_strength_f = (y_width*2)/max_topic_confidence
-    print("topic_strength_f", topic_strength_f)
     # Plot topics and manual labels
     for year, texts_for_year in topic_in_text_dict.items():
         for y, topic_repr in enumerate(topics_reps):
@@ -306,8 +305,7 @@ for el in obj["topic_model_output"]["documents"]:
         if len(topic_info["terms_found_in_text"]) > 1: # At least two terms included in text to include
             document_topics.append(topic_info)
     document_info[base_name] = {"document_topics" : document_topics, "label": label}
-    #print(json.dumps(el, indent = 1))
-    #print(base_name, label)
+
 
 
 
@@ -386,8 +384,6 @@ plt.axis('off')
 for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambda t: t["id"])):
     combined_typical_document_list = most_typical_documents_for_topics_top_5_science[index + 1] + most_typical_documents_for_topics_top_5_nature[index + 1]
     combined_typical_document_list_top_5 = sorted(combined_typical_document_list, reverse = True)[:5]
-    print(combined_typical_document_list_top_5)
-    
     
     if (index) % TOPICS_PER_ROW == 0:
         #jump to next row
@@ -420,7 +416,6 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
             current_string = ""
         current_string = current_string.strip() + " " + chunk.strip()
     string_list.append(current_string)
-    print(string_list)
     current_y = current_y - y_heading_margin
     description_x = current_x - 0.022
     for nr, str_el in enumerate(string_list):
