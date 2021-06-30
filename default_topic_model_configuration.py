@@ -85,14 +85,20 @@ The maximumn number of features to include when vectorizing the texts
 MAX_NR_OF_FEATURES = None
 
 """
-If the same word occurs several times in a document, should that be countet just once (binary)
+If the same word occurs several times in a document, should that be counted just once (binary)
 or should it be counted several times
 """
 BINARY_TF = False
 
 """
+Set sublinear_tf = True, which use log(tf), to lower the advantage for long documents
+"""
+SUBLINEAR_TF = False
+
+"""
     Whether to show the argumentation buttons or not
 """
+
 SHOW_ARGUMENTATION = True
 
 """

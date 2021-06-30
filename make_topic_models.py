@@ -358,7 +358,7 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
 def train_scikit_lda_model(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
     
     pre_processed_documents = pre_process(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
-    texts, tf_vectorizer, tf = get_scikit_bow(properties, pre_processed_documents, CountVectorizer, stopword_handler, path_slash_format)
+    texts, tf_vectorizer, tf = get_scikit_bow(properties, pre_processed_documents, CountVectorizer, stopword_handler, path_slash_format, nmf=False)
     
     model_list = []
     for i in range(0, properties.NUMBER_OF_RUNS):
@@ -374,7 +374,7 @@ def train_scikit_lda_model(properties, documents, word2vecwrapper, path_slash_fo
 def train_scikit_nmf_model(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
                            
     pre_processed_documents = pre_process(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
-    texts, tfidf_vectorizer, tfidf = get_scikit_bow(properties, pre_processed_documents, TfidfVectorizer, stopword_handler, path_slash_format)
+    texts, tfidf_vectorizer, tfidf = get_scikit_bow(properties, pre_processed_documents, TfidfVectorizer, stopword_handler, path_slash_format, nmf=True)
     
     model_list = []
     for i in range(0, properties.NUMBER_OF_RUNS):
@@ -566,7 +566,7 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
 
     
 
-def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_slash_format):
+def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_slash_format, nmf=True):
     """
     Will tranform the list of documents that are given as input, to a list of terms
     that occurr in these documents
@@ -581,6 +581,8 @@ def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_sla
     vaccination_programmes is a collocation and cease__ceased is one word
     """
     
+    print("Starts transforming the text into vectors")
+    
     if len(documents) < 3: # if there is only two documents these parameters are the only that work
                            # but just for debugging, no point of running with only two documents
         min_document_frequency = 1
@@ -594,21 +596,25 @@ def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_sla
     max_features = properties.MAX_NR_OF_FEATURES
     binary = properties.BINARY_TF
     
-    if type(vectorizer) == TfidfVectorizer:
-        # Use sublinear_tf, which used log(tf), to lower the advantage for long documents
+    if properties.SUBLINEAR_TF and nmf:
         tf_vectorizer = vectorizer(sublinear_tf = True, max_df= max_document_frequency, min_df=min_document_frequency,\
                                    ngram_range = (1, ngram_length), stop_words = stop_words, max_features = max_features, binary = binary, use_idf=False)
+        print("Uses sublinear")
     else:
         tf_vectorizer = vectorizer(max_df= max_document_frequency, min_df=min_document_frequency,\
                                    ngram_range = (1, ngram_length), stop_words=stop_words,
                                max_features = max_features, binary = binary)
+        
+        print("Uses standard tf-idf")
         
     tf = tf_vectorizer.fit_transform(documents)
     inversed = tf_vectorizer.inverse_transform(tf)
     to_return = []
     for el in inversed:
         to_return.append(list(el))
-
+    print("Vocabulary size: " + str(len(tf_vectorizer.get_feature_names())))
+    print("Finished transforming the text into vectors")
+    
     return to_return, tf_vectorizer, tf
 
 

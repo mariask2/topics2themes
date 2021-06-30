@@ -216,6 +216,11 @@ class PropertiesContainer:
             self.BINARY_TF = properties.BINARY_TF
         except AttributeError:
             self.BINARY_TF = default_topic_model_configuration.BINARY_TF
+            
+        try:
+             self.SUBLINEAR_TF = properties.SUBLINEAR_TF
+        except AttributeError:
+             self.SUBLINEAR_TF = default_topic_model_configuration.SUBLINEAR_TF
         
         try:
             self.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING = properties.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING
