@@ -23,8 +23,8 @@ import math
 
 # Different names in paper and in data, but same classes
 label_list = ["A_dominant_frame", "B_dominant_frame", "C_dominant_frame", "D_dominant_frame", "E_dominant_frame", "F_dominant_frame", "G_dominant_frame", "H_dominant_frame"]
-classes = ["eco", "dev", "sec","eth", "tec", "gov", "sci", "com"]
- 
+classes = [c.upper() for c in["econ", "dev", "sec","eth", "tech", "gov", "sci", "com"]]
+
 def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_dict, ax, xlabels, color_map, max_topic_confidence):
 
     margin_to_topics = 0.20
@@ -85,17 +85,17 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
         y_width_class = classification_display_size/3
         class_color = "white"
         text_color = "darkgray"
-        text_x_diff = 1.5
+        text_x_diff = 1.0
         text_x_diff_right = 0.15
         text = class_name
         if c_nr % 2 == 0:
             class_color = "whitesmoke"
             text_color = "dimgray"
-            text_x_diff = 1.0
+            text_x_diff = 1.5
             text_x_diff_right = 0.65
             text = class_name
-        ax.text(x_min_lim-text_x_diff,y, text, size=3.5, color = text_color, verticalalignment='center')
-        ax.text(x_max_lim+text_x_diff_right,y, text, size=3.5, color = text_color, verticalalignment='center')
+        ax.text(x_min_lim-text_x_diff,y, text, size=2.8, color = text_color, verticalalignment='center')
+        ax.text(x_max_lim+text_x_diff_right,y, text, size=2.8, color = text_color, verticalalignment='center')
         #ax.text(min_year-text_x_diff + 0.01,y + classification_display_size/2 + 0.01, text, size=3.9, color = text_color)
         plt.axhline(y=y, linewidth=0.05, linestyle = ":", color = "black")
         ax.fill([x_min_lim, x_max_lim, x_max_lim, x_min_lim, x_min_lim], [y - y_width_class, y - y_width_class, y + y_width_class, y + y_width_class, y - y_width_class], color = class_color, edgecolor = class_color)
@@ -436,7 +436,7 @@ for index, el in enumerate(sorted(obj["topic_model_output"]["topics"], key=lambd
         if len(title) > MAX_TITLE_LENGTH:
             title = title[:MAX_TITLE_LENGTH-2] + "..."
         ax3.text(current_x-0.022, current_y, '"' + title + '"', verticalalignment='center', fontsize=3.0)
-        ax3.text(current_x + x_jump-0.057, current_y, cls, verticalalignment='center', fontsize=3.3, color = "k")
+        ax3.text(current_x + x_jump-0.059, current_y-0.0005, cls, verticalalignment='center', fontsize=2.5, color = "k")
 
     current_y = current_y - y_jump*title_height_part/3
     for term in el['topic_terms']:
