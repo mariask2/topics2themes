@@ -102,6 +102,7 @@ class Word2vecWrapper:
                 return self.default_vector
 
     def load_clustering(self, output_file, transformation):
+        nr_of_not_found = 0
         print("Clustering vectors, this might take a while ....")
         
         frequencies = transformation.toarray().sum(axis=0)
@@ -122,7 +123,12 @@ class Word2vecWrapper:
                 list_vector = norm_vector[0]
                 X_vectors.append(list_vector)
                 cluster_words.append(word)
-
+            else:
+                # default vector
+                nr_of_not_found = nr_of_not_found + 1
+                
+        print("Number of words not found in vector space used: " + str(nr_of_not_found))
+        
         # Compute DBSCAN
         X = np.matrix(X_vectors)
         self.cluster_dict = {}
