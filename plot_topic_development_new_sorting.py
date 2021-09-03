@@ -26,19 +26,16 @@ label_list = ["A_dominant_frame", "B_dominant_frame", "C_dominant_frame", "D_dom
 classes = [c.upper() for c in["econ", "dev", "sec","eth", "tech", "gov", "sci", "com"]]
 
 label_list_filtered = ["A_dominant_frame", "E_dominant_frame", "F_dominant_frame", "G_dominant_frame", "H_dominant_frame"]
-classes_filtered = [c.upper() for c in["econ", "tech", "gov", "sci", "com"]]
+classes_filtered = [c.upper() for c in["econ", "tech", "gov", "sci", "com", "other"]]
 # Not found: "dev", "sec","eth",
 
 def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, title, file_name, min_year, max_year, year_title_dict, ax, xlabels, color_map, max_topic_confidence):
 
     margin_to_topics = 0.20
-    
-    # To
-    #plot_right_margin = 0.0
-    
-    classification_display_size = 0.55
+        
+    classification_display_size = 0.75
 
-    y_max_lim = len(topics_reps) + classification_display_size*len(classes) - 0.1 + margin_to_topics
+    y_max_lim = len(topics_reps) + classification_display_size*len(classes_filtered) - 0.1
     ax.set_ylim(y_max_lim, -0.5)
     x_min_lim = min_year - 0.4
     x_max_lim = max_year + 1.1
@@ -67,13 +64,32 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
     y_width = 0.35
     y_ticks = [el[:20].replace("_", " ") + "..." for el in topics_reps] + [""]
     
+    # Before these row numbers (= y), the manual labels will be printed
     at_which_y_to_print_labels = [0, 1, 5, 9, 12, 13]
     
+    # Colors for the manual labels
+    econ_label_colors = [[153, 0, 76]]
+    tech_label_colors = [[0, 76, 153]]
+    gov_label_colors = [[153, 76, 0]]
+    sci_label_colors = [[0, 153, 76]]
+    com_label_colors = [[153, 0, 0]]
+    other_label_colors = [[0, 153, 153]]
+
+    color_map_label = []
+    for c in econ_label_colors + tech_label_colors + gov_label_colors + sci_label_colors + com_label_colors + other_label_colors:
+        color_map_label.append([c[0]/255, c[1]/255, c[2]/255, 1])
+        
+    
+    
+    ####
     extra_y_for_room_for_labels = 0
     for y, (topic_id, topic_repr) in enumerate(zip(manually_sorted_ids, topics_reps)):
         color_index = y
         
         if y in at_which_y_to_print_labels:
+            label_space_nr = at_which_y_to_print_labels.index(y)
+            ax.text(x_max_lim+0.23, y + extra_y_for_room_for_labels - classification_display_size/30, classes_filtered[label_space_nr] , size=3.2, color = color_map_label[label_space_nr], verticalalignment='center')
+            
             extra_y_for_room_for_labels = extra_y_for_room_for_labels + classification_display_size
         
         y = y + extra_y_for_room_for_labels
@@ -84,7 +100,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
         ax.text(x_min_lim-3,y, "Topic " + str(topic_id), size=5.0, color = "black", verticalalignment='center')
         ax.text(x_min_lim-3,y, "Topic ", size=5.0, color = text_color, verticalalignment='center')
         ax.text(x_max_lim + 0.25, y, y_ticks[color_index], size=3.5, color = text_color, verticalalignment='center')
-        #ax.text(x_max_lim + 0.1 - plot_right_margin, y+0.3, "(", size=4.0, color = "black")
+
         ax.fill([x_min_lim, x_max_lim, x_max_lim, x_min_lim, x_min_lim], [y - y_width, y - y_width, y + y_width, y + y_width, y - y_width], color = color_map[color_index], edgecolor = color_map[color_index])
     for c, t in zip(color_map, ax.yaxis.get_ticklabels()):
         text_color = [c[0], c[1], c[2], 1.0]
@@ -141,12 +157,13 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
             plt.axvline(x=x, linewidth=linewidth, color="black", linestyle = linestyle)
             
             #ax.text(x, -1.0, article_title, size=0.00001, color = "darkgray", rotation=90, horizontalalignment='center', verticalalignment='bottom')
+            
             # Small numbers on the line, in order to be able to retrieve the titles
             #y_extra = len(topics_reps) -0.5 + 0.15*(article_nr_position_extra)
             for tr, top in enumerate(topics_reps):
                 if tr == 0:
                     continue
-                #y_extra = len(topics_reps) - 0.5
+                
                 y_extra = tr - 0.4
                 if article_nr % 2 != 0:
                     ax.text(x - 0.03, 0 + y_extra, str(article_nr + 1), size=0.0001, color = "darkgray", rotation=-90, horizontalalignment='center', verticalalignment='top')
@@ -196,24 +213,15 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
             for (topic_in_text, label) in texts_for_year: # go through scatter-vector for each text for the year
                 marker = markers.MarkerStyle(marker='|', fillstyle='none')
                 if topic_in_text[topic_id] != 0: #if the text contains the topic
-                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[topic_id] * topic_strength_f/2, y - topic_in_text[topic_id] * topic_strength_f/2], '.-', linewidth=0.4, markersize=0, color = "black")
+                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[topic_id] * topic_strength_f/1.5, y - topic_in_text[topic_id] * topic_strength_f/1.5], '.-', linewidth=0.4, markersize=0, color = "black")
                
                 # plot the class (= manual label) for the text
                 if print_labels and label not in ["B_dominant_frame", "C_dominant_frame", "D_dominant_frame"]:
-                    print("*****")
-                    print(label)
                     label_nr = label_list_filtered.index(label)
                     label_space_nr = at_which_y_to_print_labels.index(y_for_labels)
-                    #print("label_nr", label_nr)
-                    #print("y_for_labels", y_for_labels)
                     if label_nr == label_space_nr:
                         y_for_labels_to_plot = y_for_labels + extra_y_for_room_for_labels - classification_display_size
-                        ax.plot([year + x_moved, year + x_moved], [y_for_labels_to_plot - classification_display_size/3, y_for_labels_to_plot - classification_display_size/3], 'o-', linewidth=0.8, markersize=0.07, color = "red")
-                        print("label_nr", label_nr)
-                label_start = len(topics_reps) + label_nr * classification_display_size + margin_to_topics
-                if (label_nr, label_start) not in printed:
-                    printed.append((label_nr, label_start))
-                ax.plot([year + x_moved, year + x_moved], [label_start, label_start], 'o-', linewidth=0.04, markersize=0.03, color = "black")
+                        ax.plot([year + x_moved, year + x_moved], [y_for_labels_to_plot + classification_display_size/10, y_for_labels_to_plot + classification_display_size/10], '.-', linewidth=0.8, markersize=0.50, color = color_map_label[label_space_nr], fillstyle='full')
                 
                 # Move the next text for the year a bit to the right
                 x_moved = x_moved + move_x
