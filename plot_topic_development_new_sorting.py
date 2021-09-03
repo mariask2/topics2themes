@@ -25,7 +25,7 @@ import math
 label_list = ["A_dominant_frame", "B_dominant_frame", "C_dominant_frame", "D_dominant_frame", "E_dominant_frame", "F_dominant_frame", "G_dominant_frame", "H_dominant_frame"]
 classes = [c.upper() for c in["econ", "dev", "sec","eth", "tech", "gov", "sci", "com"]]
 
-def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_year, max_year, year_title_dict, ax, xlabels, color_map, max_topic_confidence):
+def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, title, file_name, min_year, max_year, year_title_dict, ax, xlabels, color_map, max_topic_confidence):
 
     margin_to_topics = 0.20
     
@@ -159,13 +159,15 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, title, file_name, min_yea
     topic_strength_f = (y_width*2)/max_topic_confidence
     # Plot topics and manual labels
     for year, texts_for_year in topic_in_text_dict.items():
-        for y, topic_repr in enumerate(topics_reps):
+        #for y, topic_repr in enumerate(topics_reps): #OLD
+        for y, (topic_id, topic_repr) in enumerate(zip(manually_sorted_ids, topics_reps)):
+            topic_id = topic_id - 1 # Zero counting in scatter and plot, and 1 counting for topics
             move_x = 1/len(texts_for_year)
             x_moved = 0.0
             for (topic_in_text, label) in texts_for_year: # go through scatter-vector for each text for the year
                 marker = markers.MarkerStyle(marker='|', fillstyle='none')
-                if topic_in_text[y] != 0: #if the text contains the topic
-                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[y] * topic_strength_f/2, y - topic_in_text[y] * topic_strength_f/2], '.-', linewidth=0.4, markersize=0, color = "black")
+                if topic_in_text[topic_id] != 0: #if the text contains the topic
+                    ax.plot([year + x_moved, year + x_moved], [y + topic_in_text[topic_id] * topic_strength_f/2, y - topic_in_text[topic_id] * topic_strength_f/2], '.-', linewidth=0.4, markersize=0, color = "black")
                
                 # plot the class (= manual label) for the text
                 label_nr = label_list.index(label)
@@ -329,7 +331,35 @@ for el in obj["topic_model_output"]["topics"]:
     topics[el["id"]] = topic_name
 
 
-topic_names = [topics[key] for key in sorted(topics.keys())]
+topic_names_old = [topics[key] for key in sorted(topics.keys())]
+
+
+topic_sorted_for_id = sorted(obj["topic_model_output"]["topics"], key=lambda t: t["id"])
+
+# Topics sorted according to this text:
+# However, the IPCC topic could also be categoried as a sci topic.
+# There are four gov-related topics:  [T1], [T3], [T5], [T12].
+# There are three sci-related topics: [T2], [T4], [T15].
+# There are four tech-related topics: [T7], [T8], [T11] [T13].
+# Finally, there is one com-related topic: [T9]
+# One econ-related topic: [T14].
+# Not matching: [T6] [T10]
+# "econ", "dev", "sec","eth", "tech", "gov", "sci", "com"
+econ_ids = [14]
+tech_ids = [7, 8, 11, 13]
+gov_ids = [1, 3, 12, 5]
+sci_ids = [2, 4, 15]
+com_ids = [9]
+other_ids = [6, 10]
+
+manually_sorted_ids = econ_ids + tech_ids + gov_ids + sci_ids + com_ids + other_ids
+
+topics_manually_sorted = []
+for manual_id in manually_sorted_ids:
+    topics_manually_sorted.append(topic_sorted_for_id[manual_id-1])
+
+
+topic_names = [topics[key] for key in manually_sorted_ids]
 
 
 topic_description_file = "/Users/marsk757/topic2themes/topics2themes/data_folder/climate-editorials-graph/topics2themes_exports_folder_created_by_system/602f89d39962f2a59e2653c4_topic_name.json"
@@ -387,28 +417,11 @@ title_height_part = 1.1
 y_jump = (row_height - heading_space-y_heading_margin/2)/(nr_of_terms + 1 + nr_of_texts*title_height_part )
 plt.axis('off')
 
-topic_sorted_for_id = sorted(obj["topic_model_output"]["topics"], key=lambda t: t["id"])
-
-# However, the IPCC topic could also be categoried as a sci topic.
-# There are four gov-related topics:  [T1], [T3], [T5], [T12].
-# There are three sci-related topics: [T2], [T4], [T15].
-# There are four tech-related topics: [T7], [T8], [T11] [T13].
-# Finally, there is one com-related topic: [T9]
-# One econ-related topic: [T14].
-# Not matching: [T6] [T10]
-# "econ", "dev", "sec","eth", "tech", "gov", "sci", "com"
-econ_ids = [14]
-tech_ids = [7, 8, 11, 13]
-gov_ids = [1, 3, 12, 5]
-sci_ids = [2, 4, 15]
-com_ids = [9]
-other_ids = [6, 10]
 
 
 
-topics_manually_sorted = []
-for manual_id in econ_ids + tech_ids + gov_ids + sci_ids + com_ids + other_ids:
-    topics_manually_sorted.append(topic_sorted_for_id[manual_id-1])
+
+
    
 #for loop_index, el in enumerate(topic_sorted_for_id):
 for loop_index, el in enumerate(topics_manually_sorted):
@@ -521,10 +534,10 @@ plt.close('all')
 nr_of_topics = len(obj["topic_model_output"]["topics"])
 ax1 = plt.subplot(211)
 
-plot_topics_text(topic_names, scatter_dict_science, "Science", "science", min_year, max_year, year_title_dict_science, ax1, xlabels=False, color_map = color_map, max_topic_confidence = max_topic_confidence)
+plot_topics_text(topic_names, scatter_dict_science, manually_sorted_ids, "Science", "science", min_year, max_year, year_title_dict_science, ax1, xlabels=False, color_map = color_map, max_topic_confidence = max_topic_confidence)
 
 ax2 = plt.subplot(212)
-plot_topics_text(topic_names, scatter_dict_nature, "Nature", "nature", min_year, max_year, year_title_dict_nature, ax2, xlabels=True, color_map = color_map, max_topic_confidence = max_topic_confidence)
+plot_topics_text(topic_names, scatter_dict_nature, manually_sorted_ids, "Nature", "nature", min_year, max_year, year_title_dict_nature, ax2, xlabels=True, color_map = color_map, max_topic_confidence = max_topic_confidence)
 
 
 
