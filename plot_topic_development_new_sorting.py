@@ -82,13 +82,15 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
     
     
     ####
+    # The tic labels to the right of the plot
     extra_y_for_room_for_labels = 0
     for y, (topic_id, topic_repr) in enumerate(zip(manually_sorted_ids, topics_reps)):
         color_index = y
         
+        #+ " (from Hulme et al.)"
         if y in at_which_y_to_print_labels:
             label_space_nr = at_which_y_to_print_labels.index(y)
-            ax.text(x_max_lim+0.23, y + extra_y_for_room_for_labels - classification_display_size/30, classes_filtered[label_space_nr] , size=3.2, color = color_map_label[label_space_nr], verticalalignment='center')
+            ax.text(x_max_lim+0.23, y + extra_y_for_room_for_labels - classification_display_size/30, classes_filtered[label_space_nr], size=3.2, color = color_map_label[label_space_nr], verticalalignment='center')
             
             extra_y_for_room_for_labels = extra_y_for_room_for_labels + classification_display_size
         
@@ -160,6 +162,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
             
             # Small numbers on the line, in order to be able to retrieve the titles
             #y_extra = len(topics_reps) -0.5 + 0.15*(article_nr_position_extra)
+            """
             for tr, top in enumerate(topics_reps):
                 if tr == 0:
                     continue
@@ -168,12 +171,14 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
                 if article_nr % 2 != 0:
                     ax.text(x - 0.03, 0 + y_extra, str(article_nr + 1), size=0.0001, color = "darkgray", rotation=-90, horizontalalignment='center', verticalalignment='top')
             
+            
             for ci, c in enumerate(classes):
                 if ci % 2 != 0:
                     continue
                 y_extra = len(topics_reps) + margin_to_topics + ci*classification_display_size + 0.2
                 if article_nr % 2 != 0:
                     ax.text(x - 0.03, 0 + y_extra, str(article_nr + 1), size=0.0001, color = "darkgray", rotation=-90, horizontalalignment='center', verticalalignment='top')
+            """
                 
             #article_nr_position_extra = article_nr_position_extra + 1
             #if article_nr_position_extra == 3:
@@ -221,7 +226,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
                     label_space_nr = at_which_y_to_print_labels.index(y_for_labels)
                     if label_nr == label_space_nr:
                         y_for_labels_to_plot = y_for_labels + extra_y_for_room_for_labels - classification_display_size
-                        ax.plot([year + x_moved, year + x_moved], [y_for_labels_to_plot + classification_display_size/10, y_for_labels_to_plot + classification_display_size/10], '.-', linewidth=0.8, markersize=0.50, color = color_map_label[label_space_nr], fillstyle='full')
+                        ax.plot([year + x_moved, year + x_moved], [y_for_labels_to_plot + classification_display_size/30, y_for_labels_to_plot + classification_display_size/30], 'o-', linewidth=1.5, markersize=0.60, color = color_map_label[label_space_nr], fillstyle='full')
                 
                 # Move the next text for the year a bit to the right
                 x_moved = x_moved + move_x
