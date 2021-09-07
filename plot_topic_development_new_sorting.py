@@ -27,6 +27,8 @@ classes = [c.upper() for c in["econ", "dev", "sec","eth", "tech", "gov", "sci", 
 
 label_list_filtered = ["A_dominant_frame", "E_dominant_frame", "F_dominant_frame", "G_dominant_frame", "H_dominant_frame"]
 classes_filtered = [c.upper() for c in["econ", "tech", "gov", "sci", "com", "other"]]
+
+manual_topic_names = ["Econ", "Tech 1", "Tech 2", "Tech 3", "Tech 4", "Gov 1", "Gov 2", "Gov 3", "Gov* 4", "Sci 1", "Sci 2", "Sci 3", "Com", "Other 1", "Other 2"]
 # Not found: "dev", "sec","eth",
 
 def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, title, file_name, min_year, max_year, year_title_dict, ax, xlabels, color_map, max_topic_confidence):
@@ -68,12 +70,12 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
     at_which_y_to_print_labels = [0, 1, 5, 9, 12, 13]
     
     # Colors for the manual labels
-    econ_label_colors = [[153, 0, 76]]
+    econ_label_colors = [[102, 0, 102]]
     tech_label_colors = [[0, 76, 153]]
     gov_label_colors = [[153, 76, 0]]
-    sci_label_colors = [[0, 153, 76]]
+    sci_label_colors = [[25, 51, 0]]
     com_label_colors = [[153, 0, 0]]
-    other_label_colors = [[0, 153, 153]]
+    other_label_colors = [[0, 102, 102]]
 
     color_map_label = []
     for c in econ_label_colors + tech_label_colors + gov_label_colors + sci_label_colors + com_label_colors + other_label_colors:
@@ -99,8 +101,10 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
         line_color = [color_map[color_index][0], color_map[color_index][1], color_map[color_index][2], 0.20]
         text_color = [color_map[color_index][0], color_map[color_index][1], color_map[color_index][2], 1.0]
         plt.axhline(y=y, linewidth=0.55, color = line_color)
-        ax.text(x_min_lim-3,y, "Topic " + str(topic_id), size=5.0, color = "black", verticalalignment='center')
-        ax.text(x_min_lim-3,y, "Topic ", size=5.0, color = text_color, verticalalignment='center')
+        #ax.text(x_min_lim-3,y, "Topic " + str(topic_id), size=5.0, color = "black", verticalalignment='center')
+        #ax.text(x_min_lim-3,y, "Topic ", size=5.0, color = text_color, verticalalignment='center')
+        ax.text(x_min_lim-3,y, manual_topic_names[color_index], size=5.0, color = text_color, verticalalignment='center')
+        
         ax.text(x_max_lim + 0.25, y, y_ticks[color_index], size=3.5, color = text_color, verticalalignment='center')
 
         ax.fill([x_min_lim, x_max_lim, x_max_lim, x_min_lim, x_min_lim], [y - y_width, y - y_width, y + y_width, y + y_width, y - y_width], color = color_map[color_index], edgecolor = color_map[color_index])
@@ -434,12 +438,12 @@ print("max_topic_confidence", max_topic_confidence)
 
 #color_map_orig = cm.get_cmap('tab20b', len(topic_names)).colors
 
-econ_colors = [[255, 0, 127]]
-tech_colors = [[0, 70, 150], [0, 102, 204], [51, 153, 255], [100, 170, 255]]
-gov_colors = [[170, 80, 0], [204, 102, 0], [255, 153, 51], [153, 180, 10]]
-sci_colors = [[0, 153, 0], [0, 255, 0], [102, 255, 102]]
-com_colors = [[255, 0, 0]]
-other_colors = [[0, 204, 204], [51, 255, 255]]
+econ_colors = [[255, 50, 255]]
+tech_colors = [[100, 170, 255], [51, 153, 255], [0, 102, 204], [0, 70, 150]]
+gov_colors = [[255, 153, 51], [204, 102, 0], [170, 80, 0],   [143, 120, 0]]
+sci_colors = [[122, 245, 0], [102, 204, 0], [76, 153, 0]]
+com_colors = [[204, 0, 0]]
+other_colors = [[0, 204, 204], [0, 153, 153]]
 
 color_map = []
 for c in econ_colors + tech_colors + gov_colors + sci_colors + com_colors + other_colors:
@@ -477,6 +481,7 @@ plt.axis('off')
    
 #for loop_index, el in enumerate(topic_sorted_for_id):
 for loop_index, el in enumerate(topics_manually_sorted):
+    extra_space = 0
     id = int(el["id"])
     combined_typical_document_list = most_typical_documents_for_topics_top_5_science[id] + most_typical_documents_for_topics_top_5_nature[id]
     combined_typical_document_list_top_5 = sorted(combined_typical_document_list, reverse = True)[:5]
@@ -520,7 +525,13 @@ for loop_index, el in enumerate(topics_manually_sorted):
     x_jump_proportion = 0.60
     if loop_index < 10:
         x_jump_proportion = 0.63
-    ax3.text(current_x + x_jump*x_jump_proportion, current_y - row_height + 2.6*y_jump, "Topic " + str(id), verticalalignment='bottom', fontsize=3.5)
+    #ax3.text(current_x + x_jump*x_jump_proportion, current_y - row_height + 2.6*y_jump, "Topic " + str(id), verticalalignment='bottom', fontsize=3.5)
+    extra_space = math.log10(len(manual_topic_names[loop_index]))*0.004
+    if "Sci" in manual_topic_names[loop_index] or "Com" in manual_topic_names[loop_index]:
+        extra_space = extra_space + 0.011
+    if "Econ" in manual_topic_names[loop_index]:
+        extra_space = extra_space + 0.009
+    ax3.text(current_x + x_jump*x_jump_proportion + extra_space, current_y - row_height + 2.6*y_jump, manual_topic_names[loop_index], verticalalignment='bottom', fontsize=3.5)
    
 
     current_y = current_y - heading_space + y_heading_margin
