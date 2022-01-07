@@ -596,11 +596,12 @@ plt.close('all')
  ############################
 nr_of_topics = len(obj["topic_model_output"]["topics"])
 ax1 = plt.subplot(211)
+plot_topics_text(topic_names, scatter_dict_nature, manually_sorted_ids, "Nature", "nature", min_year, max_year, year_title_dict_nature, ax1, xlabels=True, color_map = color_map, max_topic_confidence = max_topic_confidence)
 
-plot_topics_text(topic_names, scatter_dict_science, manually_sorted_ids, "Science", "science", min_year, max_year, year_title_dict_science, ax1, xlabels=False, color_map = color_map, max_topic_confidence = max_topic_confidence)
 
 ax2 = plt.subplot(212)
-plot_topics_text(topic_names, scatter_dict_nature, manually_sorted_ids, "Nature", "nature", min_year, max_year, year_title_dict_nature, ax2, xlabels=True, color_map = color_map, max_topic_confidence = max_topic_confidence)
+plot_topics_text(topic_names, scatter_dict_science, manually_sorted_ids, "Science", "science", min_year, max_year, year_title_dict_science, ax2, xlabels=False, color_map = color_map, max_topic_confidence = max_topic_confidence)
+
 
 
 
