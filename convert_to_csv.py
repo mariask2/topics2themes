@@ -19,6 +19,7 @@ def convert_to_csv(json_topic_names, json_model, json_themes):
     header_list.append("Your comments")
     header_list.append("Most common theme")
     header_list.append("2nd most common theme")
+    header_list.append("3rd most common theme")
     header_list.append("Rest of themes")
     index_start_topics = len(header_list)
     
@@ -41,11 +42,13 @@ def convert_to_csv(json_topic_names, json_model, json_themes):
         #themes
         if str(document['id']) in document_theme_dict:
             themes_sorted = sorted(document_theme_dict[str(document['id'])], key=lambda x: len((x['document_ids'])), reverse = True)
-            print(themes_sorted)
             row_list[3] = themes_sorted[0]['theme_name']
             if len(themes_sorted) > 1:
                 row_list[4] = themes_sorted[1]['theme_name']
-        
+            if len(themes_sorted) > 2:
+                row_list[5] = themes_sorted[2]['theme_name']
+            if len(themes_sorted) > 3:
+                row_list[6] = " / ".join([t['theme_name'] for t in themes_sorted[3:]])
         #key words and topics
         key_words = []
         for document_topic in document["document_topics"]:
