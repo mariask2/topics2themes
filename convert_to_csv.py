@@ -2,8 +2,15 @@ import os
 import json
 import csv
 
-def convert_to_csv(json_topic_names, json_model):
-    #print(json_model)
+def convert_to_csv(json_topic_names, json_model, json_themes):
+    
+    document_theme_dict = {}
+    for theme_el in json_themes:
+        for document_id in theme_el['document_ids']:
+            if document_id not in document_theme_dict:
+                document_theme_dict[document_id] = []
+            document_theme_dict[document_id].append(theme_el)
+            
     topic_names_sorted = sorted(json_topic_names, key=lambda k: 'topic_id')
     header_list = []
     
@@ -22,20 +29,24 @@ def convert_to_csv(json_topic_names, json_model):
     
     index_end_topics = len(header_list)
     header_list.append("Filename")
-    
-    """
-    with open('test_output.txt', 'w') as csvfile:
-        csvwriter = csv.writer(csvfile, dialect='excel', delimiter="\t",
-                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        csvwriter.writerow(header_list)
-    """
-    
+        
     outputfile = open('test_output.txt', 'w')
     to_write = "\t".join(header_list) + "\n"
     outputfile.write(to_write)
         
     for document in json_model["topic_model_output"]["documents"]:
+        
         row_list = [""]*len(header_list)
+        
+        #themes
+        if str(document['id']) in document_theme_dict:
+            themes_sorted = sorted(document_theme_dict[str(document['id'])], key=lambda x: len((x['document_ids'])), reverse = True)
+            print(themes_sorted)
+            row_list[3] = themes_sorted[0]['theme_name']
+            if len(themes_sorted) > 1:
+                row_list[4] = themes_sorted[1]['theme_name']
+        
+        #key words and topics
         key_words = []
         for document_topic in document["document_topics"]:
             key_words.extend(document_topic['terms_found_in_text'])
@@ -59,7 +70,11 @@ def convert_to_csv(json_topic_names, json_model):
             repr_terms.append("/".join(terms_to_pick_as_rep))
         
         row_list[0] = ", ".join(repr_terms)
+        
+        #text
         row_list[1] = document['text'].replace("\t", " ").replace("\n", " ").strip()
+        
+        #name of text
         row_list[index_end_topics] = document['base_name']
         
         to_write_row = "\t".join(row_list) + "\n"
@@ -76,9 +91,13 @@ if __name__ == '__main__':
     
     model = open(os.path.join(folder, model_nr + "_model.json"), "r")
     
+    themes = open(os.path.join(folder, model_nr + "_theme.json"), "r")
+    
     json_topic_names = json.loads(topic_names.read())
     json_model = json.loads(model.read())
-
+    json_themes = json.loads(themes.read())
+    
     topic_names.close()
     model.close()
-    convert_to_csv(json_topic_names, json_model)
+    themes.close()
+    convert_to_csv(json_topic_names, json_model, json_themes)
