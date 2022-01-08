@@ -42,7 +42,23 @@ def convert_to_csv(json_topic_names, json_model):
             id_index = id_index_dict[document_topic['topic_index']]
             row_list[index_start_topics + id_index] = str(round(document_topic['topic_confidence'], 2)).replace(".",",") # Swedish Excel
         
-        row_list[0] = ", ".join(key_words)
+        key_words = list(set(key_words))
+        repr_terms = []
+        for key_word in key_words:
+            terms_to_pick_as_rep = []
+            splitted_key_word = sorted(key_word.split("__"), key=len)
+            terms_to_pick_as_rep.append(splitted_key_word[0])
+            for splitted in splitted_key_word[1:]:
+                add_splitted = True
+                for existing_reps in terms_to_pick_as_rep[:]:
+                    if (len(existing_reps) > 1 and existing_reps in splitted) or (len(existing_reps) > 3 and existing_reps[:-2] in splitted): # Adapted to only to suffixing lang.
+                        add_splitted = False # Don't add a longer form of a word
+                if add_splitted or "_" in splitted:
+                    terms_to_pick_as_rep.append(splitted)
+                 
+            repr_terms.append("/".join(terms_to_pick_as_rep))
+        
+        row_list[0] = ", ".join(repr_terms)
         row_list[1] = document['text'].replace("\t", " ").replace("\n", " ").strip()
         row_list[index_end_topics] = document['base_name']
         
@@ -53,7 +69,7 @@ def convert_to_csv(json_topic_names, json_model):
         
 if __name__ == '__main__':
     folder = "/Users/marsk757/topic2themes/topics2themes/data_folder/språk-tilltal-delat/topics2themes_exports_folder_created_by_system"
-    model_nr = "61d78098fb849a1ac4d873a2"
+    model_nr = "61d9bbb060423d19911efd8a"
     
     
     topic_names = open(os.path.join(folder, model_nr + "_topic_name.json"), "r")
