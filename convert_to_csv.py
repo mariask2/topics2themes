@@ -16,7 +16,7 @@ def convert_to_csv(json_topic_names, json_model, json_themes):
     
     header_list.append("Keywords")
     header_list.append("Text")
-    header_list.append("Your comments")
+    header_list.append("Your theme")
     header_list.append("Most common theme")
     header_list.append("2nd most common theme")
     header_list.append("3rd most common theme")
@@ -25,7 +25,7 @@ def convert_to_csv(json_topic_names, json_model, json_themes):
     
     id_index_dict = {}
     for nr, el in enumerate(topic_names_sorted):
-        header_list.append(str(el['topic_id']) + ": " + el['topic_name'].strip())
+        header_list.append(el['topic_name'].strip())
         id_index_dict[int(el['topic_id'])] = nr
     
     index_end_topics = len(header_list)
@@ -87,8 +87,9 @@ def convert_to_csv(json_topic_names, json_model, json_themes):
         
 if __name__ == '__main__':
     folder = "/Users/marsk757/topic2themes/topics2themes/data_folder/språk-tilltal-delat/topics2themes_exports_folder_created_by_system"
-    model_nr = "61d9bbb060423d19911efd8a"
-    
+    #model_nr = "61d9bbb060423d19911efd8a"
+    #model_nr = "61dcc03a8002335ed70e493f"
+    model_nr = "61df484b2ca8753abecb663a"
     
     topic_names = open(os.path.join(folder, model_nr + "_topic_name.json"), "r")
     
