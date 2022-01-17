@@ -2,6 +2,11 @@ import os
 import json
 import csv
 
+def fill_zero(str):
+    while len(str) < 4:
+        str = "0" + str
+    return str
+
 def convert_to_csv(json_topic_names, json_model, json_themes):
     
     document_theme_dict = {}
@@ -42,13 +47,13 @@ def convert_to_csv(json_topic_names, json_model, json_themes):
         #themes
         if str(document['id']) in document_theme_dict:
             themes_sorted = sorted(document_theme_dict[str(document['id'])], key=lambda x: len((x['document_ids'])), reverse = True)
-            row_list[3] = themes_sorted[0]['theme_name']
+            row_list[3] = fill_zero(str(len(themes_sorted[0]['document_ids']))) + " occ: " +  themes_sorted[0]['theme_name']
             if len(themes_sorted) > 1:
-                row_list[4] = themes_sorted[1]['theme_name']
+                row_list[4] = fill_zero(str(len(themes_sorted[1]['document_ids']))) + " occ: " + themes_sorted[1]['theme_name']
             if len(themes_sorted) > 2:
-                row_list[5] = themes_sorted[2]['theme_name']
+                row_list[5] = fill_zero(str(len(themes_sorted[2]['document_ids']))) + " occ: " + themes_sorted[2]['theme_name']
             if len(themes_sorted) > 3:
-                row_list[6] = " / ".join([t['theme_name'] for t in themes_sorted[3:]])
+                row_list[6] = " / ".join([fill_zero(str(len(t['document_ids']))) + " occ: " + t['theme_name'] for t in themes_sorted[3:]])
         #key words and topics
         key_words = []
         for document_topic in document["document_topics"]:
