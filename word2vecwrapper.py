@@ -3,6 +3,7 @@ For accessing word2vec, cluster vectors and replace terms with synonym clusters
 """
 
 import gensim
+import os
 from sklearn import preprocessing
 import numpy as np
 import gc
@@ -31,13 +32,27 @@ class Word2vecWrapper:
     A class for storing the information regarding the distributional semantics space
     """
 
-    def __init__(self, model_path, semantic_vector_length, cluster_eps, no_match, manual_made_dict, binary, gensim_format):
+    def __init__(self, model_path, semantic_vector_length, cluster_eps, no_match, manual_made_dict_file, binary, gensim_format, path_slash_format):
+    
+    
+        print(os.path.join(model_path, manual_made_dict_file))
+        manual_made_cluster_dict = {}
+        if manual_made_dict_file != None:
+            if not os.path.isfile(os.path.join(path_slash_format, manual_made_dict_file)):
+                raise FileNotFoundError("The file for specifying manually constructed words doesn't exist. Filename given in configuration is: " + \
+                                         manual_made_dict_file)
+            with open(os.path.join(path_slash_format, manual_made_dict_file)) as manual_cluster_file:
+                for line in manual_cluster_file:
+                    cluster_words = line.strip().split(" ") #TODO: Sort first
+                    for word in cluster_words:
+                        manual_made_cluster_dict[word] = SYNONYM_BINDER.join(cluster_words)
+
         self.word2vec_model = None
         self.model_path = model_path
         self.semantic_vector_length = semantic_vector_length
         self._vocabulary_list = None
         self.no_match = no_match
-        self.manual_made_dict = manual_made_dict
+        self.manual_made_dict = manual_made_cluster_dict
         self.binary = binary
         self.gensim_format = gensim_format
         self.cluster_eps = cluster_eps
@@ -48,7 +63,6 @@ class Word2vecWrapper:
         self.term_similar_dict = None
         
         
-            
     def load(self):
         """
         load the semantic space in the memory
@@ -143,9 +157,12 @@ class Word2vecWrapper:
                     self.cluster_dict[label] = []
                 self.cluster_dict[label].append(term)
 
+        """
+        for t,i in self.manual_made_dict.items():
+            print(t,i)
+        """
         self.term_similar_dict = self.manual_made_dict
         for label, items in self.cluster_dict.items():
-            #TODO: sort items
             if len(items) > 1: # only include clusters with at least 2 items
                 for term in items:
                     self.term_similar_dict[term] = SYNONYM_BINDER.join(items)

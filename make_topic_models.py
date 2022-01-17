@@ -142,23 +142,10 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
             for word in words_not_to_include_in_clustering_file.readlines():
                 words_not_to_include_in_clustering.append(word.strip())
 
-    # TODO: Move to other
-    manual_made_cluster_dict = {}
-    if properties.MANUAL_CLUSTER_FILE != None:
-        if not os.path.isfile(os.path.join(path_slash_format, properties.MANUAL_CLUSTER_FILE)):
-            raise FileNotFoundError("The file for specifying manually constructed words doesn't exist. Filename given in configuration is: " + \
-                                    properties.MANUAL_CLUSTER_FILE)
-        with open(os.path.join(path_slash_format, properties.MANUAL_CLUSTER_FILE)) as manual_cluster_file:
-            for line in manual_cluster_file:
-                cluster_words = line.strip().split(" ") #TODO: Sort first
-                for word in cluster_words:
-                    manual_made_cluster_dict[word] = SYNONYM_BINDER.join(cluster_words)
-
-
     word2vecwrapper = None
     if properties.PRE_PROCESS:
         word2vecwrapper = Word2vecWrapper(properties.SPACE_FOR_PATH, properties.VECTOR_LENGTH, properties.MAX_DIST_FOR_CLUSTERING,\
-                                      words_not_to_include_in_clustering, manual_made_cluster_dict, properties.BINARY_SPACE, properties.GENSIM_FORMAT)
+                                      words_not_to_include_in_clustering, properties.MANUAL_CLUSTER_FILE, properties.BINARY_SPACE, properties.GENSIM_FORMAT, path_slash_format)
     
     data_set_name = os.path.basename(path_slash_format)
  
