@@ -875,13 +875,14 @@ function getBadgeLabel(stanceCategory){
             badgeLabel.addClass("badge");
             badgeLabel.addClass("text-badge");
             badgeLabel.attr("id", stanceCategory);
-            if (stanceCategory.length > 3) {
-            badgeLabel.append(stanceCategory.substring(0, 3))
-            }
+            // if (stanceCategory.length > 3) {
+            // badgeLabel.append(stanceCategory.substring(0, 3))
+            //}
             //else if (stanceCategory.length == 2){
             //    badgeLabel.append(stanceCategory + " ");
             //}
-            else if (stanceCategory.length == 1){
+            // else
+		if (stanceCategory.length == 1){
                 badgeLabel.append(stanceCategory + " ");
             }
             else{
@@ -2155,8 +2156,10 @@ function addChoiceBasedHighlight(){
     .classed(CHOOSEN, false);
     
     d3.selectAll("." + NOTCHOSEN)
-    .classed(NOTCHOSEN, false);
+	.classed(NOTCHOSEN, false);
 
+    
+    /*
     // Reset to show snippet texts only
     d3.selectAll('.snippet-text').classed("not-displayed-text", false);
     d3.selectAll('.full-text').classed("not-displayed-text", true);
@@ -2164,7 +2167,8 @@ function addChoiceBasedHighlight(){
     d3.selectAll('.full-text').classed("displayed-text", false);
     showFullText = false;
     $("#showFullText").removeClass("button-active");
-                                                            
+    */
+                                                        
     d3.selectAll('.text-label').classed("text-border", false);
     
     // Reset highlight of terms that stem from topics that are not chosen
