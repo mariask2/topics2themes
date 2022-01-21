@@ -1,6 +1,7 @@
 import os
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
+from sklearn.neighbors import NearestNeighbors
 import joblib
 # Deprecated:
 #from sklearn.externals import joblib
@@ -27,6 +28,8 @@ MODEL_FOLDER = os.path.join(WORKSPACE_FOLDER, "trained_machine_learning_models")
 MODEL_PREFIX = "model_"
 VECTORIZER_PREFIX = "vectorizer_"
 CLASS_LIST_PREFIX = "class_list_"
+NEIGH_MODEL_PREFIX = "neighmodel_"
+Y_VEC_PREFIX = "y_vec_"
 
 class ThemeSorter:
     def __init__(self, mongo_connector):
@@ -45,6 +48,12 @@ class ThemeSorter:
     def get_class_list_file(self, analysis_id):
         return os.path.join(MODEL_FOLDER, CLASS_LIST_PREFIX + analysis_id)
     
+    def get_neigh_model_file(self, analysis_id):
+        return os.path.join(MODEL_FOLDER, NEIGH_MODEL_PREFIX + analysis_id)
+        
+    def get_y_vec_file(self, analysis_id):
+        return os.path.join(MODEL_FOLDER, Y_VEC_PREFIX + analysis_id)
+        
     def retrain_model(self, analysis_id):
         print("Retrain model for " + str(analysis_id))
         print("********")
@@ -102,12 +111,16 @@ class ThemeSorter:
         clf.fit(transformed, y)
         print("feature_set", feature_set)
         
+        neigh = NearestNeighbors(n_neighbors=len(y), algorithm='ball_tree')
+        neigh.fit(transformed)
+        
         res_on_training = clf.predict_proba(transformed)
         
         joblib.dump(clf, self.get_model_file(analysis_id))
         joblib.dump(vectorizer, self.get_vectorizer_file(analysis_id))
         joblib.dump(categories_list, self.get_class_list_file(analysis_id))
-
+        joblib.dump(neigh, self.get_neigh_model_file(analysis_id))
+        joblib.dump(y, self.get_y_vec_file(analysis_id))
         # TODO: It might be possible to speed up the training by using a recently trained model to start with
         # investigate if training is slow
         return None
@@ -152,20 +165,40 @@ class ThemeSorter:
             print("no classifier trained for " + str(analysis_id))
             return default_themes_str
         
-        clf = joblib.load(self.get_model_file(analysis_id))
         vectorizer = joblib.load(self.get_vectorizer_file(analysis_id))
-        classes = joblib.load(self.get_class_list_file(analysis_id))
+        ys = joblib.load(self.get_y_vec_file(analysis_id))
+        CUTOFF_LOGISTIC_REGRESSION = 300
+        if os.path.exists(self.get_neigh_model_file(analysis_id) and \
+            os.path.exists(self.get_y_vec_file(analysis_id))) and \
+            len(ys) < CUTOFF_LOGISTIC_REGRESSION:
+            print("Use nearest neighbour classification")
+            neigh = joblib.load(self.get_neigh_model_file(analysis_id))
+            data = [document_dict[int(document_id)]]
+            transformed = vectorizer.transform(data)
     
-        data = [document_dict[int(document_id)]]
-        transformed = vectorizer.transform(data)
-        print("transformed", transformed)
-        print("inverse transformed", vectorizer.inverse_transform(transformed))
+            classifications = neigh.kneighbors(transformed, return_distance=False)[0]
+            print("neighbour datapoints", classifications)
+            classes = [ys[index] for index in classifications]
+            sorted_themes = []
+            for c in classes:
+                if c not in sorted_themes:
+                    sorted_themes.append(c)
+        else:
+            print("Use logistic regression classification")
+            clf = joblib.load(self.get_model_file(analysis_id))
+            classes = joblib.load(self.get_class_list_file(analysis_id))
+    
+            data = [document_dict[int(document_id)]]
+            transformed = vectorizer.transform(data)
+            print("transformed", transformed)
+            print("inverse transformed", vectorizer.inverse_transform(transformed))
         
-        classifications = clf.predict_proba(transformed)
-        print("classifications", classifications)
+            classifications = clf.predict_proba(transformed)
+            print("classifications", classifications)
         
-        sorted_prob_themes = sorted([(prob, theme_nr) for prob, theme_nr in zip(classifications[0], classes)], reverse = True)
-        sorted_themes = [int(theme_nr) for (prob, theme_nr) in sorted_prob_themes]
+        
+            sorted_prob_themes = sorted([(prob, theme_nr) for prob, theme_nr in zip(classifications[0], classes)], reverse = True)
+            sorted_themes = [int(theme_nr) for (prob, theme_nr) in sorted_prob_themes]
         
         sorted_themes_using_topic_connection = self.rank_according_to_topic_connection(document_id, sorted_themes, potential_theme_dict)
 
@@ -178,9 +211,5 @@ class ThemeSorter:
 if __name__ == '__main__':
     mc = MongoConnector()
     ts = ThemeSorter(mc)
-    ts.retrain_model("5ba3977599a029238042ecf3")
-    print(ts.rank_themes_for_document("5ba3977599a029238042ecf3", "682"))
-    print(ts.rank_themes_for_document("5ba3977599a029238042ecf3", "480"))
-    print(ts.rank_themes_for_document("5ba3977599a029238042ecf3", "1033"))
-    print(ts.rank_themes_for_document("5ba3977599a029238042ecf3", "627"))
-    print(ts.rank_themes_for_document("5ba3977599a029238042ecf3", "14"))
+    ts.retrain_model("61ea6c0301c7c1346b1ff9f4")
+    print(ts.rank_themes_for_document("61ea6c0301c7c1346b1ff9f4", "14"))
