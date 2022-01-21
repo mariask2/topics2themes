@@ -1,6 +1,6 @@
 import os
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.linear_model import LogisticRegression
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 import joblib
 # Deprecated:
 #from sklearn.externals import joblib
@@ -47,10 +47,12 @@ class ThemeSorter:
     
     def retrain_model(self, analysis_id):
         print("Retrain model for " + str(analysis_id))
+        print("********")
         themes = self.mongo_connector.get_saved_themes(analysis_id)
         document_dict, potential_theme_dict = self.mongo_connector.get_documents_for_analysis(analysis_id)
         
         if (len(themes)) < 2 or (len(document_dict.keys()) < 5):
+            print("Not enough manual data yet to train model")
             return # No point of training a model when there very little data
 
         text_collection_name = self.mongo_connector.get_collection_name_for_analysis(analysis_id)
@@ -77,12 +79,12 @@ class ThemeSorter:
                     categories_list.append(theme[THEME_NUMBER])
 
         if len(categories_list) < 2:
+            print("Not enough manual data yet to train model")
             return # If the categories list is small, but nr of themes is >= 2, this means that the classifier only has one class to work with. No point training the classifier.
     
         vectorizer = CountVectorizer(min_df=2,\
                                      stop_words=stop_words,\
-                                     ngram_range = (1, 1),\
-                                     binary = True)
+                                     ngram_range = (1, 1))
         try:
             transformed = vectorizer.fit_transform(data_list)
         except ValueError:
@@ -96,8 +98,9 @@ class ThemeSorter:
                 feature_set.add(f)
         if len(feature_set) < 5:
             return # No point of training a model when there very features
-        clf = LogisticRegression(C=10)
+        clf = LogisticRegressionCV(solver='liblinear')
         clf.fit(transformed, y)
+        print("feature_set", feature_set)
         
         res_on_training = clf.predict_proba(transformed)
         
@@ -110,6 +113,8 @@ class ThemeSorter:
         return None
     
     def rank_according_to_topic_connection(self, document_id, sorted_themes, potential_theme_dict):
+        print("document_id for ranking", str(document_id))
+        print("sorted_themes", sorted_themes)
         # Get the themes which other documents that belong to the same topic as the current document belong to
         
         potiential_themes_given_topic_connections = set(potential_theme_dict[int(document_id)])
@@ -153,7 +158,12 @@ class ThemeSorter:
     
         data = [document_dict[int(document_id)]]
         transformed = vectorizer.transform(data)
+        print("transformed", transformed)
+        print("inverse transformed", vectorizer.inverse_transform(transformed))
+        
         classifications = clf.predict_proba(transformed)
+        print("classifications", classifications)
+        
         sorted_prob_themes = sorted([(prob, theme_nr) for prob, theme_nr in zip(classifications[0], classes)], reverse = True)
         sorted_themes = [int(theme_nr) for (prob, theme_nr) in sorted_prob_themes]
         
