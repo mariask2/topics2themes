@@ -101,39 +101,7 @@ var buffer = [];
 var lastKeyTime = Date.now();
 
 
-function onKeyDown(event) {
-    console.log("onkeydown")
-    console.log(event)
-    const currentTime = Date.now();
-    if (currentTime - lastKeyTime < 10) {
-        return;
-    }
- 
-    // only select a theme to attach to if a text is chosen
-    if (currentTextIds.length == 0){
-        return;
-    }
-    
-    if (currentTextIds.length > 1){
-        alert("Several texts are selected, you can only attach one text at a time to a theme");
-        return;
-    }          
 
-    const charList = '0123456789';
-    const key = event.key.toLowerCase();
-
-    if (charList.indexOf(key) == -1) return;
-
-
-    if (currentTime - lastKeyTime > 1000) {
-        buffer = [];
-    }
-
-    buffer.push(key);
-    lastKeyTime = currentTime;
-    var keyselectedtheme = parseInt(buffer.join(''))
-    addTextThemeLinkAndUpdateInterface(currentTextIds[0], keyselectedtheme)
-}
 /////////////////////
 // Script entry point
 //////////////////////
@@ -1965,6 +1933,40 @@ function addTextThemeLinkAndUpdateInterface(textId, themeId){
     addChoiceBasedHighlight();
     // Redraw the links
     renderLinks();
+}
+
+function onKeyDown(event) {
+    const currentTime = Date.now();
+
+    // only select a theme to attach to if a text is chosen
+    if (currentTextIds.length == 0){
+        return;
+    }
+    
+    if (currentTextIds.length > 1){
+        alert("Several texts are selected, you can only attach one text at a time to a theme");
+        return;
+    }          
+
+    const charList = '0123456789';
+    const key = event.key.toLowerCase();
+
+    if (event.key === "Enter" && buffer.length > 0){
+	var keyselectedtheme = parseInt(buffer.join(''))
+	addTextThemeLinkAndUpdateInterface(currentTextIds[0], keyselectedtheme)
+	buffer = [];
+	return;
+    }
+    
+    if (charList.indexOf(key) == -1) return;
+
+    if (currentTime - lastKeyTime > 2000) {
+        buffer = [];
+    }
+
+    buffer.push(key);
+    lastKeyTime = currentTime;
+    
 }
 
 
