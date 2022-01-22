@@ -1951,6 +1951,10 @@ function onKeyDown(event) {
     const charList = '0123456789';
     const key = event.key.toLowerCase();
 
+    if (currentTime - lastKeyTime > 1500) {
+        buffer = [];
+    }
+    
     if (event.key === "Enter" && buffer.length > 0){
 	var keyselectedtheme = parseInt(buffer.join(''))
 	addTextThemeLinkAndUpdateInterface(currentTextIds[0], keyselectedtheme)
@@ -1960,9 +1964,7 @@ function onKeyDown(event) {
     
     if (charList.indexOf(key) == -1) return;
 
-    if (currentTime - lastKeyTime > 2000) {
-        buffer = [];
-    }
+
 
     buffer.push(key);
     lastKeyTime = currentTime;
@@ -2126,7 +2128,7 @@ function doResetHighlightAfterStateChange(){
     
     renderLinks();
     
-    setTimeout(addChoiceBasedHighlight, 1);
+    setTimeout(addChoiceBasedHighlight, 0);
     
 }
 
@@ -2177,20 +2179,7 @@ function resetLinkHighlight() {
 function addChoiceBasedHighlight(){
     
     // If there are selected items, first set all items to grey
-    
-    /*
-    if (currentTermIds.length > 0 ||
-        currentTopicIds.length > 0 ||
-        currentTextIds.length > 0 ||
-        currentThemeIds.length > 0){
-        d3.select("#termsList").selectAll("li").classed(NOTCHOSEN, true);
-        d3.select("#topicsList").selectAll("li").classed(NOTCHOSEN, true);
-        d3.select("#textsList").selectAll("li").classed(NOTCHOSEN, true);
-        d3.select("#themesList").selectAll("li").classed(NOTCHOSEN, true);
-    }*/
-    
-
-    
+      
     d3.selectAll("." + DIRECTCHOOSEN)
     .classed(DIRECTCHOOSEN, false);
     
@@ -2262,7 +2251,7 @@ function addChoiceBasedHighlight(){
 // Handles hovering for a document element
 function onTextElementMouseEnter() {
     resetHighlight();
-	highlightTextElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT);
+	($(this), DIRECTHIGHLIGHT, HIGHLIGHT);
 }
 
 // Handles hovering for a document element
