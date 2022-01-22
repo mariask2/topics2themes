@@ -538,6 +538,11 @@ function getMaxDocumentScore(){
 
 
 function modelAddTextThemeLink(themeId, textId){
+    if (!(themeId in modelThemesToTexts)){
+        console.log("themeId not in modelThemesToTexts");
+        console.log(themeId);
+        return;
+    }
 
     if (modelThemesToTexts[themeId].texts.indexOf(textId) == -1){
         modelThemesToTexts[themeId].texts.push(textId)

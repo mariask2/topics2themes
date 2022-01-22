@@ -97,8 +97,43 @@ var themeSortMode = null;
 
 var authenticationKey = null;
 
+var buffer = [];
+var lastKeyTime = Date.now();
 
 
+function onKeyDown(event) {
+    console.log("onkeydown")
+    console.log(event)
+    const currentTime = Date.now();
+    if (currentTime - lastKeyTime < 10) {
+        return;
+    }
+ 
+    // only select a theme to attach to if a text is chosen
+    if (currentTextIds.length == 0){
+        return;
+    }
+    
+    if (currentTextIds.length > 1){
+        alert("Several texts are selected, you can only attach one text at a time to a theme");
+        return;
+    }          
+
+    const charList = '0123456789';
+    const key = event.key.toLowerCase();
+
+    if (charList.indexOf(key) == -1) return;
+
+
+    if (currentTime - lastKeyTime > 1000) {
+        buffer = [];
+    }
+
+    buffer.push(key);
+    lastKeyTime = currentTime;
+    var keyselectedtheme = parseInt(buffer.join(''))
+    addTextThemeLinkAndUpdateInterface(currentTextIds[0], keyselectedtheme)
+}
 /////////////////////
 // Script entry point
 //////////////////////
@@ -114,7 +149,13 @@ $(document).ready(function(){
     ////////////////////////
 	// Set up the handlers
     /////////////////////////
-    
+
+
+
+
+    //$(document).add("body").keydown(onKeyDown);
+    document.addEventListener('keydown', onKeyDown);
+
     // Handlers for selecting and/or constructing data sets, models and analysis 
     $("#dataset").change(onDatasetChange);
     $("#newModel").click(onConstructNewModel);
@@ -162,6 +203,7 @@ $(document).ready(function(){
     $("#themesList").on("click", ".theme-element", onThemeElementClick);
 
     $("#textsList").on("mouseup", ".jp_lemma", onSelectionChange);
+
     
 
     // Button for showing full text
@@ -1895,34 +1937,32 @@ function onThemeElementDrop(event) {
 	return false;
 }
 
-
 // Handles the successful drag'n'drop for a topic element and a theme element
 function onSuccessfulThemeTextElementDrop(themeElement, textId) {
     
     // Get the theme element datum
     let theme = d3.select(themeElement.get(0)).datum();
-    modelAddTextThemeLink(theme.id, textId)
-    
-    //addTextTheme(theme.id)
-    
+    addTextThemeLinkAndUpdateInterface(textId, theme.id)
+}
+
+// Invoked from the drag and drop text-theme association, as well as when it is done with keys
+function addTextThemeLinkAndUpdateInterface(textId, themeId){
+    modelAddTextThemeLink(themeId, textId);
+
     // Repopulate the theme element for the updated text-theme links
     d3.select("#themesList").selectAll("li")
-    .filter(function(f, j){
-            return theme.id == f.id;
-            })
-    .each(populateThemeElement);
-    
+        .filter(function(f, j){
+        return themeId == f.id;
+        })
+	.each(populateThemeElement);
     
     // Adds information of associated themes to the text elements
     d3.select("#textsList").selectAll("li")
     .filter(function(f, j){
-            return isAssociatedThemeText(theme.id, f.id);
-            })
+    return isAssociatedThemeText(themeId, f.id);
+    })
     .each(populateTextElement);
-    
     addChoiceBasedHighlight();
-    
-    //doDefaultSort(); // XXX: disabled not to disturb the user (imagine someone in the middle of a very long list...)
     // Redraw the links
     renderLinks();
 }
