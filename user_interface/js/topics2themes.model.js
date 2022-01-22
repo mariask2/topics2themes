@@ -1472,11 +1472,20 @@ function modelToggleTopicElement(topicId){
 }
 
 function modelToggleTextElement(textId){
-    resetSelectedDataExcept(currentTextIds);
-    toggleSelectedElements(textId, currentTextIds);
+    let wasChosenBefore = false;
+    if (currentTextIds.indexOf(textId) > -1) {
+	wasChosenBefore = true;
+    }
+    resetSelectedDataExcept();
+    if (!wasChosenBefore){
+	currentTextIds.push(textId);
+    }
+    
+	//    resetSelectedDataExcept(currentTextIds);
+//    toggleSelectedElements(textId, currentTextIds);
 }
 
-function modelToggleThemeElement(themeId){
+function modelToggleThemeElement(themeId){    
     resetSelectedDataExcept(currentThemeIds);
     toggleSelectedElements(themeId, currentThemeIds);
 }
