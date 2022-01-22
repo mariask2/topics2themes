@@ -156,10 +156,10 @@ $(document).ready(function(){
     $(".sort-themes-trigger").click(onSortThemesList);
                   
 	// list click events to select a items as active
-    $("#termsList").on("dblclick", ".term-element", onTermElementClick);
-    $("#topicsList").on("dblclick", ".topic-element", onTopicElementClick);
-    $("#textsList").on("dblclick", ".text-element", onTextElementClick);
-    $("#themesList").on("dblclick", ".theme-element", onThemeElementClick);
+    $("#termsList").on("click", ".term-element", onTermElementClick);
+    $("#topicsList").on("click", ".topic-element", onTopicElementClick);
+    $("#textsList").on("click", ".text-element", onTextElementClick);
+    $("#themesList").on("click", ".theme-element", onThemeElementClick);
 
     $("#textsList").on("mouseup", ".jp_lemma", onSelectionChange);
     
