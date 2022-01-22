@@ -106,21 +106,32 @@ class ThemeSorter:
             for f in list(feature):
                 feature_set.add(f)
         if len(feature_set) < 5:
+            print("Too few features to train a model")
             return # No point of training a model when there very features
+            
         clf = LogisticRegressionCV(solver='liblinear')
-        clf.fit(transformed, y)
         print("feature_set", feature_set)
+        try:
+            clf.fit(transformed, y)
+            joblib.dump(clf, self.get_model_file(analysis_id))
+        except ValueError:
+            print("Training of LogisticRegressionCV failed")
+            return
         
         neigh = NearestNeighbors(n_neighbors=len(y), algorithm='ball_tree')
-        neigh.fit(transformed)
-        
+        try:
+            neigh.fit(transformed)
+            joblib.dump(neigh, self.get_neigh_model_file(analysis_id))
+            joblib.dump(y, self.get_y_vec_file(analysis_id))
+        except ValueError:
+            print("Training of NearestNeighbors failed")
+            return
         res_on_training = clf.predict_proba(transformed)
         
-        joblib.dump(clf, self.get_model_file(analysis_id))
+        
         joblib.dump(vectorizer, self.get_vectorizer_file(analysis_id))
         joblib.dump(categories_list, self.get_class_list_file(analysis_id))
-        joblib.dump(neigh, self.get_neigh_model_file(analysis_id))
-        joblib.dump(y, self.get_y_vec_file(analysis_id))
+        
         # TODO: It might be possible to speed up the training by using a recently trained model to start with
         # investigate if training is slow
         return None
