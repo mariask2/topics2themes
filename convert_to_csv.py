@@ -1,13 +1,14 @@
 import os
 import json
 import csv
+import glob
 
 def fill_zero(str):
     while len(str) < 4:
         str = "0" + str
     return str
 
-def convert_to_csv(json_topic_names, json_model, json_themes):
+def convert_to_csv(json_topic_names, json_model, json_themes, file_name_text_dict):
     
     document_theme_dict = {}
     for theme_el in json_themes:
@@ -35,11 +36,12 @@ def convert_to_csv(json_topic_names, json_model, json_themes):
     
     index_end_topics = len(header_list)
     header_list.append("Filename")
-        
+    
     outputfile = open('test_output.txt', 'w')
     to_write = "\t".join(header_list) + "\n"
     outputfile.write(to_write)
         
+    included_file_names = set()
     for document in json_model["topic_model_output"]["documents"]:
         
         row_list = [""]*len(header_list)
@@ -83,18 +85,38 @@ def convert_to_csv(json_topic_names, json_model, json_themes):
         row_list[1] = document['text'].replace("\t", " ").replace("\n", " ").strip()
         
         #name of text
-        row_list[index_end_topics] = document['base_name']
+        row_list[index_end_topics] = document['base_name'].replace(".txt", "")
         
+        to_write_row = "\t".join(row_list) + "\n"
+        outputfile.write(to_write_row)
+        
+        included_file_names.add(document['base_name'])
+    
+    not_covered = set(file_name_text_dict.keys()) - included_file_names
+    for file_name in list(not_covered):
+        row_list = [""]*len(header_list)
+        row_list[index_end_topics] = file_name.replace(".txt", "")
+        row_list[1] = file_name_text_dict[file_name].replace("\t", " ").replace("\n", " ").strip()
         to_write_row = "\t".join(row_list) + "\n"
         outputfile.write(to_write_row)
         
     outputfile.close()
         
 if __name__ == '__main__':
-    folder = "/Users/marsk757/topic2themes/topics2themes/data_folder/språk-tilltal-delat/topics2themes_exports_folder_created_by_system"
+    #folder = "/Users/marsk757/topic2themes/topics2themes/data_folder/språk-tilltal-delat/topics2themes_exports_folder_created_by_system"
     #model_nr = "61d9bbb060423d19911efd8a"
     #model_nr = "61dcc03a8002335ed70e493f"
-    model_nr = "61df484b2ca8753abecb663a"
+    #model_nr = "61df484b2ca8753abecb663a"
+    
+    folder = "/Users/marsk757/topic2themes/topics2themes/data_folder/cycling/topics2themes_exports_folder_created_by_system"
+    model_nr = "61ea6c0301c7c1346b1ff9f4"
+    files_folder = "/Users/marsk757/topic2themes/topics2themes/data_folder/cycling/cycling/"
+    
+    file_names = glob.glob(os.path.join(files_folder, "*.txt"))
+    file_name_text_dict = {}
+    for file_name in file_names:
+        with open(file_name) as f:
+            file_name_text_dict[os.path.basename(file_name)] = f.read()
     
     topic_names = open(os.path.join(folder, model_nr + "_topic_name.json"), "r")
     
@@ -109,4 +131,4 @@ if __name__ == '__main__':
     topic_names.close()
     model.close()
     themes.close()
-    convert_to_csv(json_topic_names, json_model, json_themes)
+    convert_to_csv(json_topic_names, json_model, json_themes, file_name_text_dict)
