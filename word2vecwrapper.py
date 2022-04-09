@@ -33,26 +33,15 @@ class Word2vecWrapper:
     """
 
     def __init__(self, model_path, semantic_vector_length, cluster_eps, no_match, manual_made_dict_file, binary, gensim_format, path_slash_format):
-    
-    
-        print(os.path.join(model_path, manual_made_dict_file))
-        manual_made_cluster_dict = {}
-        if manual_made_dict_file != None:
-            if not os.path.isfile(os.path.join(path_slash_format, manual_made_dict_file)):
-                raise FileNotFoundError("The file for specifying manually constructed words doesn't exist. Filename given in configuration is: " + \
-                                         manual_made_dict_file)
-            with open(os.path.join(path_slash_format, manual_made_dict_file)) as manual_cluster_file:
-                for line in manual_cluster_file:
-                    cluster_words = line.strip().split(" ") #TODO: Sort first
-                    for word in cluster_words:
-                        manual_made_cluster_dict[word] = SYNONYM_BINDER.join(cluster_words)
 
+        self.manual_made_dict_file = manual_made_dict_file
+        self.path_slash_format = path_slash_format
         self.word2vec_model = None
         self.model_path = model_path
         self.semantic_vector_length = semantic_vector_length
         self._vocabulary_list = None
         self.no_match = no_match
-        self.manual_made_dict = manual_made_cluster_dict
+        self.manual_made_dict = None
         self.binary = binary
         self.gensim_format = gensim_format
         self.cluster_eps = cluster_eps
@@ -62,6 +51,21 @@ class Word2vecWrapper:
 
         self.term_similar_dict = None
         
+    def load_manual_dict(self, vocabulary):
+        vocabulary_set = set(vocabulary)
+        manual_made_cluster_dict = {}
+        if self.manual_made_dict_file != None:
+            if not os.path.isfile(os.path.join(self.path_slash_format, self.manual_made_dict_file)):
+                raise FileNotFoundError("The file for specifying manually constructed words doesn't exist. Filename given in configuration is: " + \
+                                         self.manual_made_dict_file)
+            with open(os.path.join(self.path_slash_format, self.manual_made_dict_file)) as manual_cluster_file:
+                for line in manual_cluster_file:
+                    cluster_words = line.strip().split(" ") #TODO: Sort first
+                    for word in cluster_words:
+                        if word in vocabulary_set:
+                            manual_made_cluster_dict[word] = SYNONYM_BINDER.join(cluster_words)
+                        
+        return manual_made_cluster_dict
         
     def load(self):
         """
@@ -115,7 +119,8 @@ class Word2vecWrapper:
         except KeyError:
                 return self.default_vector
 
-    def load_clustering(self, output_file, transformation):
+    def load_clustering(self, output_file, transformation, not_found_words_file_name):
+        not_found_words_file = open(not_found_words_file_name, "w")
         nr_of_not_found = 0
         print("Clustering vectors, this might take a while ....")
         
@@ -127,7 +132,9 @@ class Word2vecWrapper:
         word_freq_dict = {}
         for word, count in zip(self._vocabulary_list, frequencies):
             word_freq_dict[word] = count
-            
+        
+        self.manual_made_dict = self.load_manual_dict(self._vocabulary_list)
+        
         X_vectors = []
         cluster_words = []
         for word in self._vocabulary_list:
@@ -140,8 +147,13 @@ class Word2vecWrapper:
             else:
                 # default vector
                 nr_of_not_found = nr_of_not_found + 1
+                if word not in set(self.manual_made_dict.keys()):
+                    not_found_words_file.write(word + "\n")
                 
         print("Number of words not found in vector space used: " + str(nr_of_not_found))
+        not_found_words_file.close()
+        
+        
         
         # Compute DBSCAN
         X = np.matrix(X_vectors)
@@ -157,10 +169,6 @@ class Word2vecWrapper:
                     self.cluster_dict[label] = []
                 self.cluster_dict[label].append(term)
 
-        """
-        for t,i in self.manual_made_dict.items():
-            print(t,i)
-        """
         self.term_similar_dict = self.manual_made_dict
         for label, items in self.cluster_dict.items():
             if len(items) > 1: # only include clusters with at least 2 items

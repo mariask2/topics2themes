@@ -3,6 +3,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.neighbors import NearestNeighbors
 import joblib
+import traceback
 # Deprecated:
 #from sklearn.externals import joblib
 
@@ -56,7 +57,6 @@ class ThemeSorter:
         
     def retrain_model(self, analysis_id):
         print("Retrain model for " + str(analysis_id))
-        print("********")
         themes = self.mongo_connector.get_saved_themes(analysis_id)
         document_dict, potential_theme_dict = self.mongo_connector.get_documents_for_analysis(analysis_id)
         
@@ -96,8 +96,9 @@ class ThemeSorter:
                                      ngram_range = (1, 1))
         try:
             transformed = vectorizer.fit_transform(data_list)
-        except ValueError:
+        except:
             print("Vectorization failed")
+            traceback.print_exc()
             return # If there is very little data, don't do any machine learning training
         
         feature_set = set()
@@ -110,11 +111,12 @@ class ThemeSorter:
             return # No point of training a model when there very features
             
         clf = LogisticRegressionCV(solver='liblinear')
-        print("feature_set", feature_set)
+        #print("feature_set", feature_set)
         try:
             clf.fit(transformed, y)
             joblib.dump(clf, self.get_model_file(analysis_id))
-        except ValueError:
+        except:
+            traceback.print_exc()
             print("Training of LogisticRegressionCV failed")
             return
         
@@ -123,8 +125,9 @@ class ThemeSorter:
             neigh.fit(transformed)
             joblib.dump(neigh, self.get_neigh_model_file(analysis_id))
             joblib.dump(y, self.get_y_vec_file(analysis_id))
-        except ValueError:
+        except:
             print("Training of NearestNeighbors failed")
+            traceback.print_exc()
             return
         res_on_training = clf.predict_proba(transformed)
         
@@ -137,8 +140,8 @@ class ThemeSorter:
         return None
     
     def rank_according_to_topic_connection(self, document_id, sorted_themes, potential_theme_dict):
-        print("document_id for ranking", str(document_id))
-        print("sorted_themes", sorted_themes)
+        #print("document_id for ranking", str(document_id))
+        #print("sorted_themes", sorted_themes)
         # Get the themes which other documents that belong to the same topic as the current document belong to
         
         potiential_themes_given_topic_connections = set(potential_theme_dict[int(document_id)])
@@ -156,8 +159,8 @@ class ThemeSorter:
         #print("ranked_only_machine_learning", ranked_only_machine_learning)
         sorted_themes_using_topic_connection = ranked_according_to_topic_connection + ranked_only_machine_learning
 
-        print("sorted_themes", sorted_themes)
-        print("sorted_themes_using_topic_connection", sorted_themes_using_topic_connection)
+        #print("sorted_themes", sorted_themes)
+        #print("sorted_themes_using_topic_connection", sorted_themes_using_topic_connection)
         return sorted_themes_using_topic_connection
 
     def rank_themes_for_document(self, analysis_id, document_id):
@@ -175,41 +178,54 @@ class ThemeSorter:
             default_themes_str = [str(theme) for theme in sorted_themes_using_topic_connection]
             print("no classifier trained for " + str(analysis_id))
             return default_themes_str
+        try:
+            ranking = self.get_ml_ranking(analysis_id, document_dict, document_id, potential_theme_dict, all_theme_nrs)
+            return ranking
+        except:
+            sorted_themes_using_topic_connection = self.rank_according_to_topic_connection(document_id, all_theme_nrs, potential_theme_dict)
+            default_themes_str = [str(theme) for theme in sorted_themes_using_topic_connection]
+            print("machine learning-based ranking failed " + str(analysis_id))
+            traceback.print_exc()
+            return default_themes_str
         
+    def get_ml_ranking(self, analysis_id, document_dict, document_id, potential_theme_dict, all_theme_nrs):
         vectorizer = joblib.load(self.get_vectorizer_file(analysis_id))
         ys = joblib.load(self.get_y_vec_file(analysis_id))
-        CUTOFF_LOGISTIC_REGRESSION = 300
+        CUTOFF_LOGISTIC_REGRESSION = 1000
         if os.path.exists(self.get_neigh_model_file(analysis_id) and \
             os.path.exists(self.get_y_vec_file(analysis_id))) and \
             len(ys) < CUTOFF_LOGISTIC_REGRESSION:
-            print("Use nearest neighbour classification")
+            
+            print("Try nearest neighbour classification")
             neigh = joblib.load(self.get_neigh_model_file(analysis_id))
             data = [document_dict[int(document_id)]]
             transformed = vectorizer.transform(data)
     
             classifications = neigh.kneighbors(transformed, return_distance=False)[0]
-            print("neighbour datapoints", classifications)
+            #print("neighbour datapoints", classifications)
             classes = [ys[index] for index in classifications]
             sorted_themes = []
             for c in classes:
                 if c not in sorted_themes:
                     sorted_themes.append(c)
+            print("Used nearest neighbour classification")
         else:
-            print("Use logistic regression classification")
+            print("Try logistic regression classification")
             clf = joblib.load(self.get_model_file(analysis_id))
             classes = joblib.load(self.get_class_list_file(analysis_id))
     
             data = [document_dict[int(document_id)]]
             transformed = vectorizer.transform(data)
-            print("transformed", transformed)
-            print("inverse transformed", vectorizer.inverse_transform(transformed))
+            #print("transformed", transformed)
+            #print("inverse transformed", vectorizer.inverse_transform(transformed))
         
             classifications = clf.predict_proba(transformed)
-            print("classifications", classifications)
+            #print("classifications", classifications)
         
         
             sorted_prob_themes = sorted([(prob, theme_nr) for prob, theme_nr in zip(classifications[0], classes)], reverse = True)
             sorted_themes = [int(theme_nr) for (prob, theme_nr) in sorted_prob_themes]
+            print("Used logistic regression classification")
         
         sorted_themes_using_topic_connection = self.rank_according_to_topic_connection(document_id, sorted_themes, potential_theme_dict)
 

@@ -118,10 +118,6 @@ $(document).ready(function(){
 	// Set up the handlers
     /////////////////////////
 
-
-
-
-    //$(document).add("body").keydown(onKeyDown);
     document.addEventListener('keydown', onKeyDown);
 
     // Handlers for selecting and/or constructing data sets, models and analysis 
@@ -2251,7 +2247,8 @@ function addChoiceBasedHighlight(){
 // Handles hovering for a document element
 function onTextElementMouseEnter() {
     resetHighlight();
-	($(this), DIRECTHIGHLIGHT, HIGHLIGHT);
+    highlightTextElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT);
+    //($(this), DIRECTHIGHLIGHT, HIGHLIGHT);
 }
 
 // Handles hovering for a document element
