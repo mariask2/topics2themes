@@ -429,12 +429,12 @@ def pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_form
     synonym_file = os.path.join(synonym_output_dir, model_name + "_synonyms.txt")
     not_found_words_file = os.path.join(synonym_output_dir, model_name + "_notfound.txt")
         
-    #word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(stop_word_file, stop_word_set), min_df= 0.005)
-    word_vectorizer = CountVectorizer(binary = True, stop_words=stopword_handler.get_stop_word_set(properties.STOP_WORD_FILE, properties.STOP_WORD_SET, path_slash_format),\
+    stopwords_for_word2vec = stop_words=stopword_handler.get_stop_word_set(properties.STOP_WORD_FILE, properties.STOP_WORD_SET, path_slash_format)
+    word_vectorizer = CountVectorizer(binary = True, stop_words=stopwords_for_word2vec, lowercase=False,\
         min_df = properties.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING)
     transformation = word_vectorizer.fit_transform(documents)
     word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names())
-    word2vecwrapper.load_clustering(synonym_file, transformation, not_found_words_file)
+    word2vecwrapper.load_clustering(synonym_file, transformation, not_found_words_file, stopwords_for_word2vec)
     
     term_visualiser.set_vocabulary(word_vectorizer.get_feature_names(), path_slash_format)
     

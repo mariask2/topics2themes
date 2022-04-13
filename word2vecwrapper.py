@@ -77,7 +77,7 @@ class Word2vecWrapper:
             if self.gensim_format:
                 self.word2vec_model = gensim.models.KeyedVectors.load(self.model_path)
             else:
-                self.word2vec_model = gensim.models.KeyedVectors.load_word2vec_format(self.model_path, binary=self.binary, unicode_errors='ignore')
+                self.word2vec_model = gensim.models.KeyedVectors.load_word2vec_format(self.model_path, binary=self.binary, unicode_errors='strict')
             print("Loaded word2vec model")
 
     def get_semantic_vector_length(self):
@@ -104,22 +104,32 @@ class Word2vecWrapper:
                     self._vocabulary_list.append(el)
             print("Vocabulary size included in clustering " + str(len(self._vocabulary_list)))
 
+    def check_vector_length(self, raw_vec):
+        if len(raw_vec) != self.semantic_vector_length:
+            raise Exception("The true semantic vector has length "\
+                            + str(len(raw_vec)) \
+                            +"while the configuration file states that is should have length "\
+                            + str(self.semantic_vector_length))
+
+        
     def get_vector(self, word):
         if len(word) == 3 and word[1] == "_":
             word = word[0] # To cover for a bug in scikit learn, one char tokens have been transformed to longer. These are here transformed back
         try:
             self.load()
             raw_vec = self.word2vec_model[word]
-            if len(raw_vec) != self.semantic_vector_length:
-               raise Exception("The true semantic vector has length "\
-                            + str(len(raw_vec)) \
-                            +"while the configuration file states that is should have length "\
-                            + str(self.semantic_vector_length))
+            self.check_vector_length(raw_vec)
             return raw_vec
         except KeyError:
+            try:
+                print("word not found")
+                raw_vec = self.word2vec_model[word.lower()]
+                self.check_vector_length(raw_vec)
+                return raw_vec
+            except KeyError:
                 return self.default_vector
 
-    def load_clustering(self, output_file, transformation, not_found_words_file_name):
+    def load_clustering(self, output_file, transformation, not_found_words_file_name, stopwords_for_word2vec):
         not_found_words_file = open(not_found_words_file_name, "w")
         nr_of_not_found = 0
         print("Clustering vectors, this might take a while ....")
@@ -138,12 +148,14 @@ class Word2vecWrapper:
         X_vectors = []
         cluster_words = []
         for word in self._vocabulary_list:
+            if word.lower() in stopwords_for_word2vec:
+                continue
             vector = self.get_vector(word)
             if not all([el1 == el2 for el1, el2 in zip(vector, self.default_vector)]):
                 norm_vector = preprocessing.normalize(np.reshape(vector, newshape = (1, self.semantic_vector_length)), norm='l2') # normalize the vector (l2 = eucledian)  
                 list_vector = norm_vector[0]
                 X_vectors.append(list_vector)
-                cluster_words.append(word)
+                cluster_words.append(word.lower())
             else:
                 # default vector
                 nr_of_not_found = nr_of_not_found + 1
@@ -167,7 +179,8 @@ class Word2vecWrapper:
             if label != -1:                
                 if label not in self.cluster_dict:
                     self.cluster_dict[label] = []
-                self.cluster_dict[label].append(term)
+                if term not in self.cluster_dict[label]: # to make sure the same is not added twice (when there are both upper and lower case)
+                    self.cluster_dict[label].append(term)
 
         self.term_similar_dict = self.manual_made_dict
         for label, items in self.cluster_dict.items():
