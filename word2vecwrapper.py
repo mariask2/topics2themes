@@ -52,7 +52,7 @@ class Word2vecWrapper:
         self.term_similar_dict = None
         
     def load_manual_dict(self, vocabulary):
-        vocabulary_set = set(vocabulary)
+        vocabulary_set = set([el.lower() for el in vocabulary])
         manual_made_cluster_dict = {}
         if self.manual_made_dict_file != None:
             if not os.path.isfile(os.path.join(self.path_slash_format, self.manual_made_dict_file)):
@@ -122,7 +122,6 @@ class Word2vecWrapper:
             return raw_vec
         except KeyError:
             try:
-                print("word not found")
                 raw_vec = self.word2vec_model[word.lower()]
                 self.check_vector_length(raw_vec)
                 return raw_vec
@@ -147,8 +146,16 @@ class Word2vecWrapper:
         
         X_vectors = []
         cluster_words = []
+        
+        has_lower_set = set([])
         for word in self._vocabulary_list:
-            if word.lower() in stopwords_for_word2vec:
+            if word.lower() == word:
+                has_lower_set.add(word)
+                
+        for word in self._vocabulary_list:
+            if word.lower() in stopwords_for_word2vec or word.lower() in self.manual_made_dict.keys():
+                continue
+            if word.lower() != word and word.lower() in has_lower_set: # if there is a non-cap version of the word use that one
                 continue
             vector = self.get_vector(word)
             if not all([el1 == el2 for el1, el2 in zip(vector, self.default_vector)]):
@@ -159,12 +166,11 @@ class Word2vecWrapper:
             else:
                 # default vector
                 nr_of_not_found = nr_of_not_found + 1
-                if word not in set(self.manual_made_dict.keys()):
-                    not_found_words_file.write(word + "\n")
+                if word not in set(self.manual_made_dict.keys()) and word.lower() not in set(self.manual_made_dict.keys()):
+                    not_found_words_file.write(word.lower() + "\n")
                 
         print("Number of words not found in vector space used: " + str(nr_of_not_found))
         not_found_words_file.close()
-        
         
         
         # Compute DBSCAN
@@ -174,7 +180,8 @@ class Word2vecWrapper:
         labels = db.labels_
 
         for label, term, vector in zip(labels, cluster_words, X_vectors):
-            if term in self.no_match or term in self.manual_made_dict: # User defined to exclude from clustering or in a user-defined dict
+            term = term.lower()
+            if term in self.no_match or term in self.manual_made_dict.keys(): # User defined to exclude from clustering or in a user-defined dict
                 continue
             if label != -1:                
                 if label not in self.cluster_dict:
