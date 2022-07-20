@@ -50,11 +50,6 @@ var splittedTerms = [];
 /// Sort functions
 /////////////////////
 
-// Sort functions for documents
-/*var SORT_DOCUMENTS = {
-	"time/asc": compareDocumentTimestampAsc,
-	"time/desc": compareDocumentTimestampDesc
-};*/
 
 // Sort functions for terms
 var SORT_TERMS = {

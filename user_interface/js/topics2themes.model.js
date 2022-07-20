@@ -157,27 +157,6 @@ function compareTopicTermsDesc(a, b){
 	return b.score - a.score;
 }
 
-// Document timestamp comparator
-function compareDocumentTimestampAsc(a, b){
-	let datumA = d3.select(a).datum();
-	let datumB = d3.select(b).datum();
-	
-	let timestampA = moment(datumA.timestamp, 'dd MMM DD HH:mm:ss ZZ YYYY');
-	let timestampB = moment(datumB.timestamp, 'dd MMM DD HH:mm:ss ZZ YYYY');
-	
-	return timestampA - timestampB;
-}
-
-// Document timestamp comparator
-function compareDocumentTimestampDesc(a, b){
-	let datumA = d3.select(a).datum();
-	let datumB = d3.select(b).datum();
-	
-	let timestampA = moment(datumA.timestamp, 'dd MMM DD HH:mm:ss ZZ YYYY');
-	let timestampB = moment(datumB.timestamp, 'dd MMM DD HH:mm:ss ZZ YYYY');
-	
-	return timestampB - timestampA;
-}
 
 // Resets the stored data values
 /*
