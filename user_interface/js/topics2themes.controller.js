@@ -1508,7 +1508,7 @@ function scrollTopForAllExceptRecentlyClicked(recentlyClicked){
 function sortTermsList(sortKey) {
 	if (!(sortKey in SORT_TERMS))
 		return;
-	
+    console.log("sortTermsList");
 	// Use the external sorting function for the terms list
 	let sortFunction = SORT_TERMS[sortKey];
 	
@@ -1518,6 +1518,7 @@ function sortTermsList(sortKey) {
 	// Reset the scrolling for the container before reattaching the elements
 	//termsContainer.scrollTop(0);
 	termsContainer.append(sortedElements);
+    console.log("sortTermsList return");
 }
 
 
@@ -2096,6 +2097,7 @@ function resetHighlightAfterStateChange(){
 }
 
 function doResetHighlightAfterStateChange(){
+    console.log("doResetHighlightAfterStateChange");
     // If a term is not selected
     if (currentTermIds.length == 0){
         sortTermsList(termSortMode);
@@ -2120,7 +2122,7 @@ function doResetHighlightAfterStateChange(){
     renderLinks();
     
     setTimeout(addChoiceBasedHighlight, 0);
-    
+    console.log("doResetHighlightAfterStateChange return");    
 }
 
 
@@ -2168,6 +2170,7 @@ function resetLinkHighlight() {
 
 
 function addChoiceBasedHighlight(){
+    console.log("addChoiceBasedHighlight");    
     
     // If there are selected items, first set all items to grey
       
@@ -2199,7 +2202,8 @@ function addChoiceBasedHighlight(){
     d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
     // Then go through all items to see which are selected
     // and set them to not grey
-    
+
+    console.log("addChoiceBasedHighlight #termsList");
     d3.select("#termsList").selectAll("li")
     .each(function(d, i){
           let element = $(this);
@@ -2209,6 +2213,7 @@ function addChoiceBasedHighlight(){
           });
  
     
+    console.log("addChoiceBasedHighlight #topicsList");
     d3.select("#topicsList").selectAll("li")
     .each(function(d, i){
           let element = $(this);
@@ -2218,6 +2223,7 @@ function addChoiceBasedHighlight(){
           });
     
     
+    console.log("addChoiceBasedHighlight #textsList");
     d3.select("#textsList").selectAll("li")
     .each(function(d, i){
           let element = $(this);
@@ -2226,6 +2232,7 @@ function addChoiceBasedHighlight(){
           }
           });
     
+    console.log("addChoiceBasedHighlight #themesList");
     d3.select("#themesList").selectAll("li")
     .each(function(d, i){
           let element = $(this);
@@ -2234,8 +2241,9 @@ function addChoiceBasedHighlight(){
           }
           });
 
+    console.log("addChoiceBasedHighlight reset");
     resetAllArgumentMarkings();
-    
+    console.log("addChoiceBasedHighlight return");
 }
 
 
@@ -2359,13 +2367,20 @@ function highlightTopicElement(topicElement, direct, indirect) {
 	let topic = d3.select(topicElement.get(0)).datum();
 	
     // Perform secondary highlights
+    console.log("highlightTopicElement 1");
     secondaryHighlightTerms(isAssociatedTermTopic, indirect, topic.id);
+    console.log("highlightTopicElement 2");
     secondaryHighlightTexts(isAssociatedTextTopic, indirect, topic.id);
+    console.log("highlightTopicElement 3");
     secondaryHighlightThemes(isAssociatedThemeTopic, indirect, topic.id);
 
+    console.log("highlightTopicElement 4");
     highlightTopicToTermLink(topic.id);
+    console.log("highlightTopicElement 5");
     highlightTopicToTextLink(topic.id);
+    console.log("highlightTopicElement 6");
     highlightTopicToThemeLink(topic.id);
+    console.log("highlightTopicElement 7");
 	}
 
 
