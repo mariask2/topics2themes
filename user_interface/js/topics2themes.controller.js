@@ -1290,7 +1290,6 @@ function prepareCanvasForLinks(firstLeftElement, firstRightElement, svgId, links
 function drawLinks(leftElement, rightElement, termScore,
                 opacityScale, strokeWidthScale, links,
                    datum, text, className, svgId){
-    
     // Draw the links from terms to topics
     let offsetLeft = $("#" + svgId).offset().left;
     let offsetTop = $("#" + svgId).offset().top;
@@ -2106,6 +2105,21 @@ function doResetHighlightAfterStateChange(){
     // If a topic is not selected
     if (currentTopicIds.length == 0){
         sortTopicsList(topicSortMode);
+	d3.selectAll(".term-to-mark").classed("specifictermchosen", true);
+	d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
+    }
+    else{
+	for (let i = 0; i < modelTopics.length; i++) {
+             let topic = modelTopics[i]["id"];
+             // If topic is selected
+             if (currentTopicIds.indexOf(topic) > -1){
+		 d3.selectAll('.topic_' + topic).classed("termintextnotchosen", false);
+             }
+             else{
+		 d3.selectAll('.topic_' + topic).classed("termintextnotchosen", true);
+             }
+        }
+	d3.selectAll(".term-to-mark").classed("specifictermchosen", false);
     }
     
     // If a text is not selected
@@ -2198,8 +2212,8 @@ function addChoiceBasedHighlight(){
     
     // Reset highlight of terms that stem from topics that are not chosen
     
-    d3.selectAll(".term-to-mark").classed("specifictermchosen", true);
-    d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
+    //d3.selectAll(".term-to-mark").classed("specifictermchosen", true);
+    //d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
     // Then go through all items to see which are selected
     // and set them to not grey
 
@@ -2418,7 +2432,7 @@ function highlightTextElement(textElement, direct, indirect) {
 }
 
 function colorAllTagsWithTheSameColor(textElement){
-       d3.select(textElement.get(0)).selectAll(".term-to-mark").classed("specifictermchosen", true);
+    d3.select(textElement.get(0)).selectAll(".term-to-mark").classed("specifictermchosen", true);
 }
 
 
@@ -2443,18 +2457,18 @@ function showFullTextChosen(textElement){
 function secondaryHighlightTermsInText(textElement){
     let textId = d3.select(textElement.get(0)).datum().id;
     
-  
     // If topics are chosen, hightlight terms that belong to thees topics, and in accordance to the strength of these terms to these topics
     d3.select(textElement.get(0)).selectAll(".term-to-mark").classed("specifictermchosen", false);
+   // d3.select(textElement.get(0)).selectAll(".term-to-mark").classed("termintextnotchosen", true);
     if (modelTopics != []){
         for (let i = 0; i < modelTopics.length; i++) {
             let topic = modelTopics[i]["id"];
             // If topic is selected
             if (currentTopicIds.indexOf(topic) > -1){
-                d3.selectAll('.topic_' + topic).classed("termintextnotchosen", false);
+                d3.select(textElement.get(0)).selectAll('.topic_' + topic).classed("termintextnotchosen", false);
             }
             else{
-                d3.selectAll('.topic_' + topic).classed("termintextnotchosen", true);
+                d3.select(textElement.get(0)).selectAll('.topic_' + topic).classed("termintextnotchosen", true);
             }
         }
     }
