@@ -1071,42 +1071,42 @@ function renderLinks() {
 
 // Renders terms-to-topics links
 function renderTermToTopicLinks() {
-	// If any of the lists is empty, return
-	if ($("#termsList").children().length == 0
-		|| $("#termsList > li.term-element:not(.not-displayed)").length == 0
-		|| $("#topicsList").children().length == 0
-		|| $("#topicsList > li.topic-element:not(.not-displayed)").length == 0)
-		return;
+    // If any of the lists is empty, return
+    if ($("#termsList").children().length == 0
+	|| $("#termsList > li.term-element:not(.not-displayed)").length == 0
+	|| $("#topicsList").children().length == 0
+	|| $("#topicsList > li.topic-element:not(.not-displayed)").length == 0)
+	return;
   
-	// Prepare the scales to map the score of the link
+    // Prepare the scales to map the score of the link
     let maxScore = getMaxTermScore();
- 	let opacityScale = getOpacityScale(maxScore);
+    let opacityScale = getOpacityScale(maxScore);
     let strokeWidthScale = getStrokeWidthScale(maxScore, TERM_TO_TOPIC_LINK_WIDTHS);
  
-	// Get the position of the first term element and the first topic element
-	let firstTermElement = $("#termsList > li.term-element:not(.not-displayed):first");
-	let firstTopicElement = $("#topicsList > li.topic-element:not(.not-displayed):first");
+    // Get the position of the first term element and the first topic element
+    let firstTermElement = $("#termsList > li.term-element:not(.not-displayed):first");
+    let firstTopicElement = $("#topicsList > li.topic-element:not(.not-displayed):first");
 
     let svgId = "termLinksSvg";
-	let termLinks = prepareCanvasForLinks(firstTermElement, firstTopicElement, svgId, "termLinksHighlight");
-			
-	d3.select("#termsList").selectAll("li:not(.not-displayed)")
-	.each(function(d, i){
-        if (!(d.term in modelTermsToTopics))
-          return;
+    let termLinks = prepareCanvasForLinks(firstTermElement, firstTopicElement, svgId, "termLinksHighlight");
 
-        let leftElement = $(this);
-		let relevantTopics = modelTermsToTopics[d.term].topics;
-		
-		d3.select("#topicsList").selectAll("li:not(.not-displayed)")
+    d3.select("#termsList").selectAll("li:not(.not-displayed)")
+	.each(function(d, i){
+            if (!(d.term in modelTermsToTopics))
+		return;
+
+            let leftElement = $(this);
+	    let relevantTopics = modelTermsToTopics[d.term].topics;
+
+	    d3.select("#topicsList").selectAll("li:not(.not-displayed)")
 		.filter(function(e){ return relevantTopics.indexOf(e.id) > -1;})
 		.each(function(e, j){
-			let rightElement = $(this);
-            let termScore = modelTermsToTopics[d.term].score_for_topics[modelTermsToTopics[d.term].topics.indexOf(e.id)]
-            let text = "Topic #" + e.id + "\n" + "Term: " + d.term + "\n" + "Score: " + termScore
-            drawLinks(leftElement, rightElement, termScore,
-                      opacityScale, strokeWidthScale, termLinks,
-                      { term: d.term, topic: e.id }, text, "terms-to-topics", svgId);
+		    let rightElement = $(this);
+		    let termScore = modelTermsToTopics[d.term].score_for_topics[modelTermsToTopics[d.term].topics.indexOf(e.id)]
+		    let text = "Topic #" + e.id + "\n" + "Term: " + d.term + "\n" + "Score: " + termScore
+		    drawLinks(leftElement, rightElement, termScore,
+			      opacityScale, strokeWidthScale, termLinks,
+			      { term: d.term, topic: e.id }, text, "terms-to-topics", svgId);
 		});
 	});
 }
