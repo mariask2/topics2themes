@@ -608,7 +608,6 @@ function modelSetMostRecentlyClickedForThemeRanking(textId){
 function modelSortThemesWithMachineLearningIfTextChosen(){
     if(modelMostRecentlyClickedText == undefined){
         sortThemesList(themeSortMode);
-        renderLinks();
     }
     else{
         let themeRankingUrl = "get_theme_ranking_for_document";
@@ -622,7 +621,7 @@ function modelSortThemesWithMachineLearningIfTextChosen(){
 function resortThemes(themeSorting){
     modelThemeRankingForMostRecentlyClickedText = themeSorting;
     sortThemesList(themeSortMode);
-    renderLinks();
+    /* TODO: renderLinks not called, but caller needs to wait before calling renderLinks or run it again */
 }
 
 

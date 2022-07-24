@@ -175,7 +175,7 @@ $(document).ready(function(){
     $("#showLabels").click(onShowLabels);
                   
     // Button for lock and unlock the sorting of themes
-    $("#doThemeSorting").click(onLockThemesSorting);
+    $("#doThemeSorting").click(onDoThemeSorting);
 
     // Button for lock and unlock the sorting of texts
     $("#lockTextSorting").click(onLockTextSorting);
@@ -2922,18 +2922,15 @@ function onShowLabels(){
     controllerDoPopulateThemes(true);
 }
 
-function onLockThemesSorting(){
-    if (!doThemesSorting){
-        doThemesSorting = true;
+function onDoThemeSorting(){
+    doThemesSorting = !doThemesSorting;
+    if (doThemesSorting){
 	$("#doThemeSorting").addClass("button-active");
-        modelSortThemesWithMachineLearningIfTextChosen();
-        
+	doResetHighlightAfterStateChange();
     }
     else{
-        doThemesSorting = false;
         modelResetRecentlyClickedForMachineLearningSorting();
         $("#doThemeSorting").removeClass("button-active");
-        modelSortThemesWithMachineLearningIfTextChosen();
     }
 }
 
