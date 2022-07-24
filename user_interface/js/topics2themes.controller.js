@@ -2103,11 +2103,12 @@ function doResetHighlightAfterStateChange(){
     }
     
     // If a topic is not selected
-    if (currentTopicIds.length == 0){
+    if (currentTopicIds.length == 0 && currentTermIds.length == 0){
         sortTopicsList(topicSortMode);
 	d3.selectAll(".term-to-mark").classed("specifictermchosen", true);
 	d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
     }
+    
     else{
 	for (let i = 0; i < modelTopics.length; i++) {
              let topic = modelTopics[i]["id"];
@@ -2212,8 +2213,6 @@ function addChoiceBasedHighlight(){
     
     // Reset highlight of terms that stem from topics that are not chosen
     
-    //d3.selectAll(".term-to-mark").classed("specifictermchosen", true);
-    //d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
     // Then go through all items to see which are selected
     // and set them to not grey
 
@@ -2456,10 +2455,12 @@ function showFullTextChosen(textElement){
 
 function secondaryHighlightTermsInText(textElement){
     let textId = d3.select(textElement.get(0)).datum().id;
+
     
     // If topics are chosen, hightlight terms that belong to thees topics, and in accordance to the strength of these terms to these topics
+    /*
     d3.select(textElement.get(0)).selectAll(".term-to-mark").classed("specifictermchosen", false);
-   // d3.select(textElement.get(0)).selectAll(".term-to-mark").classed("termintextnotchosen", true);
+    
     if (modelTopics != []){
         for (let i = 0; i < modelTopics.length; i++) {
             let topic = modelTopics[i]["id"];
@@ -2467,16 +2468,17 @@ function secondaryHighlightTermsInText(textElement){
             if (currentTopicIds.indexOf(topic) > -1){
                 d3.select(textElement.get(0)).selectAll('.topic_' + topic).classed("termintextnotchosen", false);
             }
+	    
             else{
                 d3.select(textElement.get(0)).selectAll('.topic_' + topic).classed("termintextnotchosen", true);
             }
         }
-    }
+    }*/
 
     // If terms are chosen, highlight these terms
     if (currentTermIds.length > 0){
         // Default is that nothing is marked
-        d3.select(textElement.get(0)).selectAll(".term-to-mark").classed("specifictermchosen", false);
+        //d3.select(textElement.get(0)).selectAll(".term-to-mark").classed("specifictermchosen", false);
         // Select the terms that are to be marked
         d3.select(textElement.get(0)).selectAll(".term-to-mark").each(function(d, i) {
                                                                             let foundterm = $(this).html().trim().toLowerCase();
