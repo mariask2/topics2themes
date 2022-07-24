@@ -2095,8 +2095,15 @@ function resetHighlightAfterStateChange(){
     resetHighlightTimer = setTimeout(doResetHighlightAfterStateChange, 0)
 }
 
+function timing() {
+    let now = Date.now();
+    let diff = now - timing.last;
+    timing.last = now;
+    return diff;
+}
+
 function doResetHighlightAfterStateChange(){
-    console.log("doResetHighlightAfterStateChange");
+    console.log("doResetHighlightAfterStateChange", timing());
     // If a term is not selected
     if (currentTermIds.length == 0){
         sortTermsList(termSortMode);
@@ -2134,10 +2141,11 @@ function doResetHighlightAfterStateChange(){
         //sortThemesList(themeSortMode);
     }
     
+    console.log("doResetHighlightAfterStateChange before renderLinks", timing());
     renderLinks();
     
     setTimeout(addChoiceBasedHighlight, 0);
-    console.log("doResetHighlightAfterStateChange return");    
+    console.log("doResetHighlightAfterStateChange return", timing());
 }
 
 
