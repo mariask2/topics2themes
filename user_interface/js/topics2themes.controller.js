@@ -1630,11 +1630,11 @@ function onTermElementClick(){
     
     if (currentTermIds.indexOf(term.term) > -1){ // if chosen
         $(this).addClass(DIRECTCHOOSEN);
-        setTimeout(highlightTermElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
+        setTimeout(() => highlightTermElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
     else{
         $(this).removeClass(DIRECTCHOOSEN);
-        setTimeout(highlightTermElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
+        setTimeout(() => highlightTermElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
     
     // For the other panels, which were not recently clicked, they should show the beginning of the panel, so scroll up
@@ -1644,12 +1644,12 @@ function onTermElementClick(){
     // Sort other lists and render the links
     
 
-    setTimeout(resetPanelHeadings(), 0);
-    setTimeout(setPanelHeadings(), 0);
-    setTimeout(resetHighlightAfterStateChange(), 0);
+    setTimeout(resetPanelHeadings, 0);
+    setTimeout(setPanelHeadings, 0);
+    setTimeout(resetHighlightAfterStateChange, 0);
 }
 
-function onTopicElementClick(){
+function onTopicElementClick(event){
     let eventClass = $(event.target).attr("class");
     if (eventClass.includes("title-label")){
         // Discard clicks on the subcomponents within a topic element
@@ -1661,20 +1661,20 @@ function onTopicElementClick(){
 
     if (currentTopicIds.indexOf(topic.id) > -1){ // if chosen
         $(this).addClass(DIRECTCHOOSEN);
-        setTimeout(highlightTopicElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
+        setTimeout(() => highlightTopicElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
     else{
         $(this).removeClass(DIRECTCHOOSEN);
-        setTimeout(highlightTopicElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
+        setTimeout(() => highlightTopicElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
     
     // For the other panels, which were not recently clicked, they should show the beginning of the panel, so scroll up
     scrollTopForAllExceptRecentlyClicked("#topicsList");
     
-    setTimeout(resetPanelHeadings(), 0);
-    setTimeout(setPanelHeadings(), 0);
+    setTimeout(resetPanelHeadings, 0);
+    setTimeout(setPanelHeadings, 0);
     
-    setTimeout(resetHighlightAfterStateChange(), 0);
+    setTimeout(resetHighlightAfterStateChange, 0);
 }
 
 function onTextElementClick(event){
@@ -1695,11 +1695,11 @@ function onTextElementClick(event){
     
     if (currentTextIds.indexOf(text.id) > -1){ // if chosen
         $(this).addClass(DIRECTCHOOSEN);
-        setTimeout(highlightTextElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
+        setTimeout(() => highlightTextElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
     else{
         $(this).removeClass(DIRECTCHOOSEN);
-        setTimeout(highlightTextElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
+        setTimeout(() => highlightTextElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
     
     // For the other panels, which were not recently clicked, they should show the beginning of the panel, so scroll up
@@ -1709,10 +1709,10 @@ function onTextElementClick(event){
     //This sorting the rendering is not done here, but in a call-back from modelGetThemeRankingForText
     //sortThemesList(themeSortMode);
     //renderLinks();
-    setTimeout(resetPanelHeadings(), 0);
-    setTimeout(setPanelHeadings(), 0);
+    setTimeout(resetPanelHeadings, 0);
+    setTimeout(setPanelHeadings, 0);
     
-    setTimeout(resetHighlightAfterStateChange(), 0);
+    setTimeout(resetHighlightAfterStateChange, 0);
     
    
 }
@@ -1729,19 +1729,19 @@ function onThemeElementClick(event){
     
     if (currentThemeIds.indexOf(theme.id) > -1){ // if chosen
         $(this).addClass(DIRECTCHOOSEN);
-        setTimeout(highlightThemeElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
+        setTimeout(() => highlightThemeElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
     else{
         $(this).removeClass(DIRECTCHOOSEN);
-        setTimeout(highlightThemeElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
+        setTimeout(() => highlightThemeElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
     
     // For the other panels, which were not recently clicked, they should show the beginning of the panel, so scroll up
     scrollTopForAllExceptRecentlyClicked("#themesList");
-    setTimeout(resetPanelHeadings(), 0);
-    setTimeout(setPanelHeadings(), 0);
+    setTimeout(resetPanelHeadings, 0);
+    setTimeout(setPanelHeadings, 0);
     
-    setTimeout(resetHighlightAfterStateChange(), 0);
+    setTimeout(resetHighlightAfterStateChange, 0);
 }
 
 
