@@ -408,7 +408,6 @@ function controllerDoPopulateDataChoices(choices){
           element.attr("disabled", true);
           }
           element.attr("value", d.value);
-          element.attr("title", d.value);
           //let titleLabel = $("<span></span>");
           //titleLabel.addClass("title-label");
           //titleLabel.append(d.term);
@@ -457,7 +456,6 @@ function controllerDoPopulateModelChoices(modelModelsForCurrentDataset){
               element.attr("disabled", true);
               }
               element.attr("value", d.value);
-              element.attr("title", d.value);
               //let titleLabel = $("<span></span>");
               //titleLabel.addClass("title-label");
               //titleLabel.append(d.term);
@@ -543,7 +541,6 @@ function controllerDoPopulateAnalysisChoices(modelAnalysesForCurrentModel){
               element.attr("disabled", true);
               }
               element.attr("value", d.value);
-              element.attr("title", d.value);
               //let titleLabel = $("<span></span>");
               //titleLabel.addClass("title-label");
               //titleLabel.append(d.term);
@@ -616,7 +613,6 @@ function controllerDoPopulateInterface() {
 	.each(function(d, i){
 		let element = $(this);
 		element.addClass("term-element");
-		element.attr("title", "Term: " + d.term);
 		element.attr("style", "padding: 5px 7px;");
 		let titleLabel = $("<span></span>");
 		titleLabel.addClass("title-label");
@@ -738,7 +734,7 @@ function populateTextElement(d, i){
     let element = $(this);
     element.empty(); // As this function is also used for repopulation, start with emptying what is there
     element.addClass("text-element");
-    element.attr("title", "Document #" + d.base_name + ": " + d.label);
+    // element.attr("title", "Document #" + d.base_name + ": " + d.label);
  
     let buttonGroup = populateTextElementLabel(d3.select(element.get(0)));
     let buttonGroupContainer = $("<span></span>");
@@ -917,8 +913,7 @@ function populateThemeElement(d, i) {
     let element = $(this);
     element.empty() // Since this function is used also for repopulation, start with removing current content
     element.addClass("theme-element");
-    element.attr("title", "Theme #" + d.id + ": " + d.label);
-	
+   	
     let removeButton = $("<button type=\"button\" class=\"btn btn-default btn-xs theme-remove-button\" aria-label=\"Remove theme without associated texts\" title=\"Remove theme without associated texts\">"
 		+ "<span class=\"glyphicon glyphicon-remove\" aria-hidden=\"true\"></span>"
 		+ "</button>");
@@ -970,7 +965,7 @@ function populateThemeTextsContainerAtTextElement(text, themeTextsContainer) {
             textLabel.addClass("theme-texts-label");
             textLabel.data("themeid", themeId);
             textLabel.data("textid", text.id);
-            textLabel.attr("title", "Text #" + text.id + " in theme #" + themeId);
+            //textLabel.attr("title", "Text #" + text.id + " in theme #" + themeId);
             textLabel.append("Theme #" + themeId + "&nbsp;");
 
             
