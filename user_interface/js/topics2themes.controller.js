@@ -358,8 +358,8 @@ $(window).bind("resizeEnd", function(){
 	// Update the element sizes
 	resizeContainers();
 	
-	// Update the links
-	renderLinks();
+    // Update the links
+    setTimeout(renderLinks, 0);
 });
 
 // Resizes the containers based on the current window size
@@ -636,20 +636,22 @@ function controllerDoPopulateInterface() {
     controllerDoPopulateTextElements();
   
     adaptArgumentationButtonsToModel();
-	// Themes are populated in  controllerDoPopulateThemes, when an analysis version is selected, and not here
+    // Themes are populated in  controllerDoPopulateThemes, when an analysis version is selected, and not here
    
     
     // Sort the lists initially
     doDefaultSort();
     
-	// Resize the containers
-	resizeContainers();
-	
-	// Draw the links over an SVG canvas
-	renderLinks();
-    
+    // Resize the containers
+    resizeContainers();
+
     // Disable term highlighting that are not to be there
     resetHighlight();
+    
+    // Draw the links over an SVG canvas
+    setTimeout(renderLinks, 0);
+    
+
 }
 
 function controllerDoPopulateTextElements(){
@@ -1415,7 +1417,7 @@ function onSortDocumentsList(event) {
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-    renderLinks();
+    setTimeout(renderLinks, 0);
 }
 
 
@@ -1441,7 +1443,7 @@ function onSortTermsList(event) {
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-    renderLinks();
+    setTimeout(renderLinks, 0);
 }
 
 
@@ -1469,7 +1471,7 @@ function onSortTopicsList(event) {
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-    renderLinks();
+    setTimeout(renderLinks, 0);
 }
 
 // Reacts to the sort trigger
@@ -1493,7 +1495,7 @@ function onSortThemesList(event) {
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-    renderLinks();
+    setTimeout(renderLinks, 0);
 }
 
 
@@ -1947,6 +1949,7 @@ function addTextThemeLinkAndUpdateInterface(textId, themeId){
     .each(populateTextElement);
     addChoiceBasedHighlight();
     // Redraw the links
+    // TODO: might take time 
     renderLinks();
 }
 
@@ -2019,8 +2022,9 @@ function onThemeTextRemoveAtTextElement(){
             })
     .each(populateThemeElement);
     
-	// Redraw the links
-	renderLinks();
+    // Redraw the links
+    // TODO: might take time
+    renderLinks();
     
 }
 
@@ -2061,7 +2065,9 @@ function controllerDoPopulateThemes(doSorting){
     resizeContainers();
     
     // Redraw the links
-    renderLinks();
+    setTimeout(renderLinks, 0);
+
+    
     
     enableThemeButtons();
 }
@@ -2091,7 +2097,7 @@ function onThemeRemove() {
 		
     resetHighlight();
     // Redraw the links
-	renderLinks();
+    setTimeout(renderLinks, 0);
 }
 
 
@@ -2165,11 +2171,11 @@ function doResetHighlightAfterStateChange(){
         //sortThemesList(themeSortMode);
     }
     
-    console.log("doResetHighlightAfterStateChange before renderLinks", timing());
-    renderLinks();
-    
     setTimeout(addChoiceBasedHighlight, 0);
     console.log("doResetHighlightAfterStateChange return", timing());
+
+    console.log("doResetHighlightAfterStateChange before renderLinks", timing());
+    setTimeout(renderLinks, 0);
 }
 
 
@@ -2730,16 +2736,17 @@ function onTextSearch(){
 
 // Filters the displayed document elements
 function filterDisplayedDocuments() {
-	let query = textSearchText ? textSearchText.toLowerCase().trim() : null;
+    let query = textSearchText ? textSearchText.toLowerCase().trim() : null;
 	
-	d3.select("#textsList").selectAll("li")
+    d3.select("#textsList").selectAll("li")
 	.classed("not-displayed", function(d, i){
 		if (!query)
 			return false;
 		return (!d.marked_text_tok || d.marked_text_tok.toLowerCase().indexOf(query) < 0);
 	});
-	
-	renderLinks();
+
+    setTimeout(renderLinks, 0);
+
 }
 
 
@@ -2790,7 +2797,7 @@ function filterDisplayedTerms() {
 	});
 	
 	resetHighlight();
-	renderLinks();
+	setTimeout(renderLinks, 0);
 }
 
 /////
@@ -2825,7 +2832,7 @@ function filterDisplayedTopics() {
 	});
 	
 	resetHighlight();
-	renderLinks();
+	setTimeout(renderLinks, 0);
 }
 
 
@@ -2854,7 +2861,7 @@ function filterDisplayedThemes() {
 	});
 	
 	resetHighlight();
-	renderLinks();
+	setTimeout(renderLinks, 0);
 }
 
 
