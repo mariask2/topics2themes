@@ -634,9 +634,12 @@ function controllerDoPopulateInterface() {
 
     //texts
     controllerDoPopulateTextElements();
-  
-    adaptArgumentationButtonsToModel();
+
     // Themes are populated in  controllerDoPopulateThemes, when an analysis version is selected, and not here
+    controllerRepopulateTheme(); // To make sure texts with changed labels are propagated to themes
+    
+    
+    adaptArgumentationButtonsToModel();
    
     
     // Sort the lists initially
@@ -1066,9 +1069,7 @@ function renderLinks() {
     d3.select("#bgSvgContainer").each(function(){
                                let parent = $(this).get(0).parentNode;
                                  parent.removeChild($(this).get(0));
-                                parent.insertBefore($(this).get(0), parent.firstChild);
-
-    })
+                                parent.insertBefore($(this).get(0), parent.firstChild);})
     console.log("renderLinks return", timing()); 
 }
 
@@ -1946,12 +1947,12 @@ function addTextThemeLinkAndUpdateInterface(textId, themeId){
     .filter(function(f, j){
     return isAssociatedThemeText(themeId, f.id);
     })
-    .each(populateTextElement);
-    addChoiceBasedHighlight();
-    // Redraw the links
-    // TODO: might take time 
-    renderLinks();
+	.each(populateTextElement);
+    
+    setTimeout(addChoiceBasedHighlight, 0);
+    setTimeout(renderLinks, 0);
 }
+
 
 function onKeyDown(event) {
     const currentTime = Date.now();
@@ -1992,10 +1993,10 @@ function onKeyDown(event) {
 
 // Removes a text from a theme
 function onThemeTextRemoveAtTextElement(){
-	let textElement = $(this).parentsUntil("#textsList", ".text-element");
+    let textElement = $(this).parentsUntil("#textsList", ".text-element");
 	
-	// Update the corresponding data element
-	let text = d3.select(textElement.get(0)).datum();
+    // Update the corresponding data element
+    let text = d3.select(textElement.get(0)).datum();
     
     if (!text){
         console.error("no text")
@@ -2003,7 +2004,7 @@ function onThemeTextRemoveAtTextElement(){
     }
     
     
-	let themeLabel = $(this).parent(".theme-texts-label");
+    let themeLabel = $(this).parent(".theme-texts-label");
     let themeId = themeLabel.data("themeid")
     
     removeTextThemeLink(themeId, text.id);
@@ -2023,9 +2024,7 @@ function onThemeTextRemoveAtTextElement(){
     .each(populateThemeElement);
     
     // Redraw the links
-    // TODO: might take time
-    renderLinks();
-    
+    setTimeout(renderLinks, 0);  
 }
 
 // Creates a new theme
@@ -2045,7 +2044,7 @@ function controllerSelectChosenAnalysis(name_of_created_analysis){
     $("#analysisVersion").trigger("change");
 }
 
-function controllerDoPopulateThemes(doSorting){
+function controllerDoPopulateThemes(){
     $("#themesList").empty();
 	// Update the list elements with D3
 	d3.select("#themesList").selectAll("li")
@@ -2056,19 +2055,7 @@ function controllerDoPopulateThemes(doSorting){
 	.append("li")
 	.classed("list-group-item", true)
 	.each(populateThemeElement);
-	
-    if (doSorting){
-        doDefaultSort();
-    }
-    
-    // Resize the containers
-    resizeContainers();
-    
-    // Redraw the links
-    setTimeout(renderLinks, 0);
-
-    
-    
+        
     enableThemeButtons();
 }
                                                                         
@@ -2951,7 +2938,13 @@ function onShowLabels(){
         showLabels = true;
         $("#showLabels").addClass("button-active");
     }
-    controllerDoPopulateThemes(true);
+    controllerDoPopulateThemes();
+
+    // Resize the containers
+    resizeContainers();
+    
+    // Redraw the links
+    setTimeout(renderLinks, 0);
 }
 
 function onDoThemeSorting(){
