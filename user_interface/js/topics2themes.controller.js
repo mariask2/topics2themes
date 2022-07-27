@@ -1047,16 +1047,23 @@ d3.selection.prototype.moveToFront = function() {
 
 // Renders the links between the term/topic/text/theme elements
 function renderLinks() {
+    console.log("renderLinks start", timing());
+
 	// Remove the highlighting just in case
-	resetLinkHighlight();
+    resetLinkHighlight();
+    console.log("renderLinks 1", timing());
 	
-	resetLinks();
+    resetLinks();
+    console.log("renderLinks 2", timing());
 			
-	renderTermToTopicLinks();
+    renderTermToTopicLinks();
+    console.log("renderLinks 3", timing());
     
     renderTopicToTextLinks();
-   
-	renderTextsToThemeLinks();
+    console.log("renderLinks 4", timing());
+    
+    renderTextsToThemeLinks();
+    console.log("renderLinks 5", timing());
     
     // Fix to place the links behind the containers so that the user can scroll with mouse-drag
     d3.select("#bgSvgContainer").each(function(){
@@ -1065,12 +1072,13 @@ function renderLinks() {
                                 parent.insertBefore($(this).get(0), parent.firstChild);
 
     })
- 
+    console.log("renderLinks return", timing()); 
 }
 
 
 // Renders terms-to-topics links
 function renderTermToTopicLinks() {
+    console.log("renderTermToTopicLinks 1",  timing());
     // If any of the lists is empty, return
     if ($("#termsList").children().length == 0
 	|| $("#termsList > li.term-element:not(.not-displayed)").length == 0
@@ -1079,8 +1087,11 @@ function renderTermToTopicLinks() {
 	return;
   
     // Prepare the scales to map the score of the link
+    console.log("renderTermToTopicLinks 2",  timing());
     let maxScore = getMaxTermScore();
+    console.log("renderTermToTopicLinks 3",  timing());
     let opacityScale = getOpacityScale(maxScore);
+    console.log("renderTermToTopicLinks 4",  timing());
     let strokeWidthScale = getStrokeWidthScale(maxScore, TERM_TO_TOPIC_LINK_WIDTHS);
  
     // Get the position of the first term element and the first topic element
@@ -1088,8 +1099,12 @@ function renderTermToTopicLinks() {
     let firstTopicElement = $("#topicsList > li.topic-element:not(.not-displayed):first");
 
     let svgId = "termLinksSvg";
+    console.log("renderTermToTopicLinks 5",  timing());
     let termLinks = prepareCanvasForLinks(firstTermElement, firstTopicElement, svgId, "termLinksHighlight");
 
+    console.log("renderTermToTopicLinks 6",  timing());
+
+    // TIME: The following seems to take a lot of time:
     d3.select("#termsList").selectAll("li:not(.not-displayed)")
 	.each(function(d, i){
             if (!(d.term in modelTermsToTopics))
@@ -1109,6 +1124,7 @@ function renderTermToTopicLinks() {
 			      { term: d.term, topic: e.id }, text, "terms-to-topics", svgId);
 		});
 	});
+    console.log("renderTermToTopicLinks 7",  timing());
 }
 
 // Renders topics-to-text links
@@ -1225,24 +1241,37 @@ function getOpacityScale(maxScore){
 
 function getStrokeWidthScale(maxScore, linkWidths){
     return d3.scale.linear().domain([0, maxScore]).range(linkWidths);
-
 }
-function prepareCanvasForLinks(firstLeftElement, firstRightElement, svgId, linksHighlightId){
 
+// TODO: Now "prepareCanvasForLinks" is invoked several times
+// it takes a lot of time. So perhaps it could be cashed in the DOM, and only
+// be invoked when the window is resized.
+function prepareCanvasForLinks(firstLeftElement, firstRightElement, svgId, linksHighlightId){
+    console.log("prepareCanvasForLinks 1",  timing());
     // Get the offset of the SVG element with regard to its parent container
-	let svgLeft = Math.ceil(firstLeftElement.offset().left
-				+ firstLeftElement.parent().scrollLeft()
-		 		- $("#bgSvgContainer").offset().left
-				+ firstLeftElement.outerWidth());
+    let elOffset = firstLeftElement.offset().left;
+    console.log("prepareCanvasForLinks 1aa",  timing());
+    let parenscroll = firstLeftElement.parent().scrollLeft();
+    console.log("prepareCanvasForLinks 1ab",  timing());
+    let containerOffset = $("#bgSvgContainer").offset().left;
+    console.log("prepareCanvasForLinks 1ac",  timing());
+    let elOuter = firstLeftElement.outerWidth()
+    console.log("prepareCanvasForLinks 1ad",  timing());
+	let svgLeft = Math.ceil(elOffset
+				+ parenscroll
+		 		- containerOffset
+				+ elOuter);
+    console.log("prepareCanvasForLinks 1a",  timing());
 	let svgTop = Math.ceil(firstLeftElement.offset().top
 				+ firstLeftElement.parent().scrollTop()
 				- $("#bgSvgContainer").offset().top);
-		
+    console.log("prepareCanvasForLinks 1b",  timing());
 	let svgWidth = Math.ceil(firstRightElement.offset().left
 				- (firstLeftElement.offset().left + firstLeftElement.outerWidth())
 		 		- 1);
-	let svgHeight = Math.ceil($("#mainPanelUpper").height() - svgTop);
-	
+    let svgHeight = Math.ceil($("#mainPanelUpper").height() - svgTop);
+    console.log("prepareCanvasForLinks 1c",  timing());
+    console.log("prepareCanvasForLinks 2",  timing());
 	let svg = d3.select("#bgSvgContainer").append("svg:svg")
 				.classed("svg-vis", true)
 				.attr("id", svgId)
@@ -1251,7 +1280,7 @@ function prepareCanvasForLinks(firstLeftElement, firstRightElement, svgId, links
 				.attr("height", svgHeight + "px")
 				.attr("width", svgWidth + "px")
 				.attr("clip", [0, svgWidth, svgHeight, 0].join(" "));
-	
+    console.log("prepareCanvasForLinks 3",  timing());
 	// Prepare the clipping path for inner canvas
 	svg.append("clipPath")
 		.attr("id", "canvasClip")
@@ -1260,19 +1289,19 @@ function prepareCanvasForLinks(firstLeftElement, firstRightElement, svgId, links
 	    .attr("y", 0)
 	    .attr("width", svgWidth)
 	    .attr("height", svgHeight);
-	
+	console.log("prepareCanvasForLinks 4",  timing());
 	let canvas = svg.append("g")
 		.classed("canvas-vis", true)
 		.attr("clip-path", "url(#canvasClip)");
     
-  		
+    console.log("prepareCanvasForLinks 5",  timing());
     let links = canvas.append("g")
     .attr("id", "termLinks");
     
     // Add an overlay for highlighting
     canvas.append("g")
     .attr("id", linksHighlightId);
-    
+    console.log("prepareCanvasForLinks 6",  timing());
      //for debugging
     /*
      canvas.append("rect")
@@ -2381,28 +2410,21 @@ function highlightTermElement(termElement, direct, indirect) {
 // Highlights the given topic element and related items
 function highlightTopicElement(topicElement, direct, indirect) {
 
-	// First of all, highlight the element under cursor
-	topicElement.addClass(direct);
+    // First of all, highlight the element under cursor
+    topicElement.addClass(direct);
 	
-	// Get the topic datum
-	let topic = d3.select(topicElement.get(0)).datum();
+    // Get the topic datum
+    let topic = d3.select(topicElement.get(0)).datum();
 	
     // Perform secondary highlights
-    console.log("highlightTopicElement 1");
     secondaryHighlightTerms(isAssociatedTermTopic, indirect, topic.id);
-    console.log("highlightTopicElement 2");
     secondaryHighlightTexts(isAssociatedTextTopic, indirect, topic.id);
-    console.log("highlightTopicElement 3");
     secondaryHighlightThemes(isAssociatedThemeTopic, indirect, topic.id);
 
-    console.log("highlightTopicElement 4");
     highlightTopicToTermLink(topic.id);
-    console.log("highlightTopicElement 5");
     highlightTopicToTextLink(topic.id);
-    console.log("highlightTopicElement 6");
     highlightTopicToThemeLink(topic.id);
-    console.log("highlightTopicElement 7");
-	}
+}
 
 
 
