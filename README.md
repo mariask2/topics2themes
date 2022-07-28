@@ -51,17 +51,9 @@ mongod --dbpath data/db/
 
 You write the following to run the code:
 
-source activate topic_modelling
-
-
-
-To create a new topic model for the data in the folders data_folder/vaccination_constructed_data
-python make_topic_models.py --project data_folder.vaccination_constructed_data_marked
-(This will not be save to the database, only written to a file)
-
 To run the topic modell as a flask server, you write:
 
-python restful_api_topic_modelling.py [port]
+python restful_api_topic_modelling.py <port>
 
 for instance:
 
@@ -83,6 +75,19 @@ Each text collection is positioned in a subfolder of "data_folder". This subfold
 As a default, the "data_folder" is positioned as a subdirectory in the folder with the python code.
 The variable "WORKSPACE_FOLDER" in the file "environment_configuration.py"  can, however, be changed to another location, and the "data_folder" can be positioned there.
 
+**********
+
+If you are using conda, don't forget to activate the environment, 
+
+source activate <name of environment>
+
+For instance:
+source activate topic_modelling
+
+You used to be able to create a model without
+To create a new topic model for the data in the folders data_folder/vaccination_constructed_data
+python make_topic_models.py --project data_folder.vaccination_constructed_data_marked
+(This will not be save to the database, only written to a file)
 
 Part of the code is inspired from:
 https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730
