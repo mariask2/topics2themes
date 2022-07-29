@@ -428,8 +428,6 @@ line.topics-to-themes {
 
 .direct-highlight, .direct-highlight.highlight{
     background-color: #E6F3FF;
-    border-top: 1px  !important;
-    border-bottom: 1px  !important;
     border-color: #BDBDBD !important;
     background: repeating-linear-gradient(
 	45deg,
@@ -437,9 +435,6 @@ line.topics-to-themes {
 	#E6F3FF 2px,
 	#F2F2F2 2px,
 	#E6E6E6 5px
-/*
-	#F0F0F0 2px,
-	#E4E4E4 5px*/
 ) !important;
 }
 
