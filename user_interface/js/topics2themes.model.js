@@ -249,7 +249,8 @@ function modelCreateNewTheme(){
 
 function doCreateNewTheme(themeId){
     addNewTheme(themeId, "");
-    controllerDoPopulateThemes(true);  // do default sorting
+    controllerDoPopulateThemes();
+    doDefaultSort();
 }
 
 //
@@ -622,6 +623,7 @@ function resortThemes(themeSorting){
     modelThemeRankingForMostRecentlyClickedText = themeSorting;
     sortThemesList(themeSortMode);
     /* TODO: renderLinks not called, but caller needs to wait before calling renderLinks or run it again */
+    setTimeout(renderLinks, 0);
 }
 
 
@@ -1616,8 +1618,9 @@ function doGetSavedThemes(themes){
 
         }
     }
-    controllerDoPopulateThemes(true);
-    controllerDoPopulateInterface();
+    controllerDoPopulateThemes();
+    // TODO: Perhaps possible to save time by only population text elements controllerDoPopulateTextElements();
+    setTimeout(controllerDoPopulateInterface, 0);
 }
 
 function modelRenameTheme(themeId, newLabel){
@@ -1798,7 +1801,6 @@ function modelDefineUserLabel(textId, userDefinedLabel){
 
 function updateUserDefinedLabel(data){
     controllerDoPopulateOneTextElement(data);
-    //controllerDoPopulateThemes(false);
     controllerRepopulateTheme();
 }
 
