@@ -1079,7 +1079,7 @@ function renderLinks() {
 
 // Renders terms-to-topics links
 function renderTermToTopicLinks() {
-    console.log("renderTermToTopicLinks 1",  timing());
+//    console.log("renderTermToTopicLinks 1",  timing());
     // If any of the lists is empty, return
     if ($("#termsList").children().length == 0
 	|| $("#termsList > li.term-element:not(.not-displayed)").length == 0
@@ -1088,11 +1088,11 @@ function renderTermToTopicLinks() {
 	return;
   
     // Prepare the scales to map the score of the link
-    console.log("renderTermToTopicLinks 2",  timing());
+//    console.log("renderTermToTopicLinks 2",  timing());
     let maxScore = getMaxTermScore();
-    console.log("renderTermToTopicLinks 3",  timing());
+//    console.log("renderTermToTopicLinks 3",  timing());
     let opacityScale = getOpacityScale(maxScore);
-    console.log("renderTermToTopicLinks 4",  timing());
+//    console.log("renderTermToTopicLinks 4",  timing());
     let strokeWidthScale = getStrokeWidthScale(maxScore, TERM_TO_TOPIC_LINK_WIDTHS);
  
     // Get the position of the first term element and the first topic element
@@ -1100,7 +1100,7 @@ function renderTermToTopicLinks() {
     let firstTopicElement = $("#topicsList > li.topic-element:not(.not-displayed):first");
 
     let svgId = "termLinksSvg";
-    console.log("renderTermToTopicLinks 5",  timing());
+//    console.log("renderTermToTopicLinks 5",  timing());
     let termLinks = prepareCanvasForLinks(firstTermElement, firstTopicElement, svgId, "termLinksHighlight");
 
     console.log("renderTermToTopicLinks 6",  timing());
@@ -1251,28 +1251,28 @@ function prepareCanvasForLinks(firstLeftElement, firstRightElement, svgId, links
     console.log("prepareCanvasForLinks 1",  timing());
     // Get the offset of the SVG element with regard to its parent container
     let elOffset = firstLeftElement.offset().left;
-    console.log("prepareCanvasForLinks 1aa",  timing());
+//    console.log("prepareCanvasForLinks 1aa",  timing());
     let parenscroll = firstLeftElement.parent().scrollLeft();
-    console.log("prepareCanvasForLinks 1ab",  timing());
+//    console.log("prepareCanvasForLinks 1ab",  timing());
     let containerOffset = $("#bgSvgContainer").offset().left;
-    console.log("prepareCanvasForLinks 1ac",  timing());
+//    console.log("prepareCanvasForLinks 1ac",  timing());
     let elOuter = firstLeftElement.outerWidth()
-    console.log("prepareCanvasForLinks 1ad",  timing());
+//    console.log("prepareCanvasForLinks 1ad",  timing());
 	let svgLeft = Math.ceil(elOffset
 				+ parenscroll
 		 		- containerOffset
 				+ elOuter);
-    console.log("prepareCanvasForLinks 1a",  timing());
+//    console.log("prepareCanvasForLinks 1a",  timing());
 	let svgTop = Math.ceil(firstLeftElement.offset().top
 				+ firstLeftElement.parent().scrollTop()
 				- $("#bgSvgContainer").offset().top);
-    console.log("prepareCanvasForLinks 1b",  timing());
+//    console.log("prepareCanvasForLinks 1b",  timing());
 	let svgWidth = Math.ceil(firstRightElement.offset().left
 				- (firstLeftElement.offset().left + firstLeftElement.outerWidth())
 		 		- 1);
     let svgHeight = Math.ceil($("#mainPanelUpper").height() - svgTop);
-    console.log("prepareCanvasForLinks 1c",  timing());
-    console.log("prepareCanvasForLinks 2",  timing());
+//    console.log("prepareCanvasForLinks 1c",  timing());
+//    console.log("prepareCanvasForLinks 2",  timing());
 	let svg = d3.select("#bgSvgContainer").append("svg:svg")
 				.classed("svg-vis", true)
 				.attr("id", svgId)
@@ -1281,7 +1281,7 @@ function prepareCanvasForLinks(firstLeftElement, firstRightElement, svgId, links
 				.attr("height", svgHeight + "px")
 				.attr("width", svgWidth + "px")
 				.attr("clip", [0, svgWidth, svgHeight, 0].join(" "));
-    console.log("prepareCanvasForLinks 3",  timing());
+//    console.log("prepareCanvasForLinks 3",  timing());
 	// Prepare the clipping path for inner canvas
 	svg.append("clipPath")
 		.attr("id", "canvasClip")
@@ -1290,12 +1290,12 @@ function prepareCanvasForLinks(firstLeftElement, firstRightElement, svgId, links
 	    .attr("y", 0)
 	    .attr("width", svgWidth)
 	    .attr("height", svgHeight);
-	console.log("prepareCanvasForLinks 4",  timing());
+//	console.log("prepareCanvasForLinks 4",  timing());
 	let canvas = svg.append("g")
 		.classed("canvas-vis", true)
 		.attr("clip-path", "url(#canvasClip)");
     
-    console.log("prepareCanvasForLinks 5",  timing());
+//    console.log("prepareCanvasForLinks 5",  timing());
     let links = canvas.append("g")
     .attr("id", "termLinks");
     
