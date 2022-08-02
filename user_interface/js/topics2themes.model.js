@@ -273,35 +273,50 @@ function addNewTheme(themeId, newLabel){
 // General functionality used for communicating with server
 ///////
 
-function get_data(url, success_function, dataToSend) {
+async function get_data_async(url, dataToSend) {
     dataToSend["authentication_key"] = authenticationKey
-    $.ajax({url:BASEURL + url, dataType: "json",
-       data: dataToSend,
-       type: "GET",
-       success: function(json, status) {
-       success_function(json["result"]);
-       },
-       error: function(xhr,status,error) {
-       alert("Something went wrong with " + url + " " + error)
-       }
-       });
+    let result = await $.ajax({
+	url:BASEURL + url,
+	dataType: "json",
+	data: dataToSend,
+	type: "GET"
+    });
+    return result["result"];
+}
+
+function get_data(url, success_function, dataToSend) {
+    (async () => {
+	try {
+	    let result = await get_data_async(url, dataToSend);
+	    success_function(result);
+	} catch (jqXHR) {
+	    alert("Something went wrong with " + url)
+	}
+    })();
+}
+
+
+async function save_data_async(url, dataToSend) {
+    dataToSend["authentication_key"] = authenticationKey
+    let result = await $.ajax({
+	url:BASEURL + url,
+	dataType: "json",
+	data: dataToSend,
+	type: "POST"
+    });
+    return result["result"];
 }
 
 function save_data(url, success_function, dataToSend) {
-    dataToSend["authentication_key"] = authenticationKey
-    $.ajax({url:BASEURL + url, dataType: "json",
-           data: dataToSend,
-           type: "POST",
-           success: function(json, status) {
-           success_function(json["result"]);
-           },
-           error: function(xhr,status,error) {
-           alert("Something went wrong with " + url + " " + error)
-           }
-           });
+    (async () => {
+	try {
+	    let result = await save_data_async(url, dataToSend);
+	    success_function(result);
+	} catch (jqXHR) {
+	    alert("Something went wrong with " + url)
+	}
+    })();    
 }
-
-
 	
 // Initializes the data entries
 function modelInitializeData(modelId) {
