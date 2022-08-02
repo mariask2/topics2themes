@@ -728,13 +728,13 @@ function controllerDoPopulateTopicElements(){
 }
 
 
-function onChooseLabelClick(event){
+async function onChooseLabelClick(event){
     let element = $(this);
     let userDefinedLabel = element.attr("id");
     let textId = element.attr("text-id");
-
-    modelDefineUserLabel(textId, userDefinedLabel);
-
+    let data = await modelDefineUserLabel(textId, userDefinedLabel);
+    controllerDoPopulateOneTextElement(data);
+    controllerRepopulateTheme();
 }
 
 function populateTextElement(d, i){

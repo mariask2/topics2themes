@@ -1754,12 +1754,7 @@ function modelDefineUserLabel(textId, userDefinedLabel){
     let updateUserLabelUrl = "update_user_defined_label";
     let data = {"text_id" : textId, "user_defined_label" : userDefinedLabel, "analysis_id" : modelCurrentAnalysisVersionId};
     
-    save_data(updateUserLabelUrl, updateUserDefinedLabel, data);
-}
-
-function updateUserDefinedLabel(data){
-    controllerDoPopulateOneTextElement(data);
-    controllerRepopulateTheme();
+    return save_data_async(updateUserLabelUrl, data);
 }
 
 async function getSavedUserDefinedLabels(){
