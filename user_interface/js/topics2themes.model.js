@@ -237,20 +237,16 @@ function resetSelectedDataExcept(notToReset){
     }
 }
 
-function modelCreateNewTheme(){
+async function modelCreateNewTheme(){
     if (modelCurrentAnalysisVersionId == null){
 	// Don't create new themes if no analysis has been selected
 	return;
     }
     let createThemeUrl = "create_new_theme";
     let data = {"analysis_id" : modelCurrentAnalysisVersionId};
-    save_data(createThemeUrl, doCreateNewTheme, data);
-}
+    let themeId = await save_data_async(createThemeUrl, data);
 
-function doCreateNewTheme(themeId){
     addNewTheme(themeId, "");
-    controllerDoPopulateThemes();
-    doDefaultSort();
 }
 
 //
@@ -319,13 +315,9 @@ function save_data(url, success_function, dataToSend) {
 }
 	
 // Initializes the data entries
-function modelInitializeData(modelId) {
+async function modelInitializeData(modelId) {
     modelCurrentModelId = modelId;
-    get_data("get_model_for_model_id", doInitializeData, {"model_id" : modelId});
-  
-}
-
-function doInitializeData(res){
+    let res = await get_data_async("get_model_for_model_id", {"model_id" : modelId});
     resetModelData()
     jsonData = res["topic_model_output"];
     let documents = jsonData.documents;
@@ -441,7 +433,6 @@ function doInitializeData(res){
 		}
 	}
     
-    controllerDoPopulateInterface();
 }
 
 
@@ -555,12 +546,10 @@ function modelAddTextThemeLink(themeId, textId){
     let addTextThemeLinkUrl = "add_theme_document_connection";
     let data = {"theme_number" :themeId,
         "document_id":textId, "analysis_id": modelCurrentAnalysisVersionId};
-    
-    save_data(addTextThemeLinkUrl, doAddTextThemeLink, data);
-}
 
-function doAddTextThemeLink(res){
-    // not used, only kept for debug purposes
+    (async () => {
+	save_data_async(addTextThemeLinkUrl, data);
+    })();
 }
 
 function hasThemeAssociatedTexts(themeId){
@@ -621,24 +610,15 @@ function modelSetMostRecentlyClickedForThemeRanking(textId){
 }
 
 
-function modelSortThemesWithMachineLearningIfTextChosen(){
+async function modelSortThemesWithMachineLearningIfTextChosen(){
     if(modelMostRecentlyClickedText == undefined){
-        sortThemesList(themeSortMode);
+	return;
     }
-    else{
-        let themeRankingUrl = "get_theme_ranking_for_document";
-        let data = {"document_id" : modelMostRecentlyClickedText, "analysis_id" : modelCurrentAnalysisVersionId};
-    
-        get_data(themeRankingUrl, resortThemes, data);
-    }
-}
 
-// Called via callback from modelSortThemesWithMachineLearningIfTextChosen
-function resortThemes(themeSorting){
-    modelThemeRankingForMostRecentlyClickedText = themeSorting;
-    sortThemesList(themeSortMode);
-    /* TODO: renderLinks not called, but caller needs to wait before calling renderLinks or run it again */
-    setTimeout(renderLinks, 0);
+    let themeRankingUrl = "get_theme_ranking_for_document";
+    let data = {"document_id" : modelMostRecentlyClickedText, "analysis_id" : modelCurrentAnalysisVersionId};
+
+    modelThemeRankingForMostRecentlyClickedText = await get_data_async(themeRankingUrl, data);
 }
 
 
@@ -1518,30 +1498,24 @@ function modelSetCanModelBeCreated(createModel){
 ////
 
 /// Dataset
-function modelFillDataSetChoices(){
+async function modelFillDataSetChoices(){
     let getDataChoicesUrl = "get_data_sets";
     modelDataSetChoices = [];
-    get_data(getDataChoicesUrl, modelDoFillDataSetChoices, {});
-}
+    let choices = await get_data_async(getDataChoicesUrl, {});
 
-function modelDoFillDataSetChoices(choices){
     for (let i = 0; i < choices.length; i++) {
         var choice = choices[i];
         modelDataSetChoices.push({"value" : choice})
     }
     
     modelDataSetChoices.push({"value" : SELECTDATASETTEXT})
-    
-    controllerDoPopulateDataChoices(modelDataSetChoices);
 }
 
-function modelGetDataSetChoices(){
+async function modelGetDataSetChoices(){
     if(modelDataSetChoices == null){
-        modelFillDataSetChoices();
+        await modelFillDataSetChoices();
     }
-    else{
-    controllerDoPopulateDataChoices(modelDataSetChoices);
-    }
+    return modelDataSetChoices;
 }
 
 //////////////////////
@@ -1561,22 +1535,15 @@ function updateTopicNameList(dummy){
      // Dont use this at the moment
 }
 
-function getSavedTopicNames(){
+async function getSavedTopicNames(){
     let savedTopicNamesUrl = "get_all_topic_names";
     let data = {"analysis_id" : modelCurrentAnalysisVersionId};
 
-    get_data(savedTopicNamesUrl, doGetSavedTopicNames, data);
-}
-
-
-
-function doGetSavedTopicNames(topic_names){
+    let topic_names = await get_data_async(savedTopicNamesUrl, data);
    
     for (let i = 0; i < topic_names.length; i++){
         modelTopicNames[topic_names[i].topic_id] = topic_names[i].topic_name;
     }
-    // TODO: Perhaps this shouldn't be done here, but later, or split up into subfunctions
-    controllerDoPopulateTopicElements();
 }
     
 function modelGetTopicNameForId(topic_id){
@@ -1601,14 +1568,11 @@ function doDeleteDatabaseTheme(res){
 }
 
 
-function getSavedThemes(){
+async function getSavedThemes(){
     let savedThemesUrl = "get_saved_themes";
     let data = {"analysis_id" : modelCurrentAnalysisVersionId};
-    get_data(savedThemesUrl, doGetSavedThemes, data);
-}
+    let themes = await get_data_async(savedThemesUrl, data);
 
-
-function doGetSavedThemes(themes){
     for (let i = 0; i < themes.length; i++){
         let themeId = themes[i].theme_number;
         themeId = parseInt(themeId)
@@ -1633,9 +1597,6 @@ function doGetSavedThemes(themes){
 
         }
     }
-    controllerDoPopulateThemes();
-    // TODO: Perhaps possible to save time by only population text elements controllerDoPopulateTextElements();
-    setTimeout(controllerDoPopulateInterface, 0);
 }
 
 function modelRenameTheme(themeId, newLabel){
@@ -1676,16 +1637,13 @@ function doDeleteDatabaseTextThemeLink(res){
 /// For loading data in the scroll list of previous models and analyses
 ///////
 
-function modelLoadModelForSelectedDataSet(currentDataset){
+async function modelLoadModelForSelectedDataSet(currentDataset){
     modelCurrentDataset = currentDataset;
     let modelForSelectedDataSetUrl = "get_all_models_for_collection_with_name";
     let data = {"collection_name" : currentDataset};
     
-    get_data(modelForSelectedDataSetUrl, doLoadModelsForSelectedDataSet, data);
+    let modelsForCurrentDatasetFromDataBase = await get_data_async(modelForSelectedDataSetUrl, data);
  
-}
-
-function doLoadModelsForSelectedDataSet(modelsForCurrentDatasetFromDataBase){
     resetModelData();
     resetModelChoiceData();
     
@@ -1696,9 +1654,6 @@ function doLoadModelsForSelectedDataSet(modelsForCurrentDatasetFromDataBase){
     }
     
     modelModelsForCurrentDataset.push({"value" : SELECTMODELTEXT, "id" : undefined});
-    
-    controllerDoPopulateInterface();
-    controllerDoPopulateModelChoices(modelModelsForCurrentDataset);
 }
 
 ///////
@@ -1716,16 +1671,18 @@ function modelLoadModelForCurrentDataSet(dummy){
 
 
 ///For loading the analyses-list
-function modelLoadAnalysesForSelectedModel(newModelId){
+async function modelLoadAnalysesForSelectedModel(newModelId){
     modelCurrentModelId = newModelId;
+    return modelLoadAnalysis();
+}
+
+async function modelLoadAnalysis(){
     let loadAnalysesUrl = "get_all_analyses_for_model";
     let data = {"model_id" : modelCurrentModelId};
     resetUserAnalysisData();
     
-    get_data(loadAnalysesUrl, doLoadAnalysesForSelectedModel, data);
-}
+    let analysesForCurrentModelFromDataBase = await get_data_async(loadAnalysesUrl, data);
 
-function doLoadAnalysesForSelectedModel(analysesForCurrentModelFromDataBase){
     resetAnalysisChoiceData();
     for (let i = 0; i < analysesForCurrentModelFromDataBase.length; i++) {
         let m = analysesForCurrentModelFromDataBase[i];
@@ -1733,49 +1690,35 @@ function doLoadAnalysesForSelectedModel(analysesForCurrentModelFromDataBase){
     }
     
     modelAnalysesForCurrentModel.push({"value" : SELECTANALYSISTEXT, "id" : undefined});
-    
-    controllerDoPopulateAnalysisChoices(modelAnalysesForCurrentModel);
-    resetUserAnalysisData();
-    //controllerDoPopulateInterface();
-}
-
-function doLoadAnalysesForSelectedModelAndSelectOne(analysesForCurrentModelFromDataBase){
-    doLoadAnalysesForSelectedModel(analysesForCurrentModelFromDataBase);
-    controllerSelectChosenAnalysis(modelCurrentAnalysisName)
 }
 
 
-function modelLoadNewAnalysis(newAnalysisVersionId){
+
+async function modelLoadNewAnalysis(newAnalysisVersionId){
     resetUserAnalysisData();
     modelCurrentAnalysisVersionId = newAnalysisVersionId;
-    
-    getSavedTopicNames();
-    getSavedUserDefinedLabels();
-    getSavedThemes();
-    
 
+    return Promise.all([
+	getSavedTopicNames(),
+	getSavedUserDefinedLabels(),
+	getSavedThemes()
+    ]);
 }
 
 ///////
 /// For constructing a new analysis, loading analyses and exporting analysis
 ////////////
-function modelConstructNewAnalysis(analysisName){
+async function modelConstructNewAnalysis(analysisName){
     let constructNewAnalysisUrl = "create_new_analysis";
     let data = {"model_id" : modelCurrentModelId, "analysis_name" : analysisName};
-    save_data(constructNewAnalysisUrl, modelLoadAnalysisForCurrentModel, data);
-}
+    let createdAnalysisParameters = await save_data_async(constructNewAnalysisUrl, data);
 
-
-function modelLoadAnalysisForCurrentModel(createdAnalysisParameters){
-
-    let loadAnalysesUrl = "get_all_analyses_for_model";
-    let data = {"model_id" : modelCurrentModelId};
-    resetUserAnalysisData();
-    
-    modelCurrentAnalysisName = createdAnalysisParameters["analysis_name"];
+    let modelCurrentAnalysisName = createdAnalysisParameters["analysis_name"];
     modelCurrentAnalysisVersionId = createdAnalysisParameters["analysis_id"];
+    console.log("modelLoadAnalysisForCurrentModel", modelCurrentAnalysisName);
 
-    get_data(loadAnalysesUrl, doLoadAnalysesForSelectedModelAndSelectOne, data);
+    await modelLoadAnalysis();
+    return modelCurrentAnalysisName;
 }
 
 function modelExportAnalysis(){
@@ -1819,18 +1762,15 @@ function updateUserDefinedLabel(data){
     controllerRepopulateTheme();
 }
 
-function getSavedUserDefinedLabels(){
+async function getSavedUserDefinedLabels(){
     let savedUserDefinedLabels = "get_all_user_defined_labels";
     let data = {"analysis_id" : modelCurrentAnalysisVersionId};
     
-    get_data(savedUserDefinedLabels, doGetUserDefinedLabels, data);
-}
+    let userLabels = await get_data_async(savedUserDefinedLabels, data);
 
-function doGetUserDefinedLabels(userLabels){
     for (let i = 0; i < userLabels.length; i++){
         modelUserTextLabels[userLabels[i].text_id] = userLabels[i].user_defined_label;
     }
-    // The interface is updated with the labels from the call from update of themes
 }
 
 function modelResetRecentlyClickedForMachineLearningSorting(){

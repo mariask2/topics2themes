@@ -389,11 +389,9 @@ function resizeContainers() {
 // Data set changes
 //////
 
-function populateDataChoices(){
-    modelGetDataSetChoices();
-}
+async function populateDataChoices(){
+    let choices = await modelGetDataSetChoices();
 
-function controllerDoPopulateDataChoices(choices){
     $("#dataset").empty();
     
     // Append the terms
@@ -417,7 +415,7 @@ function controllerDoPopulateDataChoices(choices){
 }
 
 
-function onDatasetChange() {
+async function onDatasetChange() {
     var newDataset = $("#dataset").val();
     
     if (newDataset == modelCurrentDataset)
@@ -425,13 +423,10 @@ function onDatasetChange() {
     
     resetInterface();
     disableAnalysisChoices();
-    modelLoadModelForSelectedDataSet(newDataset);
     disableThemeButtons();
-    
-    
-    
-    // leads to controllerDoPopulateModelChoices via call-backs
-    //resetDataWhenNewAnalysisIsSelected()
+    await modelLoadModelForSelectedDataSet(newDataset);
+    controllerDoPopulateInterface();
+    controllerDoPopulateModelChoices(modelModelsForCurrentDataset);
 }
 
 // invoked from the model
@@ -490,33 +485,38 @@ function onConstructNewModel(){
 /// Selection of models, and what results of that
 ///////////////////
 
-function onModelVersionListChange(element) {
-    var newModelVersionId  = $(this).children('option:selected').attr("id");
- 
+async function onModelVersionListChange(element) {
+    var newModelVersionId  = $("#modelVersion").children('option:selected').attr("id");
     
     if (newModelVersionId == modelCurrentModelId)
         return;
     
     resetInterface();
     disableThemeButtons();
-    modelInitializeData(newModelVersionId);
-    modelLoadAnalysesForSelectedModel(newModelVersionId);
-    
-    // leads to controllerDoPopulateInterface and controllerDoPopulateAnalysisChoices via call-backs to the model function 'doInitializeData'
-    //resetDataWhenNewAnalysisIsSelected()
+    let path1 = (async () => {
+	await modelInitializeData(newModelVersionId);
+	controllerDoPopulateInterface();
+    })();
+    let path2 = (async () => {
+	await modelLoadAnalysesForSelectedModel(newModelVersionId);
+	controllerDoPopulateAnalysisChoices(modelAnalysesForCurrentModel);
+    })();
+    await Promise.all([path1, path2]);
 }
 
 /// Selection of analyses
-function onAnalysisVersionListChange(element) {
+async function onAnalysisVersionListChange(element) {
     
-    var newAnalysisVersionId  = $(this).children('option:selected').attr("id");
+    var newAnalysisVersionId  = $("#analysisVersion").children('option:selected').attr("id");
     
     if (newAnalysisVersionId == modelCurrentAnalysisVersionId)
         return;
     
-    modelLoadNewAnalysis(newAnalysisVersionId)
-    // leads to controllerDoPopulateInterface and controllerDoPopulateThemes via call-backs
-    //resetDataWhenNewAnalysisIsSelected()
+    await modelLoadNewAnalysis(newAnalysisVersionId);
+    controllerDoPopulateTopicElements();
+    controllerDoPopulateThemes();
+    // TODO: Perhaps possible to save time by only population text elements controllerDoPopulateTextElements();
+    setTimeout(controllerDoPopulateInterface, 0);
 }
 
 // invoked from the model
@@ -563,10 +563,13 @@ function onNewAnalysis(){
     if (analysisName == null || analysisName == "") {
         alert("No new analysis created, a name must be given");
     } else {
-    disableAnalysisChoices();
-    modelConstructNewAnalysis(analysisName);
-
-}
+	disableAnalysisChoices();
+	(async () => {
+	    let modelCurrentAnalysisName = await modelConstructNewAnalysis(analysisName);
+	    controllerDoPopulateAnalysisChoices(modelAnalysesForCurrentModel);
+	    controllerSelectChosenAnalysis(modelCurrentAnalysisName);
+	})();
+    }
 }
 
 function onExportAnalysis(){
@@ -2033,9 +2036,11 @@ function onThemeAdd() {
 }
 
 // Creates a new theme with an optionally provided list of text IDs
-function createNewTheme(textIds) {
+async function createNewTheme(textIds) {
     disableThemeButtons(); // To prevent the user from creating several themes at the same time
-    modelCreateNewTheme(textIds);
+    await modelCreateNewTheme(textIds);
+    controllerDoPopulateThemes();
+    doDefaultSort();
 }
 
 function controllerSelectChosenAnalysis(name_of_created_analysis){
@@ -2151,18 +2156,20 @@ function doResetHighlightAfterStateChange(){
     if (currentTextIds.length == 0){
         sortTextsList(textSortMode);
     }
-    
-    // If a theme is not selected
-    if (currentThemeIds.length == 0){
-        modelSortThemesWithMachineLearningIfTextChosen();
-        //sortThemesList(themeSortMode);
-    }
-    
-    setTimeout(addChoiceBasedHighlight, 0);
-    console.log("doResetHighlightAfterStateChange return", timing());
 
-    console.log("doResetHighlightAfterStateChange before renderLinks", timing());
-    setTimeout(renderLinks, 0);
+    (async () => {
+	// If a theme is not selected
+	if (currentThemeIds.length == 0){
+            await modelSortThemesWithMachineLearningIfTextChosen();
+	    sortThemesList(themeSortMode);
+	}
+	
+	setTimeout(addChoiceBasedHighlight, 0);
+	console.log("doResetHighlightAfterStateChange return", timing());
+	
+	console.log("doResetHighlightAfterStateChange before renderLinks", timing());
+	setTimeout(renderLinks, 0);
+    })();
 }
 
 
