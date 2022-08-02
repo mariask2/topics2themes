@@ -372,7 +372,7 @@ function resizeContainers() {
 	// Several magic numbers below to account for heights of headers, spaces, etc.
 	var maxAvailableHeight = windowHeight - otherHeight
 		- parseInt($("body > div.container-fluid").css("margin-top")) - parseInt($("body > div.container-fluid").css("border-top-width"));
-	var mainAvailableHeight = maxAvailableHeight - $("#mainPanelLower").outerHeight();
+	var mainAvailableHeight = maxAvailableHeight;
 	
 	// Adjust the sizes of the inner containers
 	var innerAvailableHeight = mainAvailableHeight - TOP_OFFSET;
