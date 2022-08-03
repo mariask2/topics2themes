@@ -1481,13 +1481,9 @@ function toggleSelectedElements(element, list){
 // For determining if new models can be created
 //////
 
-function modelCanModelBeCreated(){
+async function modelCanModelBeCreated(){
     let canModelBeCreatedUrl = "can_model_be_created";
-    get_data(canModelBeCreatedUrl, modelSetCanModelBeCreated, {});
-}
-
-
-function modelSetCanModelBeCreated(createModel){
+    let createModel = await get_data_async(canModelBeCreatedUrl, {});
     if (createModel == "False"){
 	modelDisableModelCreation = 1; 
     }
