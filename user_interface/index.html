@@ -11,7 +11,7 @@
 	<link rel="shortcut icon" href="favicon.png">
 		 
 	<!-- Bootstrap -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/glyphicons.css" rel="stylesheet">
 	 	
 	<!-- noUiSlider -->
 	<link href="css/jquery.nouislider.min.css" rel="stylesheet">
@@ -30,51 +30,48 @@
   </head>
   <body>
       
-  	<div class="container-fluid">
+  	<div class="page-wrapper">
 	    <div class="page-header outer-element">
-	    	<div class="row small-bottom-margin">
-                <div class="col-xs-2 small-top-margin">
+                <div class="logobox small-top-margin">
                     <h2 class="title-blue">Topics<span>2</span>Themes.</h2>
                 </div>
-	    		<div class="col-xs-10 large-top-margin pull-right">
-	    			<div class="form-inline small-bottom-margin pull-right large-top-margin">
+	    			<div class="top-selection">
 						<!--<span class="small-right-margin choice-description">Data set:</span>-->
 			
             
-						<select id="dataset" class="form-control dataset-choices">
+						<select id="dataset" class="dataset-choices">
 						</select>
-                        <button id="newModel" type="button" title="Construct new model" class="btn btn-default btn-xs header-button create-button-button" aria-label="Construct new model">
+                        <button id="newModel" type="button" title="Construct new model" class=" header-button create-button-button" aria-label="Construct new model">
                             <!-- glyphicon-cog -->
                             <span class="glyphicon glyphicon-plus create-buttons-plus" aria-hidden="true"></span>
                         </button>
             
                         
-                        <select id="modelVersion" class="form-control dataset-choices">
+                        <select id="modelVersion" class="dataset-choices">
                             <option
                                 value="----"
                                 title="-----">---- model version ----</option>
                         </select>
                         
-                        <button id="newAnalysis" type="button" title="Add new analysis version" class="btn btn-default btn-xs header-button create-button-button" aria-label="Add a new analysis">
+                        <button id="newAnalysis" type="button" title="Add new analysis version" class=" header-button create-button-button" aria-label="Add a new analysis">
                             <span class="glyphicon glyphicon-plus create-buttons-plus" aria-hidden="true"></span>
                         </button>
                         
                         <!--<span class="small-right-margin choice-description">Analysis version:</span>-->
                         
-                        <select id="analysisVersion" class="form-control dataset-choices">
+                        <select id="analysisVersion" class="dataset-choices">
                             <option
                                 value="-----"
                                 title="-----">---- analysis version ----</option>
                         </select>
 			<button id="exportAnalysis" type="button"
-                            title="Export analysis" class="btn
-                            btn-default btn-xs save-button-button
+                            title="Export analysis" class="save-button-button
                             header-button"
                             aria-label="Export analysis">
 			 <span class="glyphicon glyphicon-save save-button" aria-hidden="true"></span>
                         </button>
 			<!--<button id="importAnalysis" type="button"
-                            title="Import analysis" class="btn btn-default btn-xs
+                            title="Import analysis" class="
                             header-button create-button-button"
                             aria-label="Import analysis">
 			 <span class="glyphicon glyphicon-open save-button" aria-hidden="true"></span>-->
@@ -84,55 +81,44 @@
      
                         
                     </div>
-                </div><!-- /.col-md-6 -->
-	    	</div><!-- /.row  -->
 	    </div><!-- /.page-header -->
 	    
-	    <div id="mainRow" class="row-main small-bottom-margin">
-									
-			<div id="mainPanel" class="col-xs-12 no-bottom-margin">
-				<div id="mainPanelUpper" class="row
-				no-bottom-margin">
+			<div id="mainPanel" class="row-main">
+				<div id="mainPanelUpper" class="">
 
 
 
 				  
-					<div id="termsContainerColumn" class="col-xs-2 no-bottom-margin">
-						<div id="termsContainer" class="panel panel-default no-bottom-margin small-right-margin">
-							<div class="panel-heading">
-								<h3 class="panel-title" >
+					<div id="termsContainerColumn" class="termscolumn">
+						<div id="termsContainer" class="listcontainer small-right-margin">
+							<div class="containerheader">
+								<h3>
 									<span id="termsTitle">Terms</span>
 								
-                                    <div class="btn-group pull-right">
+                                    <div class="headerbuttons" style="">
                                         
-                                        <div class="btn-group small-right-margin">
-                                            <input id="termSearch"
-                                                type="search"
-                                                class="form-control search-input" placeholder="Search">
-                                                <span id="termSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
-                                        </div>
                                         <button id="resizeTerms" type="button"
                                             title="When activated, the terms are only partly shown"
-                                            class="btn btn-default btn-xs
+                                            class="
                                             header-button pull-left" aria-label="When activated, the terms are only partly shown">
                                             <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
                                         </button>
 					<button id="lockTermsSorting" type="button"
                                         title="When activated, the automatic sort of terms is disabled."
-                                        class="btn btn-default btn-xs
+                                        class="
                                         header-button pull-left" aria-label="When activated, the terms are only partly shown">
                                         <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
 					</button>
 					
                                         
-                                        <button id="termSearchButton" type="button" title="Search for term" class="btn btn-default btn-xs header-button" aria-label="Search for term">
+                                        <button id="termSearchButton" type="button" title="Search for term" class=" header-button" aria-label="Search for term">
                                             <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                                         </button>
-									<div class="btn-group pull-right">
-									  <button id="termSortButton", type="button" title="Sort" class="btn btn-default btn-xs dropdown-toggle header-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+									<div class="headerbuttons">
+									  <button id="termSortButton", type="button" title="Sort" class=" popupmenu header-button" aria-haspopup="true" aria-expanded="true">
 									    <span class="glyphicon glyphicon-sort-by-attributes" aria-hidden="true"></span>
 									  </button>
-									  <ul class="dropdown-menu">
+									  <ul class="popupmenu-body">
 									    <li><a href="" class="sort-terms-trigger" data-sortkey="score/desc"><span class="checkmark"></span>Total score (desc)</a></li>
 									    <li><a href="" class="sort-terms-trigger" data-sortkey="score/asc"><span class="checkmark"></span>Total score (asc)</a></li>
 									    <li><a href="" class="sort-terms-trigger" data-sortkey="topics/desc"><span class="checkmark"></span>Number of topics (desc)</a></li>
@@ -146,41 +132,41 @@
                                     </div>
 									<span class="clearfix"></span>
 								</h3>
+                                        <div class="headersearch small-right-margin">
+                                            <input id="termSearch"
+                                                type="search"
+                                                class="search-input" placeholder="Search">
+                                                <span id="termSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
+                                        </div>
 							</div>
 					
-							<ul id="termsList" class="list-group">
+							<ul id="termsList" class="itemlist">
 							</ul>	
 						</div><!-- /.termsContainer -->
 					</div><!-- /.left column in the main panel -->
 
-					<div id="topicsContainerColumn" class="col-xs-2 no-bottom-margin">
-						<div id="topicsContainer" class="panel panel-default no-bottom-margin small-left-margin small-right-margin">
-							<div class="panel-heading">
-								<h3 class="panel-title">
-								Topics
+					<div id="topicsContainerColumn" class="topicscolumn">
+						<div id="topicsContainer" class="listcontainer small-left-margin small-right-margin">
+							<div class="containerheader">
+								<h3>
+								<span id="topicsTitle">Topics</span>
 								
-                                <div class="btn-group pull-right">
+                                <div class="headerbuttons">
                                     
-                                    <div class="btn-group small-right-margin">
-                                        <input id="topicSearch"
-                                            type="search"
-                                            class="form-control search-input" placeholder="Search">
-                                            <span id="topicSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
-                                    </div>
                                     <button id="lockTopicsSorting" type="button"
                                         title="When activated, the automatic sort of topics is disabled."
-                                        class="btn btn-default btn-xs
+                                        class="
                                         header-button pull-left" aria-label="Lock resorting of topics">
                                         <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
                                     </button>
-                                    <button id="topicSearchButton" type="button" title="Search for topic" class="btn btn-default btn-xs header-button" aria-label="Search for topic">
+                                    <button id="topicSearchButton" type="button" title="Search for topic" class=" header-button" aria-label="Search for topic">
                                         <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                                     </button>
-                                <div class="btn-group pull-right">
-								  <button type="button" title="Sort" class="btn btn-default btn-xs dropdown-toggle header-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                <div class="headerbuttons">
+								  <button type="button" title="Sort" class=" header-button popupmenu" aria-haspopup="true" aria-expanded="true">
 								    <span class="glyphicon glyphicon-sort-by-attributes" aria-hidden="true"></span>
 								  </button>
-								  <ul class="dropdown-menu">
+								  <ul class="popupmenu-body">
 								    <li><a href="" class="sort-topics-trigger" data-sortkey="score/desc"><span class="checkmark"></span>Total score (desc)</a></li>
 								    <li><a href="" class="sort-topics-trigger" data-sortkey="score/asc"><span class="checkmark"></span>Total score (asc)</a></li>
 								  </ul>
@@ -189,22 +175,28 @@
 								<span class="clearfix"></span>
 								
 								</h3>
+                                    <div class="headersearch small-right-margin">
+                                        <input id="topicSearch"
+                                            type="search"
+                                            class="search-input" placeholder="Search">
+                                            <span id="topicSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
+                                    </div>
 							</div>
 					
-							<ul id="topicsList" class="list-group">
+							<ul id="topicsList" class="itemlist">
 							</ul>	
 						</div><!-- /.topicsContainer -->
 					</div><!-- /.second column in the main panel -->
 
 
-					<div id="textContainerColumn" class="col-xs-5 no-bottom-margin">
-						<div id="textContainer" class="panel panel-default no-bottom-margin small-left-margin small-right-margin">
-							<div class="panel-heading">
-								<h3 class="panel-title">
+					<div id="textContainerColumn" class="textcolumn">
+						<div id="textContainer" class="listcontainer small-left-margin small-right-margin">
+							<div class="containerheader">
+								<h3>
 								Texts
                                 
      
-                                <div class="btn-group pull-right">
+                                <div class="headerbuttons">
                                     
                                     
 
@@ -212,28 +204,28 @@
                                         
                                         <button id="claim" type="button"
                                             title="Show main claim"
-                                            class="btn btn-default btn-xs
+                                            class="
                                             header-button argumentation-button pull-left" aria-label="Show main claim">
                                             <span aria-hidden="true">Claim</span>
                                         </button>
                                         
                                         <button id="supporting" type="button"
                                             title="Show supporting arguments"
-                                            class="btn btn-default btn-xs
+                                            class="
                                             header-button argumentation-button pull-left" aria-label="Show supporting arguments">
                                             <span aria-hidden="true">Support</span>
                                         </button>
                                         
                                         <button id="opposing" type="button"
                                             title="Show opposing arguments"
-                                            class="btn btn-default btn-xs
+                                            class="
                                             header-button argumentation-button pull-left oppose-button" aria-label="Show opposing arguments">
                                             <span aria-hidden="true">Oppose</span>
                                         </button>
-                                        <div class="btn-group pull-left">
+                                        <div class="headerbuttons pull-left">
                                             <button id="sentiment" type="button"
                                                 title="Show markers for sentiment"
-                                                class="btn btn-default btn-xs
+                                                class="
                                                 header-button argumentation-button pull-left sentiment-button" aria-label="Show markers for sentiment">
                                                 <span aria-hidden="true">Sentiment</span>
                                             </button>
@@ -246,40 +238,34 @@
 
                                     
                                     
-                                    <div class="btn-group small-right-margin">
-                                        <input id="textSearch"
-                                            type="search"
-                                            class="form-control search-input" placeholder="Search">
-                                            <span id="textSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
-                                    </div>
 
 				    <button id="showFullText" type="button"
                                         title="When activated, full texts (not summaries) are shown."
-                                        class="btn btn-default btn-xs
+                                        class="
                                         header-button pull-left" aria-label="Lock resorting of texts">
                                         <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
 				    </button>
 				    
                                     <button id="lockTextSorting" type="button"
                                         title="When activated, the automatic sort of texts is disable."
-                                        class="btn btn-default btn-xs
+                                        class="
                                         header-button pull-left" aria-label="Lock resorting of texts">
                                         <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
                                     </button>
                                     
                                     
-                                    <button id="textSearchButton" type="button" title="Search for text" class="btn btn-default btn-xs header-button" aria-label="Search for text">
+                                    <button id="textSearchButton" type="button" title="Search for text" class=" header-button" aria-label="Search for text">
                                         <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                                     </button>
                                     
 
                                     
-                                <div class="btn-group pull-right">
-								  <button type="button" title="Sort" class="btn btn-default btn-xs dropdown-toggle header-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                <div class="headerbuttons">
+								  <button type="button" title="Sort" class=" header-button popupmenu" aria-haspopup="true" aria-expanded="true">
 								    <span class="glyphicon glyphicon-sort-by-attributes" aria-hidden="true"></span>
 								  </button>
                                   
-								  <ul class="dropdown-menu">
+								  <ul class="popupmenu-body">
 								    <li><a href="" class="sort-documents-trigger" data-sortkey="score/desc"><span class="checkmark"></span>Total score (desc)</a></li>
 								    <li><a href="" class="sort-documents-trigger" data-sortkey="score/asc"><span class="checkmark"></span>Total score (asc)</a></li>
                                     <li><a href="" class="sort-documents-trigger" data-sortkey="themes/desc"><span class="checkmark"></span>Number of associated themes (desc)</a></li>
@@ -292,58 +278,57 @@
                                 </div>
                                 <span class="clearfix"></span>
                                 </h3>
+                                    <div class="headersearch small-right-margin">
+                                        <input id="textSearch"
+                                            type="search"
+                                            class="search-input" placeholder="Search">
+                                            <span id="textSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
+                                    </div>
 							</div>
 
-							<ul id="textsList" class="list-group">
+							<ul id="textsList" class="itemlist">
 							</ul>	
 						</div><!-- /.textsContainer -->
 					</div><!-- /.third column in the main panel -->
 									      
-					<div id="themesContainerColumn" class="col-xs-3 no-bottom-margin">
-						<div id="themesContainer" class="panel panel-default no-bottom-margin small-left-margin">
-							<div class="panel-heading">
-								<h3 class="panel-title">
+					<div id="themesContainerColumn" class="themescolumn">
+						<div id="themesContainer" class="listcontainer small-left-margin">
+							<div class="containerheader">
+								<h3>
 								Themes
-				<div class="btn-group pull-right">
+				<div class="headerbuttons">
 
 				  <button id="newTheme" type="button"
                                       title="Add a new theme"
-                                      class="btn btn-default btn-xs
+                                      class="
                                       header-button new-theme-button pull-left" aria-label="Add a new theme">
                                       <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                                   </button>
 				  
 				 <button id="doThemeSorting" type="button"
                                       title="When activated, a machine learning-based resorting of themes is carried out"
-                                      class="btn btn-default btn-xs button-active
+                                      class=" button-active
                                       header-button lock-button pull-left" aria-label="Activate machine learning based resorting of themes">
                                       <span class="glyphicon glyphicon-sort" aria-hidden="true"></span>
                                   </button>
 				  
 				   <button id="showLabels" type="button"
-                                      title="Show labels" class="btn
-                                      btn-default btn-xs header-button button-active
+                                      title="Show labels" class="header-button button-active
                                       hide-labels-button pull-left" aria-label="Show labels">
                                       <span class="glyphicon glyphicon-tag" aria-hidden="true"></span>
                                   </button>
 				  
                                     
-                                    <div class="btn-group small-right-margin">
-                                        <input id="themeSearch"
-                                            type="search"
-                                            class="form-control search-input" placeholder="Search">
-                                            <span id="themeSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
-				    </div>
                                     
-                                    <button id="themeSearchButton" type="button" title="Search for theme" class="btn btn-default btn-xs header-button" aria-label="Search for theme">
+                                    <button id="themeSearchButton" type="button" title="Search for theme" class=" header-button" aria-label="Search for theme">
                                         <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                                     </button>
-                                <div class="btn-group pull-right">
-								  <button id="sortTheme" type="button" title="Sort" class="btn btn-default btn-xs dropdown-toggle header-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                <div class="headerbuttons">
+								  <button id="sortTheme" type="button" title="Sort" class=" header-button popupmenu" aria-haspopup="true" aria-expanded="true">
 								    <span class="glyphicon glyphicon-sort-by-attributes" aria-hidden="true"></span>
 								  </button>
                                   
-								  <ul class="dropdown-menu">
+								  <ul class="popupmenu-body">
 								   <li><a href="" class="sort-themes-trigger" data-sortkey="time/asc"><span class="checkmark"></span>Time of creation (asc)</a></li>
 								    <li><a href="" class="sort-themes-trigger" data-sortkey="time/desc"><span class="checkmark"></span>Time of creation (desc)</a></li>
 								     <li><a
@@ -368,9 +353,15 @@
                                 </div>
                                 <span class="clearfix"></span>
                                 </h3>
+                                    <div class="headersearch small-right-margin">
+                                        <input id="themeSearch"
+                                            type="search"
+                                            class="search-input" placeholder="Search">
+                                            <span id="themeSearchClear" class="glyphicon glyphicon-remove search-clear"></span>
+				    </div>
 							</div>
 					
-							<ul id="themesList" class="list-group">
+							<ul id="themesList" class="itemlist">
 							</ul>	
 						</div><!-- /.themesContainer -->
 					</div><!-- /.right column in the main panel -->
@@ -384,9 +375,6 @@
 				
 					
 			</div><!-- /.mainPanel -->
-			
-		</div><!-- /.mainRow  -->
-		
 		<div id="footer">
 		    <hr>
 	    		<p class="text-muted credit no-top-margin no-bottom-margin hidden">
@@ -404,7 +392,6 @@
 	<!-- jQuery -->
     <script src="js/jquery.js"></script>
     <!-- Include all compiled plugins -->
-    <script src="js/bootstrap.min.js"></script>
     
     <!-- D3 -->
     <script src="js/d3.v3.min.js"></script>

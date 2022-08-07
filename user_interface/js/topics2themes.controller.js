@@ -305,7 +305,6 @@ function disableThemeButtons(){
     
     d3.select("#topicsList").selectAll("li").selectAll("textarea").each(function(){
                                                                         $(this).attr("disabled", true);
-                                                                        $(this).addClass("textarea_disabled");
                                                                               })
 }
 
@@ -324,7 +323,6 @@ function enableThemeButtons(){
     
     d3.select("#topicsList").selectAll("li").selectAll("textarea").each(function(){
                                                                         $(this).attr("disabled", false);
-                                                                        $(this).addClass("textarea_disabled");
                                                                         })
 }
 
@@ -371,7 +369,7 @@ function resizeContainers() {
 		
 	// Several magic numbers below to account for heights of headers, spaces, etc.
 	var maxAvailableHeight = windowHeight - otherHeight
-		- parseInt($("body > div.container-fluid").css("margin-top")) - parseInt($("body > div.container-fluid").css("border-top-width"));
+		- parseInt($("body > div.page-wrapper").css("margin-top")) - parseInt($("body > div.page-wrapper").css("border-top-width"));
 	var mainAvailableHeight = maxAvailableHeight;
 	
 	// Adjust the sizes of the inner containers
@@ -611,7 +609,6 @@ function controllerDoPopulateInterface() {
 	.data(modelTerms)
 	.enter()
 	.append("li")
-	.classed("list-group-item", true)
     
 	.each(function(d, i){
 		let element = $(this);
@@ -666,7 +663,6 @@ function controllerDoPopulateTextElements(){
     .data(modelDocuments)
     .enter()
     .append("li")
-    .classed("list-group-item", true)
     //.attr("draggable", true)
     .each(populateTextElement);
 }
@@ -700,13 +696,12 @@ function controllerDoPopulateTopicElements(){
     .data(modelTopics)
     .enter()
     .append("li")
-    .classed("list-group-item", true)
     .each(function(d, i){
           let element = $(this);
           
           element.addClass("topic-element");
           
-          let titleLabel = $("<textarea  type=\"text\" class=\"form-control\"></textarea>");
+          let titleLabel = $("<textarea  type=\"text\"></textarea>");
           titleLabel.addClass("title-label");
           titleLabel.addClass("topic-input");
           titleLabel.attr("placeholder", "Topic #" + d.id);
@@ -809,13 +804,12 @@ function populateTextElementLabel(element){
     let textId = element.datum().id;
     
     let buttonGroup = $("<div></div>");
-    buttonGroup.addClass("btn-group");
-    buttonGroup.addClass("pull-right");
+    buttonGroup.addClass("labelbuttons");
 
     if (modelCurrentAnalysisVersionId != null){
         let button = $("<span></span>");
-        button.addClass("dropdown-toggle");
-        button.attr("data-toggle", "dropdown");
+        button.addClass("popupmenu");
+	button.click(popupmenuclick);
         button.attr("aria-haspopup", "true");
         button.attr("aria-expanded", "false");
     
@@ -845,7 +839,7 @@ function populateTextElementLabel(element){
     
         let dropdown = $("<ul></ul>");
         dropdown.addClass("choose-label-trigger");
-        dropdown.addClass("dropdown-menu")
+        dropdown.addClass("popupmenu-body")
         for (let j = 0; j < modelLabelCategories.length; j++){
             let dropdownItem = $("<span></span>");
             dropdownItem.addClass("choose-label-trigger");
@@ -877,7 +871,7 @@ function getBadgeLabel(stanceCategory){
         //console.log(modelLabelCategories[j]["label"])
         if (stanceCategory == modelLabelCategories[j]["label"]){
             let badgeLabel = $("<span style='background-color:" + modelLabelCategories[j]["color"] + "'></span>");
-            badgeLabel.addClass("badge");
+            badgeLabel.addClass("label");
             badgeLabel.addClass("text-badge");
             badgeLabel.attr("id", stanceCategory);
             // if (stanceCategory.length > 3) {
@@ -902,7 +896,7 @@ function populateAdditionalLabelsAtTextElement(textElement, additionalLabelsCont
     for (let j = 0; j < textElement["additional_labels"].length; j++){
         //console.log(textElement["additional_labels"][j])
         let badgeLabel = getAdditionalLabel(textElement["additional_labels"][j]);
-        badgeLabel.addClass("badge");
+        badgeLabel.addClass("label");
         badgeLabel.addClass("additional-label-badge");
         additionalLabelsContainer.append(badgeLabel);
     }
@@ -910,7 +904,7 @@ function populateAdditionalLabelsAtTextElement(textElement, additionalLabelsCont
 
 function getAdditionalLabel(text){
     let badgeLabel = $("<span></span>");
-    badgeLabel.addClass("badge");
+    badgeLabel.addClass("label");
     badgeLabel.addClass("additional-label-badge");
     badgeLabel.append(text);
     return badgeLabel;
@@ -922,11 +916,9 @@ function populateThemeElement(d, i) {
     element.empty() // Since this function is used also for repopulation, start with removing current content
     element.addClass("theme-element");
    	
-    let removeButton = $("<button type=\"button\" class=\"btn btn-default btn-xs theme-remove-button\" aria-label=\"Remove theme without associated texts\" title=\"Remove theme without associated texts\">"
+    let removeButton = $("<button type=\"button\" class=\"theme-remove-button\" aria-label=\"Remove theme without associated texts\" title=\"Remove theme without associated texts\">"
 		+ "<span class=\"glyphicon glyphicon-remove\" aria-hidden=\"true\"></span>"
 		+ "</button>");
-    
-    removeButton.addClass("pull-right");
     
     if (hasThemeAssociatedTexts(d.id)){
         removeButton.addClass("disabled");
@@ -935,7 +927,6 @@ function populateThemeElement(d, i) {
     let indexLabel = $("<span>Theme #</span>");
     indexLabel.addClass("index-label");
     indexLabel.append(d.id);
-    indexLabel.addClass("pull-right");
      
     let themeTextContainer = $("<div></div>");
     themeTextContainer.addClass("theme-texts-container");
@@ -945,7 +936,7 @@ function populateThemeElement(d, i) {
         populateThemeTextsContainer(d, themeTextContainer);
     }
     
-    let titleLabel = $("<textarea type=\"text\" class=\"form-control\"></textarea>");
+    let titleLabel = $("<textarea type=\"text\"></textarea>");
     titleLabel.addClass("title-label");
     titleLabel.attr("placeholder", "Theme #" + d.id + " (click to add description)");
     titleLabel.val(d.label);
@@ -977,7 +968,7 @@ function populateThemeTextsContainerAtTextElement(text, themeTextsContainer) {
             textLabel.append("Theme #" + themeId + "&nbsp;");
 
             
-            let removeButton = $("<button type=\"button\" class=\"btn btn-default btn-xs theme-text-remove-button \" aria-label=\"Remove text from theme\" title=\"Remove text from theme\">"
+            let removeButton = $("<button type=\"button\" class=\"theme-text-remove-button \" aria-label=\"Remove text from theme\" title=\"Remove text from theme\">"
                                  + "<span class=\"glyphicon glyphicon-remove text-theme-remove-glyph\" aria-hidden=\"true\"  ></span>"
                                  + "</button>");
             textLabel.append(removeButton);
@@ -2058,7 +2049,6 @@ function controllerDoPopulateThemes(){
 	.data(modelThemes, function(d) { return d.id; })
 	.enter()
 	.append("li")
-	.classed("list-group-item", true)
 	.each(populateThemeElement);
         
     enableThemeButtons();
@@ -2174,10 +2164,10 @@ function doResetHighlightAfterStateChange(){
 
 
 function resetPanelHeadings(){
-    d3.select("#termsContainer").select(".panel-heading").classed("panel-heading-marked", false);
-    d3.select("#topicsContainer").select(".panel-heading").classed("panel-heading-marked", false);
-    d3.select("#textContainer").select(".panel-heading").classed("panel-heading-marked", false);
-    d3.select("#themesContainer").select(".panel-heading").classed("panel-heading-marked", false);
+    d3.select("#termsContainer").select(".containerheader").classed("panel-heading-marked", false);
+    d3.select("#topicsContainer").select(".containerheader").classed("panel-heading-marked", false);
+    d3.select("#textContainer").select(".containerheader").classed("panel-heading-marked", false);
+    d3.select("#themesContainer").select(".containerheader").classed("panel-heading-marked", false);
     
     d3.select("#termsContainer").classed("panel-marked", false);
     d3.select("#topicsContainer").classed("panel-marked", false);
@@ -2187,19 +2177,19 @@ function resetPanelHeadings(){
 
 function setPanelHeadings(){
     if (currentTermIds.length > 0){
-        d3.select("#termsContainer").select(".panel-heading").classed("panel-heading-marked", true);
+        d3.select("#termsContainer").select(".containerheader").classed("panel-heading-marked", true);
         d3.select("#termsContainer").classed("panel-marked", true);
     }
     if (currentTopicIds.length > 0){
-        d3.select("#topicsContainer").select(".panel-heading").classed("panel-heading-marked", true);
+        d3.select("#topicsContainer").select(".containerheader").classed("panel-heading-marked", true);
         d3.select("#topicsContainer").classed("panel-marked", true);
     }
     if (currentTextIds.length > 0){
-        d3.select("#textContainer").select(".panel-heading").classed("panel-heading-marked", true);
+        d3.select("#textContainer").select(".containerheader").classed("panel-heading-marked", true);
         d3.select("#textContainer").classed("panel-marked", true);
     }
     if (currentThemeIds.length > 0){
-        d3.select("#themesContainer").select(".panel-heading").classed("panel-heading-marked", true);
+        d3.select("#themesContainer").select(".containerheader").classed("panel-heading-marked", true);
         d3.select("#themesContainer").classed("panel-marked", true);
     }
 }
@@ -2867,24 +2857,24 @@ function filterDisplayedThemes() {
 function hideSearchFields(){
     let field_names = ["#termSearch", "#termSearchClear", "#topicSearch", "#topicSearchClear", "#textSearch", "#textSearchClear", "#themeSearch", "#themeSearchClear"];
     for (let i = 0; i < field_names.length; i++){
-        d3.select(field_names[i]).classed("search-input_hidden", true);
+        d3.select(field_names[i]).style("display", "none");
     }
 }
 
 // Help functions
 function showSearchField(fieldName, clearName, showFieldClass){
-    d3.select(fieldName).style("visibility", "visible");
+    d3.select(fieldName).style("display", "block");
     d3.select(fieldName).classed(showFieldClass, true)
-    d3.select(clearName).style("visibility", "visible");
+    d3.select(clearName).style("display", "block");
     d3.select(fieldName).each(function(){
                               $(this).focus()
                               })
 }
 
 function hideSearchField(fieldName, clearName, showFieldClass){
-    d3.select(fieldName).style("visibility", "hidden");
+    d3.select(fieldName).style("display", "none");
     d3.select(fieldName).classed(showFieldClass, false)
-    d3.select(clearName).style("visibility", "hidden");
+    d3.select(clearName).style("display", "none");
 }
 
 // Terms
@@ -3040,11 +3030,7 @@ function onResizeTerms(){
         $("#resizeTerms").removeClass("button-active");
         $("#resizeTerms").removeClass("header-button-small");
         $("#resizeTerms").addClass("header-button");
-	$("#termsContainerColumn").removeClass("col-xs-1");
-	$("#termsContainerColumn").addClass("col-xs-2");
-
-	$("#themesContainerColumn").removeClass("col-xs-4");
-	$("#themesContainerColumn").addClass("col-xs-3");
+	$("#mainPanel").removeClass("terms-small");
 
 	$("#lockTermsSorting").removeClass("header-button-hidden");
 	$("#termSearchButton").removeClass("header-button-hidden");
@@ -3056,12 +3042,8 @@ function onResizeTerms(){
     }
     else{
         termsSmall = true;
-	$("#termsContainerColumn").removeClass("col-xs-2");
-	$("#termsContainerColumn").addClass("col-xs-1");
+	$("#mainPanel").addClass("terms-small");
         $("#resizeTerms").addClass("button-active");
-
-	$("#themesContainerColumn").removeClass("col-xs-3");
-	$("#themesContainerColumn").addClass("col-xs-4");
 
 	$("#lockTermsSorting").addClass("header-button-hidden");
 	$("#termSearchButton").addClass("header-button-hidden");
@@ -3223,3 +3205,27 @@ function onShowOpposing(){
 }
 
 
+$(document).click(function (e) {
+    $(".popupmenu").parent().removeClass('popupmenu-open');
+});
+
+
+function popupmenuclick(e) {
+    let button = $(this);
+
+    if (button.is('.disabled')) {
+	return;
+    }
+
+    if (button.parent().hasClass('popupmenu-open')) {
+	$(".popupmenu").parent().removeClass('popupmenu-open');
+    } else {
+	$(".popupmenu").parent().removeClass('popupmenu-open');
+	button.parent().addClass('popupmenu-open');
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+$(".popupmenu").click(popupmenuclick);
