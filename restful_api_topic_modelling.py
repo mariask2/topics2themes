@@ -383,13 +383,17 @@ def get_hash(path):
             b = f.read1(65536)
     return hash.hexdigest()
 
+from jinja2 import contextfilter
+
 @app.template_filter('staticfile')
-def staticfile_hash(filename):
+@contextfilter
+def staticfile_hash(context, filename):
     h = get_hash("user_interface/js/" + filename)
     return "js/" + h + "/" + filename
 
 @app.template_filter('staticfile_css')
-def staticfile_css_hash(filename):
+@contextfilter
+def staticfile_css_hash(context, filename):
     h = get_hash("user_interface/css/" + filename)
     return "css/" + h + "/" + filename
     
