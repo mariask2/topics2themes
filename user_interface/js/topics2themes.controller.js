@@ -306,9 +306,8 @@ function disableThemeButtons(){
     $("#themeSearchButton").addClass("disabled");
     $("#themeSearchButton").attr("disabled", true);
     
-    d3.select("#topicsList").selectAll("li").selectAll("textarea").each(function(){
-                                                                        $(this).attr("disabled", true);
-                                                                              })
+    d3.select("#topicsList").selectAll("li").selectAll("textarea")
+	.property("disabled", true);
 }
 
 function enableThemeButtons(){
@@ -323,10 +322,9 @@ function enableThemeButtons(){
     
     $("#themeSearchButton").removeClass("disabled")
     $("#themeSearchButton").attr("disabled", false);
-    
-    d3.select("#topicsList").selectAll("li").selectAll("textarea").each(function(){
-                                                                        $(this).attr("disabled", false);
-                                                                        })
+
+    d3.select("#topicsList").selectAll("li").selectAll("textarea")
+	.property("disabled", false);
 }
 
 
@@ -581,23 +579,15 @@ function controllerDoPopulateInterface() {
     resetLinks();
     
     // Append the terms
-	d3.select("#termsList").selectAll("li")
+    d3.select("#termsList").selectAll("li")
 	.data(modelTerms)
 	.enter()
 	.append("li")
-    
-	.each(function(d, i){
-		let element = $(this);
-		element.addClass("term-element");
-		element.attr("style", "padding: 5px 7px;");
-		let titleLabel = $("<span></span>");
-		titleLabel.addClass("title-label");
-		titleLabel.append(d.term.replace("_", " ").replace("_", " ").replace("_", " "));
-   
-		element.append(titleLabel);
-        
-
-	});
+	.classed("term-element", true)
+	.style("padding", "5px 7px")
+	.append("span")
+	.classed("title-label", true)
+	.text((d) => d.term.replace(/_/g, " "));
     
     // topics
     // only populate topics if no analysis is chosen. If an analysis is chosen, this will instead be performed in from the callback when loading an analysis version
