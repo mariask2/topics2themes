@@ -116,44 +116,44 @@ $(document).ready(function(){
     document.addEventListener('keydown', onKeyDown);
 
     // Handlers for selecting and/or constructing data sets, models and analysis 
-    $("#dataset").change(onDatasetChange);
-    $("#newModel").click(onConstructNewModel);
-    $("#modelVersion").change(onModelVersionListChange);
-    $("#newAnalysis").click(onNewAnalysis);
-    $("#analysisVersion").change(onAnalysisVersionListChange);    
-    $("#exportAnalysis").click(onExportAnalysis);                  
+    $("#dataset").on("change", onDatasetChange);
+    $("#newModel").on("click", onConstructNewModel);
+    $("#modelVersion").on("change", onModelVersionListChange);
+    $("#newAnalysis").on("click", onNewAnalysis);
+    $("#analysisVersion").on("change", onAnalysisVersionListChange);
+    $("#exportAnalysis").on("click", onExportAnalysis);
 
     // Search buttons
-    $("#termSearchButton").click(onTermSearchButtonClick);
-    $("#topicSearchButton").click(onTopicSearchButtonClick);
-    $("#textSearchButton").click(onTextSearchButtonClick);
-    $("#themeSearchButton").click(onThemeSearchButtonClick);
+    $("#termSearchButton").on("click", onTermSearchButtonClick);
+    $("#topicSearchButton").on("click", onTopicSearchButtonClick);
+    $("#textSearchButton").on("click", onTextSearchButtonClick);
+    $("#themeSearchButton").on("click", onThemeSearchButtonClick);
                   
                   
-	$("#termsList, #topicsList, #themesList, #textsList").scroll(onListScroll);
+	$("#termsList, #topicsList, #themesList, #textsList").on("scroll", onListScroll);
 	
 	
-	$("#termSearchClear").click(onTermSearchClear);
-	$("#termSearch").keyup(onTermSearch);
-	$("#topicSearchClear").click(onTopicSearchClear);
-	$("#topicSearch").keyup(onTopicSearch);
-	$("#textSearchClear").click(onTextSearchClear);
-	$("#textSearch").keyup(onTextSearch);
-	$("#themeSearchClear").click(onThemeSearchClear);
-	$("#themeSearch").keyup(onThemeSearch);
+	$("#termSearchClear").on("click", onTermSearchClear);
+	$("#termSearch").on("keyup", onTermSearch);
+	$("#topicSearchClear").on("click", onTopicSearchClear);
+	$("#topicSearch").on("keyup", onTopicSearch);
+	$("#textSearchClear").on("click", onTextSearchClear);
+	$("#textSearch").on("keyup", onTextSearch);
+	$("#themeSearchClear").on("click", onThemeSearchClear);
+	$("#themeSearch").on("keyup", onThemeSearch);
 	
 	
 	$("#topicsList").on("change", ".topic-element .title-label", onTopicRename);
-    $("#newTheme").click(onThemeAdd);
+    $("#newTheme").on("click", onThemeAdd);
 	$("#themesList").on("change", ".theme-element .title-label", onThemeRename);
     $("#textsList").on("click", ".text-element .change-label-trigger", onChooseLabelClick);
     $("#textsList").on("click", ".text-element .theme-text-remove-button", onThemeTextRemoveAtTextElement);
 	$("#themesList").on("click", ".theme-element .theme-remove-button", onThemeRemove);
 	
-	$(".sort-terms-trigger").click(onSortTermsList);
-	$(".sort-topics-trigger").click(onSortTopicsList);
-	$(".sort-documents-trigger").click(onSortDocumentsList);
-    $(".sort-themes-trigger").click(onSortThemesList);
+	$(".sort-terms-trigger").on("click", onSortTermsList);
+	$(".sort-topics-trigger").on("click", onSortTopicsList);
+	$(".sort-documents-trigger").on("click", onSortDocumentsList);
+    $(".sort-themes-trigger").on("click", onSortThemesList);
                   
 	// list click events to select a items as active
     $("#termsList").on("click", ".term-element", onTermElementClick);
@@ -166,25 +166,25 @@ $(document).ready(function(){
     
 
     // Button for showing full text
-    $("#showFullText").click(onShowFullText);
+    $("#showFullText").on("click", onShowFullText);
 
     // Button for resizing terms panel
-    $("#resizeTerms").click(onResizeTerms);
+    $("#resizeTerms").on("click", onResizeTerms);
 
     // Button for hide and show labels on themes
-    $("#showLabels").click(onShowLabels);
+    $("#showLabels").on("click", onShowLabels);
                   
     // Button for lock and unlock the sorting of themes
-    $("#doThemeSorting").click(onDoThemeSorting);
+    $("#doThemeSorting").on("click", onDoThemeSorting);
 
     // Button for lock and unlock the sorting of texts
-    $("#lockTextSorting").click(onLockTextSorting);
+    $("#lockTextSorting").on("click", onLockTextSorting);
 
     // Button for lock and unlock the sorting of terms
-    $("#lockTermsSorting").click(onLockTermsSorting);
+    $("#lockTermsSorting").on("click", onLockTermsSorting);
 
       // Button for lock and unlock the sorting of terms
-    $("#lockTopicsSorting").click(onLockTopicsSorting);
+    $("#lockTopicsSorting").on("click", onLockTopicsSorting);
 
              
     // Drag'n'drop handlers
@@ -332,14 +332,14 @@ function enableThemeButtons(){
 ///////
 
 // Handles window resize
-$(window).resize(function() {
+$(window).on('resize', function() {
     if(this.resizeTO) clearTimeout(this.resizeTO);
     this.resizeTO = setTimeout(function() {
         $(this).trigger("resizeEnd");
     }, 500);
 });
 
-$(window).bind("resizeEnd", function(){
+$(window).on("resizeEnd", function(){
 	// Check if the resize really occurred
 	var newWidth = $(window).width();
 	var newHeight = $(window).height();
@@ -809,7 +809,7 @@ function populateTextElementLabel(element){
     if (modelCurrentAnalysisVersionId != null){
         let button = $("<span></span>");
         button.addClass("popupmenu");
-	button.click(popupmenuclick);
+	button.on("click", popupmenuclick);
         button.attr("aria-haspopup", "true");
         button.attr("aria-expanded", "false");
     
@@ -3068,10 +3068,10 @@ var showOpposing = false;
 // Start by hiding the argumentation-specific buttons, and then show them if the model has the configuration that these
 // buttons are to be shown
 
-$("#sentiment").click(onShowSentiment);
-$("#claim").click(onShowClaim);
-$("#supporting").click(onShowSupporting);
-$("#opposing").click(onShowOpposing);
+$("#sentiment").on("click", onShowSentiment);
+$("#claim").on("click", onShowClaim);
+$("#supporting").on("click", onShowSupporting);
+$("#opposing").on("click", onShowOpposing);
 
 d3.select("#sentiment").style("visibility", "hidden");
 d3.select("#claim").style("visibility", "hidden");
@@ -3205,7 +3205,7 @@ function onShowOpposing(){
 }
 
 
-$(document).click(function (e) {
+$(document).on("click", function (e) {
     $(".popupmenu").parent().removeClass('popupmenu-open');
 });
 
@@ -3228,4 +3228,4 @@ function popupmenuclick(e) {
     e.stopPropagation();
 }
 
-$(".popupmenu").click(popupmenuclick);
+$(".popupmenu").on("click", popupmenuclick);
