@@ -397,22 +397,13 @@ async function populateDataChoices(){
     
     // Append the terms
     d3.select("#dataset").selectAll("option")
-    .data(choices)
-    .enter()
-    .append("option")
-    .each(function(d, i){
-          let element = $(this);
-          if (d.value == SELECTDATASETTEXT){
-              element.prop("selected", true);
-              element.prop("disabled", true);
-          }
-          element.attr("value", d.value);
-          //let titleLabel = $("<span></span>");
-          //titleLabel.addClass("title-label");
-          //titleLabel.append(d.term);
-          element.append(d.value);
-          });
-    
+	.data(choices)
+	.enter()
+	.append("option")
+	.property("selected", (d) => d.value == SELECTDATASETTEXT)
+	.property("disabled", (d) => d.value == SELECTDATASETTEXT)
+	.attr("value", (d) => d.value)
+	.text((d) => d.value);
 }
 
 
@@ -440,23 +431,14 @@ function controllerDoPopulateModelChoices(modelModelsForCurrentDataset){
         
         // Append the options
         d3.select("#modelVersion").selectAll("option")
-        .data(modelModelsForCurrentDataset)
-        .enter()
-        .append("option")
-        .each(function(d, i){
-              let element = $(this);
-              element.attr("id", d.id)
-
-              if (d.value == SELECTMODELTEXT){
-		  element.prop("selected", true);
-		  element.prop("disabled", true);
-              }
-              element.attr("value", d.value);
-              //let titleLabel = $("<span></span>");
-              //titleLabel.addClass("title-label");
-              //titleLabel.append(d.term);
-              element.append(d.value);
-              });
+            .data(modelModelsForCurrentDataset)
+            .enter()
+            .append("option")
+	    .attr("id", (d) => d.id)
+	    .property("selected", (d) => d.value == SELECTMODELTEXT)
+	    .property("disabled", (d) => d.value == SELECTMODELTEXT)
+	    .attr("value", (d) => d.value)
+	    .text((d) => d.value);
     }
     else{
         $("#modelVersion").addClass("disabled");
@@ -530,23 +512,14 @@ function controllerDoPopulateAnalysisChoices(modelAnalysesForCurrentModel){
         
         // Append the options
         d3.select("#analysisVersion").selectAll("option")
-        .data(modelAnalysesForCurrentModel)
-        .enter()
-        .append("option")
-        .each(function(d, i){
-              let element = $(this);
-              element.attr("id", d.id)
-              
-              if (d.value == SELECTANALYSISTEXT){
-		  element.prop("selected", true);
-		  element.prop("disabled", true);
-              }
-              element.attr("value", d.value);
-              //let titleLabel = $("<span></span>");
-              //titleLabel.addClass("title-label");
-              //titleLabel.append(d.term);
-              element.append(d.value);
-              });
+            .data(modelAnalysesForCurrentModel)
+            .enter()
+            .append("option")
+	    .attr("id", (d) => d.id)
+	    .property("selected", (d) => d.value == SELECTANALYSISTEXT)
+	    .property("disabled", (d) => d.value == SELECTANALYSISTEXT)
+	    .attr("value", (d) => d.value)
+	    .text((d) => d.value);
     }
     else{
         $("#analysisVersion").addClass("disabled");
