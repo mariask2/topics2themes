@@ -234,11 +234,14 @@ function onSelectionChange(){
 }
 
 function getAuthenticationKey(){
-    // TODO: Use localStorage.setItem to save item
-    let key = prompt("Please enter authentication key");
+    let key = localStorage.getItem('topics2themes-authkey');
+    if (key === null) {
+	key = prompt("Please enter authentication key");
+    }
    
-    if (key != null && key.trim() != ""){
+    if (key !== null && key.trim() != ""){
         authenticationKey = key
+	localStorage.setItem('topics2themes-authkey', key);
     }
     else{
         alert("Authentication key needed");
