@@ -400,8 +400,8 @@ async function populateDataChoices(){
     .each(function(d, i){
           let element = $(this);
           if (d.value == SELECTDATASETTEXT){
-          element.attr("selected", true);
-          element.attr("disabled", true);
+              element.prop("selected", true);
+              element.prop("disabled", true);
           }
           element.attr("value", d.value);
           //let titleLabel = $("<span></span>");
@@ -445,8 +445,8 @@ function controllerDoPopulateModelChoices(modelModelsForCurrentDataset){
               element.attr("id", d.id)
 
               if (d.value == SELECTMODELTEXT){
-              element.attr("selected", true);
-              element.attr("disabled", true);
+		  element.prop("selected", true);
+		  element.prop("disabled", true);
               }
               element.attr("value", d.value);
               //let titleLabel = $("<span></span>");
@@ -535,8 +535,8 @@ function controllerDoPopulateAnalysisChoices(modelAnalysesForCurrentModel){
               element.attr("id", d.id)
               
               if (d.value == SELECTANALYSISTEXT){
-              element.attr("selected", true);
-              element.attr("disabled", true);
+		  element.prop("selected", true);
+		  element.prop("disabled", true);
               }
               element.attr("value", d.value);
               //let titleLabel = $("<span></span>");
