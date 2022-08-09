@@ -633,6 +633,14 @@ function controllerDoPopulateTextElements(){
     .each(populateTextElement);
 }
 
+d3.selection.prototype.replaceChildren = function (elements) {
+    this.selectAll('*').remove();
+    for (const element of elements) {
+	this.node().appendChild(element);
+    }
+    return this;
+};
+
 // For updating the label in one specific text element
 function controllerDoPopulateOneTextElement(data){
     let selectEl = d3.select("#textsList").selectAll("li")
@@ -642,16 +650,11 @@ function controllerDoPopulateOneTextElement(data){
     let group = populateTextElementLabel(selectEl);
     
     let container = d3.select("#textsList").selectAll("li")
-    .filter(function(f, j){
+	.filter(function(f, j){
             return data.text_id == f.id;
-            })
-    .selectAll(".label-button-container")
-    .each(function(d, i){
-          let el = $(this);
-          el.empty();
-          el.append(group);
-          })
-    
+        })
+	.selectAll(".label-button-container")
+	.replaceChildren(group);
 }
 
 
