@@ -662,33 +662,16 @@ function controllerDoPopulateTopicElements(){
     $("#topicsList").empty();
     // Append the topics
     d3.select("#topicsList").selectAll("li")
-    .data(modelTopics)
-    .enter()
-    .append("li")
-    .each(function(d, i){
-          let element = $(this);
-          
-          element.addClass("topic-element");
-          
-          let titleLabel = $("<textarea  type=\"text\"></textarea>");
-          titleLabel.addClass("title-label");
-          titleLabel.addClass("topic-input");
-          titleLabel.attr("placeholder", "Topic #" + d.id);
-          titleLabel.val(d.label);
-          
-          let userLabel = modelGetTopicNameForId(d.id);
-          
-          if(userLabel == undefined){
-          // Use the default label
-          titleLabel.val(d.defaultlabel);
-          }
-          else{
-          // Use the user-defined label
-          titleLabel.val(userLabel);
-          }
-          element.append(titleLabel);
-          
-          });
+	.data(modelTopics)
+	.enter()
+	.append("li")
+	.classed("topic-element", true)
+	.append("textarea")
+	.attr("type", "text")
+	.classed("title-label", true)
+	.classed("topic-input", true)
+	.attr("placeholder", (d) => "Topic #" + d.id)
+	.property("value", (d) => modelGetTopicNameForId(d.id) || d.defaultlabel)
 }
 
 
