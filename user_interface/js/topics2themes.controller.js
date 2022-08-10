@@ -654,18 +654,13 @@ d3.selection.prototype.replaceChildren = function (elements) {
 
 // For updating the label in one specific text element
 function controllerDoPopulateOneTextElement(data){
-    let selectEl = d3.select("#textsList").selectAll("li")
-    .filter(function(f, j){
-        return data.text_id == f.id;
-        })
-    let group = populateTextElementLabel(selectEl);
-    
     let container = d3.select("#textsList").selectAll("li")
 	.filter(function(f, j){
             return data.text_id == f.id;
         })
-	.selectAll(".label-button-container")
-	.replaceChildren(group);
+	.selectAll(".label-button-container");
+
+    container.replaceChildren(function() { return populateTextElementLabel(d3.select(this.parentNode)) });
 }
 
 
