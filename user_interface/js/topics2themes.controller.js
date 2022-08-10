@@ -625,18 +625,29 @@ function controllerDoPopulateInterface() {
 
 function controllerDoPopulateTextElements(){
     $("#textsList").empty();
-    d3.select("#textsList").selectAll("li")
-    .data(modelDocuments)
-    .enter()
-    .append("li")
+    let textElementSelection = d3.select("#textsList").selectAll("li")
+	.data(modelDocuments)
+	.enter()
+	.append("li");
     //.attr("draggable", true)
-    .each(populateTextElement);
+    populateTextElement(textElementSelection);
+}
+
+function doReplaceChildren(node, elements) {
+    for (const element of elements) {
+	node.appendChild(element);
+    }
 }
 
 d3.selection.prototype.replaceChildren = function (elements) {
     this.selectAll('*').remove();
-    for (const element of elements) {
-	this.node().appendChild(element);
+    if (typeof elements === "function") {
+	this.each(function (d, i) {
+	    let result = elements.apply(this, [d, i]);
+	    doReplaceChildren(this, result);
+	});
+    } else {
+	doReplaceChildren(this.node(), elements);
     }
     return this;
 };
@@ -684,69 +695,48 @@ async function onChooseLabelClick(event){
     controllerRepopulateTheme();
 }
 
-function populateTextElement(d, i){
-    
-    let element = $(this);
-    element.empty(); // As this function is also used for repopulation, start with emptying what is there
-    element.addClass("text-element");
-    // element.attr("title", "Document #" + d.base_name + ": " + d.label);
- 
-    let buttonGroup = populateTextElementLabel(d3.select(element.get(0)));
-    let buttonGroupContainer = $("<span></span>");
-    buttonGroupContainer.append(buttonGroup);
-    buttonGroupContainer.addClass("label-button-container");
-    buttonGroupContainer.attr("draggable", true)
-    
-    let textContainer = $("<p></p>");
-    textContainer.append(buttonGroupContainer);
-    textContainer.addClass("text-container");
-    //textContainer.attr("draggable", true)
-    element.append(textContainer);
-    
-    let textLabel = $("<div></div>");
-    textLabel.append(d.marked_text_tok);
-    textLabel.addClass("full-text");
-    textLabel.addClass("text-label");
-    if(!showFullText){
-	textLabel.addClass("not-displayed-text");
-    }
-    else{
-	textLabel.addClass("displayed-text");
-    }
-    textContainer.append(textLabel);
-    
-    let snippetLabel = $("<div></div>");
-    snippetLabel.append(d.snippet);
-    snippetLabel.addClass("snippet-text")
-    snippetLabel.addClass("text-label");
-    if(showFullText){
-	snippetLabel.addClass("not-displayed-text");
-    }
-    else{   
-	snippetLabel.addClass("displayed-text")
-    }
-    
-    textContainer.append(snippetLabel);
-
-
-    
-    //textLabel.append("marked_text_tok" in d ? d.marked_text_tok : d.text);
-    
-    
-    // Add additional labels
-    let additionalLabelsContainer = $("<div></div>");
-    additionalLabelsContainer.addClass("texts-info-container");
-    populateAdditionalLabelsAtTextElement(d, additionalLabelsContainer);
-    element.append(additionalLabelsContainer)
-    
-    // Add the info about the links between the text and the theme
-    let themeTextContainer = $("<div></div>");
-    themeTextContainer.addClass("theme-texts-container");
-    populateThemeTextsContainerAtTextElement(d, themeTextContainer);
-    element.append(themeTextContainer)
-
-    colorAllTagsWithTheSameColor(element);
-    
+function populateTextElement(textElementSelection){
+    textElementSelection.selectAll('*').remove(); // As this function is also used for repopulation, start with emptying what is there
+    textElementSelection = textElementSelection
+	.classed("text-element", true);
+    let textContainer = textElementSelection.append("p");
+    textContainer.classed("text-container", true);
+    textContainer
+	.append("span")
+	.classed("label-button-container", true)
+	.attr("draggable", true)
+	.replaceChildren(function() { return populateTextElementLabel(d3.select(this.parentNode)) });
+    textContainer
+	.append("div")
+	.classed("full-text", true)
+	.classed("text-label", true)
+	.classed("not-displayed-text", !showFullText)
+	.classed("displayed-text", showFullText)
+	.html((d) => d.marked_text_tok);
+    textContainer
+	.append("div")
+	.classed("snippet-text", true)
+	.classed("text-label", true)
+	.classed("not-displayed-text", showFullText)
+	.classed("displayed-text", !showFullText)
+	.html((d) => d.snippet);
+    textElementSelection
+	.append("div")
+	.classed("texts-info-container", true)
+	.each(function (d) {
+	    // Add additional labels
+	    let additionalLabelsContainer = $(this);
+	    populateAdditionalLabelsAtTextElement(d, additionalLabelsContainer);
+	});
+    textElementSelection
+	.append("div")
+	.classed("theme-texts-container", true)
+	.each(function (d) {
+	    // Add the info about the links between the text and the theme
+	    let themeTextContainer = $(this);
+	    populateThemeTextsContainerAtTextElement(d, themeTextContainer);
+	});
+    textElementSelection.selectAll(".term-to-mark").classed("specifictermchosen", true);
 }
 
 // Code for  displaying the label and the popup for changing it
@@ -1889,11 +1879,11 @@ function addTextThemeLinkAndUpdateInterface(textId, themeId){
 	.each(populateThemeElement);
     
     // Adds information of associated themes to the text elements
-    d3.select("#textsList").selectAll("li")
+    let textElementSelection = d3.select("#textsList").selectAll("li")
     .filter(function(f, j){
     return isAssociatedThemeText(themeId, f.id);
-    })
-	.each(populateTextElement);
+    });
+    populateTextElement(textElementSelection);
     
     setTimeout(addChoiceBasedHighlight, 0);
     setTimeout(renderLinks, 0);
@@ -1956,11 +1946,11 @@ function onThemeTextRemoveAtTextElement(){
     removeTextThemeLink(themeId, text.id);
     
     // Repopulate the text element for the updated text-theme links
-    d3.select("#textsList").selectAll("li")
+    let textElementSelection = d3.select("#textsList").selectAll("li")
     .filter(function(f, j){
             return text.id == f.id;
-            })
-    .each(populateTextElement);
+    });
+    populateTextElement(textElementSelection);
     
     // Repopulate the theme element for the updated text-theme links
     d3.select("#themesList").selectAll("li")
@@ -2396,11 +2386,6 @@ function highlightTextElement(textElement, direct, indirect) {
     secondaryHighlightTerms(isAssociatedTermText, indirect, text.id);
 
 }
-
-function colorAllTagsWithTheSameColor(textElement){
-    d3.select(textElement.get(0)).selectAll(".term-to-mark").classed("specifictermchosen", true);
-}
-
 
 function showFullTextChosen(textElement){
     //d3.select(textElement.get(0)).selectAll('.text-label').classed("text-border", true);
