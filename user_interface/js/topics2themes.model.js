@@ -47,6 +47,7 @@ var modelThemes;
 var modelDocuments;
 
 var modelLabelCategories;
+var modelCategoryToColor;
 
 // Mapping of terms to topics
 var modelTermsToTopics;
@@ -193,6 +194,7 @@ function resetModelData(){
     modelTopics = [];
     modelDocuments = [];
     modelLabelCategories = [];
+    modelCategoryToColor = {};
     resetSelectedDataExcept();
     resetUserAnalysisData();
     resetAnalysisChoiceData();
@@ -325,6 +327,7 @@ async function modelInitializeData(modelId) {
     
     let labelCategories = jsonData["meta_data"]["configuration"]["DATA_LABEL_LIST"]
     modelLabelCategories = [];
+    modelCategoryToColor = {};
     for (let index = 0; index < labelCategories.length; index++)
     {
         var color = "silver";
@@ -332,6 +335,7 @@ async function modelInitializeData(modelId) {
             color = labelCategories[index]["label_color"]
         }
         modelLabelCategories.push({"label" : labelCategories[index]["data_label"], "color" : color})
+	modelCategoryToColor[labelCategories[index]["data_label"]] = color;
     }
 
     if (jsonData["meta_data"]["SHOW_ARGUMENTATION"] == "True"){

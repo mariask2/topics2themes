@@ -659,8 +659,7 @@ function controllerDoPopulateOneTextElement(data){
             return data.text_id == f.id;
         })
 	.selectAll(".label-button-container");
-
-    container.replaceChildren(function() { return populateTextElementLabel(d3.select(this.parentNode)) });
+    populateTextElementLabel(container);
 }
 
 
@@ -696,11 +695,11 @@ function populateTextElement(textElementSelection){
 	.classed("text-element", true);
     let textContainer = textElementSelection.append("p");
     textContainer.classed("text-container", true);
-    textContainer
+    let labelButtonContainer = textContainer
 	.append("span")
 	.classed("label-button-container", true)
 	.attr("draggable", true)
-	.replaceChildren(function() { return populateTextElementLabel(d3.select(this.parentNode)) });
+    populateTextElementLabel(labelButtonContainer);
     textContainer
 	.append("div")
 	.classed("full-text", true)
@@ -734,99 +733,57 @@ function populateTextElement(textElementSelection){
     textElementSelection.selectAll(".term-to-mark").classed("specifictermchosen", true);
 }
 
-// Code for  displaying the label and the popup for changing it
-function populateTextElementLabel(element){
-    
-    let systemLabel = element.datum().label;
-    let textId = element.datum().id;
-    
-    let buttonGroup = $("<div></div>");
-    buttonGroup.addClass("labelbuttons");
-
+function populateTextElementLabel(containerSelection){
+    containerSelection.selectAll('*').remove();
+    let buttonGroup = containerSelection
+	.append("div")
+	.classed("labelbuttons", true);
     if (modelCurrentAnalysisVersionId != null){
-        let button = $("<span></span>");
-        button.addClass("popupmenu");
-	button.on("click", popupmenuclick);
-        button.attr("aria-haspopup", "true");
-        button.attr("aria-expanded", "false");
-    
-        let label_to_use = systemLabel
-        if (modelGetTextLabelForId(textId) != undefined){
-            label_to_use = modelGetTextLabelForId(textId);
-        }
-        let badgeLabel = getBadgeLabel(label_to_use);
-        badgeLabel.addClass("badge-main-label");
-        badgeLabel.addClass("choose-label-trigger");
-    
-    
-        if (modelGetTextLabelForId(textId) != undefined){
-            badgeLabel.addClass("badge-main-label-user-chosen");
-        }
-    
-    
-        let chooseSpan = $("<span></span>");
-        chooseSpan.addClass("glyphicon");
-        chooseSpan.addClass("glyphicon-sort-by-attributes");
-        chooseSpan.addClass("choose-label-trigger");
-        chooseSpan.addClass("choose-label-glyphicon");
-    
-        button.append(badgeLabel);
-        badgeLabel.append(chooseSpan);
-        //badgeLabel.append(chooseSpan);
-    
-        let dropdown = $("<ul></ul>");
-        dropdown.addClass("choose-label-trigger");
-        dropdown.addClass("popupmenu-body")
-        for (let j = 0; j < modelLabelCategories.length; j++){
-            let dropdownItem = $("<span></span>");
-            dropdownItem.addClass("choose-label-trigger");
-            let badge = getBadgeLabel(modelLabelCategories[j]["label"]);
-            badge.attr("text-id", textId);
-            badge.addClass("choose-label-trigger");
-            badge.addClass("change-label-trigger");
-
-            dropdown.append(badge);
-            dropdown.append(dropdownItem);
+	let button = buttonGroup
+	    .append("span")
+            .classed("popupmenu", true)
+	    .on("click", popupmenuclick)
+            .attr("aria-haspopup", "true")
+            .attr("aria-expanded", "false")
+	addBadgeLabel(button, (d) => modelGetTextLabelForId(d.id) || d.label)
+            .classed("badge-main-label", true)
+            .classed("choose-label-trigger", true)
+            .classed("badge-main-label-user-chosen", (d) => modelGetTextLabelForId(d.id) != undefined)
+	    .append("span")
+            .classed("glyphicon", true)
+            .classed("glyphicon-sort-by-attributes", true)
+            .classed("choose-label-trigger", true)
+            .classed("choose-label-glyphicon", true)
+	let popupmenu = buttonGroup
+	    .append("ul")
+	    .classed("choose-label-trigger", true)
+	    .classed("popupmenu-body", true)
+	for (const category of modelLabelCategories){
+	    addBadgeLabel(popupmenu, (d) => category["label"])
+		.attr("text-id", (d) => d.id)
+		.classed("choose-label-trigger", true)
+		.classed("change-label-trigger", true)
+	    popupmenu
+		.append("span")
+		.classed("choose-label-trigger", true)
+	}
+    } else {
+	addBadgeLabel(buttonGroup)
+	    .classed("badge-main-label", true)
     }
-    
-        buttonGroup.append(button);
-        buttonGroup.append(dropdown);
-    
-    }
-    else{
-        let badgeLabel = getBadgeLabel(systemLabel);
-        badgeLabel.addClass("badge-main-label");
-        buttonGroup.append(badgeLabel);
-    }
-
-    return buttonGroup;
 }
 
-function getBadgeLabel(stanceCategory){
-
-    for (let j = 0; j < modelLabelCategories.length; j++){
-        //console.log(modelLabelCategories[j]["label"])
-        if (stanceCategory == modelLabelCategories[j]["label"]){
-            let badgeLabel = $("<span style='background-color:" + modelLabelCategories[j]["color"] + "'></span>");
-            badgeLabel.addClass("label");
-            badgeLabel.addClass("text-badge");
-            badgeLabel.attr("id", stanceCategory);
-            // if (stanceCategory.length > 3) {
-            // badgeLabel.append(stanceCategory.substring(0, 3))
-            //}
-            //else if (stanceCategory.length == 2){
-            //    badgeLabel.append(stanceCategory + " ");
-            //}
-            // else
-		if (stanceCategory.length == 1){
-                badgeLabel.append(stanceCategory + " ");
-            }
-            else{
-                badgeLabel.append(stanceCategory);
-            }
-            return badgeLabel;
-        }
+function addBadgeLabel(selection, labelFunction) {
+    if (labelFunction === undefined) {
+	labelFunction = (d) => d.label;
     }
+    return selection
+	.append("span")
+	.style("background-color", (d) => modelCategoryToColor[labelFunction(d)])
+	.classed("label", true)
+	.classed("text-badge", true)
+	.attr("id", (d) => labelFunction(d))
+	.text((d) => labelFunction(d).length == 1 ? labelFunction(d) + " " : labelFunction(d))
 }
 
 function populateAdditionalLabelsAtTextElement(textElement, additionalLabelsContainer){
@@ -934,11 +891,10 @@ function populateThemeTextsContainer(themeData, themeTextsContainer) {
     
     
     let additionalLabelsCounter = {};
-	for (let i = 0; i < theme.texts.length; i++) {
+    for (let i = 0; i < theme.texts.length; i++) {
         
         let label = getLabelForText(theme.texts[i])
-        let textLabel = getBadgeLabel(label);
-        labelContainers[label].append(textLabel);
+	addBadgeLabel(d3.select(labelContainers[label].get(0)), (d) => label);
         
         let additionalLabels = getAdditionalLabelsForText(theme.texts[i])
         for (let i = 0; i < additionalLabels.length; i++){
