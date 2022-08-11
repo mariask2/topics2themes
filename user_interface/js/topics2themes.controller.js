@@ -727,14 +727,32 @@ function populateTextElement(textElementSelection){
 	.classed("additional-label-badge", true)
 	.text((d) => d)
 
+    // Add the info about the links between the text and the theme
     textElementSelection
 	.append("div")
 	.classed("theme-texts-container", true)
+	.selectAll("span")
+	.data((d) => modelThemes.filter(theme => isAssociatedThemeText(theme.id, d.id)).map(theme => ({theme, d})))
+	.enter()
+	.append("span")
+	.classed("theme-texts-label", true)
+	.text((d) => "Theme #" + d.theme.id + "\u00a0")
+	.classed("theme-indicator", true)
 	.each(function (d) {
-	    // Add the info about the links between the text and the theme
-	    let themeTextContainer = $(this);
-	    populateThemeTextsContainerAtTextElement(d, themeTextContainer);
-	});
+	    $(this).data("themeid", d.theme.id);
+	    $(this).data("textid", d.d.id);
+	})
+	.append("button")
+	.attr("type", "button")
+	.classed("theme-text-remove-button", true)
+	.attr("aria-label", "Remove text from theme")
+	.attr("title", "Remove text from theme")
+	.append("span")
+	.classed("glyphicon", true)
+	.classed("glyphicon-remove", true)
+	.classed("text-theme-remove-glyph", true)
+	.attr("aria-hidden", "true")
+
     textElementSelection.selectAll(".term-to-mark").classed("specifictermchosen", true);
 }
 
@@ -835,37 +853,6 @@ function populateThemeElement(d, i) {
     element.append(indexLabel);
     element.append(titleLabel);
     element.append(themeTextContainer);
-}
-
-
-
-
-// Populates a theme text container in a text element
-function populateThemeTextsContainerAtTextElement(text, themeTextsContainer) {
-    
-    for (let j = 0; j < modelThemes.length; j++){
-
-        let themeId = modelThemes[j].id;
-        if (isAssociatedThemeText(themeId, text.id)){
-
-            let textLabel = $("<span></span>");
-
-            textLabel.addClass("theme-texts-label");
-            textLabel.data("themeid", themeId);
-            textLabel.data("textid", text.id);
-            //textLabel.attr("title", "Text #" + text.id + " in theme #" + themeId);
-            textLabel.append("Theme #" + themeId + "&nbsp;");
-
-            
-            let removeButton = $("<button type=\"button\" class=\"theme-text-remove-button \" aria-label=\"Remove text from theme\" title=\"Remove text from theme\">"
-                                 + "<span class=\"glyphicon glyphicon-remove text-theme-remove-glyph\" aria-hidden=\"true\"  ></span>"
-                                 + "</button>");
-            textLabel.append(removeButton);
-            textLabel.addClass("theme-indicator");
-            themeTextsContainer.append(textLabel);
-
-        }
-    }
 }
 
 
