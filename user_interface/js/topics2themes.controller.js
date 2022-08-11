@@ -714,14 +714,19 @@ function populateTextElement(textElementSelection){
 	.classed("not-displayed-text", showFullText)
 	.classed("displayed-text", !showFullText)
 	.html((d) => d.snippet);
+
+    // Add additional labels
     textElementSelection
 	.append("div")
 	.classed("texts-info-container", true)
-	.each(function (d) {
-	    // Add additional labels
-	    let additionalLabelsContainer = $(this);
-	    populateAdditionalLabelsAtTextElement(d, additionalLabelsContainer);
-	});
+	.selectAll("span")
+	.data((d) => d.additional_labels)
+	.enter()
+	.append("span")
+	.classed("label", true)
+	.classed("additional-label-badge", true)
+	.text((d) => d)
+
     textElementSelection
 	.append("div")
 	.classed("theme-texts-container", true)
@@ -784,16 +789,6 @@ function addBadgeLabel(selection, labelFunction) {
 	.classed("text-badge", true)
 	.attr("id", (d) => labelFunction(d))
 	.text((d) => labelFunction(d).length == 1 ? labelFunction(d) + " " : labelFunction(d))
-}
-
-function populateAdditionalLabelsAtTextElement(textElement, additionalLabelsContainer){
-    for (let j = 0; j < textElement["additional_labels"].length; j++){
-        //console.log(textElement["additional_labels"][j])
-        let badgeLabel = getAdditionalLabel(textElement["additional_labels"][j]);
-        badgeLabel.addClass("label");
-        badgeLabel.addClass("additional-label-badge");
-        additionalLabelsContainer.append(badgeLabel);
-    }
 }
 
 function getAdditionalLabel(text){
