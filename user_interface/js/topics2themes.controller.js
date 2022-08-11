@@ -765,7 +765,7 @@ function populateTextElementLabel(containerSelection){
 	let button = buttonGroup
 	    .append("span")
             .classed("popupmenu", true)
-	    .on("click", popupmenuclick)
+	    .on("click", function () { return popupmenuclick.call(this, d3.event) })
             .attr("aria-haspopup", "true")
             .attr("aria-expanded", "false")
 	addBadgeLabel(button, (d) => modelGetTextLabelForId(d.id) || d.label)
