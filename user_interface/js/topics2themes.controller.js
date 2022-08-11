@@ -818,43 +818,41 @@ function getAdditionalLabel(text){
 }
 
 // Populates a theme element
-function populateThemeElement(d, i) {
-    let element = $(this);
-    element.empty() // Since this function is used also for repopulation, start with removing current content
-    element.addClass("theme-element");
-   	
-    let removeButton = $("<button type=\"button\" class=\"theme-remove-button\" aria-label=\"Remove theme without associated texts\" title=\"Remove theme without associated texts\">"
-		+ "<span class=\"glyphicon glyphicon-remove\" aria-hidden=\"true\"></span>"
-		+ "</button>");
-    
-    if (hasThemeAssociatedTexts(d.id)){
-        removeButton.addClass("disabled");
-    }
-        
-    let indexLabel = $("<span>Theme #</span>");
-    indexLabel.addClass("index-label");
-    indexLabel.append(d.id);
-     
-    let themeTextContainer = $("<div></div>");
-    themeTextContainer.addClass("theme-texts-container");
-	
+function populateThemeElements(themesList) {
+    themesList.selectAll('*').remove();
+    themesList = themesList.classed("theme-element", true);
+    themesList
+	.append("button")
+	.attr("type", "button")
+	.classed("theme-remove-button", true)
+	.attr("aria-label", "Remove theme without associated texts")
+	.attr("title", "Remove theme without associated texts")
+	.classed("disabled", d => hasThemeAssociatedTexts(d.id))
+	.append("span")
+	.classed("glyphicon", true)
+	.classed("glyphicon-remove", true)
+	.attr("aria-hidden", "true")
+    themesList
+	.append("span")
+	.classed("index-label", true)
+	.text(d => "Theme #" + d.id)
+    themesList
+	.append("textarea")
+	.attr("type", "text")
+	.classed("title-label", true)
+	.attr("placeholder", d => "Theme #" + d.id + " (click to add description)")
+	.property("value", d => d.label);
+    let themeTexts = themesList
+	.append("div")
+	.classed("theme-texts-container", true)
     if(showLabels){
-        // Add the topic labels for the theme
-        populateThemeTextsContainer(d, themeTextContainer);
+	themeTexts
+	    .each(function (d) {
+		// Add the topic labels for the theme
+		populateThemeTextsContainer(d, $(this));
+	    })
     }
-    
-    let titleLabel = $("<textarea type=\"text\"></textarea>");
-    titleLabel.addClass("title-label");
-    titleLabel.attr("placeholder", "Theme #" + d.id + " (click to add description)");
-    titleLabel.val(d.label);
-    
-	
-    element.append(removeButton);
-    element.append(indexLabel);
-    element.append(titleLabel);
-    element.append(themeTextContainer);
 }
-
 
 // Populates a text information in a themes container
 function populateThemeTextsContainer(themeData, themeTextsContainer) {
@@ -1805,11 +1803,11 @@ function addTextThemeLinkAndUpdateInterface(textId, themeId){
     modelAddTextThemeLink(themeId, textId);
 
     // Repopulate the theme element for the updated text-theme links
-    d3.select("#themesList").selectAll("li")
+    let themesList = d3.select("#themesList").selectAll("li")
         .filter(function(f, j){
-        return themeId == f.id;
+            return themeId == f.id;
         })
-	.each(populateThemeElement);
+    populateThemeElements(themesList);
     
     // Adds information of associated themes to the text elements
     let textElementSelection = d3.select("#textsList").selectAll("li")
@@ -1886,11 +1884,11 @@ function onThemeTextRemoveAtTextElement(){
     populateTextElement(textElementSelection);
     
     // Repopulate the theme element for the updated text-theme links
-    d3.select("#themesList").selectAll("li")
-    .filter(function(f, j){
+    let themesList = d3.select("#themesList").selectAll("li")
+	.filter(function(f, j){
             return themeId == f.id;
-            })
-    .each(populateThemeElement);
+        })
+    populateThemeElements(themesList);
     
     // Redraw the links
     setTimeout(renderLinks, 0);  
@@ -1918,19 +1916,20 @@ function controllerSelectChosenAnalysis(name_of_created_analysis){
 function controllerDoPopulateThemes(){
     $("#themesList").empty();
 	// Update the list elements with D3
-	d3.select("#themesList").selectAll("li")
+    let themesList = d3.select("#themesList").selectAll("li")
 	// Note the function below used to ensure the correct mapping of existing elements
 	// despite the arbitrary DOM ordering after sorting
 	.data(modelThemes, function(d) { return d.id; })
 	.enter()
 	.append("li")
-	.each(populateThemeElement);
+    populateThemeElements(themesList);
         
     enableThemeButtons();
 }
                                                                         
 function controllerRepopulateTheme(){
-    d3.select("#themesList").selectAll("li").each(populateThemeElement);
+    let themesList = d3.select("#themesList").selectAll("li");
+    populateThemeElements(themesList);
 }
                                                                         
 
