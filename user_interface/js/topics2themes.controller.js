@@ -857,7 +857,7 @@ function populateThemeElements(themesList) {
 	    .append("span")
 	    .classed("label", true)
 	    .classed("additional-label-badge", true)
-	    .text(d => d.k + " (" + d.v + ")")
+	    .text(d => d.label + " (" + d.count + ")")
     }
 }
 
@@ -872,33 +872,47 @@ function getBadges(d) {
 }
 
 function getAdditionalLabels(d) {
-    let labels = Object.entries(getAdditionalLabelsCounter(modelThemesToTexts[d.id]))
-    labels.sort();
-    return labels.map(([k, v]) => ({k, v}))
+    let labels = getAdditionalLabelsCounter(modelThemesToTexts[d.id]).sortedEntries()
+    return labels.map(([label, count]) => ({label, count}))
 }
 
-function add_to_counter(counter, key) {
-    if (!(key in counter)) {
-	counter[key] = 0
+class Counter extends Object {
+    constructor() {
+	super()
     }
-    counter[key] += 1
+
+    add(key, amount = 1) {
+	if (!(key in this)) {
+	    this[key] = 0
+	}
+	this[key] += amount
+    }
+
+    addMany(keys) {
+	for (const key of keys) {
+	    this.add(key)
+	}
+    }
+
+    sortedEntries() {
+	let entries = Object.entries(this)
+	entries.sort()
+	return entries
+    }
 }
 
 function getBadgesCounter(theme) {
-    let badges = {};
-    for (let i = 0; i < theme.texts.length; i++) {
-        let label = getLabelForText(theme.texts[i])
-        add_to_counter(badges, label);
+    let badges = new Counter();
+    for (const text of theme.texts) {
+	badges.add(getLabelForText(text));
     }
     return badges
 }
 
 function getAdditionalLabelsCounter(theme) {
-    let labels = {};
+    let labels = new Counter();
     for (const text of theme.texts) {
-        for (const additionalLabel of getAdditionalLabelsForText(text)){
-	    add_to_counter(labels, additionalLabel)
-	}
+	labels.addMany(getAdditionalLabelsForText(text));
     }
     return labels
 }
