@@ -846,12 +846,48 @@ function populateThemeElements(themesList) {
 	.append("div")
 	.classed("theme-texts-container", true)
     if(showLabels){
+	let badges = themeTexts
+	    .selectAll("div.themes-label-container")
+	    .data(d => getBadges(d))
+	    .enter()
+	    .append("div")
+	    .classed("themes-label-container", true)
+	    .selectAll("span")
+	    .data(d => d)
+	    .enter()
+	addBadgeLabel(badges, (d) => d.label)
 	themeTexts
 	    .each(function (d) {
 		// Add the topic labels for the theme
 		populateThemeTextsContainer(d, $(this));
 	    })
     }
+}
+
+function getBadges(d) {
+    let themeId = d.id
+    let theme = modelThemesToTexts[themeId];
+    if (theme === undefined) {
+	return []
+    }
+    let badges = getBadgesCounter(theme);
+    return modelLabelCategories.map(c => _.times(badges[c.label] || 0, () => c))
+}
+
+function add_to_counter(counter, key) {
+    if (!(key in counter)) {
+	counter[key] = 0
+    }
+    counter[key] += 1
+}
+
+function getBadgesCounter(theme) {
+    let badges = {};
+    for (let i = 0; i < theme.texts.length; i++) {
+        let label = getLabelForText(theme.texts[i])
+        add_to_counter(badges, label);
+    }
+    return badges
 }
 
 // Populates a text information in a themes container
@@ -863,32 +899,18 @@ function populateThemeTextsContainer(themeData, themeTextsContainer) {
         return;
     }
     
-    let labelContainers = {};
-    for (let j = 0; j < modelLabelCategories.length; j++){
-        labelContainers[modelLabelCategories[j]["label"]] = $("<div></div>");
-        labelContainers[modelLabelCategories[j]["label"]].addClass("themes-label-container");
-    }
-    
-    
     let additionalLabelsCounter = {};
     for (let i = 0; i < theme.texts.length; i++) {
-        
-        let label = getLabelForText(theme.texts[i])
-	addBadgeLabel(d3.select(labelContainers[label].get(0)), (d) => label);
-        
         let additionalLabels = getAdditionalLabelsForText(theme.texts[i])
-        for (let i = 0; i < additionalLabels.length; i++){
-            if (!(additionalLabels[i] in additionalLabelsCounter)){
-                additionalLabelsCounter[additionalLabels[i]] = 0
+        for (const additionalLabel of additionalLabels){
+            if (!(additionalLabel in additionalLabelsCounter)){
+                additionalLabelsCounter[additionalLabel] = 0
             }
-            additionalLabelsCounter[additionalLabels[i]] = additionalLabelsCounter[additionalLabels[i]] + 1
+            additionalLabelsCounter[additionalLabel] = additionalLabelsCounter[additionalLabel] + 1
         }
-        
-        for (let j = 0; j < modelLabelCategories.length; j++){
-            themeTextsContainer.append(labelContainers[modelLabelCategories[j]["label"]])
-        }
-  
     }
+
+
     let additionalLabelsContainers = $("<div></div>");
     additionalLabelsContainers.addClass("themes-additiona-label-container");
     let additionalLabelList = Object.keys(additionalLabelsCounter).sort();
