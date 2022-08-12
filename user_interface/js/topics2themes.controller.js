@@ -809,14 +809,6 @@ function addBadgeLabel(selection, labelFunction) {
 	.text((d) => labelFunction(d).length == 1 ? labelFunction(d) + " " : labelFunction(d))
 }
 
-function getAdditionalLabel(text){
-    let badgeLabel = $("<span></span>");
-    badgeLabel.addClass("label");
-    badgeLabel.addClass("additional-label-badge");
-    badgeLabel.append(text);
-    return badgeLabel;
-}
-
 // Populates a theme element
 function populateThemeElements(themesList) {
     themesList.selectAll('*').remove();
@@ -857,10 +849,15 @@ function populateThemeElements(themesList) {
 	    .enter()
 	addBadgeLabel(badges, (d) => d.label)
 	themeTexts
-	    .each(function (d) {
-		// Add the topic labels for the theme
-		populateThemeTextsContainer(d, $(this));
-	    })
+	    .append("div")
+	    .classed("themes-additiona-label-container", true)
+	    .selectAll("span")
+	    .data(d => getAdditionalLabels(d))
+	    .enter()
+	    .append("span")
+	    .classed("label", true)
+	    .classed("additional-label-badge", true)
+	    .text(d => d.k + " (" + d.v + ")")
     }
 }
 
@@ -872,6 +869,12 @@ function getBadges(d) {
     }
     let badges = getBadgesCounter(theme);
     return modelLabelCategories.map(c => _.times(badges[c.label] || 0, () => c))
+}
+
+function getAdditionalLabels(d) {
+    let labels = Object.entries(getAdditionalLabelsCounter(modelThemesToTexts[d.id]))
+    labels.sort();
+    return labels.map(([k, v]) => ({k, v}))
 }
 
 function add_to_counter(counter, key) {
@@ -890,37 +893,14 @@ function getBadgesCounter(theme) {
     return badges
 }
 
-// Populates a text information in a themes container
-function populateThemeTextsContainer(themeData, themeTextsContainer) {
-    let themeId = themeData.id
-    let theme = modelThemesToTexts[themeId]
-    if (theme == undefined){
-        // No texts associated with this theme
-        return;
+function getAdditionalLabelsCounter(theme) {
+    let labels = {};
+    for (const text of theme.texts) {
+        for (const additionalLabel of getAdditionalLabelsForText(text)){
+	    add_to_counter(labels, additionalLabel)
+	}
     }
-    
-    let additionalLabelsCounter = {};
-    for (let i = 0; i < theme.texts.length; i++) {
-        let additionalLabels = getAdditionalLabelsForText(theme.texts[i])
-        for (const additionalLabel of additionalLabels){
-            if (!(additionalLabel in additionalLabelsCounter)){
-                additionalLabelsCounter[additionalLabel] = 0
-            }
-            additionalLabelsCounter[additionalLabel] = additionalLabelsCounter[additionalLabel] + 1
-        }
-    }
-
-
-    let additionalLabelsContainers = $("<div></div>");
-    additionalLabelsContainers.addClass("themes-additiona-label-container");
-    let additionalLabelList = Object.keys(additionalLabelsCounter).sort();
-    for (let k = 0; k < additionalLabelList.length; k++){
-        let addLabel = getAdditionalLabel(additionalLabelList[k]);
-        addLabel.append(" (" + additionalLabelsCounter[additionalLabelList[k]] + ")")
-        additionalLabelsContainers.append(addLabel);
-    }
-    themeTextsContainer.append(additionalLabelsContainers);
-	
+    return labels
 }
 
 // Resets the links between the elements
