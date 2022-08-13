@@ -1034,21 +1034,9 @@ function renderTermToTopicLinks() {
 	e.leftPort = leftPosCache.get(e.datum.term, () => linkLeftPort(e.leftElement, svgPos))
     }
 
-    termLinks
-	.selectAll("line")
-	.data(linkData)
-	.enter()
-	.append("line")
-        .classed("terms-to-topics", true)
-        .attr("x1", d => d.leftPort.x)
-        .attr("y1", d => d.leftPort.y)
-        .attr("x2", d => d.rightPort.x)
-        .attr("y2", d => d.rightPort.y)
-        .style("stroke-opacity", d => opacityScale(d.termScore))
-        .style("stroke", d => strokeWidthScale(d.termScore))
-        .style("stroke", "black")
-        .append("svg:title")
-        .text(d => d.text);
+    drawLinks(termLinks, linkData,
+	      opacityScale, strokeWidthScale,
+	      "terms-to-topics");
 }
 
 function getDisplayedElements(listId, filterFunction) {
@@ -1124,21 +1112,9 @@ function renderTopicToTextLinks() {
     
     console.log("renderTopicToTextLinks 2", timing());
 
-    links
-	.selectAll("line")
-	.data(linkData)
-	.enter()
-	.append("line")
-        .classed("topics-to-texts", true)
-        .attr("x1", d => d.leftPort.x)
-        .attr("y1", d => d.leftPort.y)
-        .attr("x2", d => d.rightPort.x)
-        .attr("y2", d => d.rightPort.y)
-        .style("stroke-opacity", d => opacityScale(d.termScore))
-        .style("stroke", d => strokeWidthScale(d.termScore))
-        .style("stroke", "black")
-        .append("svg:title")
-        .text(d => d.text);
+    drawLinks(links, linkData,
+	      opacityScale, strokeWidthScale,
+	      "topics-to-texts");
 }
 
 
@@ -1166,35 +1142,45 @@ function renderTextsToThemeLinks() {
     
     let svgPos = getSvgPos(svgId);
     let leftPosCache = new Cache();
-    d3.select("#themesList").selectAll("li:not(.not-displayed)")
-	.each(function(d, i){
-            let themeElement = $(this);
+    let rightPosCache = new Cache();
 
-            let rightPos = linkRightPort(themeElement, svgPos);
-            if (modelThemesToTexts[d.id] == undefined){
-		return;
-            }
-          
-            let relevantTexts = modelThemesToTexts[d.id].texts;
-            let relevantTextsInts = []
+    let themesList = getDisplayedElements("#themesList", (d) => d.id in modelThemesToTexts);
+    let textsList = getDisplayedElements("#textsList");
 
-            for (let i = 0; i < relevantTexts.length; i++){
-                relevantTextsInts[i] = parseInt(relevantTexts[i])
-            }
+    let linkData = []
+
+    for (const theme of themesList) {
+	let relevantTexts = modelThemesToTexts[theme.d.id].texts;
+
+        let relevantTextsInts = []
+
+        for (let i = 0; i < relevantTexts.length; i++){
+            relevantTextsInts[i] = parseInt(relevantTexts[i])
+        }
+
+	for (const text of textsList) {
+	    if (!(relevantTextsInts.indexOf(parseInt(text.d.id)) > -1)) {
+		continue;
+	    }
+
+	    linkData.push({
+		termScore: 1,
+		datum: { text: text.d.id, theme: theme.d.id },
+		text: "Theme #" + theme.d.id + "\n" + "Text #" + text.d.id,
+		rightElement: theme.element,
+		leftElement: text.element,
+	    })
+	}
+    }
+
+    for (const e of linkData) {
+	e.rightPort = rightPosCache.get(e.datum.theme, () => linkRightPort(e.rightElement, svgPos))
+	e.leftPort = leftPosCache.get(e.datum.text, () => linkLeftPort(e.leftElement, svgPos))
+    }
     
-          
-            d3.select("#textsList").selectAll("li:not(.not-displayed)")
-		.filter(function(e) {
-                    return relevantTextsInts.indexOf(parseInt(e.id)) > -1;})
-		.each(function(e, j){
-                    let textElement = $(this);
-                    let leftPos = leftPosCache.get(e.id, () => linkLeftPort(textElement, svgPos))
-		    drawLinks(leftPos, rightPos, 1,
-                              opacityScale, strokeWidthScale, links,
-                              { text: e.id, theme: d.id }, "Theme #" + d.id + "\n"
-                              + "Text #" + e.id, "texts-to-themes");
-                });
-        });
+    drawLinks(links, linkData,
+	      opacityScale, strokeWidthScale,
+	      "texts-to-themes");
 }
 
 //////
@@ -1321,22 +1307,22 @@ function getSvgPos(svgId) {
 }
 
 // Draw the actual lines
-function drawLinks(leftPort, rightPort, termScore,
-                   opacityScale, strokeWidthScale, links,
-                   datum, text, className){
-    // Draw the link
-    links.append("line")
-            .classed(className, true)
-            .datum(datum)
-            .attr("x1", leftPort.x)
-            .attr("y1", leftPort.y)
-            .attr("x2", rightPort.x)
-            .attr("y2", rightPort.y)
-            .style("stroke-opacity", opacityScale(termScore))
-            .style("stroke", strokeWidthScale(termScore))
-            .style("stroke", "black")
-            .append("svg:title")
-            .text(text);
+function drawLinks(links, linkData, opacityScale, strokeWidthScale, className) {
+    links
+	.selectAll("line")
+	.data(linkData)
+	.enter()
+	.append("line")
+        .classed(className, true)
+        .attr("x1", d => d.leftPort.x)
+        .attr("y1", d => d.leftPort.y)
+        .attr("x2", d => d.rightPort.x)
+        .attr("y2", d => d.rightPort.y)
+        .style("stroke-opacity", d => opacityScale(d.termScore))
+        .style("stroke", d => strokeWidthScale(d.termScore))
+        .style("stroke", "black")
+        .append("svg:title")
+        .text(d => d.text);
 }
 
 
