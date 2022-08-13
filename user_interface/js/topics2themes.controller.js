@@ -999,7 +999,7 @@ function renderTermToTopicLinks() {
 //    console.log("renderTermToTopicLinks 5",  timing());
     let termLinks = prepareCanvasForLinks(firstTermElement, firstTopicElement, svgId, "termLinksHighlight");
 
-    console.log("renderTermToTopicLinks 6",  timing());
+//    console.log("renderTermToTopicLinks 6",  timing());
     let svgPos = getSvgPos(svgId);
     let rightPosCache = new Cache();
     // TIME: The following seems to take a lot of time:
@@ -1024,7 +1024,7 @@ function renderTermToTopicLinks() {
 			      { term: d.term, topic: e.id }, text, "terms-to-topics");
 		});
 	});
-    console.log("renderTermToTopicLinks 7",  timing());
+//    console.log("renderTermToTopicLinks 7",  timing());
 }
 
 // Renders topics-to-text links
@@ -1041,7 +1041,6 @@ function renderTopicToTextLinks() {
     let opacityScale = getOpacityScale(maxScore);
     let strokeWidthScale = getStrokeWidthScale(maxScore, TOPIC_TO_TEXT_LINK_WIDTHS)
 
- 
     // Get the position of the first term element and the first topic element
     let firstTextElement = $("#textsList > li.text-element:not(.not-displayed):first");
     let firstTopicElement = $("#topicsList > li.topic-element:not(.not-displayed):first");
@@ -1053,29 +1052,29 @@ function renderTopicToTextLinks() {
     let rightPosCache = new Cache();
 
     d3.select("#topicsList").selectAll("li:not(.not-displayed)")
-    .each(function(d, i){
-          let topicElement = $(this);
+	.each(function(d, i){
+            let topicElement = $(this);
           
-          let leftPos = linkLeftPort(topicElement, svgPos);
-          if (!(d.id in modelTopicsToDocuments))
-              return;
+            let leftPos = linkLeftPort(topicElement, svgPos);
+            if (!(d.id in modelTopicsToDocuments))
+		return;
           
-          let relevantDocuments = modelTopicsToDocuments[d.id].documents;
+            let relevantDocuments = modelTopicsToDocuments[d.id].documents;
    
-          d3.select("#textsList").selectAll("li:not(.not-displayed)")
-          .filter(function(e){ return relevantDocuments.indexOf(e.id) > -1;})
-          .each(function(e, j){
-                let documentElement = $(this);
+            d3.select("#textsList").selectAll("li:not(.not-displayed)")
+		.filter(function(e){ return relevantDocuments.indexOf(e.id) > -1;})
+		.each(function(e, j){
+                    let documentElement = $(this);
                 
                 // Detect the score
-		 var strokeScore = modelTopicsToDocuments[d.id].topic_confidences[modelTopicsToDocuments[d.id].documents.indexOf(e.id)]
-		 let rightPos = rightPosCache.get(e.id, () => linkRightPort(documentElement, svgPos))
-	         drawLinks(leftPos, rightPos, strokeScore,
-                          opacityScale, strokeWidthScale, links,
-                          { topic: d.id, document: e.id }, "Document #" + e.id + "\n"
-                          + "Topic #" +d.id, "topics-to-texts");
+		    var strokeScore = modelTopicsToDocuments[d.id].topic_confidences[modelTopicsToDocuments[d.id].documents.indexOf(e.id)]
+		    let rightPos = rightPosCache.get(e.id, () => linkRightPort(documentElement, svgPos))
+	            drawLinks(leftPos, rightPos, strokeScore,
+                              opacityScale, strokeWidthScale, links,
+                              { topic: d.id, document: e.id }, "Document #" + e.id + "\n"
+                              + "Topic #" +d.id, "topics-to-texts");
                 });
-          });
+        });
 }
 
 
@@ -1104,34 +1103,34 @@ function renderTextsToThemeLinks() {
     let svgPos = getSvgPos(svgId);
     let leftPosCache = new Cache();
     d3.select("#themesList").selectAll("li:not(.not-displayed)")
-    .each(function(d, i){
-          let themeElement = $(this);
+	.each(function(d, i){
+            let themeElement = $(this);
 
-          let rightPos = linkRightPort(themeElement, svgPos);
-          if (modelThemesToTexts[d.id] == undefined){
-            return;
-          }
+            let rightPos = linkRightPort(themeElement, svgPos);
+            if (modelThemesToTexts[d.id] == undefined){
+		return;
+            }
           
-          let relevantTexts = modelThemesToTexts[d.id].texts;
-          let relevantTextsInts = []
+            let relevantTexts = modelThemesToTexts[d.id].texts;
+            let relevantTextsInts = []
 
-          for (let i = 0; i < relevantTexts.length; i++){
+            for (let i = 0; i < relevantTexts.length; i++){
                 relevantTextsInts[i] = parseInt(relevantTexts[i])
-          }
+            }
     
           
-          d3.select("#textsList").selectAll("li:not(.not-displayed)")
-          .filter(function(e) {
-                  return relevantTextsInts.indexOf(parseInt(e.id)) > -1;})
-          .each(function(e, j){
-                let textElement = $(this);
-                let leftPos = leftPosCache.get(e.id, () => linkLeftPort(textElement, svgPos))
-              drawLinks(leftPos, rightPos, 1,
-                          opacityScale, strokeWidthScale, links,
-                          { text: e.id, theme: d.id }, "Theme #" + d.id + "\n"
-                          + "Text #" + e.id, "texts-to-themes");
+            d3.select("#textsList").selectAll("li:not(.not-displayed)")
+		.filter(function(e) {
+                    return relevantTextsInts.indexOf(parseInt(e.id)) > -1;})
+		.each(function(e, j){
+                    let textElement = $(this);
+                    let leftPos = leftPosCache.get(e.id, () => linkLeftPort(textElement, svgPos))
+		    drawLinks(leftPos, rightPos, 1,
+                              opacityScale, strokeWidthScale, links,
+                              { text: e.id, theme: d.id }, "Theme #" + d.id + "\n"
+                              + "Text #" + e.id, "texts-to-themes");
                 });
-            });
+        });
 }
 
 //////
