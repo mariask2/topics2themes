@@ -412,17 +412,19 @@ async function modelInitializeData(modelId) {
 			continue;
 		
 		for (let j = 0; j < doc.document_topics.length; j++){
-			let doc_topic = doc.document_topics[j];
-			if (modelTopicsToDocuments[doc_topic.topic_index] == undefined) {
-				modelTopicsToDocuments[doc_topic.topic_index] = {
-					"topic": doc_topic.topic_index,
-					"documents": [],
-                    "topic_confidences" : []
-				};
-			}
-			modelTopicsToDocuments[doc_topic.topic_index].documents.push(doc.id);
+		    let doc_topic = doc.document_topics[j];
+		    if (modelTopicsToDocuments[doc_topic.topic_index] == undefined) {
+			modelTopicsToDocuments[doc_topic.topic_index] = {
+			    "topic": doc_topic.topic_index,
+			    "documents": [],
+			    "documents_index": [],
+			    "topic_confidences" : []
+			};
+		    }
+		    modelTopicsToDocuments[doc_topic.topic_index].documents.push(doc.id);
+		    modelTopicsToDocuments[doc_topic.topic_index].documents_index[doc.id] = modelTopicsToDocuments[doc_topic.topic_index].documents.length - 1;
 
-            modelTopicsToDocuments[doc_topic.topic_index].topic_confidences.push(doc_topic.topic_confidence);
+		    modelTopicsToDocuments[doc_topic.topic_index].topic_confidences.push(doc_topic.topic_confidence);
 			
 			for (let k = 0; k < doc_topic.terms_in_topic.length; k++) {
 				let doc_term = doc_topic.terms_in_topic[k];
