@@ -1052,34 +1052,52 @@ function renderTopicToTextLinks() {
     let leftPosCache = new Cache();
     let rightPosCache = new Cache();
 
-    let linkData = []
-
+    let topicsList = [];
     d3.select("#topicsList").selectAll("li:not(.not-displayed)")
-	.each(function(d, i){
+	.each(function (d, i) {
             let topicElement = $(this);
           
             if (!(d.id in modelTopicsToDocuments))
 		return;
-          
-            let relevantDocumentsIndex = modelTopicsToDocuments[d.id].documents_index;
-   
-            d3.select("#textsList").selectAll("li:not(.not-displayed)")
-		.filter(function(e){ return e.id in relevantDocumentsIndex})
-		.each(function(e, j){
-                    let documentElement = $(this);
-                
-		    var strokeScore = modelTopicsToDocuments[d.id].topic_confidences[relevantDocumentsIndex[e.id]]
-		    linkData.push({
-			termScore:strokeScore,
-                        opacityScale, strokeWidthScale,
-			datum: { topic: d.id, document: e.id },
-			text: "Document #" + e.id + "\n" + "Topic #" +d.id,
-			className: "topics-to-texts",
-			rightElement: documentElement,
-			leftElement: topicElement,
-		    })
-		});
+	    topicsList.push({
+		element: topicElement,
+		id: d.id
+	    });
 	});
+
+    let textsList = [];
+    d3.select("#textsList").selectAll("li:not(.not-displayed)")
+	.each(function (d, i) {
+            let documentElement = $(this);
+          
+	    textsList.push({
+		element: documentElement,
+		id: d.id
+	    });
+	});
+
+    let linkData = []
+
+    for (const topic of topicsList) {
+        let relevantDocumentsIndex = modelTopicsToDocuments[topic.id].documents_index;
+
+	for (const text of textsList) {
+	    if (!(text.id in relevantDocumentsIndex)) {
+		continue;
+	    }
+
+	    var strokeScore = modelTopicsToDocuments[topic.id].topic_confidences[relevantDocumentsIndex[text.id]]
+	    linkData.push({
+		termScore:strokeScore,
+                opacityScale, strokeWidthScale,
+		datum: { topic: topic.id, document: text.id },
+		text: "Document #" + text.id + "\n" + "Topic #" +topic.id,
+		className: "topics-to-texts",
+		rightElement: text.element,
+		leftElement: topic.element,
+	    })
+	}
+    }
 
     console.log("renderTopicToTextLinks 1", timing());
     for (const e of linkData) {
