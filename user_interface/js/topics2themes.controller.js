@@ -1089,10 +1089,8 @@ function renderTopicToTextLinks() {
 	    var strokeScore = modelTopicsToDocuments[topic.id].topic_confidences[relevantDocumentsIndex[text.id]]
 	    linkData.push({
 		termScore:strokeScore,
-                opacityScale, strokeWidthScale,
 		datum: { topic: topic.id, document: text.id },
 		text: "Document #" + text.id + "\n" + "Topic #" +topic.id,
-		className: "topics-to-texts",
 		rightElement: text.element,
 		leftElement: topic.element,
 	    })
@@ -1107,23 +1105,21 @@ function renderTopicToTextLinks() {
     
     console.log("renderTopicToTextLinks 2", timing());
 
-    for (const e of linkData) {
-	let {leftPort, rightPort, termScore,
-             opacityScale, strokeWidthScale,
-             datum, text, className} = e
-        links.append("line")
-            .classed(className, true)
-            .datum(datum)
-            .attr("x1", leftPort.x)
-            .attr("y1", leftPort.y)
-            .attr("x2", rightPort.x)
-            .attr("y2", rightPort.y)
-            .style("stroke-opacity", opacityScale(termScore))
-            .style("stroke", strokeWidthScale(termScore))
-            .style("stroke", "black")
-            .append("svg:title")
-            .text(text);
-    }
+    links
+	.selectAll("line")
+	.data(linkData)
+	.enter()
+	.append("line")
+        .classed("topics-to-texts", true)
+        .attr("x1", d => d.leftPort.x)
+        .attr("y1", d => d.leftPort.y)
+        .attr("x2", d => d.rightPort.x)
+        .attr("y2", d => d.rightPort.y)
+        .style("stroke-opacity", d => opacityScale(d.termScore))
+        .style("stroke", d => strokeWidthScale(d.termScore))
+        .style("stroke", "black")
+        .append("svg:title")
+        .text(d => d.text);
 }
 
 
