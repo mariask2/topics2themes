@@ -1049,32 +1049,63 @@ function renderTopicToTextLinks() {
     let links = prepareCanvasForLinks(firstTopicElement, firstTextElement, svgId, "topicTextLinksHighlight")
     
     let svgPos = getSvgPos(svgId);
+    let leftPosCache = new Cache();
     let rightPosCache = new Cache();
+
+    let linkData = []
 
     d3.select("#topicsList").selectAll("li:not(.not-displayed)")
 	.each(function(d, i){
             let topicElement = $(this);
           
-            let leftPos = linkLeftPort(topicElement, svgPos);
             if (!(d.id in modelTopicsToDocuments))
 		return;
           
-            let relevantDocuments = modelTopicsToDocuments[d.id].documents;
+            let relevantDocumentsIndex = modelTopicsToDocuments[d.id].documents_index;
    
             d3.select("#textsList").selectAll("li:not(.not-displayed)")
-		.filter(function(e){ return relevantDocuments.indexOf(e.id) > -1;})
+		.filter(function(e){ return e.id in relevantDocumentsIndex})
 		.each(function(e, j){
                     let documentElement = $(this);
                 
-                // Detect the score
-		    var strokeScore = modelTopicsToDocuments[d.id].topic_confidences[modelTopicsToDocuments[d.id].documents.indexOf(e.id)]
-		    let rightPos = rightPosCache.get(e.id, () => linkRightPort(documentElement, svgPos))
-	            drawLinks(leftPos, rightPos, strokeScore,
-                              opacityScale, strokeWidthScale, links,
-                              { topic: d.id, document: e.id }, "Document #" + e.id + "\n"
-                              + "Topic #" +d.id, "topics-to-texts");
-                });
-        });
+		    var strokeScore = modelTopicsToDocuments[d.id].topic_confidences[relevantDocumentsIndex[e.id]]
+		    linkData.push({
+			termScore:strokeScore,
+                        opacityScale, strokeWidthScale,
+			datum: { topic: d.id, document: e.id },
+			text: "Document #" + e.id + "\n" + "Topic #" +d.id,
+			className: "topics-to-texts",
+			rightElement: documentElement,
+			leftElement: topicElement,
+		    })
+		});
+	});
+
+    console.log("renderTopicToTextLinks 1", timing());
+    for (const e of linkData) {
+	e.rightPort = rightPosCache.get(e.datum.document, () => linkRightPort(e.rightElement, svgPos))
+	e.leftPort = leftPosCache.get(e.datum.topic, () => linkLeftPort(e.leftElement, svgPos))
+    }
+    
+    console.log("renderTopicToTextLinks 2", timing());
+
+    for (const e of linkData) {
+	let {leftPort, rightPort, termScore,
+             opacityScale, strokeWidthScale,
+             datum, text, className} = e
+        links.append("line")
+            .classed(className, true)
+            .datum(datum)
+            .attr("x1", leftPort.x)
+            .attr("y1", leftPort.y)
+            .attr("x2", rightPort.x)
+            .attr("y2", rightPort.y)
+            .style("stroke-opacity", opacityScale(termScore))
+            .style("stroke", strokeWidthScale(termScore))
+            .style("stroke", "black")
+            .append("svg:title")
+            .text(text);
+    }
 }
 
 
