@@ -1001,30 +1001,70 @@ function renderTermToTopicLinks() {
 
 //    console.log("renderTermToTopicLinks 6",  timing());
     let svgPos = getSvgPos(svgId);
+    let leftPosCache = new Cache();
     let rightPosCache = new Cache();
-    // TIME: The following seems to take a lot of time:
-    d3.select("#termsList").selectAll("li:not(.not-displayed)")
-	.each(function(d, i){
-            if (!(d.term in modelTermsToTopics))
+
+    let termsList = getDisplayedElements("#termsList", (d) => d.term in modelTermsToTopics);
+    let topicsList = getDisplayedElements("#topicsList");
+
+    let linkData = []
+
+    for (const term of termsList) {
+	let relevantTopics = modelTermsToTopics[term.d.term].topics;
+
+	for (const topic of topicsList) {
+	    if (!(relevantTopics.indexOf(topic.d.id) > -1)) {
+		continue;
+	    }
+
+	    let termScore = modelTermsToTopics[term.d.term].score_for_topics[modelTermsToTopics[term.d.term].topics.indexOf(topic.d.id)]
+	    let text = "Topic #" + topic.d.id + "\n" + "Term: " + term.d.term + "\n" + "Score: " + termScore
+	    linkData.push({
+		termScore,
+		datum: { term: term.d.term, topic: topic.d.id },
+		text: text,
+		rightElement: topic.element,
+		leftElement: term.element,
+	    })
+	}
+    }
+
+    for (const e of linkData) {
+	e.rightPort = rightPosCache.get(e.datum.topic, () => linkRightPort(e.rightElement, svgPos))
+	e.leftPort = leftPosCache.get(e.datum.term, () => linkLeftPort(e.leftElement, svgPos))
+    }
+
+    termLinks
+	.selectAll("line")
+	.data(linkData)
+	.enter()
+	.append("line")
+        .classed("terms-to-topics", true)
+        .attr("x1", d => d.leftPort.x)
+        .attr("y1", d => d.leftPort.y)
+        .attr("x2", d => d.rightPort.x)
+        .attr("y2", d => d.rightPort.y)
+        .style("stroke-opacity", d => opacityScale(d.termScore))
+        .style("stroke", d => strokeWidthScale(d.termScore))
+        .style("stroke", "black")
+        .append("svg:title")
+        .text(d => d.text);
+}
+
+function getDisplayedElements(listId, filterFunction) {
+    let topicsList = [];
+    d3.select(listId).selectAll("li:not(.not-displayed)")
+	.each(function (d, i) {
+            let topicElement = $(this);
+
+            if (filterFunction && !(filterFunction(d)))
 		return;
-
-            let leftElement = $(this);
-	    let leftPos = linkLeftPort(leftElement, svgPos);
-	    let relevantTopics = modelTermsToTopics[d.term].topics;
-
-	    d3.select("#topicsList").selectAll("li:not(.not-displayed)")
-		.filter(function(e){ return relevantTopics.indexOf(e.id) > -1;})
-		.each(function(e, j){
-		    let rightElement = $(this);
-		    let termScore = modelTermsToTopics[d.term].score_for_topics[modelTermsToTopics[d.term].topics.indexOf(e.id)]
-		    let rightPos = rightPosCache.get(e.id, () => linkRightPort(rightElement, svgPos))
-		    let text = "Topic #" + e.id + "\n" + "Term: " + d.term + "\n" + "Score: " + termScore
-		    drawLinks(leftPos, rightPos, termScore,
-			      opacityScale, strokeWidthScale, termLinks,
-			      { term: d.term, topic: e.id }, text, "terms-to-topics");
-		});
+	    topicsList.push({
+		element: topicElement,
+		d: d
+	    });
 	});
-//    console.log("renderTermToTopicLinks 7",  timing());
+    return topicsList;
 }
 
 // Renders topics-to-text links
@@ -1052,45 +1092,24 @@ function renderTopicToTextLinks() {
     let leftPosCache = new Cache();
     let rightPosCache = new Cache();
 
-    let topicsList = [];
-    d3.select("#topicsList").selectAll("li:not(.not-displayed)")
-	.each(function (d, i) {
-            let topicElement = $(this);
-          
-            if (!(d.id in modelTopicsToDocuments))
-		return;
-	    topicsList.push({
-		element: topicElement,
-		id: d.id
-	    });
-	});
-
-    let textsList = [];
-    d3.select("#textsList").selectAll("li:not(.not-displayed)")
-	.each(function (d, i) {
-            let documentElement = $(this);
-          
-	    textsList.push({
-		element: documentElement,
-		id: d.id
-	    });
-	});
+    let topicsList = getDisplayedElements("#topicsList", (d) => d.id in modelTopicsToDocuments);
+    let textsList = getDisplayedElements("#textsList");
 
     let linkData = []
 
     for (const topic of topicsList) {
-        let relevantDocumentsIndex = modelTopicsToDocuments[topic.id].documents_index;
+        let relevantDocumentsIndex = modelTopicsToDocuments[topic.d.id].documents_index;
 
 	for (const text of textsList) {
-	    if (!(text.id in relevantDocumentsIndex)) {
+	    if (!(text.d.id in relevantDocumentsIndex)) {
 		continue;
 	    }
 
-	    var strokeScore = modelTopicsToDocuments[topic.id].topic_confidences[relevantDocumentsIndex[text.id]]
+	    var strokeScore = modelTopicsToDocuments[topic.d.id].topic_confidences[relevantDocumentsIndex[text.d.id]]
 	    linkData.push({
 		termScore:strokeScore,
-		datum: { topic: topic.id, document: text.id },
-		text: "Document #" + text.id + "\n" + "Topic #" +topic.id,
+		datum: { topic: topic.d.id, document: text.d.id },
+		text: "Document #" + text.d.id + "\n" + "Topic #" +topic.d.id,
 		rightElement: text.element,
 		leftElement: topic.element,
 	    })
