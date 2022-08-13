@@ -936,7 +936,7 @@ function renderLinks() {
     resetLinkHighlight();
     console.log("renderLinks 1", timing());
 	
-    resetLinks();
+//    resetLinks();
     console.log("renderLinks 2", timing());
 			
     renderTermToTopicLinks();
@@ -1128,6 +1128,19 @@ function getStrokeWidthScale(maxScore, linkWidths){
 // it takes a lot of time. So perhaps it could be cashed in the DOM, and only
 // be invoked when the window is resized.
 function prepareCanvasForLinks(firstLeftElement, firstRightElement, svgId, linksHighlightId){
+    let currentSvg = document.getElementById(svgId);
+    if (currentSvg) {
+	let svg = d3.select(currentSvg);
+	let canvasvis = svg.select(".canvas-vis");
+
+	let termlinks = canvasvis.select("#termLinks");
+	termlinks.selectAll("*").remove();
+
+	let linksHighlight = d3.select(document.getElementById(linksHighlightId));
+	linksHighlight.selectAll("*").remove();
+
+	return termlinks;
+    }
     console.log("prepareCanvasForLinks 1",  timing());
     // Get the offset of the SVG element with regard to its parent container
     let elOffset = firstLeftElement.offset().left;
