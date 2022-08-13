@@ -602,7 +602,7 @@ function controllerDoPopulateInterface() {
     controllerDoPopulateTextElements();
 
     // Themes are populated in  controllerDoPopulateThemes, when an analysis version is selected, and not here
-    controllerRepopulateTheme(); // To make sure texts with changed labels are propagated to themes
+//    controllerRepopulateTheme(); // TODO: To make sure texts with changed labels are propagated to themes, is this still a problem?
     
     
     adaptArgumentationButtonsToModel();
