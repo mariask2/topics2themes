@@ -956,6 +956,22 @@ function renderLinks() {
     console.log("renderLinks return", timing()); 
 }
 
+class Cache extends Object {
+    constructor() {
+	super()
+    }
+
+    get(key, valueFunction) {
+	if (key in this) {
+	    return this[key]
+	} else {
+            let value = valueFunction(key)
+	    this[key] = value
+	    return value
+	}
+
+    }
+}
 
 // Renders terms-to-topics links
 function renderTermToTopicLinks() {
@@ -984,7 +1000,8 @@ function renderTermToTopicLinks() {
     let termLinks = prepareCanvasForLinks(firstTermElement, firstTopicElement, svgId, "termLinksHighlight");
 
     console.log("renderTermToTopicLinks 6",  timing());
-
+    let svgPos = getSvgPos(svgId);
+    let rightPosCache = new Cache();
     // TIME: The following seems to take a lot of time:
     d3.select("#termsList").selectAll("li:not(.not-displayed)")
 	.each(function(d, i){
@@ -992,6 +1009,7 @@ function renderTermToTopicLinks() {
 		return;
 
             let leftElement = $(this);
+	    let leftPos = linkLeftPort(leftElement, svgPos);
 	    let relevantTopics = modelTermsToTopics[d.term].topics;
 
 	    d3.select("#topicsList").selectAll("li:not(.not-displayed)")
@@ -999,10 +1017,11 @@ function renderTermToTopicLinks() {
 		.each(function(e, j){
 		    let rightElement = $(this);
 		    let termScore = modelTermsToTopics[d.term].score_for_topics[modelTermsToTopics[d.term].topics.indexOf(e.id)]
+		    let rightPos = rightPosCache.get(e.id, () => linkRightPort(rightElement, svgPos))
 		    let text = "Topic #" + e.id + "\n" + "Term: " + d.term + "\n" + "Score: " + termScore
-		    drawLinks(leftElement, rightElement, termScore,
+		    drawLinks(leftPos, rightPos, termScore,
 			      opacityScale, strokeWidthScale, termLinks,
-			      { term: d.term, topic: e.id }, text, "terms-to-topics", svgId);
+			      { term: d.term, topic: e.id }, text, "terms-to-topics");
 		});
 	});
     console.log("renderTermToTopicLinks 7",  timing());
@@ -1030,12 +1049,16 @@ function renderTopicToTextLinks() {
     let svgId = "textLinksSvg"
     let links = prepareCanvasForLinks(firstTopicElement, firstTextElement, svgId, "topicTextLinksHighlight")
     
+    let svgPos = getSvgPos(svgId);
+    let rightPosCache = new Cache();
+
     d3.select("#topicsList").selectAll("li:not(.not-displayed)")
     .each(function(d, i){
           let topicElement = $(this);
           
+          let leftPos = linkLeftPort(topicElement, svgPos);
           if (!(d.id in modelTopicsToDocuments))
-          return;
+              return;
           
           let relevantDocuments = modelTopicsToDocuments[d.id].documents;
    
@@ -1045,12 +1068,12 @@ function renderTopicToTextLinks() {
                 let documentElement = $(this);
                 
                 // Detect the score
-                var strokeScore = modelTopicsToDocuments[d.id].topic_confidences[modelTopicsToDocuments[d.id].documents.indexOf(e.id)]
-                
-                drawLinks(topicElement, documentElement, strokeScore,
+		 var strokeScore = modelTopicsToDocuments[d.id].topic_confidences[modelTopicsToDocuments[d.id].documents.indexOf(e.id)]
+		 let rightPos = rightPosCache.get(e.id, () => linkRightPort(documentElement, svgPos))
+	         drawLinks(leftPos, rightPos, strokeScore,
                           opacityScale, strokeWidthScale, links,
                           { topic: d.id, document: e.id }, "Document #" + e.id + "\n"
-                          + "Topic #" +d.id, "topics-to-texts", svgId);
+                          + "Topic #" +d.id, "topics-to-texts");
                 });
           });
 }
@@ -1078,10 +1101,13 @@ function renderTextsToThemeLinks() {
     let svgId = "themeLinksSvg"
     let links = prepareCanvasForLinks(firstTextElement, firstThemeElement, svgId, "themeLinksHighlight")
     
+    let svgPos = getSvgPos(svgId);
+    let leftPosCache = new Cache();
     d3.select("#themesList").selectAll("li:not(.not-displayed)")
     .each(function(d, i){
           let themeElement = $(this);
-          
+
+          let rightPos = linkRightPort(themeElement, svgPos);
           if (modelThemesToTexts[d.id] == undefined){
             return;
           }
@@ -1099,11 +1125,11 @@ function renderTextsToThemeLinks() {
                   return relevantTextsInts.indexOf(parseInt(e.id)) > -1;})
           .each(function(e, j){
                 let textElement = $(this);
-                
-                drawLinks(textElement, themeElement, 1,
+                let leftPos = leftPosCache.get(e.id, () => linkLeftPort(textElement, svgPos))
+              drawLinks(leftPos, rightPos, 1,
                           opacityScale, strokeWidthScale, links,
                           { text: e.id, theme: d.id }, "Theme #" + d.id + "\n"
-                          + "Text #" + e.id, "texts-to-themes", svgId);
+                          + "Text #" + e.id, "texts-to-themes");
                 });
             });
 }
@@ -1209,33 +1235,40 @@ function prepareCanvasForLinks(firstLeftElement, firstRightElement, svgId, links
     return links;
 }
 
-// Draw the actual lines
-function drawLinks(leftElement, rightElement, termScore,
-                opacityScale, strokeWidthScale, links,
-                   datum, text, className, svgId){
-    // Draw the links from terms to topics
-    let offsetLeft = $("#" + svgId).offset().left;
-    let offsetTop = $("#" + svgId).offset().top;
-
+function linkLeftPort(leftElement, svgPos) {
     let scrollbarWidth = 8;
     // Get the port position (this is only needed  to be calculated once, so if things get slow, do earlier)
-    let leftPortX = leftElement.offset().left - offsetLeft + leftElement.outerWidth() + scrollbarWidth;
-    let leftPortY = leftElement.offset().top - offsetTop + Math.floor(leftElement.outerHeight()/2);
-              
+    let leftPortX = leftElement.offset().left - svgPos.x + leftElement.outerWidth() + scrollbarWidth;
+    let leftPortY = leftElement.offset().top - svgPos.y + Math.floor(leftElement.outerHeight()/2);
+    return {x: leftPortX, y: leftPortY}
+}
+
+function linkRightPort(rightElement, svgPos) {
     // Get the port position
-    let rightPortX = rightElement.offset().left - offsetLeft;
-    let rightPortY = rightElement.offset().top - offsetTop + Math.floor(rightElement.outerHeight()/2);
-		
-    
-    
+    let rightPortX = rightElement.offset().left - svgPos.x;
+    let rightPortY = rightElement.offset().top - svgPos.y + Math.floor(rightElement.outerHeight()/2);
+    return {x: rightPortX, y: rightPortY}
+}
+
+function getSvgPos(svgId) {
+    let offsetLeft = $("#" + svgId).offset().left;
+    let offsetTop = $("#" + svgId).offset().top;
+    let svgPos = {x: offsetLeft, y: offsetTop}
+    return svgPos;
+}
+
+// Draw the actual lines
+function drawLinks(leftPort, rightPort, termScore,
+                   opacityScale, strokeWidthScale, links,
+                   datum, text, className){
     // Draw the link
     links.append("line")
             .classed(className, true)
             .datum(datum)
-            .attr("x1", leftPortX)
-            .attr("y1", leftPortY)
-            .attr("x2", rightPortX)
-            .attr("y2", rightPortY)
+            .attr("x1", leftPort.x)
+            .attr("y1", leftPort.y)
+            .attr("x2", rightPort.x)
+            .attr("y2", rightPort.y)
             .style("stroke-opacity", opacityScale(termScore))
             .style("stroke", strokeWidthScale(termScore))
             .style("stroke", "black")
