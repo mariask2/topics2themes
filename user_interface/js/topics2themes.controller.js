@@ -616,6 +616,8 @@ function controllerDoPopulateInterface() {
 
     // Disable term highlighting that are not to be there
     resetHighlight();
+
+    emptyLinksCache();
     
     // Draw the links over an SVG canvas
     setTimeout(renderLinks, 0);
@@ -969,19 +971,38 @@ class Cache extends Object {
 	    this[key] = value
 	    return value
 	}
-
     }
+
+    del(key) {
+	delete this[key]
+    }
+
+    has(key) {
+	return key in this
+    }
+}
+
+let linksCache = new Cache();
+
+function emptyLinksCache() {
+    console.log("emptyLinksCache")
+
+    linksCache.del("termToTopic")
+    linksCache.del("topicToText")
+    linksCache.del("textsToTheme")
 }
 
 // Renders terms-to-topics links
 function renderTermToTopicLinks() {
 //    console.log("renderTermToTopicLinks 1",  timing());
     // If any of the lists is empty, return
-    if ($("#termsList").children().length == 0
-	|| $("#termsList > li.term-element:not(.not-displayed)").length == 0
-	|| $("#topicsList").children().length == 0
-	|| $("#topicsList > li.topic-element:not(.not-displayed)").length == 0)
-	return;
+    if (!linksCache.has("termToTopic")) {
+	if ($("#termsList").children().length == 0
+	    || $("#termsList > li.term-element:not(.not-displayed)").length == 0
+	    || $("#topicsList").children().length == 0
+	    || $("#topicsList > li.topic-element:not(.not-displayed)").length == 0)
+	    return;
+    }
   
     // Prepare the scales to map the score of the link
 //    console.log("renderTermToTopicLinks 2",  timing());
@@ -1002,8 +1023,11 @@ function renderTermToTopicLinks() {
     let leftPosCache = new Cache();
     let rightPosCache = new Cache();
 
-    let termsList = getDisplayedElements("#termsList", (d) => d.term in modelTermsToTopics);
-    let topicsList = getDisplayedElements("#topicsList");
+    let {termsList, topicsList} = linksCache.get("termToTopic", () => ({
+	termsList: getDisplayedElements("#termsList", (d) => d.term in modelTermsToTopics),
+	topicsList: getDisplayedElements("#topicsList")
+    }))
+    
 
     let linkData = []
 
@@ -1058,12 +1082,14 @@ function getDisplayedElements(listId, filterFunction) {
 // Renders topics-to-text links
 function renderTopicToTextLinks() {
     // If any of the lists is empty, return
-    if ($("#textsList").children().length == 0
-    	|| $("#textsList > li.text-element:not(.not-displayed)").length == 0
-        || $("#topicsList").children().length == 0
-        || $("#topicsList > li.topic-element:not(.not-displayed)").length == 0)
-        return;
-    
+    if (!linksCache.has("topicToText")) {
+	if ($("#textsList").children().length == 0
+    	    || $("#textsList > li.text-element:not(.not-displayed)").length == 0
+            || $("#topicsList").children().length == 0
+            || $("#topicsList > li.topic-element:not(.not-displayed)").length == 0)
+            return;
+    }
+
     // Prepare the scales to map the score of the link
     var maxScore = getMaxDocumentScore();
     let opacityScale = getOpacityScale(maxScore);
@@ -1078,8 +1104,10 @@ function renderTopicToTextLinks() {
     let leftPosCache = new Cache();
     let rightPosCache = new Cache();
 
-    let topicsList = getDisplayedElements("#topicsList", (d) => d.id in modelTopicsToDocuments);
-    let textsList = getDisplayedElements("#textsList");
+    let {topicsList, textsList} = linksCache.get("topicToText", () => ({
+	topicsList: getDisplayedElements("#topicsList", (d) => d.id in modelTopicsToDocuments),
+	textsList: getDisplayedElements("#textsList")
+    }))
 
     let linkData = []
 
@@ -1104,28 +1132,29 @@ function renderTopicToTextLinks() {
 	}
     }
 
-    console.log("renderTopicToTextLinks 1", timing());
+//    console.log("renderTopicToTextLinks 1", timing());
     for (const e of linkData) {
 	e.rightPort = rightPosCache.get(e.document, () => linkRightPort(e.rightElement, svgPos))
 	e.leftPort = leftPosCache.get(e.topic, () => linkLeftPort(e.leftElement, svgPos))
     }
     
-    console.log("renderTopicToTextLinks 2", timing());
+//    console.log("renderTopicToTextLinks 2", timing());
 
     drawLinks(links, linkData,
 	      opacityScale, strokeWidthScale,
 	      "topics-to-texts");
 }
 
-
 // Renders topics-to-themes links
 function renderTextsToThemeLinks() {
     // If any of the lists is empty, return
-    if ($("#textsList").children().length == 0
-    	|| $("#textsList > li.text-element:not(.not-displayed)").length == 0	
-        || $("#themesList").children().length == 0
-        || $("#themesList > li.theme-element:not(.not-displayed)").length == 0)
-        return;
+    if (!linksCache.has("textsToTheme")) {
+	if ($("#textsList").children().length == 0
+    	    || $("#textsList > li.text-element:not(.not-displayed)").length == 0	
+            || $("#themesList").children().length == 0
+            || $("#themesList > li.theme-element:not(.not-displayed)").length == 0)
+            return;
+    }
     
     // Prepare the scales to map the score of the link
     var maxScore = 1;
@@ -1142,8 +1171,11 @@ function renderTextsToThemeLinks() {
     let leftPosCache = new Cache();
     let rightPosCache = new Cache();
 
-    let themesList = getDisplayedElements("#themesList", (d) => d.id in modelThemesToTexts);
-    let textsList = getDisplayedElements("#textsList");
+    let {themesList, textsList} = linksCache.get("textsToTheme", () => ({
+	themesList: getDisplayedElements("#themesList", (d) => d.id in modelThemesToTexts),
+	textsList: getDisplayedElements("#textsList")
+    }))
+
 
     let linkData = []
 
@@ -2156,6 +2188,7 @@ function doResetHighlightAfterStateChange(){
 	console.log("doResetHighlightAfterStateChange return", timing());
 	
 	console.log("doResetHighlightAfterStateChange before renderLinks", timing());
+	emptyLinksCache();
 	setTimeout(renderLinks, 0);
     })();
 }
