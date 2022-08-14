@@ -358,7 +358,12 @@ $(window).on("resizeEnd", function(){
 	resizeContainers();
 	
     // Update the links
-    setTimeout(renderLinks, 0);
+    invalidate([
+	"svg",
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 });
 
 // Resizes the containers based on the current window size
@@ -617,12 +622,13 @@ function controllerDoPopulateInterface() {
     // Disable term highlighting that are not to be there
     resetHighlight();
 
-    emptyLinksCache();
-    
     // Draw the links over an SVG canvas
-    setTimeout(renderLinks, 0);
-    
-
+    invalidate([
+	"svg",
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 }
 
 function controllerDoPopulateTextElements(){
@@ -930,34 +936,6 @@ d3.selection.prototype.moveToFront = function() {
                      });
 };
 
-// Renders the links between the term/topic/text/theme elements
-function renderLinks() {
-    console.log("renderLinks start", timing());
-
-	// Remove the highlighting just in case
-    resetLinkHighlight();
-    console.log("renderLinks 1", timing());
-	
-//    resetLinks();
-    console.log("renderLinks 2", timing());
-			
-    renderTermToTopicLinks();
-    console.log("renderLinks 3", timing());
-    
-    renderTopicToTextLinks();
-    console.log("renderLinks 4", timing());
-    
-    renderTextsToThemeLinks();
-    console.log("renderLinks 5", timing());
-    
-    // Fix to place the links behind the containers so that the user can scroll with mouse-drag
-    d3.select("#bgSvgContainer").each(function(){
-                               let parent = $(this).get(0).parentNode;
-                                 parent.removeChild($(this).get(0));
-                                parent.insertBefore($(this).get(0), parent.firstChild);})
-    console.log("renderLinks return", timing()); 
-}
-
 class Cache extends Object {
     constructor() {
 	super()
@@ -983,14 +961,6 @@ class Cache extends Object {
 }
 
 let linksCache = new Cache();
-
-function emptyLinksCache() {
-    console.log("emptyLinksCache")
-
-    linksCache.del("termToTopic")
-    linksCache.del("topicToText")
-    linksCache.del("textsToTheme")
-}
 
 // Renders terms-to-topics links
 function renderTermToTopicLinks() {
@@ -1379,13 +1349,19 @@ function drawLinks(links, linkData, opacityScale, strokeWidthScale, className) {
 // Updates the links on list scroll
 // Set a timer so that the links will not always be updated when scrolling, as this slows down the scrolling
 var timer = null;
-function onListScroll() {
-	//renderLinks();
+function onListScroll(e) {
+//    console.log("onListScroll", timer, Date.now()/1000);
     if(timer !== null) {
         clearTimeout(timer);
     }
     timer = setTimeout(function() {
-        renderLinks();
+//	console.log("onListScroll do invalidation", Date.now()/1000);
+	timer = null;
+	invalidate([
+	    "termToTopicLinksScroll",
+	    "topicToTextLinksScroll",
+	    "textsToThemeLinksScroll",
+	])
     }, 200);
 }
 
@@ -1441,7 +1417,11 @@ function onSortDocumentsList(event) {
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-    setTimeout(renderLinks, 0);
+    invalidate([
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 }
 
 
@@ -1467,7 +1447,11 @@ function onSortTermsList(event) {
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-    setTimeout(renderLinks, 0);
+    invalidate([
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 }
 
 
@@ -1495,7 +1479,11 @@ function onSortTopicsList(event) {
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-    setTimeout(renderLinks, 0);
+    invalidate([
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 }
 
 // Reacts to the sort trigger
@@ -1519,7 +1507,11 @@ function onSortThemesList(event) {
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-    setTimeout(renderLinks, 0);
+    invalidate([
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 }
 
 
@@ -1973,7 +1965,11 @@ function addTextThemeLinkAndUpdateInterface(textId, themeId){
     populateTextElement(textElementSelection);
     
     setTimeout(addChoiceBasedHighlight, 0);
-    setTimeout(renderLinks, 0);
+    invalidate([
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 }
 
 
@@ -2047,7 +2043,11 @@ function onThemeTextRemoveAtTextElement(){
     populateThemeElements(themesList);
     
     // Redraw the links
-    setTimeout(renderLinks, 0);  
+    invalidate([
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 }
 
 // Creates a new theme
@@ -2109,7 +2109,11 @@ function onThemeRemove() {
 		
     resetHighlight();
     // Redraw the links
-    setTimeout(renderLinks, 0);
+    invalidate([
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 }
 
 
@@ -2187,9 +2191,12 @@ function doResetHighlightAfterStateChange(){
 	setTimeout(addChoiceBasedHighlight, 0);
 	console.log("doResetHighlightAfterStateChange return", timing());
 	
-	console.log("doResetHighlightAfterStateChange before renderLinks", timing());
-	emptyLinksCache();
-	setTimeout(renderLinks, 0);
+	console.log("doResetHighlightAfterStateChange before invalidation", timing());
+	invalidate([
+	    "termToTopicLinks",
+	    "topicToTextLinks",
+	    "textsToThemeLinks",
+	])
     })();
 }
 
@@ -2755,8 +2762,11 @@ function filterDisplayedDocuments() {
 		return (!d.marked_text_tok || d.marked_text_tok.toLowerCase().indexOf(query) < 0);
 	});
 
-    setTimeout(renderLinks, 0);
-
+    invalidate([
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 }
 
 
@@ -2807,7 +2817,11 @@ function filterDisplayedTerms() {
 	});
 	
 	resetHighlight();
-	setTimeout(renderLinks, 0);
+    invalidate([
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 }
 
 /////
@@ -2842,7 +2856,11 @@ function filterDisplayedTopics() {
 	});
 	
 	resetHighlight();
-	setTimeout(renderLinks, 0);
+    invalidate([
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 }
 
 
@@ -2871,7 +2889,11 @@ function filterDisplayedThemes() {
 	});
 	
 	resetHighlight();
-	setTimeout(renderLinks, 0);
+    invalidate([
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 }
 
 
@@ -2967,7 +2989,11 @@ function onShowLabels(){
     resizeContainers();
     
     // Redraw the links
-    setTimeout(renderLinks, 0);
+    invalidate([
+	"termToTopicLinks",
+	"topicToTextLinks",
+	"textsToThemeLinks",
+    ])
 }
 
 function onDoThemeSorting(){
@@ -3255,3 +3281,80 @@ function popupmenuclick(e) {
 }
 
 $(".popupmenu").on("click", popupmenuclick);
+
+var invalidationTimer = null;
+var invalidations = new Set();
+
+function invalidate(commands) {
+    console.log("invalidate", commands);
+    for (const command of commands) {
+	invalidations.add(command);
+    }
+
+    if (invalidationTimer !== null) {
+        clearTimeout(invalidationTimer);
+    }
+    invalidationTimer = setTimeout(function() {
+	invalidationTimer = null;
+        doInvalidations();
+    }, 0);
+}
+
+function doInvalidations() {
+    let initialInvalidations = new Set(invalidations);
+    console.log("doInvalidations", invalidations);
+
+    if (invalidations.has("svg")) {
+	resetLinks();
+	invalidations.add("termToTopicLinks")
+	invalidations.add("topicToTextLinks")
+	invalidations.add("textsToThemeLinks")
+    }
+
+    if (invalidations.has("termToTopicLinks") ||
+	invalidations.has("topicToTextLinks") ||
+	invalidations.has("textsToThemeLinks")) {
+	resetLinkHighlight();
+    }
+
+
+    if (invalidations.has("termToTopicLinks") || invalidations.has("termToTopicLinksScroll")) {
+	if (invalidations.has("termToTopicLinks")) {
+	    linksCache.del("termToTopic")
+	}
+	renderTermToTopicLinks();
+	invalidations.delete("termToTopicLinks")
+	invalidations.delete("termToTopicLinksScroll")
+    }
+
+    if (invalidations.has("topicToTextLinks") || invalidations.has("topicToTextLinksScroll")) {
+	if (invalidations.has("topicToTextLinks")) {
+	    linksCache.del("topicToText")
+	}
+	renderTopicToTextLinks();
+	invalidations.delete("topicToTextLinks")
+	invalidations.delete("topicToTextLinksScroll")
+    }
+
+    if (invalidations.has("textsToThemeLinks") || invalidations.has("textsToThemeLinksScroll")) {
+	if (invalidations.has("textsToThemeLinks")) {
+	    linksCache.del("textsToTheme")
+	}
+	renderTextsToThemeLinks();
+	invalidations.delete("textsToThemeLinks")
+	invalidations.delete("textsToThemeLinksScroll")
+    }
+
+
+    if (invalidations.has("svg")) {
+        d3.select("#bgSvgContainer").each(function(){
+            let parent = $(this).get(0).parentNode;
+            parent.removeChild($(this).get(0));
+            parent.insertBefore($(this).get(0), parent.firstChild);})
+	invalidations.delete("svg")
+    }
+
+    if (invalidations.size) {
+	console.log("unhandled invalidations", invalidations);
+    }
+}
