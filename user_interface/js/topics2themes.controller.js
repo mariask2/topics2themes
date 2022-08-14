@@ -1021,7 +1021,8 @@ function renderTermToTopicLinks() {
 	    let text = "Topic #" + topic.d.id + "\n" + "Term: " + term.d.term + "\n" + "Score: " + termScore
 	    linkData.push({
 		termScore,
-		datum: { term: term.d.term, topic: topic.d.id },
+		term: term.d.term,
+		topic: topic.d.id,
 		text: text,
 		rightElement: topic.element,
 		leftElement: term.element,
@@ -1030,8 +1031,8 @@ function renderTermToTopicLinks() {
     }
 
     for (const e of linkData) {
-	e.rightPort = rightPosCache.get(e.datum.topic, () => linkRightPort(e.rightElement, svgPos))
-	e.leftPort = leftPosCache.get(e.datum.term, () => linkLeftPort(e.leftElement, svgPos))
+	e.rightPort = rightPosCache.get(e.topic, () => linkRightPort(e.rightElement, svgPos))
+	e.leftPort = leftPosCache.get(e.term, () => linkLeftPort(e.leftElement, svgPos))
     }
 
     drawLinks(termLinks, linkData,
@@ -1096,7 +1097,8 @@ function renderTopicToTextLinks() {
 	    var strokeScore = modelTopicsToDocuments[topic.d.id].topic_confidences[relevantDocumentsIndex[text.d.id]]
 	    linkData.push({
 		termScore:strokeScore,
-		datum: { topic: topic.d.id, document: text.d.id },
+		topic: topic.d.id,
+		document: text.d.id,
 		text: "Document #" + text.d.id + "\n" + "Topic #" +topic.d.id,
 		rightElement: text.element,
 		leftElement: topic.element,
@@ -1106,8 +1108,8 @@ function renderTopicToTextLinks() {
 
     console.log("renderTopicToTextLinks 1", timing());
     for (const e of linkData) {
-	e.rightPort = rightPosCache.get(e.datum.document, () => linkRightPort(e.rightElement, svgPos))
-	e.leftPort = leftPosCache.get(e.datum.topic, () => linkLeftPort(e.leftElement, svgPos))
+	e.rightPort = rightPosCache.get(e.document, () => linkRightPort(e.rightElement, svgPos))
+	e.leftPort = leftPosCache.get(e.topic, () => linkLeftPort(e.leftElement, svgPos))
     }
     
     console.log("renderTopicToTextLinks 2", timing());
@@ -1165,7 +1167,8 @@ function renderTextsToThemeLinks() {
 
 	    linkData.push({
 		termScore: 1,
-		datum: { text: text.d.id, theme: theme.d.id },
+		text: text.d.id,
+		theme: theme.d.id,
 		text: "Theme #" + theme.d.id + "\n" + "Text #" + text.d.id,
 		rightElement: theme.element,
 		leftElement: text.element,
@@ -1174,8 +1177,8 @@ function renderTextsToThemeLinks() {
     }
 
     for (const e of linkData) {
-	e.rightPort = rightPosCache.get(e.datum.theme, () => linkRightPort(e.rightElement, svgPos))
-	e.leftPort = leftPosCache.get(e.datum.text, () => linkLeftPort(e.leftElement, svgPos))
+	e.rightPort = rightPosCache.get(e.theme, () => linkRightPort(e.rightElement, svgPos))
+	e.leftPort = leftPosCache.get(e.text, () => linkLeftPort(e.leftElement, svgPos))
     }
     
     drawLinks(links, linkData,
