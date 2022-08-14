@@ -991,13 +991,11 @@ function renderTermToTopicLinks() {
 //    console.log("renderTermToTopicLinks 4",  timing());
     let strokeWidthScale = getStrokeWidthScale(maxScore, TERM_TO_TOPIC_LINK_WIDTHS);
  
-    // Get the position of the first term element and the first topic element
-    let firstTermElement = $("#termsList > li.term-element:not(.not-displayed):first");
-    let firstTopicElement = $("#topicsList > li.topic-element:not(.not-displayed):first");
-
     let svgId = "termLinksSvg";
 //    console.log("renderTermToTopicLinks 5",  timing());
-    let termLinks = prepareCanvasForLinks(firstTermElement, firstTopicElement, svgId, "termLinksHighlight");
+    let termLinks = prepareCanvasForLinks("#termsList > li.term-element:not(.not-displayed):first",
+					  "#topicsList > li.topic-element:not(.not-displayed):first",
+					  svgId, "termLinksHighlight");
 
 //    console.log("renderTermToTopicLinks 6",  timing());
     let svgPos = getSvgPos(svgId);
@@ -1070,13 +1068,11 @@ function renderTopicToTextLinks() {
     let opacityScale = getOpacityScale(maxScore);
     let strokeWidthScale = getStrokeWidthScale(maxScore, TOPIC_TO_TEXT_LINK_WIDTHS)
 
-    // Get the position of the first term element and the first topic element
-    let firstTextElement = $("#textsList > li.text-element:not(.not-displayed):first");
-    let firstTopicElement = $("#topicsList > li.topic-element:not(.not-displayed):first");
- 
     let svgId = "textLinksSvg"
-    let links = prepareCanvasForLinks(firstTopicElement, firstTextElement, svgId, "topicTextLinksHighlight")
-    
+    let links = prepareCanvasForLinks("#topicsList > li.topic-element:not(.not-displayed):first",
+				      "#textsList > li.text-element:not(.not-displayed):first",
+				      svgId, "topicTextLinksHighlight")
+
     let svgPos = getSvgPos(svgId);
     let leftPosCache = new Cache();
     let rightPosCache = new Cache();
@@ -1135,12 +1131,10 @@ function renderTextsToThemeLinks() {
     let strokeWidthScale = getStrokeWidthScale(maxScore, TEXT_THEME_LINK_WIDTHS)
     
     
-    // Get the position of the first topic element and the first theme element
-    let firstTextElement = $("#textsList > li.text-element:not(.not-displayed):first");
-    let firstThemeElement = $("#themesList > li.theme-element:not(.not-displayed):first");
-    
     let svgId = "themeLinksSvg"
-    let links = prepareCanvasForLinks(firstTextElement, firstThemeElement, svgId, "themeLinksHighlight")
+    let links = prepareCanvasForLinks("#textsList > li.text-element:not(.not-displayed):first",
+				      "#themesList > li.theme-element:not(.not-displayed):first",
+				      svgId, "themeLinksHighlight")
     
     let svgPos = getSvgPos(svgId);
     let leftPosCache = new Cache();
@@ -1205,7 +1199,7 @@ function getStrokeWidthScale(maxScore, linkWidths){
 // TODO: Now "prepareCanvasForLinks" is invoked several times
 // it takes a lot of time. So perhaps it could be cashed in the DOM, and only
 // be invoked when the window is resized.
-function prepareCanvasForLinks(firstLeftElement, firstRightElement, svgId, linksHighlightId){
+function prepareCanvasForLinks(firstLeftElementSelector, firstRightElementSelector, svgId, linksHighlightId){
     let currentSvg = document.getElementById(svgId);
     if (currentSvg) {
 	let svg = d3.select(currentSvg);
@@ -1220,6 +1214,8 @@ function prepareCanvasForLinks(firstLeftElement, firstRightElement, svgId, links
 	return termlinks;
     }
     console.log("prepareCanvasForLinks 1",  timing());
+    let firstLeftElement = $(firstLeftElementSelector);
+    let firstRightElement = $(firstRightElementSelector);
     // Get the offset of the SVG element with regard to its parent container
     let elOffset = firstLeftElement.offset().left;
 //    console.log("prepareCanvasForLinks 1aa",  timing());
