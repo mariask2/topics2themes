@@ -1022,8 +1022,8 @@ function renderTermToTopicLinks() {
 		term: term.d.term,
 		topic: topic.d.id,
 		text: text,
-		rightElement: topic.element,
-		leftElement: term.element,
+		rightElement: $(topic.element),
+		leftElement: $(term.element),
 	    })
 	}
     }
@@ -1042,7 +1042,7 @@ function getDisplayedElements(listId, filterFunction) {
     let topicsList = [];
     d3.select(listId).selectAll("li:not(.not-displayed)")
 	.each(function (d, i) {
-            let topicElement = $(this);
+            let topicElement = this;
 
             if (filterFunction && !(filterFunction(d)))
 		return;
@@ -1096,8 +1096,8 @@ function renderTopicToTextLinks() {
 		topic: topic.d.id,
 		document: text.d.id,
 		text: "Document #" + text.d.id + "\n" + "Topic #" +topic.d.id,
-		rightElement: text.element,
-		leftElement: topic.element,
+		rightElement: $(text.element),
+		leftElement: $(topic.element),
 	    })
 	}
     }
@@ -1164,8 +1164,8 @@ function renderTextsToThemeLinks() {
 		text: text.d.id,
 		theme: theme.d.id,
 		text: "Theme #" + theme.d.id + "\n" + "Text #" + text.d.id,
-		rightElement: theme.element,
-		leftElement: text.element,
+		rightElement: $(theme.element),
+		leftElement: $(text.element),
 	    })
 	}
     }
