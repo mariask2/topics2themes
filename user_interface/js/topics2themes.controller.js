@@ -1021,6 +1021,7 @@ function renderTermToTopicLinks() {
 		termScore,
 		term: term.d.term,
 		topic: topic.d.id,
+		id : [term.d.term, topic.d.id],
 		text: text,
 		rightElement: $(topic.element),
 		leftElement: $(term.element),
@@ -1095,6 +1096,7 @@ function renderTopicToTextLinks() {
 		termScore:strokeScore,
 		topic: topic.d.id,
 		document: text.d.id,
+		id : [topic.d.id, text.d.id],
 		text: "Document #" + text.d.id + "\n" + "Topic #" +topic.d.id,
 		rightElement: $(text.element),
 		leftElement: $(topic.element),
@@ -1163,6 +1165,7 @@ function renderTextsToThemeLinks() {
 		termScore: 1,
 		text: text.d.id,
 		theme: theme.d.id,
+		id : [text.d.id, theme.d.id],
 		text: "Theme #" + theme.d.id + "\n" + "Text #" + text.d.id,
 		rightElement: $(theme.element),
 		leftElement: $(text.element),
@@ -1206,7 +1209,6 @@ function prepareCanvasForLinks(firstLeftElementSelector, firstRightElementSelect
 	let canvasvis = svg.select(".canvas-vis");
 
 	let termlinks = canvasvis.select("#termLinks");
-	termlinks.selectAll("*").remove();
 
 	let linksHighlight = d3.select(document.getElementById(linksHighlightId));
 	linksHighlight.selectAll("*").remove();
@@ -1307,9 +1309,11 @@ function getSvgPos(svgId) {
 
 // Draw the actual lines
 function drawLinks(links, linkData, opacityScale, strokeWidthScale, className) {
-    links
+    let linked = links
 	.selectAll("line")
-	.data(linkData)
+	.data(linkData, d => d.id.join(" "))
+
+    linked
 	.enter()
 	.append("line")
         .classed(className, true)
@@ -1322,6 +1326,16 @@ function drawLinks(links, linkData, opacityScale, strokeWidthScale, className) {
         .style("stroke", "black")
         .append("svg:title")
         .text(d => d.text);
+
+    linked
+        .attr("x1", d => d.leftPort.x)
+        .attr("y1", d => d.leftPort.y)
+        .attr("x2", d => d.rightPort.x)
+        .attr("y2", d => d.rightPort.y)
+
+    linked
+	.exit()
+	.remove()
 }
 
 
