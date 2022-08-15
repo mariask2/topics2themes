@@ -984,7 +984,7 @@ function renderTermToTopicLinks() {
     }
 
 //    console.log("renderTermToTopicLinks 6",  timing());
-    let svgPos = getSvgPos(svgId);
+    let svgPos = linksCache.get("termToTopicSvg", () => getSvgPos(svgId));
     let leftPosCache = new Cache();
     let rightPosCache = new Cache();
 
@@ -1059,7 +1059,7 @@ function renderTopicToTextLinks() {
 	return;
     }
 
-    let svgPos = getSvgPos(svgId);
+    let svgPos = linksCache.get("topicToTextSvg", () => getSvgPos(svgId));
     let leftPosCache = new Cache();
     let rightPosCache = new Cache();
 
@@ -1120,7 +1120,7 @@ function renderTextsToThemeLinks() {
 	return;
     }
     
-    let svgPos = getSvgPos(svgId);
+    let svgPos = linksCache.get("textsToThemeSvg", () => getSvgPos(svgId));
     let leftPosCache = new Cache();
     let rightPosCache = new Cache();
 
@@ -1283,15 +1283,15 @@ function linkLeftPort(leftElement, svgPos) {
 
 function linkRightPort(rightElement, svgPos) {
     // Get the port position
-    let rightPortX = rightElement.offset().left - svgPos.x;
-    let rightPortY = rightElement.offset().top - svgPos.y + Math.floor(rightElement.outerHeight()/2);
+    let offset = rightElement.offset()
+    let rightPortX = offset.left - svgPos.x;
+    let rightPortY = offset.top - svgPos.y + Math.floor(rightElement[0].offsetHeight/2);
     return {x: rightPortX, y: rightPortY}
 }
 
 function getSvgPos(svgId) {
-    let offsetLeft = $("#" + svgId).offset().left;
-    let offsetTop = $("#" + svgId).offset().top;
-    let svgPos = {x: offsetLeft, y: offsetTop}
+    let offset = $("#" + svgId).offset();
+    let svgPos = {x: offset.left, y: offset.top}
     return svgPos;
 }
 
@@ -3380,6 +3380,7 @@ function doInvalidations() {
 
     $termToTopicLinks(() => {
 	linksCache.del("termToTopic")
+	linksCache.del("termToTopicSvg")
     })
 
     $termToTopicLinksScroll(() => {
@@ -3389,6 +3390,7 @@ function doInvalidations() {
 
     $topicToTextLinks(() => {
 	linksCache.del("topicToText")
+	linksCache.del("topicToTextSvg")
     })
 
     $topicToTextLinksScroll(() => {
@@ -3398,6 +3400,7 @@ function doInvalidations() {
 
     $textsToThemeLinks(() => {
 	linksCache.del("textsToTheme")
+	linksCache.del("textsToThemeSvg")
     })
 
     $textsToThemeLinksScroll(() => {
