@@ -130,7 +130,10 @@ $(document).ready(function(){
     $("#themeSearchButton").on("click", onThemeSearchButtonClick);
                   
                   
-	$("#termsList, #topicsList, #themesList, #textsList").on("scroll", onListScroll);
+	$("#termsList").on("scroll", onTermsListScroll);
+	$("#topicsList").on("scroll", onTopicsListScroll);
+	$("#themesList").on("scroll", onThemesListScroll);
+	$("#textsList").on("scroll", onTextsListScroll);
 	
 	
 	$("#termSearchClear").on("click", onTermSearchClear);
@@ -1012,15 +1015,20 @@ function renderTermToTopicLinks() {
 		topic: topic.d.id,
 		id : [term.d.term, topic.d.id],
 		text: text,
-		rightElement: $(topic.element),
-		leftElement: $(term.element),
+		rightElement: topic.element,
+		leftElement: term.element,
 	    })
 	}
     }
 
+    let svgPosMinusScroll = null
     for (const e of linkData) {
-	e.rightPort = rightPosCache.get(e.topic, () => linkRightPort(e.rightElement, svgPos))
-	e.leftPort = leftPosCache.get(e.term, () => linkLeftPort(e.leftElement, svgPos))
+	if (svgPosMinusScroll === null) {
+	    let win = e.rightElement.ownerDocument.defaultView;
+	    svgPosMinusScroll = {x: svgPos.x - win.scrollX, y: svgPos.y - win.scrollY}
+	}
+	e.rightPort = rightPosCache.get(e.topic, () => linkRightPort(e.rightElement, svgPosMinusScroll))
+	e.leftPort = leftPosCache.get(e.term, () => linkLeftPort(e.leftElement, svgPosMinusScroll))
     }
 
     drawLinks(termLinks, linkData,
@@ -1085,16 +1093,21 @@ function renderTopicToTextLinks() {
 		document: text.d.id,
 		id : [topic.d.id, text.d.id],
 		text: "Document #" + text.d.id + "\n" + "Topic #" +topic.d.id,
-		rightElement: $(text.element),
-		leftElement: $(topic.element),
+		rightElement: text.element,
+		leftElement: topic.element,
 	    })
 	}
     }
 
 //    console.log("renderTopicToTextLinks 1", timing());
+    let svgPosMinusScroll = null
     for (const e of linkData) {
-	e.rightPort = rightPosCache.get(e.document, () => linkRightPort(e.rightElement, svgPos))
-	e.leftPort = leftPosCache.get(e.topic, () => linkLeftPort(e.leftElement, svgPos))
+	if (svgPosMinusScroll === null) {
+	    let win = e.rightElement.ownerDocument.defaultView;
+	    svgPosMinusScroll = {x: svgPos.x - win.scrollX, y: svgPos.y - win.scrollY}
+	}
+	e.rightPort = rightPosCache.get(e.document, () => linkRightPort(e.rightElement, svgPosMinusScroll))
+	e.leftPort = leftPosCache.get(e.topic, () => linkLeftPort(e.leftElement, svgPosMinusScroll))
     }
     
 //    console.log("renderTopicToTextLinks 2", timing());
@@ -1152,15 +1165,20 @@ function renderTextsToThemeLinks() {
 		theme: theme.d.id,
 		id : [text.d.id, theme.d.id],
 		text: "Theme #" + theme.d.id + "\n" + "Text #" + text.d.id,
-		rightElement: $(theme.element),
-		leftElement: $(text.element),
+		rightElement: theme.element,
+		leftElement: text.element,
 	    })
 	}
     }
 
+    let svgPosMinusScroll = null
     for (const e of linkData) {
-	e.rightPort = rightPosCache.get(e.theme, () => linkRightPort(e.rightElement, svgPos))
-	e.leftPort = leftPosCache.get(e.text, () => linkLeftPort(e.leftElement, svgPos))
+	if (svgPosMinusScroll === null) {
+	    let win = e.rightElement.ownerDocument.defaultView;
+	    svgPosMinusScroll = {x: svgPos.x - win.scrollX, y: svgPos.y - win.scrollY}
+	}
+	e.rightPort = rightPosCache.get(e.theme, () => linkRightPort(e.rightElement, svgPosMinusScroll))
+	e.leftPort = leftPosCache.get(e.text, () => linkLeftPort(e.leftElement, svgPosMinusScroll))
     }
     
     drawLinks(links, linkData,
@@ -1273,19 +1291,20 @@ function prepareCanvasForLinks(firstLeftElementSelector, firstRightElementSelect
     return links;
 }
 
-function linkLeftPort(leftElement, svgPos) {
+function linkLeftPort(leftElement, svgPosMinusScroll) {
     let scrollbarWidth = 8;
-    // Get the port position (this is only needed  to be calculated once, so if things get slow, do earlier)
-    let leftPortX = leftElement.offset().left - svgPos.x + leftElement.outerWidth() + scrollbarWidth;
-    let leftPortY = leftElement.offset().top - svgPos.y + Math.floor(leftElement.outerHeight()/2);
+    // Get the port position
+    let rect = leftElement.getBoundingClientRect();
+    let leftPortX = rect.left - svgPosMinusScroll.x + leftElement.offsetWidth + scrollbarWidth;
+    let leftPortY = rect.top - svgPosMinusScroll.y + Math.floor(leftElement.offsetHeight/2);
     return {x: leftPortX, y: leftPortY}
 }
 
-function linkRightPort(rightElement, svgPos) {
+function linkRightPort(rightElement, svgPosMinusScroll) {
     // Get the port position
-    let offset = rightElement.offset()
-    let rightPortX = offset.left - svgPos.x;
-    let rightPortY = offset.top - svgPos.y + Math.floor(rightElement[0].offsetHeight/2);
+    let rect = rightElement.getBoundingClientRect();
+    let rightPortX = rect.left - svgPosMinusScroll.x;
+    let rightPortY = rect.top - svgPosMinusScroll.y + Math.floor(rightElement.offsetHeight/2);
     return {x: rightPortX, y: rightPortY}
 }
 
@@ -1333,23 +1352,33 @@ function drawLinks(links, linkData, opacityScale, strokeWidthScale, className) {
 //////////
 
 // Updates the links on list scroll
-// Set a timer so that the links will not always be updated when scrolling, as this slows down the scrolling
-var timer = null;
-function onListScroll(e) {
-//    console.log("onListScroll", timer, Date.now()/1000);
-    if(timer !== null) {
-        clearTimeout(timer);
-    }
-    timer = setTimeout(function() {
-//	console.log("onListScroll do invalidation", Date.now()/1000);
-	timer = null;
+
+function onTermsListScroll() {
+	invalidate(
+	    $termToTopicLinksScroll,
+	)
+}
+
+function onTopicsListScroll() {
 	invalidate(
 	    $termToTopicLinksScroll,
 	    $topicToTextLinksScroll,
+	)
+}
+
+function onThemesListScroll() {
+	invalidate(
 	    $textsToThemeLinksScroll
 	)
-    }, 200);
 }
+
+function onTextsListScroll() {
+	invalidate(
+	    $topicToTextLinksScroll,
+	    $textsToThemeLinksScroll
+	)
+}
+
 
 
 
