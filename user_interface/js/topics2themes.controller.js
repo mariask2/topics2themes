@@ -358,12 +358,12 @@ $(window).on("resizeEnd", function(){
 	resizeContainers();
 	
     // Update the links
-    invalidate([
-	"svg",
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$invalidateSvg,
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 });
 
 // Resizes the containers based on the current window size
@@ -623,12 +623,12 @@ function controllerDoPopulateInterface() {
     resetHighlight();
 
     // Draw the links over an SVG canvas
-    invalidate([
-	"svg",
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$invalidateSvg,
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 }
 
 function controllerDoPopulateTextElements(){
@@ -1357,11 +1357,11 @@ function onListScroll(e) {
     timer = setTimeout(function() {
 //	console.log("onListScroll do invalidation", Date.now()/1000);
 	timer = null;
-	invalidate([
-	    "termToTopicLinksScroll",
-	    "topicToTextLinksScroll",
-	    "textsToThemeLinksScroll",
-	])
+	invalidate(
+	    $termToTopicLinksScroll,
+	    $topicToTextLinksScroll,
+	    $textsToThemeLinksScroll
+	)
     }, 200);
 }
 
@@ -1417,11 +1417,11 @@ function onSortDocumentsList(event) {
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-    invalidate([
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 }
 
 
@@ -1447,11 +1447,11 @@ function onSortTermsList(event) {
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-    invalidate([
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 }
 
 
@@ -1479,11 +1479,11 @@ function onSortTopicsList(event) {
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-    invalidate([
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 }
 
 // Reacts to the sort trigger
@@ -1507,11 +1507,11 @@ function onSortThemesList(event) {
     // Redraw the links and reset highlight
     resetHighlightAfterStateChange();
     resetHighlight();
-    invalidate([
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 }
 
 
@@ -1965,11 +1965,11 @@ function addTextThemeLinkAndUpdateInterface(textId, themeId){
     populateTextElement(textElementSelection);
     
     setTimeout(addChoiceBasedHighlight, 0);
-    invalidate([
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 }
 
 
@@ -2043,11 +2043,11 @@ function onThemeTextRemoveAtTextElement(){
     populateThemeElements(themesList);
     
     // Redraw the links
-    invalidate([
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 }
 
 // Creates a new theme
@@ -2109,11 +2109,11 @@ function onThemeRemove() {
 		
     resetHighlight();
     // Redraw the links
-    invalidate([
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 }
 
 
@@ -2192,11 +2192,11 @@ function doResetHighlightAfterStateChange(){
 	console.log("doResetHighlightAfterStateChange return", timing());
 	
 	console.log("doResetHighlightAfterStateChange before invalidation", timing());
-	invalidate([
-	    "termToTopicLinks",
-	    "topicToTextLinks",
-	    "textsToThemeLinks",
-	])
+	invalidate(
+	    $termToTopicLinks,
+	    $topicToTextLinks,
+	    $textsToThemeLinks
+	)
     })();
 }
 
@@ -2762,11 +2762,11 @@ function filterDisplayedDocuments() {
 		return (!d.marked_text_tok || d.marked_text_tok.toLowerCase().indexOf(query) < 0);
 	});
 
-    invalidate([
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 }
 
 
@@ -2817,11 +2817,11 @@ function filterDisplayedTerms() {
 	});
 	
 	resetHighlight();
-    invalidate([
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 }
 
 /////
@@ -2856,11 +2856,11 @@ function filterDisplayedTopics() {
 	});
 	
 	resetHighlight();
-    invalidate([
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 }
 
 
@@ -2889,11 +2889,11 @@ function filterDisplayedThemes() {
 	});
 	
 	resetHighlight();
-    invalidate([
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 }
 
 
@@ -2989,11 +2989,11 @@ function onShowLabels(){
     resizeContainers();
     
     // Redraw the links
-    invalidate([
-	"termToTopicLinks",
-	"topicToTextLinks",
-	"textsToThemeLinks",
-    ])
+    invalidate(
+	$termToTopicLinks,
+	$topicToTextLinks,
+	$textsToThemeLinks
+    )
 }
 
 function onDoThemeSorting(){
@@ -3285,8 +3285,8 @@ $(".popupmenu").on("click", popupmenuclick);
 var invalidationTimer = null;
 var invalidations = new Set();
 
-function invalidate(commands) {
-    console.log("invalidate", commands);
+function invalidate(...commands) {
+    console.log("invalidate", invalidationsString(commands));
     for (const command of commands) {
 	invalidations.add(command);
     }
@@ -3300,61 +3300,135 @@ function invalidate(commands) {
     }, 0);
 }
 
+function addInvalidations(l) {
+    for (const e of l) {
+	invalidations.add(e)
+    }
+}
+
+let debugInvalidationHandling = false
+
+class FunctionWrapper extends Function {
+    constructor(wrappedFunction) {
+	return Object.setPrototypeOf(wrappedFunction, new.target.prototype);
+    }
+
+    handle(action) {
+	if (this.active()) {
+	    const startTime = Date.now();
+	    action()
+	    const timeDiff = Date.now() - startTime;
+	    if (debugInvalidationHandling) {
+		console.log(this.toString(), timeDiff);
+	    }
+	    invalidations.delete(this)
+	}
+    }
+
+    implicates(implications) {
+	if (this.active()) {
+	    addInvalidations(implications)
+	}
+    }
+
+    active() {
+	return invalidations.has(this)
+    }
+}
+
+class Invalidation extends FunctionWrapper {
+    constructor(id) {
+	super((action) => { return this.handle(action) })
+	this.id = id
+    }
+
+    toString() {
+	return this.id
+    }
+}
+
+function invalidationsString(list) {
+    return Array.from(list).map(e => e.id).join(" ")
+}
+
+let $termToTopicLinks = new Invalidation("termToTopicLinks")
+let $topicToTextLinks = new Invalidation("topicToTextLinks")
+let $textsToThemeLinks = new Invalidation("textsToThemeLinks")
+let $termToTopicLinksScroll = new Invalidation("termToTopicLinksScroll")
+let $topicToTextLinksScroll = new Invalidation("topicToTextLinksScroll")
+let $textsToThemeLinksScroll = new Invalidation("textsToThemeLinksScroll")
+let $invalidateSvg = new Invalidation("invalidateSvg")
+let $invalidateLinkHighlight = new Invalidation("invalidateLinkHighlight")
+let $moveSvgBack = new Invalidation("moveSvgBack")
+
+let standardImplications = [
+    [$invalidateSvg, [$termToTopicLinks, $topicToTextLinks, $textsToThemeLinks, $moveSvgBack]],
+
+    [$termToTopicLinks, [$invalidateLinkHighlight]],
+    [$topicToTextLinks, [$invalidateLinkHighlight]],
+    [$textsToThemeLinks, [$invalidateLinkHighlight]],
+
+    [$termToTopicLinks, [$termToTopicLinksScroll]],
+    [$topicToTextLinks, [$topicToTextLinksScroll]],
+    [$textsToThemeLinks, [$textsToThemeLinksScroll]],
+]
+
 function doInvalidations() {
     let initialInvalidations = new Set(invalidations);
-    console.log("doInvalidations", invalidations);
+    console.log("doInvalidations", invalidationsString(invalidations));
 
-    if (invalidations.has("svg")) {
+    const startTime = Date.now();
+
+    for (const [condition, implications] of standardImplications) {
+	condition.implicates(implications)
+    }
+
+    $invalidateSvg(() => {
 	resetLinks();
-	invalidations.add("termToTopicLinks")
-	invalidations.add("topicToTextLinks")
-	invalidations.add("textsToThemeLinks")
-    }
+    })
 
-    if (invalidations.has("termToTopicLinks") ||
-	invalidations.has("topicToTextLinks") ||
-	invalidations.has("textsToThemeLinks")) {
+    $invalidateLinkHighlight(() => {
 	resetLinkHighlight();
-    }
+    })
 
 
-    if (invalidations.has("termToTopicLinks") || invalidations.has("termToTopicLinksScroll")) {
-	if (invalidations.has("termToTopicLinks")) {
-	    linksCache.del("termToTopic")
-	}
+    $termToTopicLinks(() => {
+	linksCache.del("termToTopic")
+    })
+
+    $termToTopicLinksScroll(() => {
 	renderTermToTopicLinks();
-	invalidations.delete("termToTopicLinks")
-	invalidations.delete("termToTopicLinksScroll")
-    }
+    })
 
-    if (invalidations.has("topicToTextLinks") || invalidations.has("topicToTextLinksScroll")) {
-	if (invalidations.has("topicToTextLinks")) {
-	    linksCache.del("topicToText")
-	}
+
+    $topicToTextLinks(() => {
+	linksCache.del("topicToText")
+    })
+
+    $topicToTextLinksScroll(() => {
 	renderTopicToTextLinks();
-	invalidations.delete("topicToTextLinks")
-	invalidations.delete("topicToTextLinksScroll")
-    }
+    })
 
-    if (invalidations.has("textsToThemeLinks") || invalidations.has("textsToThemeLinksScroll")) {
-	if (invalidations.has("textsToThemeLinks")) {
-	    linksCache.del("textsToTheme")
-	}
+
+    $textsToThemeLinks(() => {
+	linksCache.del("textsToTheme")
+    })
+
+    $textsToThemeLinksScroll(() => {
 	renderTextsToThemeLinks();
-	invalidations.delete("textsToThemeLinks")
-	invalidations.delete("textsToThemeLinksScroll")
-    }
+    })
 
 
-    if (invalidations.has("svg")) {
+    $moveSvgBack(() => {
         d3.select("#bgSvgContainer").each(function(){
             let parent = $(this).get(0).parentNode;
             parent.removeChild($(this).get(0));
             parent.insertBefore($(this).get(0), parent.firstChild);})
-	invalidations.delete("svg")
-    }
+    })
 
+    const timeDiff = Date.now() - startTime;
+    console.log("invalidations took", timeDiff);
     if (invalidations.size) {
-	console.log("unhandled invalidations", invalidations);
+	console.log("unhandled invalidations", invalidationsString(invalidations));
     }
 }
