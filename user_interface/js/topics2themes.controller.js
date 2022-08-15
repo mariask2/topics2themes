@@ -3308,7 +3308,7 @@ function addInvalidations(l) {
 
 let debugInvalidationHandling = false
 
-class FunctionWrapper extends Function {
+class BaseInvalidation extends Function {
     constructor(wrappedFunction) {
 	return Object.setPrototypeOf(wrappedFunction, new.target.prototype);
     }
@@ -3336,7 +3336,7 @@ class FunctionWrapper extends Function {
     }
 }
 
-class Invalidation extends FunctionWrapper {
+class Invalidation extends BaseInvalidation {
     constructor(id) {
 	super((action) => { return this.handle(action) })
 	this.id = id
