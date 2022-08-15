@@ -965,15 +965,7 @@ let linksCache = new Cache();
 // Renders terms-to-topics links
 function renderTermToTopicLinks() {
 //    console.log("renderTermToTopicLinks 1",  timing());
-    // If any of the lists is empty, return
-    if (!linksCache.has("termToTopic")) {
-	if ($("#termsList").children().length == 0
-	    || $("#termsList > li.term-element:not(.not-displayed)").length == 0
-	    || $("#topicsList").children().length == 0
-	    || $("#topicsList > li.topic-element:not(.not-displayed)").length == 0)
-	    return;
-    }
-  
+
     // Prepare the scales to map the score of the link
 //    console.log("renderTermToTopicLinks 2",  timing());
     let maxScore = getMaxTermScore();
@@ -987,6 +979,9 @@ function renderTermToTopicLinks() {
     let termLinks = prepareCanvasForLinks("#termsList > li.term-element:not(.not-displayed):first",
 					  "#topicsList > li.topic-element:not(.not-displayed):first",
 					  svgId, "termLinksHighlight");
+    if (termLinks === null) {
+	return;
+    }
 
 //    console.log("renderTermToTopicLinks 6",  timing());
     let svgPos = getSvgPos(svgId);
@@ -1051,15 +1046,6 @@ function getDisplayedElements(listId, filterFunction) {
 
 // Renders topics-to-text links
 function renderTopicToTextLinks() {
-    // If any of the lists is empty, return
-    if (!linksCache.has("topicToText")) {
-	if ($("#textsList").children().length == 0
-    	    || $("#textsList > li.text-element:not(.not-displayed)").length == 0
-            || $("#topicsList").children().length == 0
-            || $("#topicsList > li.topic-element:not(.not-displayed)").length == 0)
-            return;
-    }
-
     // Prepare the scales to map the score of the link
     var maxScore = getMaxDocumentScore();
     let opacityScale = getOpacityScale(maxScore);
@@ -1069,6 +1055,9 @@ function renderTopicToTextLinks() {
     let links = prepareCanvasForLinks("#topicsList > li.topic-element:not(.not-displayed):first",
 				      "#textsList > li.text-element:not(.not-displayed):first",
 				      svgId, "topicTextLinksHighlight")
+    if (links === null) {
+	return;
+    }
 
     let svgPos = getSvgPos(svgId);
     let leftPosCache = new Cache();
@@ -1117,15 +1106,6 @@ function renderTopicToTextLinks() {
 
 // Renders topics-to-themes links
 function renderTextsToThemeLinks() {
-    // If any of the lists is empty, return
-    if (!linksCache.has("textsToTheme")) {
-	if ($("#textsList").children().length == 0
-    	    || $("#textsList > li.text-element:not(.not-displayed)").length == 0	
-            || $("#themesList").children().length == 0
-            || $("#themesList > li.theme-element:not(.not-displayed)").length == 0)
-            return;
-    }
-    
     // Prepare the scales to map the score of the link
     var maxScore = 1;
     let opacityScale = getOpacityScale(maxScore);
@@ -1136,6 +1116,9 @@ function renderTextsToThemeLinks() {
     let links = prepareCanvasForLinks("#textsList > li.text-element:not(.not-displayed):first",
 				      "#themesList > li.theme-element:not(.not-displayed):first",
 				      svgId, "themeLinksHighlight")
+    if (links === null) {
+	return;
+    }
     
     let svgPos = getSvgPos(svgId);
     let leftPosCache = new Cache();
@@ -1220,6 +1203,9 @@ function prepareCanvasForLinks(firstLeftElementSelector, firstRightElementSelect
     console.log("prepareCanvasForLinks 1",  timing());
     let firstLeftElement = $(firstLeftElementSelector);
     let firstRightElement = $(firstRightElementSelector);
+    if (firstLeftElement.length == 0 || firstRightElement.length == 0) {
+	return null;
+    }
     // Get the offset of the SVG element with regard to its parent container
     let elOffset = firstLeftElement.offset().left;
 //    console.log("prepareCanvasForLinks 1aa",  timing());
