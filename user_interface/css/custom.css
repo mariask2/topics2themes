@@ -61,6 +61,23 @@ button {
     font-size: 12px;
 }
 
+.hide-header-wrapper {
+    position: absolute;
+    top:0;
+    left: 50%;
+    z-index: 10;
+}
+
+button.hide-header {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-top: none;
+}
+
+body.hiddenheader button.hide-header {
+    padding-bottom: 0;
+}
+
 button.theme-text-remove-button {
     line-height: 1.5;
 }
@@ -409,6 +426,33 @@ select {
     border-bottom: 1px solid #eee;
     display: flex;
     flex-direction: row;
+    max-height: 100px;
+    opacity: 1;
+    transition: 0.5s max-height ease-in-out, 0.5s opacity ease-in-out, margin-bottom 0.5s ease-in-out;
+}
+
+body.hiddenheader .page-header {
+    max-height:0;
+    opacity: 0;
+    margin-bottom: 0;
+}
+
+body {
+    transition: 0.5s padding ease-in-out;
+}
+
+body.hiddenheader {
+    padding: 0;
+}
+
+.page-wrapper {
+    transition: 0.5s padding-right ease-in-out, 0.5s padding-left ease-in-out, 0.5s padding-bottom ease-in-out;
+}
+
+body.hiddenheader .page-wrapper {
+    padding-right: 0;
+    padding-left: 0;
+    padding-bottom: 0;
 }
 
 .row-main {
@@ -801,7 +845,7 @@ span.theme-indicator {
     border: 2px solid #E6F3FF !important;
 
     padding-right: 15px;
-    padding-bottom: 20px !important;    
+    padding-bottom: 20px;
     padding-left: 15px;
     height: 100%;
     width: 100%;

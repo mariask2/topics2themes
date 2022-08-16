@@ -196,6 +196,7 @@ $(document).ready(function(){
 		.on("dragleave", ".theme-element", onThemeElementDragLeave)
 		.on("drop", ".theme-element", onThemeElementDrop);
 	
+    $("#hide-header-button").on("click", onToggleHeader);
 
 	// Highlight handlers
     $("#textsList")
@@ -225,6 +226,25 @@ $(document).ready(function(){
     modelCanModelBeCreated();
 });
 
+
+function onToggleHeader() {
+    $("body").toggleClass("hiddenheader");
+    $("#hide-header-button .glyphicon").removeClass("glyphicon-arrow-up");
+    $("#hide-header-button .glyphicon").removeClass("glyphicon-arrow-down");
+    if ($("body").hasClass("hiddenheader")) {
+	$("#hide-header-button .glyphicon").addClass("glyphicon-arrow-down");
+    } else {
+	$("#hide-header-button .glyphicon").addClass("glyphicon-arrow-up");
+    }
+    setTimeout(() => {
+	invalidate(
+	    $invalidateSvg,
+	    $termToTopicLinks,
+	    $topicToTextLinks,
+	    $textsToThemeLinks
+	)
+    }, 600);
+}
 
 function onSelectionChange(){
     let explanation = $(this).attr("exp")
