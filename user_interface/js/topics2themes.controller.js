@@ -1,8 +1,5 @@
 "use strict";
 
-// Offset size used for the container panel headings
-var TOP_OFFSET = 45;
-
 // Stroke widths used for the term-to-topic links
 var TERM_TO_TOPIC_LINK_WIDTHS = [1, 3];
 
@@ -106,8 +103,6 @@ $(document).ready(function(){
     getAuthenticationKey();
 	windowWidth = $(window).width();
 	windowHeight = $(window).height();
-	
-	resizeContainers();
 	
     ////////////////////////
 	// Set up the handlers
@@ -357,9 +352,6 @@ $(window).on("resizeEnd", function(){
 		return;
 	}
 		
-	// Update the element sizes
-	resizeContainers();
-	
     // Update the links
     invalidate(
 	$invalidateSvg,
@@ -368,25 +360,6 @@ $(window).on("resizeEnd", function(){
 	$textsToThemeLinks
     )
 });
-
-// Resizes the containers based on the current window size
-function resizeContainers() {
-	var otherHeight = 0;
-	$(".outer-element").each(function(){
-		otherHeight += $(this).outerHeight(true);
-	})
-		
-	// Several magic numbers below to account for heights of headers, spaces, etc.
-	var maxAvailableHeight = windowHeight - otherHeight
-		- parseInt($("body > div.page-wrapper").css("margin-top")) - parseInt($("body > div.page-wrapper").css("border-top-width"));
-	var mainAvailableHeight = maxAvailableHeight;
-	
-	// Adjust the sizes of the inner containers
-	var innerAvailableHeight = mainAvailableHeight - TOP_OFFSET;
-	$("#termsList, #topicsList, #themesList, #textsList").css("max-height", innerAvailableHeight + "px");
-    
-}
-
 
 
 ///////////////
@@ -619,9 +592,6 @@ function controllerDoPopulateInterface() {
     // Sort the lists initially
     doDefaultSort();
     
-    // Resize the containers
-    resizeContainers();
-
     // Disable term highlighting that are not to be there
     resetHighlight();
 
@@ -3000,9 +2970,6 @@ function onShowLabels(){
     }
     controllerDoPopulateThemes();
 
-    // Resize the containers
-    resizeContainers();
-    
     // Redraw the links
     invalidate(
 	$termToTopicLinks,
