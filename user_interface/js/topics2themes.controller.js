@@ -2909,71 +2909,81 @@ function filterDisplayedThemes() {
 // All fields
 function hideSearchFields(){
     let field_names = ["#termSearch", "#termSearchClear", "#topicSearch", "#topicSearchClear", "#textSearch", "#textSearchClear", "#themeSearch", "#themeSearchClear"];
-    for (let i = 0; i < field_names.length; i++){
-        d3.select(field_names[i]).style("display", "none");
+    for (const fieldName of field_names){
+	let parent = d3.select(d3.select(fieldName).node().parentNode)
+	parent.style("display", "none");
     }
 }
 
 // Help functions
-function showSearchField(fieldName, clearName, showFieldClass){
-    d3.select(fieldName).style("display", "block");
+function toggleSearchField(fieldName, showFieldClass) {
+    let parent = d3.select(d3.select(fieldName).node().parentNode)
+    if (parent.style("display") == "none") {
+	showSearchField(fieldName, showFieldClass);
+    } else {
+	hideSearchField(fieldName, showFieldClass);
+    }
+}
+
+function showSearchField(fieldName, showFieldClass){
+    let parent = d3.select(d3.select(fieldName).node().parentNode)
+    parent.style("display", null);
     d3.select(fieldName).classed(showFieldClass, true)
-    d3.select(clearName).style("display", "block");
     d3.select(fieldName).each(function(){
                               $(this).focus()
                               })
 }
 
-function hideSearchField(fieldName, clearName, showFieldClass){
-    d3.select(fieldName).style("display", "none");
+function hideSearchField(fieldName, showFieldClass){
+    let parent = d3.select(d3.select(fieldName).node().parentNode)
+    parent.style("display", "none");
     d3.select(fieldName).classed(showFieldClass, false)
-    d3.select(clearName).style("display", "none");
 }
 
 // Terms
 function onTermSearchButtonClick(){
-    showSearchField("#termSearch", "#termSearchClear", "search-input_terms");
+    toggleSearchField("#termSearch", "search-input_terms");
 }
 
 function onTermSearchClear(){
     $("#termSearch").val("");
     $("#termSearch").trigger("keyup");
-    hideSearchField("#termSearch", "#termSearchClear", "search-input_terms");
+    hideSearchField("#termSearch", "search-input_terms");
 }
 
 // Topics
 function onTopicSearchButtonClick(){
-    showSearchField("#topicSearch", "#topicSearchClear", "search-input_topics");
+    toggleSearchField("#topicSearch", "search-input_topics")
 }
 
 function onTopicSearchClear(){
     $("#topicSearch").val("");
     $("#topicSearch").trigger("keyup");
-    hideSearchField("#topicSearch", "#topicSearchClear", "search-input_topics");
+    hideSearchField("#topicSearch", "search-input_topics");
 }
 
 // Texts
 function onTextSearchButtonClick(){
-    showSearchField("#textSearch", "#textSearchClear", "search-input-text");
+    toggleSearchField("#textSearch", "search-input-text");
 }
 
 // Handles the document search update
 function onTextSearchClear(){
     $("#textSearch").val("");
     $("#textSearch").trigger("keyup");
-    hideSearchField("#textSearch", "#textSearchClear", "search-input-text");
+    hideSearchField("#textSearch", "search-input-text");
 }
 
 // Themes
 function onThemeSearchButtonClick(){
-    showSearchField("#themeSearch", "#themeSearchClear", "search-input-themes");
+    toggleSearchField("#themeSearch", "search-input-themes");
 }
 
 // Handles the theme search update
 function onThemeSearchClear(){
     $("#themeSearch").val("");
     $("#themeSearch").trigger("keyup");
-    hideSearchField("#themeSearch", "#themeSearchClear", "search-input-themes");
+    hideSearchField("#themeSearch", "search-input-themes");
 }
 
 // TODO: Now labels are hidden and shown in javascript. If this gets too slow (as the themes need to be re-populated)

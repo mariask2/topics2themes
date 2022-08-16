@@ -93,9 +93,12 @@ button.disabled {
 
 .headerbuttons, .headersearch, .labelbuttons {
     position: relative;
-    display: inline-block;
     vertical-align: middle;
     display: inline-flex;
+}
+
+.headersearch {
+    margin-top: 10px;
 }
 
 .labelbuttons {
@@ -1086,7 +1089,9 @@ span.checkmark {
   -webkit-box-shadow: 0 0 1px rgba(255, 255, 255, .5);
 }
 
-
+::-webkit-search-cancel-button {
+    display: none;
+}
 
 
 
