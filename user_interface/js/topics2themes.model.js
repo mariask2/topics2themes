@@ -608,40 +608,39 @@ async function modelSortThemesWithMachineLearningIfTextChosen(){
 }
 
 
-
+function sum(array) {
+    return array.reduce((acc, e) => acc + e, 0);
+}
 
 // Calculates the total score for the provided array of term list elements
 function calculateTermsScore(termElements) {
-    return $.map(termElements, function(element, i){
+    return $.map(termElements, function(element, i) {
 	let d = d3.select(element).datum();
-	
-	let accScore = 0;
-	
-	// The flag below is used to sort the selected elements separately
-	// to ensure proper sorting for all sorting modes (desc/asc)
-	let isTopicSelected = currentTopicIds.some(currentTopicId => isAssociatedTermTopic(d.term, currentTopicId));
-	if (isTopicSelected) {
-            for (const currentTopicId of currentTopicIds){
-		if (isAssociatedTermTopic(d.term, currentTopicId)){
-                    accScore = accScore + getScoreForTermTopic(d.term, currentTopicId);
-		}
-            }
-            return { index: i, element: element, value: accScore, isSelected: true, secondaryValue: d.term.length};
-	}
 
-        for (const topic of modelTopics) {
-            if (isAssociatedTermTopic(d.term, topic.id)){
-                // This is the standard score to give to the term, an
-                // accumulation of each topic it
-                // is associated to, if no topic is chosen
-                
-                accScore = accScore + getScoreForTermTopic(d.term, topic.id);
-            }
+	// The isRelated* flags below are used to sort the selected elements separately
+	// to ensure proper sorting for all sorting modes (desc/asc)
+
+	let currentAssociatedTermTopics = currentTopicIds.filter(currentTopicId => isAssociatedTermTopic(d.term, currentTopicId));
+	let isRelatedTopicSelected = currentAssociatedTermTopics.length > 0;
+
+	if (isRelatedTopicSelected) {
+	    let scores = currentAssociatedTermTopics.map((currentTopicId) => getScoreForTermTopic(d.term, currentTopicId))
+
+	    let accScore = sum(scores)
+
+            return { index: i, element: element, value: accScore, isSelected: true, secondaryValue: d.term.length };
+	} else {
+            let isRelatedTextSelected = currentTextIds.some(text => isAssociatedTextTerm(text, d.term))
+	    let isRelatedThemeSelected = currentThemeIds.some(theme => isAssociatedThemeTerm(theme, d.term))
+
+	    let associatedTermTopics = modelTopics.filter(topic => isAssociatedTermTopic(d.term, topic.id))
+
+	    let scores = associatedTermTopics.map((topic => getScoreForTermTopic(d.term, topic.id)))
+
+	    let accScore = sum(scores)
+
+            return { index: i, element: element, value: accScore, isSelected: isRelatedTextSelected || isRelatedThemeSelected, secondaryValue: d.term.length };
 	}
-        let isTextSelected = currentTextIds.some(text => isAssociatedTextTerm(text, d.term))
-	let isThemeSelected = currentThemeIds.some(theme => isAssociatedThemeTerm(theme, d.term))
-	// Prepare the resulting element
-        return { index: i, element: element, value: accScore, isSelected: isTextSelected || isThemeSelected, secondaryValue: d.term.length};
     });
 }
 
@@ -649,60 +648,46 @@ function calculateTermsScore(termElements) {
 // Calculates the total score for the provided array of text list elements
 function calculateTextScore(textElements) {
     return $.map(textElements, function(element, i){
-            let d = d3.select(element).datum();
-            let accScore = 0;
-            
-            // The flag below is used to sort the selected elements separately
-    		// to ensure proper sorting for all sorting modes (desc/asc)
-    		let isSelected = false;
-                 
-            for (const currentTopicId of currentTopicIds){
-                 if (isAssociatedTextTopic(d.id, currentTopicId)){
-                 // TODO: Strange structure in modelTopicsToDocuments makes this code a bit strange, should restructure
-                    let textIndexIn_ModelTopicsToDocuments = modelTopicsToDocuments[currentTopicId].documents.indexOf(d.id);
-                    let topicConfidence = modelTopicsToDocuments[currentTopicId].topic_confidences[textIndexIn_ModelTopicsToDocuments];
-                    accScore = accScore + topicConfidence;
-                    isSelected = true;
-                 }
-                 }
-            ///
-    
-            if (!isSelected){
-                 let scores = []
-                 for (const topic of modelTopics){
-                    if (isAssociatedTextTopic(d.id, topic.id)){
-                 // This is the standard score to give to the term, an
-                 // accumulation of each topic it
-                 // is associated to, if no topic is chosen
-                 // TODO: Strange structure in modelTopicsToDocuments makes this code a bit strange, should restructure
-                    let textIndexIn_ModelTopicsToDocuments = modelTopicsToDocuments[topic.id].documents.indexOf(d.id);
-                    let topicConfidence = modelTopicsToDocuments[topic.id].topic_confidences[textIndexIn_ModelTopicsToDocuments];
-                    scores.push(topicConfidence)
-                    accScore = accScore + topicConfidence;
-                 }}
-                 // When no topic is chosen, use the mean strength for the topics
-                 for (const score of scores){
-                    accScore = accScore + score;
-                 }
-                 accScore = accScore/scores.length;
-                 }
-    
-            for (const term of currentTermIds){
-                if (isAssociatedTextTerm(d.id, term)){
-                    isSelected = true;
-                 }}
-                 
-            for (const theme of currentThemeIds){
-                 
-                if (isAssociatedTextTheme(d.id, theme)){
-                    isSelected = true;
-                 }}
+        let d = d3.select(element).datum();
 
-            // Prepare the resulting element
-                 // If the association score is the same, sort according to inverse document length, as a short document with high association should have a higher expressiveness
-                 return { index: i, element: element, value: accScore, isSelected: isSelected, secondaryValue: -1*d.text.length};
-      });
-    
+	// The isRelated* flags below are used to sort the selected elements separately
+	// to ensure proper sorting for all sorting modes (desc/asc)
+
+	let currentAssociatedTextTopics = currentTopicIds.filter(currentTopicId => isAssociatedTextTopic(d.id, currentTopicId));
+	let isRelatedTopicSelected = currentAssociatedTextTopics.length > 0;
+
+	if (isRelatedTopicSelected) {
+	    let accScore = sum(currentAssociatedTextTopics.map(currentTopicId => {
+                // TODO: Strange structure in modelTopicsToDocuments makes this code a bit strange, should restructure
+                let textIndexIn_ModelTopicsToDocuments = modelTopicsToDocuments[currentTopicId].documents.indexOf(d.id);
+                let topicConfidence = modelTopicsToDocuments[currentTopicId].topic_confidences[textIndexIn_ModelTopicsToDocuments];
+                return topicConfidence;
+	    }))
+            return { index: i, element: element, value: accScore, isSelected: isRelatedTopicSelected, secondaryValue: -1*d.text.length};
+	}
+	let isSelected = false;
+	let associatedTextTopics = modelTopics.filter(topic => isAssociatedTextTopic(d.id, topic.id));
+        let scores = associatedTextTopics.map(topic => {
+                // This is the standard score to give to the term, an
+                // accumulation of each topic it
+                // is associated to, if no topic is chosen
+                // TODO: Strange structure in modelTopicsToDocuments makes this code a bit strange, should restructure
+                let textIndexIn_ModelTopicsToDocuments = modelTopicsToDocuments[topic.id].documents.indexOf(d.id);
+                let topicConfidence = modelTopicsToDocuments[topic.id].topic_confidences[textIndexIn_ModelTopicsToDocuments];
+            return topicConfidence
+        })
+
+        // When no topic is chosen, use the mean strength for the topics
+        let accScore = sum(scores) / scores.length;
+
+	let isRelatedTermSelected = currentTermIds.some(term => isAssociatedTextTerm(d.id, term))
+
+        let isRelatedThemeSelected = currentThemeIds.some(theme => isAssociatedTextTheme(d.id, theme))
+
+        // Prepare the resulting element
+        // If the association score is the same, sort according to inverse document length, as a short document with high association should have a higher expressiveness
+        return { index: i, element: element, value: accScore, isSelected: isRelatedTermSelected || isRelatedThemeSelected, secondaryValue: -1*d.text.length};
+    });
 }
 
 
