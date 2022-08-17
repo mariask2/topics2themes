@@ -328,14 +328,14 @@ async function modelInitializeData(modelId) {
     let labelCategories = jsonData["meta_data"]["configuration"]["DATA_LABEL_LIST"]
     modelLabelCategories = [];
     modelCategoryToColor = {};
-    for (let index = 0; index < labelCategories.length; index++)
+    for (const labelCategory of labelCategories)
     {
         var color = "silver";
-        if ("label_color" in labelCategories[index]){
-            color = labelCategories[index]["label_color"]
+        if ("label_color" in labelCategory){
+            color = labelCategory["label_color"]
         }
-        modelLabelCategories.push({"label" : labelCategories[index]["data_label"], "color" : color})
-	modelCategoryToColor[labelCategories[index]["data_label"]] = color;
+        modelLabelCategories.push({"label" : labelCategory["data_label"], "color" : color})
+	modelCategoryToColor[labelCategory["data_label"]] = color;
     }
 
     if (jsonData["meta_data"]["SHOW_ARGUMENTATION"] == "True"){
@@ -355,8 +355,7 @@ async function modelInitializeData(modelId) {
 
     // Terms have to be constructed from topics
     // At the same time, the reverse mapping from terms to topics should be established
-    for (let i = 0; i < topics.length; i++) {
-	let topic = topics[i];
+    for (const topic of topics) {
 
         modelTopics.push({"id" : topic.id, "defaultlabel" : topic.label})
 	
@@ -365,8 +364,7 @@ async function modelInitializeData(modelId) {
 			continue;
         }
 
-        for (let j = 0; j < topic.topic_terms.length; j++) {
-			let topic_term = topic.topic_terms[j];
+        for (const topic_term of topic.topic_terms) {
 			if (modelTermsToTopics[topic_term.term] == undefined) {
 				modelTermsToTopics[topic_term.term] = {
 					"term": topic_term.term,
@@ -386,13 +384,11 @@ async function modelInitializeData(modelId) {
 	// Establish the reverse mappings from topics to documents and terms to documents
 	modelTopicsToDocuments = {};
 	modelTermsToDocuments = {};
+
+        for (var doc of documents) {
 	
-	for (let i = 0; i < documents.length; i++) {
 		// NOTE: "document" is a pretty important DOM object,
 		// so better use other local variable names
-	    var doc = documents[i];
-  
-
 
             // TODO: This code (and the check if snippet exists below) is only here for historic reasons. Remove in later version
             let dot_splitted = doc.marked_text_tok.split(".").slice(0,2);
@@ -411,8 +407,7 @@ async function modelInitializeData(modelId) {
 		if (doc.document_topics == undefined)
 			continue;
 		
-		for (let j = 0; j < doc.document_topics.length; j++){
-		    let doc_topic = doc.document_topics[j];
+		for (const doc_topic of doc.document_topics) {
 		    if (modelTopicsToDocuments[doc_topic.topic_index] == undefined) {
 			modelTopicsToDocuments[doc_topic.topic_index] = {
 			    "topic": doc_topic.topic_index,
@@ -426,8 +421,7 @@ async function modelInitializeData(modelId) {
 
 		    modelTopicsToDocuments[doc_topic.topic_index].topic_confidences.push(doc_topic.topic_confidence);
 			
-			for (let k = 0; k < doc_topic.terms_in_topic.length; k++) {
-				let doc_term = doc_topic.terms_in_topic[k];
+			for (const doc_term of doc_topic.terms_in_topic) {
 				if (modelTermsToDocuments[doc_term.term] == undefined) {
 					modelTermsToDocuments[doc_term.term] = {
 						"term": doc_term,
@@ -454,11 +448,11 @@ function getScoreForTermTopic(term, topicId){
 
 // TODO: Implement this as a dictionary instead. If the list of text gets long, this might be slow?
 function getLabelForText(textId){
-    for (let j = 0; j < modelDocuments.length; j++){
-        if (modelDocuments[j].id == textId){
-            let label = modelGetTextLabelForId(modelDocuments[j].id);
+    for (const modelDocument of modelDocuments){
+        if (modelDocument.id == textId){
+            let label = modelGetTextLabelForId(modelDocument.id);
             if (label == undefined){ // No user label, use automatic label
-                label = modelDocuments[j].label;
+                label = modelDocument.label;
             }
             return label;
         }
@@ -468,9 +462,9 @@ function getLabelForText(textId){
 
 // TODO: Implement this as a dictionary instead. If the list of text gets long, this might be slow?
 function getAdditionalLabelsForText(textId){
-    for (let j = 0; j < modelDocuments.length; j++){
-        if (modelDocuments[j].id == textId){
-            return modelDocuments[j].additional_labels.sort();
+    for (const modelDocument of modelDocuments){
+        if (modelDocument.id == textId){
+            return modelDocument.additional_labels.sort();
         }
     }
     return undefined;
@@ -480,27 +474,21 @@ function getAdditionalLabelsForText(textId){
 // For getting the maximum score for the four categories (used for sorting)
 ////
 function getMaxTermScore(){
-    let all_scores = [];
-    $.each(modelTermsToTopics, function(k, v){
-            all_scores = all_scores.concat(v.score_for_topics)
-           });
+    let all_scores = _.flatten(_.map(modelTermsToTopics, (v, k) => v.score_for_topics), 1);
     return _.max(all_scores)
 }
 
 // Get the maximum creation data
 function getMaxThemeScore(){
-    let all_scores = [];
+    let all_scores = _.map(modelThemes, (v) => v.creation_time);
     
-    for (let j = 0; j < modelThemes.length; j++ ){
-        all_scores = all_scores.concat(modelThemes[j].creation_time);
-    }
     return _.max(all_scores)
 }
 
 function getMaxTopicScore(){
     let all_scores = [];
-    for (let j = 0; j < modelTopics.length; j++ ){
-        let topicId = modelTopics[j].id
+    for (const topic of modelTopics){
+        let topicId = topic.id
         let tot_score = 0
     // Let the score of a topic be the total score for the terms that belong to it
     // TODO: This code is duplicated, make a function
@@ -516,15 +504,7 @@ function getMaxTopicScore(){
 }
 
 function getMaxDocumentScore(){
-    var maxScore = 0;
-    $.each(modelTopicsToDocuments, function(key, topicsToDocumentsValue){
-        for (var j = 0; j < topicsToDocumentsValue.topic_confidences.length; j++){
-            if (topicsToDocumentsValue.topic_confidences[j] > maxScore){
-                maxScore = topicsToDocumentsValue.topic_confidences[j];
-           }
-           }
-           });
-    return maxScore;    
+    return _.max(_.map(modelTopicsToDocuments, (v, k) => _.max(v.topic_confidences)));
 }
 
 
@@ -632,49 +612,37 @@ async function modelSortThemesWithMachineLearningIfTextChosen(){
 
 // Calculates the total score for the provided array of term list elements
 function calculateTermsScore(termElements) {
-	return $.map(termElements, function(element, i){
-		let d = d3.select(element).datum();
-		
-		let accScore = 0;
-
-		// The flag below is used to sort the selected elements separately
-		// to ensure proper sorting for all sorting modes (desc/asc)
-		let isSelected = false;
-
-        for (let i = 0; i < currentTopicIds.length; i++){
-            if (isAssociatedTermTopic(d.term, currentTopicIds[i])){
-                    accScore = accScore + getScoreForTermTopic(d.term, currentTopicIds[i]);
-                    isSelected = true;
-                 }
-        }
-                 
-        if (!isSelected){
-                 for (let j = 0; j < modelTopics.length; j++ ){
-                 let topic = modelTopics[j];
-                 if (isAssociatedTermTopic(d.term, topic.id)){
-                 // This is the standard score to give to the term, an
-                 // accumulation of each topic it
-                 // is associated to, if no topic is chosen
-                 
-                 accScore = accScore + getScoreForTermTopic(d.term, topic.id);
-                 }}}
-                 
-		for (let j = 0; j < currentTextIds.length; j++ ){
-			let text = currentTextIds[j];
-			if (isAssociatedTextTerm(text, d.term)){
-                isSelected = true;
-			}
+    return $.map(termElements, function(element, i){
+	let d = d3.select(element).datum();
+	
+	let accScore = 0;
+	
+	// The flag below is used to sort the selected elements separately
+	// to ensure proper sorting for all sorting modes (desc/asc)
+	let isTopicSelected = currentTopicIds.some(currentTopicId => isAssociatedTermTopic(d.term, currentTopicId));
+	if (isTopicSelected) {
+            for (const currentTopicId of currentTopicIds){
+		if (isAssociatedTermTopic(d.term, currentTopicId)){
+                    accScore = accScore + getScoreForTermTopic(d.term, currentTopicId);
 		}
+            }
+            return { index: i, element: element, value: accScore, isSelected: true, secondaryValue: d.term.length};
+	}
 
-		for (let j = 0; j < currentThemeIds.length; j++ ){
-			let theme = currentThemeIds[j];
-			if (isAssociatedThemeTerm(theme, d.term)){
-					isSelected = true;
-			}
-		}
-		// Prepare the resulting element
-        return { index: i, element: element, value: accScore, isSelected: isSelected, secondaryValue: d.term.length};
-	});
+        for (const topic of modelTopics) {
+            if (isAssociatedTermTopic(d.term, topic.id)){
+                // This is the standard score to give to the term, an
+                // accumulation of each topic it
+                // is associated to, if no topic is chosen
+                
+                accScore = accScore + getScoreForTermTopic(d.term, topic.id);
+            }
+	}
+        let isTextSelected = currentTextIds.some(text => isAssociatedTextTerm(text, d.term))
+	let isThemeSelected = currentThemeIds.some(theme => isAssociatedThemeTerm(theme, d.term))
+	// Prepare the resulting element
+        return { index: i, element: element, value: accScore, isSelected: isTextSelected || isThemeSelected, secondaryValue: d.term.length};
+    });
 }
 
 
@@ -688,11 +656,11 @@ function calculateTextScore(textElements) {
     		// to ensure proper sorting for all sorting modes (desc/asc)
     		let isSelected = false;
                  
-            for (let i = 0; i < currentTopicIds.length; i++){
-                 if (isAssociatedTextTopic(d.id, currentTopicIds[i])){
+            for (const currentTopicId of currentTopicIds){
+                 if (isAssociatedTextTopic(d.id, currentTopicId)){
                  // TODO: Strange structure in modelTopicsToDocuments makes this code a bit strange, should restructure
-                    let textIndexIn_ModelTopicsToDocuments = modelTopicsToDocuments[currentTopicIds[i]].documents.indexOf(d.id);
-                    let topicConfidence = modelTopicsToDocuments[currentTopicIds[i]].topic_confidences[textIndexIn_ModelTopicsToDocuments];
+                    let textIndexIn_ModelTopicsToDocuments = modelTopicsToDocuments[currentTopicId].documents.indexOf(d.id);
+                    let topicConfidence = modelTopicsToDocuments[currentTopicId].topic_confidences[textIndexIn_ModelTopicsToDocuments];
                     accScore = accScore + topicConfidence;
                     isSelected = true;
                  }
@@ -701,8 +669,7 @@ function calculateTextScore(textElements) {
     
             if (!isSelected){
                  let scores = []
-                 for (let j = 0; j < modelTopics.length; j++ ){
-                    let topic = modelTopics[j];
+                 for (const topic of modelTopics){
                     if (isAssociatedTextTopic(d.id, topic.id)){
                  // This is the standard score to give to the term, an
                  // accumulation of each topic it
@@ -714,20 +681,18 @@ function calculateTextScore(textElements) {
                     accScore = accScore + topicConfidence;
                  }}
                  // When no topic is chosen, use the mean strength for the topics
-                 for (let k = 0; k < scores.length; k++){
-                    accScore = accScore + scores[k];
+                 for (const score of scores){
+                    accScore = accScore + score;
                  }
                  accScore = accScore/scores.length;
                  }
     
-            for (let j = 0; j < currentTermIds.length; j++ ){
-                let term = currentTermIds[j];
+            for (const term of currentTermIds){
                 if (isAssociatedTextTerm(d.id, term)){
                     isSelected = true;
                  }}
                  
-            for (let j = 0; j < currentThemeIds.length; j++ ){
-                let theme = currentThemeIds[j];
+            for (const theme of currentThemeIds){
                  
                 if (isAssociatedTextTheme(d.id, theme)){
                     isSelected = true;
@@ -754,8 +719,7 @@ function calculateTextThemesScore(textElements) {
 	    // to ensure proper sorting for all sorting modes (desc/asc)
 	    let isSelected = false;
 
-	    for (let j = 0; j < modelTopics.length; j++ ){
-		let topic = modelTopics[j];
+	    for (const topic of modelTopics){
 		if (isAssociatedTextTopic(d.id, topic.id)){
 				if (currentTopicIds.indexOf(topic.id) > -1){
 					isSelected = true;
@@ -763,8 +727,7 @@ function calculateTextThemesScore(textElements) {
 			}
 		}
 
-		for (let j = 0; j < modelTerms.length; j++ ){
-			let term = modelTerms[j];
+		for (const term of modelTerms){
 			if (isAssociatedTextTerm(d.id, term.term)){
 				if (currentTermIds.indexOf(term.term) > -1){
 					isSelected = true;
@@ -772,8 +735,7 @@ function calculateTextThemesScore(textElements) {
 			}
 		}
 
-		for (let j = 0; j < modelThemes.length; j++ ){
-			let theme = modelThemes[j];
+		for (const theme of modelThemes){
 			if (isAssociatedTextTheme(d.id, theme.id)){
 				if (currentThemeIds.indexOf(theme.id) > -1){
 					isSelected = true;
@@ -801,8 +763,7 @@ function getLabelForSort(textElements) {
 	    // to ensure proper sorting for all sorting modes (desc/asc)
 	    let isSelected = false;
 
-	    for (let j = 0; j < modelTopics.length; j++ ){
-		let topic = modelTopics[j];
+	    for (const topic of modelTopics){
 		if (isAssociatedTextTopic(d.id, topic.id)){
 				if (currentTopicIds.indexOf(topic.id) > -1){
 					isSelected = true;
@@ -810,8 +771,7 @@ function getLabelForSort(textElements) {
 			}
 		}
 
-		for (let j = 0; j < modelTerms.length; j++ ){
-			let term = modelTerms[j];
+		for (const term of modelTerms){
 			if (isAssociatedTextTerm(d.id, term.term)){
 				if (currentTermIds.indexOf(term.term) > -1){
 					isSelected = true;
@@ -819,8 +779,7 @@ function getLabelForSort(textElements) {
 			}
 		}
 
-		for (let j = 0; j < modelThemes.length; j++ ){
-			let theme = modelThemes[j];
+		for (const theme of modelThemes){
 			if (isAssociatedTextTheme(d.id, theme.id)){
 				if (currentThemeIds.indexOf(theme.id) > -1){
 					isSelected = true;
@@ -891,28 +850,25 @@ function calculateTopicScore(topicElements) {
                         }
                 });
                 let totTextScore = 0;
-                for (let j = 0; j < textScores.length; j++){
-                    totTextScore = totTextScore + textScores[j];
+                for (const textScore of textScores){
+                    totTextScore = totTextScore + textScore;
                 }
                 let finalTextScore = totTextScore/textScores.length;
                  
                 // Check if term is selected
-                for (let j = 0; j < currentTermIds.length; j++ ){
-                    let term = currentTermIds[j];
+                for (const term of currentTermIds){
         
                     if (isAssociatedTermTopic(term, d.id)){
                             isSelected = true;
                     }
                  }
                  
-                 for (let j = 0; j < currentTextIds.length; j++ ){
-                    let text = currentTextIds[j];
+                 for (const text of currentTextIds){
                     if (isAssociatedTextTopic(text, d.id)){
                         isSelected = true;
                  }}
    
-                 for (let j = 0; j < currentThemeIds.length; j++ ){
-                    let theme = currentThemeIds[j];
+                 for (const theme of currentThemeIds){
                  
                     if (isAssociatedThemeTopic(theme, d.id)){
                         isSelected = true;
@@ -936,20 +892,17 @@ function calculateThemesScore(themeElements) {
           		 // to ensure proper sorting for all sorting modes (desc/asc)
           		 let isSelected = false;
                  
-                 for (let j = 0; j < currentTopicIds.length; j++ ){
-                    let topic = currentTopicIds[j];
+                 for (const topic of currentTopicIds){
                     if (isAssociatedThemeTopic(d.id, topic)){
                             isSelected = true;
                  }}
                  
-                 for (let j = 0; j < currentTermIds.length; j++ ){
-                    let term = currentTermIds[j];
+                 for (const term of currentTermIds){
                     if (isAssociatedThemeTerm(d.id, term)){
                         isSelected = true;
                  }}
                  
-                 for (let j = 0; j < currentTextIds.length; j++ ){
-                    let text = currentTextIds[j];
+                 for (const text of currentTextIds){
                     if (isAssociatedTextTheme(text, d.id)){
                         isSelected = true;
                  }}
@@ -1191,8 +1144,7 @@ function calculateTermsTopicsNumber(termElements) {
 		// to ensure proper sorting for all sorting modes (desc/asc)
 		let isSelected = false;
 
-		for (let j = 0; j < modelTopics.length; j++ ){
-			let topic = modelTopics[j];
+		for (const topic of modelTopics){
 			if (isAssociatedTermTopic(d.term, topic.id)){
 				if (currentTopicIds.indexOf(topic.id) > -1){
 					isSelected = true;
@@ -1200,8 +1152,7 @@ function calculateTermsTopicsNumber(termElements) {
 			}
 		}
 
-		for (let j = 0; j < modelDocuments.length; j++ ){
-			let text = modelDocuments[j];
+		for (const text of modelDocuments){
 			if (isAssociatedTextTerm(text.id, d.term)){
 				if (currentTextIds.indexOf(text.id) > -1){
 					isSelected = true;
@@ -1209,8 +1160,7 @@ function calculateTermsTopicsNumber(termElements) {
 			}
 		}
 
-		for (let j = 0; j < modelThemes.length; j++ ){
-			let theme = modelThemes[j];
+		for (const theme of modelThemes){
 			if (isAssociatedThemeTerm(theme.id, d.term)){
 				if (currentThemeIds.indexOf(theme.id) > -1){
 					isSelected = true;
@@ -1255,8 +1205,7 @@ function calculateTermsDocsNumber(termElements) {
 		// to ensure proper sorting for all sorting modes (desc/asc)
 		let isSelected = false;
 
-		for (let j = 0; j < modelTopics.length; j++ ){
-			let topic = modelTopics[j];
+		for (const topic of modelTopics){
 			if (isAssociatedTermTopic(d.term, topic.id)){
 				if (currentTopicIds.indexOf(topic.id) > -1){
 					isSelected = true;
@@ -1264,8 +1213,7 @@ function calculateTermsDocsNumber(termElements) {
 			}
 		}
 
-		for (let j = 0; j < modelDocuments.length; j++ ){
-			let text = modelDocuments[j];
+		for (const text of modelDocuments){
 			if (isAssociatedTextTerm(text.id, d.term)){
 				if (currentTextIds.indexOf(text.id) > -1){
 					isSelected = true;
@@ -1273,8 +1221,7 @@ function calculateTermsDocsNumber(termElements) {
 			}
 		}
 
-		for (let j = 0; j < modelThemes.length; j++ ){
-			let theme = modelThemes[j];
+		for (const theme of modelThemes){
 			if (isAssociatedThemeTerm(theme.id, d.term)){
 				if (currentThemeIds.indexOf(theme.id) > -1){
 					isSelected = true;
@@ -1312,8 +1259,7 @@ function getTermStrings(termElements) {
 		// to ensure proper sorting for all sorting modes (desc/asc)
 		let isSelected = false;
 
-		for (let j = 0; j < modelTopics.length; j++ ){
-			let topic = modelTopics[j];
+		for (const topic of modelTopics){
 			if (isAssociatedTermTopic(d.term, topic.id)){
 				if (currentTopicIds.indexOf(topic.id) > -1){
 					isSelected = true;
@@ -1321,8 +1267,7 @@ function getTermStrings(termElements) {
 			}
 		}
 
-		for (let j = 0; j < modelDocuments.length; j++ ){
-			let text = modelDocuments[j];
+		for (const text of modelDocuments){
 			if (isAssociatedTextTerm(text.id, d.term)){
 				if (currentTextIds.indexOf(text.id) > -1){
 					isSelected = true;
@@ -1330,8 +1275,7 @@ function getTermStrings(termElements) {
 			}
 		}
 
-		for (let j = 0; j < modelThemes.length; j++ ){
-			let theme = modelThemes[j];
+		for (const theme of modelThemes){
 			if (isAssociatedThemeTerm(theme.id, d.term)){
 				if (currentThemeIds.indexOf(theme.id) > -1){
 					isSelected = true;
@@ -1385,8 +1329,8 @@ function isAssociatedThemeTopic(themeId, topicId){
     let themeTexts = modelThemesToTexts[themeId].texts;
     
     let modelTexts = modelTopicsToDocuments[topicId].documents;
-    for (var i = 0; i < modelTexts.length; i++){
-        if(themeTexts.indexOf(modelTexts[i]) > -1){
+    for (const text of modelTexts){
+        if(themeTexts.indexOf(text) > -1){
             return true;
         }
     }
@@ -1400,8 +1344,7 @@ function isAssociatedThemeTerm(themeId, term){
 
     let themeTexts = modelThemesToTexts[themeId].texts;
     
-    for (var i = 0; i < themeTexts.length; i++){
-        let loopTextId = themeTexts[i];
+    for (const loopTextId of themeTexts){
         if (isAssociatedTextTerm(loopTextId, term)){
             return true;
             }
@@ -1505,8 +1448,7 @@ async function modelFillDataSetChoices(){
     modelDataSetChoices = [];
     let choices = await get_data_async(getDataChoicesUrl, {});
 
-    for (let i = 0; i < choices.length; i++) {
-        var choice = choices[i];
+    for (const choice of choices) {
         modelDataSetChoices.push({"value" : choice})
     }
     
@@ -1543,8 +1485,8 @@ async function getSavedTopicNames(){
 
     let topic_names = await get_data_async(savedTopicNamesUrl, data);
    
-    for (let i = 0; i < topic_names.length; i++){
-        modelTopicNames[topic_names[i].topic_id] = topic_names[i].topic_name;
+    for (const topic_name of topic_names){
+        modelTopicNames[topic_name.topic_id] = topic_name.topic_name;
     }
 }
     
@@ -1575,15 +1517,14 @@ async function getSavedThemes(){
     let data = {"analysis_id" : modelCurrentAnalysisVersionId};
     let themes = await get_data_async(savedThemesUrl, data);
 
-    for (let i = 0; i < themes.length; i++){
-        let themeId = themes[i].theme_number;
+    for (const theme of themes){
+        let themeId = theme.theme_number;
         themeId = parseInt(themeId)
-        let themeLabel = themes[i].theme_name
+        let themeLabel = theme.theme_name
         addNewTheme(themeId, themeLabel);
     
-        for (let j = 0; j < themes[i].document_ids.length; j++){
-            let textId = themes[i].document_ids[j];
-            textId = parseInt(textId)
+        for (const textIdString of theme.document_ids){
+            let textId = parseInt(textIdString)
             if (modelThemesToTexts[themeId].texts.indexOf(textId) == -1){
                 modelThemesToTexts[themeId].texts.push(textId)
             }
@@ -1649,8 +1590,7 @@ async function modelLoadModelForSelectedDataSet(currentDataset){
     resetModelData();
     resetModelChoiceData();
     
-    for (let i = 0; i < modelsForCurrentDatasetFromDataBase.length; i++) {
-        let m = modelsForCurrentDatasetFromDataBase[i];
+    for (const m of modelsForCurrentDatasetFromDataBase) {
         var  name_to_use = m["model_name"] + " " + m["date"];
         modelModelsForCurrentDataset.push({"value" : name_to_use, "id" : m["_id"]});
     }
@@ -1686,8 +1626,7 @@ async function modelLoadAnalysis(){
     let analysesForCurrentModelFromDataBase = await get_data_async(loadAnalysesUrl, data);
 
     resetAnalysisChoiceData();
-    for (let i = 0; i < analysesForCurrentModelFromDataBase.length; i++) {
-        let m = analysesForCurrentModelFromDataBase[i];
+    for (const m of analysesForCurrentModelFromDataBase) {
         modelAnalysesForCurrentModel.push({"value" : m["analysis_name"], "id" : m["_id"]});
     }
     
@@ -1765,8 +1704,8 @@ async function getSavedUserDefinedLabels(){
     
     let userLabels = await get_data_async(savedUserDefinedLabels, data);
 
-    for (let i = 0; i < userLabels.length; i++){
-        modelUserTextLabels[userLabels[i].text_id] = userLabels[i].user_defined_label;
+    for (const userLabel of userLabels){
+        modelUserTextLabels[userLabel.text_id] = userLabel.user_defined_label;
     }
 }
 

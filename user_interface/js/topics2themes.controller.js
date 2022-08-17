@@ -1138,11 +1138,7 @@ function renderTextsToThemeLinks() {
     for (const theme of themesList) {
 	let relevantTexts = modelThemesToTexts[theme.d.id].texts;
 
-        let relevantTextsInts = []
-
-        for (let i = 0; i < relevantTexts.length; i++){
-            relevantTextsInts[i] = parseInt(relevantTexts[i])
-        }
+        let relevantTextsInts = relevantTexts.map(text => parseInt(text))
 
 	for (const text of textsList) {
 	    if (!(relevantTextsInts.indexOf(parseInt(text.d.id)) > -1)) {
@@ -2168,8 +2164,8 @@ function doResetHighlightAfterStateChange(){
     }
     
     else{
-	for (let i = 0; i < modelTopics.length; i++) {
-             let topic = modelTopics[i]["id"];
+	for (const modelTopic of modelTopics) {
+             let topic = modelTopic["id"];
              // If topic is selected
              if (currentTopicIds.indexOf(topic) > -1){
 		 d3.selectAll('.topic_' + topic).classed("termintextnotchosen", false);
