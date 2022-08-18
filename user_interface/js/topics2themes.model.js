@@ -1528,11 +1528,6 @@ async function getSavedThemes(){
 }
 
 function modelRenameTheme(themeId, newLabel){
-    for (let i = 0; i < modelThemes.length; i++){
-        if (modelThemes[i] == themeId){
-            modelThemes[i].label = newLabel
-        }
-    }
     let updateThemeNameUrl = "update_theme_name";
     let data = {"theme_number": themeId, "theme_name" : newLabel, "analysis_id" : modelCurrentAnalysisVersionId}
     
@@ -1541,14 +1536,6 @@ function modelRenameTheme(themeId, newLabel){
 
 function doRenameTheme(res){
     // Nothing is done here (keeping empty method for debug purposes)
-}
-
-function getThemeName(themeId){
-    for (let i = 0; i < modelThemes.length; i++){
-        if (modelThemes[i] == themeId){
-            return modelThemes[i].label
-        }
-    }
 }
 
 function deleteDatabaseTextThemeLink(themeId, textId){
