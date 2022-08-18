@@ -566,14 +566,14 @@ function removeTheme(themeId){
     return true;
 }
 
-function removeTextThemeLink(themeId, textId){
+async function removeTextThemeLink(themeId, textId){
     let indexToRemove = modelThemesToTexts[themeId].texts.indexOf(textId);
     modelThemesToTexts[themeId].texts.splice(indexToRemove, 1);
     
     let themeIndexToRemove = modelTextsToThemes[textId].themes.indexOf(themeId);
     modelTextsToThemes[textId].themes.splice(themeIndexToRemove, 1);
 
-    deleteDatabaseTextThemeLink(themeId, textId);
+    await deleteDatabaseTextThemeLink(themeId, textId);
 }
 
 
@@ -1451,17 +1451,13 @@ async function modelGetDataSetChoices(){
 // Save and fetch topic names
 /////////////////////
 
-function modelRenameTopic(topicId, newLabel){
+async function modelRenameTopic(topicId, newLabel){
     modelTopicNames[topicId] = newLabel;
     
     let updateTopicNameUrl = "update_topic_name";
     let data = {"topic_id" : topicId, "topic_name" : newLabel, "analysis_id" : modelCurrentAnalysisVersionId};
     
-    save_data(updateTopicNameUrl, updateTopicNameList, data);
-}
-
-function updateTopicNameList(dummy){
-     // Dont use this at the moment
+    await save_data_async(updateTopicNameUrl, data);
 }
 
 async function getSavedTopicNames(){
@@ -1485,15 +1481,10 @@ function modelGetTopicNameForId(topic_id){
 }
 
 
-function deleteDatabaseTheme(themeId){
+async function deleteDatabaseTheme(themeId){
     let deleteThemeUrl = "delete_theme";
     let data = {"analysis_id": modelCurrentAnalysisVersionId, "theme_number": themeId};
-    save_data(deleteThemeUrl, doDeleteDatabaseTheme, data);
-}
-
-function doDeleteDatabaseTheme(res){
-    // Not used at the moment
-    //(res);
+    await save_data_async(deleteThemeUrl, data);
 }
 
 
@@ -1527,27 +1518,21 @@ async function getSavedThemes(){
     }
 }
 
-function modelRenameTheme(themeId, newLabel){
+async function modelRenameTheme(themeId, newLabel){
     let updateThemeNameUrl = "update_theme_name";
     let data = {"theme_number": themeId, "theme_name" : newLabel, "analysis_id" : modelCurrentAnalysisVersionId}
     
-    save_data(updateThemeNameUrl, doRenameTheme, data);
+    await save_data_async(updateThemeNameUrl, data);
 }
 
-function doRenameTheme(res){
-    // Nothing is done here (keeping empty method for debug purposes)
-}
 
-function deleteDatabaseTextThemeLink(themeId, textId){
+async function deleteDatabaseTextThemeLink(themeId, textId){
     let deleteDatabaseTextThemeLinkUrl = "delete_theme_document_connection";
     let data = {"theme_number" : themeId, "document_id" : textId, "analysis_id" : modelCurrentAnalysisVersionId};
     
-    save_data(deleteDatabaseTextThemeLinkUrl, doDeleteDatabaseTextThemeLink, data);
+    await save_data_async(deleteDatabaseTextThemeLinkUrl, data);
 }
 
-function doDeleteDatabaseTextThemeLink(res){
-   // Nothing done here, only kept for debut reasons
-}
 ////////
 /// For loading data in the scroll list of previous models and analyses
 ///////
@@ -1572,15 +1557,11 @@ async function modelLoadModelForSelectedDataSet(currentDataset){
 
 ///////
 /// For constructing a new model
-function modelConstructNewModel(modelName){
+async function modelConstructNewModel(modelName){
     let contructNewModelUrl = "make_model_for_collection";
     let data = {"collection_name" : modelCurrentDataset, "model_name" : modelName};
-    save_data(contructNewModelUrl, modelLoadModelForCurrentDataSet, data);
-}
-
-// A dummy parameter, as the function that is submitted to get_data expects a parameter
-function modelLoadModelForCurrentDataSet(dummy){
-    modelLoadModelForSelectedDataSet(modelCurrentDataset)
+    await save_data_async(contructNewModelUrl, data);
+    await modelLoadModelForSelectedDataSet(modelCurrentDataset);
 }
 
 
@@ -1634,17 +1615,14 @@ async function modelConstructNewAnalysis(analysisName){
     return modelCurrentAnalysisName;
 }
 
-function modelExportAnalysis(){
+async function modelExportAnalysis() {
     if (modelCurrentAnalysisVersionId == null){
 	// Nothing to export if there is no analysis
 	return;
     }
     let exportAnalysisUrl = "export_analysis";
     let data = {"analysis_id" : modelCurrentAnalysisVersionId};
-    save_data(exportAnalysisUrl, doNotifyExportedAnalysis, data);
-}
-
-function doNotifyExportedAnalysis(savedData){
+    await save_data_async(exportAnalysisUrl, data);
     alert("Saved analysis with id: " + savedData["analysis_id"] + ".\nTo folder: " +savedData["data_dir"]);
 }
 

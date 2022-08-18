@@ -447,7 +447,7 @@ function controllerDoPopulateModelChoices(modelModelsForCurrentDataset){
 }
 
 /// Construct new model
-function onConstructNewModel(){
+async function onConstructNewModel(){
     
     if (modelDisableModelCreation == undefined){
         var modelName = prompt("Please enter the name of the model to create");
@@ -458,9 +458,9 @@ function onConstructNewModel(){
     if (modelName == null || modelName == "") {
         alert("No model created/loaded, a name must be given");
     } else {
-        modelConstructNewModel(modelName);
         disableModelChoices();
         disableAnalysisChoices();
+        await modelConstructNewModel(modelName);
     }
 }
 
@@ -545,8 +545,8 @@ function onNewAnalysis(){
     }
 }
 
-function onExportAnalysis(){
-    modelExportAnalysis();
+async function onExportAnalysis(){
+    await modelExportAnalysis();
 }
 
 
@@ -1369,7 +1369,7 @@ function onTextsListScroll() {
 
 
 // Reacts to the topic label change
-function onTopicRename() {
+async function onTopicRename() {
 	let newLabel = $(this).val();
 	let topicElement = $(this).parent(".topic-element");
 	
@@ -1379,11 +1379,11 @@ function onTopicRename() {
 	// Update the tooltip
 	topicElement.attr("title", "Topic #" + topic.id + ": " + topic.label);
 	
-    modelRenameTopic(topic.id, newLabel);
+    await modelRenameTopic(topic.id, newLabel);
 }
 
 // Reacts to the theme label change
-function onThemeRename() {
+async function onThemeRename() {
     let newLabel = $(this).val();
     let themeElement = $(this).parent(".theme-element");
 	
@@ -1393,7 +1393,7 @@ function onThemeRename() {
     // Update the tooltip
     themeElement.attr("title", "Theme #" + theme.id + ": " + theme.label);
 	
-    modelRenameTheme(theme.id, newLabel)
+    await modelRenameTheme(theme.id, newLabel)
 }
 
 // Reacts to the sort trigger
@@ -2012,7 +2012,7 @@ function onKeyDown(event) {
 
 
 // Removes a text from a theme
-function onThemeTextRemoveAtTextElement(){
+async function onThemeTextRemoveAtTextElement(){
     let textElement = $(this).parentsUntil("#textsList", ".text-element");
 	
     // Update the corresponding data element
@@ -2027,7 +2027,7 @@ function onThemeTextRemoveAtTextElement(){
     let themeLabel = $(this).parent(".theme-texts-label");
     let themeId = themeLabel.data("themeid")
     
-    removeTextThemeLink(themeId, text.id);
+    await removeTextThemeLink(themeId, text.id);
     
     // Repopulate the text element for the updated text-theme links
     let textElementSelection = d3.select("#textsList").selectAll("li")
