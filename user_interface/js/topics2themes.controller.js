@@ -1622,18 +1622,11 @@ function sortThemesList(sortKey) {
 
 function fillSplittedCurrentTermList(){
     // Split to be able to mark synonyms and multiword expressions in the text
-    splittedTerms = []
-    for (let j = 0; j < currentTermIds.length; j++){
-        let splitted1 = currentTermIds[j].split("/")
-        for (let k = 0; k < splitted1.length; k++){
-            let comp1 = splitted1[k].trim();
-            let splitted2 = comp1.split("_");
-            for (let l = 0; l < splitted2.length; l++){
-                let comp2 = splitted2[l].trim();
-                splittedTerms.push(comp2);
-            }
-        }
-    }
+    splittedTerms = _.flatten(currentTermIds.map(termId => {
+	return termId.split("/").map(term => {
+	    return term.trim().split("_").map(word => word.trim())
+	})
+    }))
 }
 
 function onTermElementClick(){
