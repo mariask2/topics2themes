@@ -365,16 +365,14 @@ async function modelInitializeData(modelId) {
         }
 
         for (const topic_term of topic.topic_terms) {
-			if (modelTermsToTopics[topic_term.term] == undefined) {
-				modelTermsToTopics[topic_term.term] = {
-					"term": topic_term.term,
-					"topics": [],
-                    "score_for_topics": []
-				};
+	    if (modelTermsToTopics[topic_term.term] == undefined) {
+		modelTermsToTopics[topic_term.term] = {
+		    "term": topic_term.term,
+                    "score_for_topics": {}
+		};
             }
-			modelTermsToTopics[topic_term.term].topics.push(topic.id);
-            modelTermsToTopics[topic_term.term].score_for_topics.push(topic_term.score);
- 		}
+            modelTermsToTopics[topic_term.term].score_for_topics[topic.id] = topic_term.score;
+ 	}
     
 	}
     
@@ -437,13 +435,7 @@ async function modelInitializeData(modelId) {
 
 
 function getScoreForTermTopic(term, topicId){
-    let topicIndex = modelTermsToTopics[term].topics.indexOf(topicId);
-    if (topicIndex != -1){
-        return modelTermsToTopics[term].score_for_topics[topicIndex];
-    }
-    else{
-        return undefined;
-    }
+    return modelTermsToTopics[term].score_for_topics[topicId];
 }
 
 // TODO: Implement this as a dictionary instead. If the list of text gets long, this might be slow?
@@ -474,7 +466,7 @@ function getAdditionalLabelsForText(textId){
 // For getting the maximum score for the four categories (used for sorting)
 ////
 function getMaxTermScore(){
-    let all_scores = _.flatten(_.map(modelTermsToTopics, (v, k) => v.score_for_topics), 1);
+    let all_scores = _.flatten(_.map(modelTermsToTopics, (v, k) => _.values(v.score_for_topics)), 1);
     return _.max(all_scores)
 }
 
@@ -493,10 +485,8 @@ function getMaxTopicScore(){
     // Let the score of a topic be the total score for the terms that belong to it
     // TODO: This code is duplicated, make a function
         $.each(modelTermsToTopics, function(k, v){
-           let topic_index = v.topics.indexOf(topicId);
-           if (topic_index > -1)
-           tot_score = tot_score  + v.score_for_topics[topic_index]
-           });
+            tot_score = tot_score + (v.score_for_topics[topicId] || 0)
+        });
         all_scores = all_scores.concat(tot_score)
     }
     return _.max(all_scores)
@@ -1118,7 +1108,7 @@ function calculateTermsTopicsNumber(termElements) {
 		// Calculate the number
 		let number = 0;
 		if (d.term in modelTermsToTopics) {
-			number = modelTermsToTopics[d.term].topics.length;
+		    number = _.size(modelTermsToTopics[d.term].score_for_topics);
 		}
 		
 		// TODO: instead of simply using the count of topics,
@@ -1298,7 +1288,7 @@ function sortTermsAlphaAsc(termElements) {
 
 function isAssociatedTermTopic(term, topicId){
     return (modelTermsToTopics[term] != undefined
-            && modelTermsToTopics[term].topics.indexOf(topicId) > -1);
+            && topicId in modelTermsToTopics[term].score_for_topics);
 }
 
 function isAssociatedTextTopic(textId, topicId){

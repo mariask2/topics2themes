@@ -990,14 +990,12 @@ function renderTermToTopicLinks() {
     let linkData = []
 
     for (const term of termsList) {
-	let relevantTopics = modelTermsToTopics[term.d.term].topics;
-
 	for (const topic of topicsList) {
-	    if (!(relevantTopics.indexOf(topic.d.id) > -1)) {
+	    if (!(topic.d.id in modelTermsToTopics[term.d.term].score_for_topics)) {
 		continue;
 	    }
 
-	    let termScore = modelTermsToTopics[term.d.term].score_for_topics[modelTermsToTopics[term.d.term].topics.indexOf(topic.d.id)]
+	    let termScore = modelTermsToTopics[term.d.term].score_for_topics[topic.d.id]
 	    let text = "Topic #" + topic.d.id + "\n" + "Term: " + term.d.term + "\n" + "Score: " + termScore
 	    linkData.push({
 		termScore,
