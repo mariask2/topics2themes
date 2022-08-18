@@ -1134,12 +1134,10 @@ function renderTextsToThemeLinks() {
     let linkData = []
 
     for (const theme of themesList) {
-	let relevantTexts = modelThemesToTexts[theme.d.id].texts;
-
-        let relevantTextsInts = relevantTexts.map(text => parseInt(text))
+	let relevantTexts = modelThemesToTexts[theme.d.id].textsSet;
 
 	for (const text of textsList) {
-	    if (!(relevantTextsInts.indexOf(parseInt(text.d.id)) > -1)) {
+	    if (!(relevantTexts.has(text.d.id))) {
 		continue;
 	    }
 

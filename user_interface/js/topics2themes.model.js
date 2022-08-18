@@ -251,6 +251,11 @@ async function modelCreateNewTheme(){
     addNewTheme(themeId, "");
 }
 
+function recalculateModelThemesToTextsExtraFields(themeId) {
+    let relevantTexts = modelThemesToTexts[themeId].texts;
+    modelThemesToTexts[themeId].textsSet = new Set(relevantTexts.map(text => parseInt(text)));
+}
+
 //
 function addNewTheme(themeId, newLabel){
     var d = new Date();
@@ -265,6 +270,7 @@ function addNewTheme(themeId, newLabel){
     modelThemesToTexts[themeId] = {
         "texts" : []
     }
+    recalculateModelThemesToTextsExtraFields(themeId);
 }
 
 /////////
@@ -508,6 +514,7 @@ function modelAddTextThemeLink(themeId, textId){
 
     if (modelThemesToTexts[themeId].texts.indexOf(textId) == -1){
         modelThemesToTexts[themeId].texts.push(textId)
+	recalculateModelThemesToTextsExtraFields(themeId);
     }
 
     if (!(textId in modelTextsToThemes)){
@@ -559,6 +566,7 @@ function removeTheme(themeId){
 async function removeTextThemeLink(themeId, textId){
     let indexToRemove = modelThemesToTexts[themeId].texts.indexOf(textId);
     modelThemesToTexts[themeId].texts.splice(indexToRemove, 1);
+    recalculateModelThemesToTextsExtraFields(themeId);
     
     let themeIndexToRemove = modelTextsToThemes[textId].themes.indexOf(themeId);
     modelTextsToThemes[textId].themes.splice(themeIndexToRemove, 1);
@@ -1334,7 +1342,7 @@ function isAssociatedTermTheme(term, themeId){
 
 function isAssociatedTextTheme(textId, themeId){
     let associated = modelThemesToTexts[themeId] != undefined
-    && modelThemesToTexts[themeId].texts.indexOf(textId) > -1;
+	&& modelThemesToTexts[themeId].textsSet.has(textId);
 
     return associated;
 }
@@ -1491,8 +1499,9 @@ async function getSavedThemes(){
     
         for (const textIdString of theme.document_ids){
             let textId = parseInt(textIdString)
-            if (modelThemesToTexts[themeId].texts.indexOf(textId) == -1){
+	    if (!(modelThemesToTexts[themeId].textsSet.has(textId))) {
                 modelThemesToTexts[themeId].texts.push(textId)
+		recalculateModelThemesToTextsExtraFields(themeId);
             }
 
 	    // Also store the reverse connection
