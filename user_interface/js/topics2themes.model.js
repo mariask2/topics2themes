@@ -511,12 +511,10 @@ function modelAddTextThemeLink(themeId, textId){
 
     if (!(textId in modelTextsToThemes)){
 	// For storing connections between texts and themes
-	modelTextsToThemes[textId] = {"themes" : []};
+	modelTextsToThemes[textId] = {"themes" : new Set()};
     }
 
-    if (modelTextsToThemes[textId].themes.indexOf(themeId) == -1){
-        modelTextsToThemes[textId].themes.push(themeId)
-    }
+    modelTextsToThemes[textId].themes.add(themeId);
     
     let addTextThemeLinkUrl = "add_theme_document_connection";
     let data = {"theme_number" :themeId,
@@ -559,8 +557,7 @@ function removeTheme(themeId){
 async function removeTextThemeLink(themeId, textId){
     modelThemesToTexts[themeId].texts.delete(textId);
     
-    let themeIndexToRemove = modelTextsToThemes[textId].themes.indexOf(themeId);
-    modelTextsToThemes[textId].themes.splice(themeIndexToRemove, 1);
+    modelTextsToThemes[textId].themes.delete(themeId);
 
     await deleteDatabaseTextThemeLink(themeId, textId);
 }
@@ -685,9 +682,9 @@ function calculateTextThemesScore(textElements) {
 
 	    let number = 0;
 	    let d = d3.select(element).datum();
-	    if (d.id in modelTextsToThemes){
-		number = modelTextsToThemes[d.id].themes.length;
-	     }
+	    if (d.id in modelTextsToThemes) {
+		number = modelTextsToThemes[d.id].themes.size;
+	    }
 	   
 	    // The flag below is used to sort the selected elements separately
 	    // to ensure proper sorting for all sorting modes (desc/asc)
@@ -1494,14 +1491,11 @@ async function getSavedThemes(){
             }
 
 	    // Also store the reverse connection
-	     if (!(textId in modelTextsToThemes)){
-		 modelTextsToThemes[textId] = {"themes" : []};
-	     }
-
-	    if (modelTextsToThemes[textId].themes.indexOf(themeId) == -1){
-		modelTextsToThemes[textId].themes.push(themeId)
+	    if (!(textId in modelTextsToThemes)) {
+		modelTextsToThemes[textId] = {"themes" : new Set()};
 	    }
 
+	    modelTextsToThemes[textId].themes.add(themeId)
         }
     }
 }
