@@ -645,7 +645,7 @@ function calculateTextScore(textElements) {
 	if (isRelatedTopicSelected) {
 	    let accScore = sum(currentAssociatedTextTopics.map(currentTopicId => {
                 // TODO: Strange structure in modelTopicsToDocuments makes this code a bit strange, should restructure
-                let textIndexIn_ModelTopicsToDocuments = modelTopicsToDocuments[currentTopicId].documents.indexOf(d.id);
+                let textIndexIn_ModelTopicsToDocuments = modelTopicsToDocuments[currentTopicId].documents_index[d.id];
                 let topicConfidence = modelTopicsToDocuments[currentTopicId].topic_confidences[textIndexIn_ModelTopicsToDocuments];
                 return topicConfidence;
 	    }))
@@ -658,7 +658,7 @@ function calculateTextScore(textElements) {
                 // accumulation of each topic it
                 // is associated to, if no topic is chosen
                 // TODO: Strange structure in modelTopicsToDocuments makes this code a bit strange, should restructure
-                let textIndexIn_ModelTopicsToDocuments = modelTopicsToDocuments[topic.id].documents.indexOf(d.id);
+                let textIndexIn_ModelTopicsToDocuments = modelTopicsToDocuments[topic.id].documents_index[d.id];
                 let topicConfidence = modelTopicsToDocuments[topic.id].topic_confidences[textIndexIn_ModelTopicsToDocuments];
             return topicConfidence
         })
@@ -815,9 +815,9 @@ function calculateTopicScore(topicElements) {
                  // Compute the means score among the associated text
                  let textScores = [];
                  $.each(modelTopicsToDocuments, function(k, v){
-                        let document_index = v.documents.indexOf(d.id);
-                        if (document_index > -1){
-                        textScores.push(v.topic_confidences[document_index]);
+                        let document_index = v.documents_index[d.id];
+                        if (document_index !== undefined) {
+                            textScores.push(v.topic_confidences[document_index]);
                         }
                 });
                 let totTextScore = 0;
@@ -1289,7 +1289,7 @@ function isAssociatedTermTopic(term, topicId){
 
 function isAssociatedTextTopic(textId, topicId){
     return (modelTopicsToDocuments[topicId] != undefined
-            && modelTopicsToDocuments[topicId].documents.indexOf(textId) > -1);
+            && modelTopicsToDocuments[topicId].documents_index[textId] !== undefined);
 }
 
 
