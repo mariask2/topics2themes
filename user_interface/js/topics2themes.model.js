@@ -250,11 +250,6 @@ async function modelCreateNewTheme(){
     addNewTheme(themeId, "");
 }
 
-function recalculateModelThemesToTextsExtraFields(themeId) {
-    let relevantTexts = modelThemesToTexts[themeId].texts;
-    modelThemesToTexts[themeId].textsSet = new Set(relevantTexts.map(text => parseInt(text)));
-}
-
 //
 function addNewTheme(themeId, newLabel){
     var d = new Date();
@@ -267,9 +262,8 @@ function addNewTheme(themeId, newLabel){
                      });
     
     modelThemesToTexts[themeId] = {
-        "texts" : []
+        "texts" : new Set()
     }
-    recalculateModelThemesToTextsExtraFields(themeId);
 }
 
 /////////
@@ -511,9 +505,8 @@ function modelAddTextThemeLink(themeId, textId){
         return;
     }
 
-    if (modelThemesToTexts[themeId].texts.indexOf(textId) == -1){
-        modelThemesToTexts[themeId].texts.push(textId)
-	recalculateModelThemesToTextsExtraFields(themeId);
+    if (!modelThemesToTexts[themeId].texts.has(textId)) {
+        modelThemesToTexts[themeId].texts.add(textId)
     }
 
     if (!(textId in modelTextsToThemes)){
@@ -536,8 +529,9 @@ function modelAddTextThemeLink(themeId, textId){
 
 function hasThemeAssociatedTexts(themeId){
     if (modelThemesToTexts[themeId] != undefined){
-        if (modelThemesToTexts[themeId].texts.length > 0){
-            return true;         }
+        if (modelThemesToTexts[themeId].texts.size > 0) {
+            return true;
+        }
     }
     return false;
 }
@@ -563,9 +557,7 @@ function removeTheme(themeId){
 }
 
 async function removeTextThemeLink(themeId, textId){
-    let indexToRemove = modelThemesToTexts[themeId].texts.indexOf(textId);
-    modelThemesToTexts[themeId].texts.splice(indexToRemove, 1);
-    recalculateModelThemesToTextsExtraFields(themeId);
+    modelThemesToTexts[themeId].texts.delete(textId);
     
     let themeIndexToRemove = modelTextsToThemes[textId].themes.indexOf(themeId);
     modelTextsToThemes[textId].themes.splice(themeIndexToRemove, 1);
@@ -889,7 +881,7 @@ function calculateThemesScore(themeElements) {
                         isSelected = true;
                  }}
                  
-                 let numberOfAssociateTexts = modelThemesToTexts[d["id"]].texts.length;
+                 let numberOfAssociateTexts = modelThemesToTexts[d["id"]].texts.size;
                
                  return { index: i, element: element, value: tot_score, isSelected: isSelected, id: d["id"], numberOfTexts: numberOfAssociateTexts };
     	});
@@ -1312,7 +1304,7 @@ function isAssociatedThemeTopic(themeId, topicId){
     
     let modelTexts = modelTopicsToDocuments[topicId].documents;
     for (const text of modelTexts){
-        if(themeTexts.indexOf(text) > -1){
+        if (themeTexts.has(text)) {
             return true;
         }
     }
@@ -1327,9 +1319,9 @@ function isAssociatedThemeTerm(themeId, term){
     let themeTexts = modelThemesToTexts[themeId].texts;
     
     for (const loopTextId of themeTexts){
-        if (isAssociatedTextTerm(loopTextId, term)){
+        if (isAssociatedTextTerm(loopTextId, term)) {
             return true;
-            }
+        }
     }
     return false;
 }
@@ -1341,7 +1333,7 @@ function isAssociatedTermTheme(term, themeId){
 
 function isAssociatedTextTheme(textId, themeId){
     let associated = modelThemesToTexts[themeId] != undefined
-	&& modelThemesToTexts[themeId].textsSet.has(textId);
+	&& modelThemesToTexts[themeId].texts.has(textId);
 
     return associated;
 }
@@ -1497,9 +1489,8 @@ async function getSavedThemes(){
     
         for (const textIdString of theme.document_ids){
             let textId = parseInt(textIdString)
-	    if (!(modelThemesToTexts[themeId].textsSet.has(textId))) {
-                modelThemesToTexts[themeId].texts.push(textId)
-		recalculateModelThemesToTextsExtraFields(themeId);
+	    if (!(modelThemesToTexts[themeId].texts.has(textId))) {
+                modelThemesToTexts[themeId].texts.add(textId)
             }
 
 	    // Also store the reverse connection

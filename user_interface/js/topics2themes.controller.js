@@ -1134,7 +1134,7 @@ function renderTextsToThemeLinks() {
     let linkData = []
 
     for (const theme of themesList) {
-	let relevantTexts = modelThemesToTexts[theme.d.id].textsSet;
+	let relevantTexts = modelThemesToTexts[theme.d.id].texts;
 
 	for (const text of textsList) {
 	    if (!(relevantTexts.has(text.d.id))) {
