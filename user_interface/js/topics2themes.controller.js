@@ -42,7 +42,7 @@ var showFullText = false;
 
 
 // Holds terms selected, splitted for "/" and "_" into different terms
-var splittedTerms = [];
+var splittedTerms = new Set();
 
 /// Sort functions
 /////////////////////
@@ -1618,11 +1618,11 @@ function sortThemesList(sortKey) {
 
 function fillSplittedCurrentTermList(){
     // Split to be able to mark synonyms and multiword expressions in the text
-    splittedTerms = _.flatten(currentTermIds.map(termId => {
+    splittedTerms = new Set(_.flatten(currentTermIds.map(termId => {
 	return termId.split("/").map(term => {
 	    return term.trim().split("_").map(word => word.trim())
 	})
-    }))
+    })))
 }
 
 function onTermElementClick(){
@@ -2520,8 +2520,8 @@ function secondaryHighlightTermsInText(textElement){
         // Select the terms that are to be marked
         d3.select(textElement.get(0)).selectAll(".term-to-mark").each(function(d, i) {
                                                                             let foundterm = $(this).html().trim().toLowerCase();
-                                                                            if (splittedTerms.indexOf(foundterm) >= 0){
-                                                                            d3.select($(this).get(0)).classed("specifictermchosen", true);
+                                                                            if (splittedTerms.has(foundterm)) {
+                                                                                d3.select(this).classed("specifictermchosen", true);
                                                                             }});
     }
 }
