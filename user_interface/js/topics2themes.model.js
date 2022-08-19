@@ -371,6 +371,7 @@ async function modelInitializeData(modelId) {
 		};
             }
             modelTermsToTopics[topic_term.term].score_for_topics[topic.id] = topic_term.score;
+            maxTermScoreCache = undefined;
  	}
     
 	}
@@ -464,9 +465,17 @@ function getAdditionalLabelsForText(textId){
 ////
 // For getting the maximum score for the four categories (used for sorting)
 ////
+let maxTermScoreCache;
+
 function getMaxTermScore(){
-    let all_scores = _.flatten(_.map(modelTermsToTopics, (v, k) => _.values(v.score_for_topics)), 1);
-    return _.max(all_scores)
+    if (maxTermScoreCache === undefined) {
+        let all_scores = _.flatten(_.map(modelTermsToTopics, (v, k) => _.values(v.score_for_topics)), 1);
+        let max_score = _.max(all_scores)
+        maxTermScoreCache = max_score
+        return max_score
+    } else {
+        return maxTermScoreCache
+    }
 }
 
 // Get the maximum creation data
