@@ -1631,7 +1631,7 @@ function onTermElementClick(){
     
     toggleChosenElement(term.term, modelToggleTermElement);
     
-    if (currentTermIds.indexOf(term.term) > -1){ // if chosen
+    if (currentTermIds.has(term.term)) { // if chosen
         $(this).addClass(DIRECTCHOOSEN);
         setTimeout(() => highlightTermElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
@@ -1662,7 +1662,7 @@ function onTopicElementClick(event){
     let topic = d3.select($(this).get(0)).datum();
     toggleChosenElement(topic.id, modelToggleTopicElement);
 
-    if (currentTopicIds.indexOf(topic.id) > -1){ // if chosen
+    if (currentTopicIds.has(topic.id)) { // if chosen
         $(this).addClass(DIRECTCHOOSEN);
         setTimeout(() => highlightTopicElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
@@ -1696,7 +1696,7 @@ function onTextElementClick(event){
     
     // Sort other lists and render the links
     
-    if (currentTextIds.indexOf(text.id) > -1){ // if chosen
+    if (currentTextIds.has(text.id)) { // if chosen
         $(this).addClass(DIRECTCHOOSEN);
         setTimeout(() => highlightTextElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
@@ -1730,7 +1730,7 @@ function onThemeElementClick(event){
     let theme = d3.select($(this).get(0)).datum();
     toggleChosenElement(theme.id, modelToggleThemeElement);
     
-    if (currentThemeIds.indexOf(theme.id) > -1){ // if chosen
+    if (currentThemeIds.has(theme.id)) { // if chosen
         $(this).addClass(DIRECTCHOOSEN);
         setTimeout(() => highlightThemeElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     }
@@ -1967,11 +1967,11 @@ function onKeyDown(event) {
     const currentTime = Date.now();
 
     // only select a theme to attach to if a text is chosen
-    if (currentTextIds.length == 0){
+    if (currentTextIds.size == 0){
         return;
     }
     
-    if (currentTextIds.length > 1){
+    if (currentTextIds.size > 1){
         alert("Several texts are selected, you can only attach one text at a time to a theme");
         return;
     }          
@@ -1985,7 +1985,7 @@ function onKeyDown(event) {
     
     if (event.key === "Enter" && buffer.length > 0){
 	var keyselectedtheme = parseInt(buffer.join(''))
-	addTextThemeLinkAndUpdateInterface(currentTextIds[0], keyselectedtheme)
+	addTextThemeLinkAndUpdateInterface(currentTextIds.oneValue(), keyselectedtheme)
 	buffer = [];
 	return;
     }
@@ -2141,12 +2141,12 @@ function timing() {
 function doResetHighlightAfterStateChange(){
     console.log("doResetHighlightAfterStateChange", timing());
     // If a term is not selected
-    if (currentTermIds.length == 0){
+    if (currentTermIds.size == 0){
         sortTermsList(termSortMode);
     }
     
     // If a topic is not selected
-    if (currentTopicIds.length == 0 && currentTermIds.length == 0){
+    if (currentTopicIds.size == 0 && currentTermIds.size == 0){
         sortTopicsList(topicSortMode);
 	d3.selectAll(".term-to-mark").classed("specifictermchosen", true);
 	d3.selectAll(".term-to-mark").classed("termintextnotchosen", true);
@@ -2156,7 +2156,7 @@ function doResetHighlightAfterStateChange(){
 	for (const modelTopic of modelTopics) {
              let topic = modelTopic["id"];
              // If topic is selected
-             if (currentTopicIds.indexOf(topic) > -1){
+             if (currentTopicIds.has(topic)) {
 		 d3.selectAll('.topic_' + topic).classed("termintextnotchosen", false);
              }
              else{
@@ -2167,13 +2167,13 @@ function doResetHighlightAfterStateChange(){
     }
     
     // If a text is not selected
-    if (currentTextIds.length == 0){
+    if (currentTextIds.size == 0){
         sortTextsList(textSortMode);
     }
 
     (async () => {
 	// If a theme is not selected
-	if (currentThemeIds.length == 0){
+	if (currentThemeIds.size == 0) {
             await modelSortThemesWithMachineLearningIfTextChosen();
 	    sortThemesList(themeSortMode);
 	}
@@ -2204,19 +2204,19 @@ function resetPanelHeadings(){
 }
 
 function setPanelHeadings(){
-    if (currentTermIds.length > 0){
+    if (currentTermIds.size > 0) {
         d3.select("#termsContainer").select(".containerheader").classed("panel-heading-marked", true);
         d3.select("#termsContainer").classed("panel-marked", true);
     }
-    if (currentTopicIds.length > 0){
+    if (currentTopicIds.size > 0) {
         d3.select("#topicsContainer").select(".containerheader").classed("panel-heading-marked", true);
         d3.select("#topicsContainer").classed("panel-marked", true);
     }
-    if (currentTextIds.length > 0){
+    if (currentTextIds.size > 0) {
         d3.select("#textContainer").select(".containerheader").classed("panel-heading-marked", true);
         d3.select("#textContainer").classed("panel-marked", true);
     }
-    if (currentThemeIds.length > 0){
+    if (currentThemeIds.size > 0) {
         d3.select("#themesContainer").select(".containerheader").classed("panel-heading-marked", true);
         d3.select("#themesContainer").classed("panel-marked", true);
     }
@@ -2270,7 +2270,7 @@ function addChoiceBasedHighlight(){
     d3.select("#termsList").selectAll("li")
     .each(function(d, i){
           let element = $(this);
-          if (currentTermIds.indexOf(d.term) > -1){
+          if (currentTermIds.has(d.term)) {
             highlightTermElement(element, DIRECTCHOOSEN, CHOOSEN);
           }
           });
@@ -2280,7 +2280,7 @@ function addChoiceBasedHighlight(){
     d3.select("#topicsList").selectAll("li")
     .each(function(d, i){
           let element = $(this);
-          if (currentTopicIds.indexOf(d.id) > -1){
+          if (currentTopicIds.has(d.id)) {
             highlightTopicElement(element, DIRECTCHOOSEN, CHOOSEN);
           }
           });
@@ -2290,19 +2290,19 @@ function addChoiceBasedHighlight(){
     d3.select("#textsList").selectAll("li")
     .each(function(d, i){
           let element = $(this);
-          if (currentTextIds.indexOf(d.id) > -1){
+          if (currentTextIds.has(d.id)){
           highlightTextElement(element, DIRECTCHOOSEN, CHOOSEN);
           }
           });
     
     console.log("addChoiceBasedHighlight #themesList");
     d3.select("#themesList").selectAll("li")
-    .each(function(d, i){
-          let element = $(this);
-          if (currentThemeIds.indexOf(d.id) > -1){
-          highlightThemeElement(element, DIRECTCHOOSEN, CHOOSEN);
-          }
-          });
+        .each(function(d, i) {
+            let element = $(this);
+            if (currentThemeIds.has(d.id)) {
+                highlightThemeElement(element, DIRECTCHOOSEN, CHOOSEN);
+            }
+        });
 
     console.log("addChoiceBasedHighlight reset");
     resetAllArgumentMarkings();
@@ -2514,7 +2514,7 @@ function secondaryHighlightTermsInText(textElement){
     }*/
 
     // If terms are chosen, highlight these terms
-    if (currentTermIds.length > 0){
+    if (currentTermIds.size > 0){
         // Default is that nothing is marked
         //d3.select(textElement.get(0)).selectAll(".term-to-mark").classed("specifictermchosen", false);
         // Select the terms that are to be marked
@@ -2553,7 +2553,7 @@ function highlightThemeElement(themeElement, direct, indirect) {
 function secondaryHighlightTopics(associationMethod, highlightClass, key){
     d3.select("#topicsList").selectAll("li")
     .filter(function(d, i){
-            return associationMethod(key, d.id) && currentTopicIds.indexOf(d.id) == -1;
+            return associationMethod(key, d.id) && !currentTopicIds.has(d.id);
             })
     .classed(highlightClass, true);
 }
@@ -2563,7 +2563,7 @@ function secondaryHighlightTopics(associationMethod, highlightClass, key){
 function secondaryHighlightTerms(associationMethod, highlightClass, key){
     d3.select("#termsList").selectAll("li")
     .filter(function(d, i){
-            return associationMethod(d.term, key) && currentTermIds.indexOf(d.term) == -1;
+            return associationMethod(d.term, key) && !currentTermIds.has(d.term);
             })
     .classed(highlightClass, true);
     //.each(highlightTermToTopicLinks);
@@ -2572,17 +2572,17 @@ function secondaryHighlightTerms(associationMethod, highlightClass, key){
 }
 
 // note the different order of the arguments to the associationMethod compared to secondaryHighlightTopics
-function secondaryHighlightTexts(associationMethod, highlightClass, key){
+function secondaryHighlightTexts(associationMethod, highlightClass, key) {
     d3.select("#textsList").selectAll("li")
-    .filter(function(d, i){
-            return associationMethod(d.id, key) && currentTextIds.indexOf(d.id) == -1;
-            })
-    .classed(highlightClass, true)
-    .each(function(d, i){
-          if (highlightClass == CHOOSEN){
-              secondaryHighlightTermsInText($(this));
-        }
-          });
+        .filter(function(d, i) {
+            return associationMethod(d.id, key) && !currentTextIds.has(d.id);
+        })
+        .classed(highlightClass, true)
+        .each(function(d, i) {
+            if (highlightClass == CHOOSEN){
+                secondaryHighlightTermsInText($(this));
+            }
+        });
 }
 
 
@@ -2591,7 +2591,7 @@ function secondaryHighlightTexts(associationMethod, highlightClass, key){
 function secondaryHighlightThemes(associationMethod, highlightClass, key){
     d3.select("#themesList").selectAll("li")
     .filter(function(d, i){
-            return associationMethod(d.id, key) && currentThemeIds.indexOf(d.id) == -1;
+            return associationMethod(d.id, key) && !currentThemeIds.has(d.id);
             })
     .classed(highlightClass, true);
 }

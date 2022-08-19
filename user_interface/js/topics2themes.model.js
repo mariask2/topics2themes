@@ -67,13 +67,13 @@ var modelTopicNames;
 var modelUserTextLabels;
 
 // The terms that are selected
-var currentTermIds = [];
+var currentTermIds = new Set();
 // The topics that are selected
-var currentTopicIds = [];
+var currentTopicIds = new Set();
 // The documents that are selected
-var currentTextIds = [];
+var currentTextIds = new Set();
 // The themes that are selected
-var currentThemeIds = [];
+var currentThemeIds = new Set();
 
 // Used for sorting the themes that are not currently selected
 var modelMostRecentlyClickedText;
@@ -213,29 +213,28 @@ function resetUserAnalysisData(){
 }
 
 function modelResetClickedChoices(){
-    currentTermIds = [];
-    currentTopicIds = [];
-    currentTextIds = [];
-    currentThemeIds = [];
+    currentTermIds.clear();
+    currentTopicIds.clear();
+    currentTextIds.clear();
+    currentThemeIds.clear();
 }
 
 // Resets all list of selected items, except the argument (if such an argument is submitted)
 function resetSelectedDataExcept(notToReset){
-    if (notToReset != currentTermIds){
-        currentTermIds = [];
+    if (notToReset !== currentTermIds) {
+        currentTermIds.clear();
     }
     
-    if (notToReset != currentTopicIds){
-        currentTopicIds = [];
-
+    if (notToReset !== currentTopicIds) {
+        currentTopicIds.clear();
     }
     
-    if (notToReset != currentTextIds){
-        currentTextIds = [];
+    if (notToReset !== currentTextIds) {
+        currentTextIds.clear();
     }
     
-    if (notToReset != currentThemeIds){
-        currentThemeIds = [];
+    if (notToReset !== currentThemeIds) {
+        currentThemeIds.clear();
     }
 }
 
@@ -577,13 +576,13 @@ async function removeTextThemeLink(themeId, textId){
 
 function modelSetMostRecentlyClickedForThemeRanking(textId){
     // TODO: Chosing not to sort after it already has been sorted doesn't seem to work
-    if (currentTextIds.indexOf(textId) == -1 || modelCurrentAnalysisVersionId == null || !doThemesSorting){
+    if (!currentTextIds.has(textId) || modelCurrentAnalysisVersionId == null || !doThemesSorting) {
         // Then it was an unclick a previously selected text
-        if (currentTextIds.length == 0){
+        if (currentTextIds.size == 0){
             // If no more documents are selected, reset the machine learning based theme sorting
             modelResetRecentlyClickedForMachineLearningSorting();
         }
-        if (!doThemesSorting && currentTextIds.indexOf(textId) != -1){
+        if (!doThemesSorting && currentTextIds.has(textId)) {
             modelMostRecentlyClickedText = textId; // Save to use for later if doThemesSorting would be enabled
         }
         
@@ -704,7 +703,7 @@ function calculateTextThemesScore(textElements) {
 
 	    for (const topic of modelTopics){
 		if (isAssociatedTextTopic(d.id, topic.id)){
-				if (currentTopicIds.indexOf(topic.id) > -1){
+				if (currentTopicIds.has(topic.id)) {
 					isSelected = true;
 				}
 			}
@@ -712,7 +711,7 @@ function calculateTextThemesScore(textElements) {
 
 		for (const term of modelTerms){
 			if (isAssociatedTextTerm(d.id, term.term)){
-				if (currentTermIds.indexOf(term.term) > -1){
+				if (currentTermIds.has(term.term)) {
 					isSelected = true;
 				}
 			}
@@ -720,7 +719,7 @@ function calculateTextThemesScore(textElements) {
 
 		for (const theme of modelThemes){
 			if (isAssociatedTextTheme(d.id, theme.id)){
-				if (currentThemeIds.indexOf(theme.id) > -1){
+				if (currentThemeIds.has(theme.id)) {
 					isSelected = true;
 				}
 			}
@@ -748,7 +747,7 @@ function getLabelForSort(textElements) {
 
 	    for (const topic of modelTopics){
 		if (isAssociatedTextTopic(d.id, topic.id)){
-				if (currentTopicIds.indexOf(topic.id) > -1){
+				if (currentTopicIds.has(topic.id)) {
 					isSelected = true;
 				}
 			}
@@ -756,7 +755,7 @@ function getLabelForSort(textElements) {
 
 		for (const term of modelTerms){
 			if (isAssociatedTextTerm(d.id, term.term)){
-				if (currentTermIds.indexOf(term.term) > -1){
+				if (currentTermIds.has(term.term)) {
 					isSelected = true;
 				}
 			}
@@ -764,7 +763,7 @@ function getLabelForSort(textElements) {
 
 		for (const theme of modelThemes){
 			if (isAssociatedTextTheme(d.id, theme.id)){
-				if (currentThemeIds.indexOf(theme.id) > -1){
+				if (currentThemeIds.has(theme.id)) {
 					isSelected = true;
 				}
 			}
@@ -1129,7 +1128,7 @@ function calculateTermsTopicsNumber(termElements) {
 
 		for (const topic of modelTopics){
 			if (isAssociatedTermTopic(d.term, topic.id)){
-				if (currentTopicIds.indexOf(topic.id) > -1){
+				if (currentTopicIds.has(topic.id)) {
 					isSelected = true;
 				}
 			}
@@ -1137,7 +1136,7 @@ function calculateTermsTopicsNumber(termElements) {
 
 		for (const text of modelDocuments){
 			if (isAssociatedTextTerm(text.id, d.term)){
-				if (currentTextIds.indexOf(text.id) > -1){
+				if (currentTextIds.has(text.id)) {
 					isSelected = true;
 				}
 			}
@@ -1145,7 +1144,7 @@ function calculateTermsTopicsNumber(termElements) {
 
 		for (const theme of modelThemes){
 			if (isAssociatedThemeTerm(theme.id, d.term)){
-				if (currentThemeIds.indexOf(theme.id) > -1){
+				if (currentThemeIds.has(theme.id)) {
 					isSelected = true;
 				}
 			}
@@ -1190,7 +1189,7 @@ function calculateTermsDocsNumber(termElements) {
 
 		for (const topic of modelTopics){
 			if (isAssociatedTermTopic(d.term, topic.id)){
-				if (currentTopicIds.indexOf(topic.id) > -1){
+				if (currentTopicIds.has(topic.id)) {
 					isSelected = true;
 				}
 			}
@@ -1198,7 +1197,7 @@ function calculateTermsDocsNumber(termElements) {
 
 		for (const text of modelDocuments){
 			if (isAssociatedTextTerm(text.id, d.term)){
-				if (currentTextIds.indexOf(text.id) > -1){
+				if (currentTextIds.has(text.id)) {
 					isSelected = true;
 				}
 			}
@@ -1206,7 +1205,7 @@ function calculateTermsDocsNumber(termElements) {
 
 		for (const theme of modelThemes){
 			if (isAssociatedThemeTerm(theme.id, d.term)){
-				if (currentThemeIds.indexOf(theme.id) > -1){
+				if (currentThemeIds.has(theme.id)) {
 					isSelected = true;
 				}
 			}
@@ -1244,7 +1243,7 @@ function getTermStrings(termElements) {
 
 		for (const topic of modelTopics){
 			if (isAssociatedTermTopic(d.term, topic.id)){
-				if (currentTopicIds.indexOf(topic.id) > -1){
+				if (currentTopicIds.has(topic.id)) {
 					isSelected = true;
 				}
 			}
@@ -1252,7 +1251,7 @@ function getTermStrings(termElements) {
 
 		for (const text of modelDocuments){
 			if (isAssociatedTextTerm(text.id, d.term)){
-				if (currentTextIds.indexOf(text.id) > -1){
+				if (currentTextIds.has(text.id)) {
 					isSelected = true;
 				}
 			}
@@ -1260,7 +1259,7 @@ function getTermStrings(termElements) {
 
 		for (const theme of modelThemes){
 			if (isAssociatedThemeTerm(theme.id, d.term)){
-				if (currentThemeIds.indexOf(theme.id) > -1){
+				if (currentThemeIds.has(theme.id)) {
 					isSelected = true;
 				}
 			}
@@ -1380,12 +1379,12 @@ function modelToggleTopicElement(topicId){
 
 function modelToggleTextElement(textId){
     let wasChosenBefore = false;
-    if (currentTextIds.indexOf(textId) > -1) {
+    if (currentTextIds.has(textId)) {
 	wasChosenBefore = true;
     }
     resetSelectedDataExcept();
     if (!wasChosenBefore){
-	currentTextIds.push(textId);
+	currentTextIds.add(textId);
     }
     
 	//    resetSelectedDataExcept(currentTextIds);
@@ -1397,14 +1396,13 @@ function modelToggleThemeElement(themeId){
     toggleSelectedElements(themeId, currentThemeIds);
 }
 
-// Help function for adding and removing selected elements
-function toggleSelectedElements(element, list){
-    if (list.indexOf(element) > -1) {
-        list.splice(list.indexOf(element), 1);
+function toggleSelectedElements(element, set){
+    if (set.has(element)) {
+	set.delete(element)
         return false;
     }
     else{
-        list.push(element);
+	set.add(element)
         return true;
     }
 }
