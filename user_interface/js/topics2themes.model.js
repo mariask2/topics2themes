@@ -697,34 +697,15 @@ function calculateTextThemesScore(textElements) {
 	   
 	    // The flag below is used to sort the selected elements separately
 	    // to ensure proper sorting for all sorting modes (desc/asc)
-	    let isSelected = false;
 
-	    for (const topic of modelTopics){
-		if (isAssociatedTextTopic(d.id, topic.id)){
-				if (currentTopicIds.has(topic.id)) {
-					isSelected = true;
-				}
-			}
-		}
+            let isRelatedTopicSelected = modelTopics.some(topic => isAssociatedTextTopic(d.id, topic.id) && currentTopicIds.has(topic.id));
 
-		for (const term of modelTerms){
-			if (isAssociatedTextTerm(d.id, term.term)){
-				if (currentTermIds.has(term.term)) {
-					isSelected = true;
-				}
-			}
-		}
+            let isRelatedTermSelected = modelTerms.some(term => isAssociatedTextTerm(d.id, term.term) && currentTermIds.has(term.term));
 
-		for (const theme of modelThemes){
-			if (isAssociatedTextTheme(d.id, theme.id)){
-				if (currentThemeIds.has(theme.id)) {
-					isSelected = true;
-				}
-			}
-		}
-				
+            let isRelatedThemeSelected = modelThemes.some(theme => isAssociatedTextTheme(d.id, theme.id) && currentThemeIds.has(theme.id));
+
 		// Prepare the resulting element
-		return { index: i, element: element, value: number, isSelected: isSelected};
+		return { index: i, element: element, value: number, isSelected: isRelatedTopicSelected || isRelatedTermSelected || isRelatedThemeSelected };
 	});
 }
 
