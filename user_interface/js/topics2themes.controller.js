@@ -982,7 +982,7 @@ function renderTermToTopicLinks() {
     let rightPosCache = new Cache();
 
     let {termsList, topicsList} = linksCache.get("termToTopic", () => ({
-	termsList: getDisplayedElements("#termsList", (d) => d.term in modelTermsToTopics),
+	termsList: getDisplayedElements("#termsList", (d) => modelTermsToTopics.has(d.term)),
 	topicsList: getDisplayedElements("#topicsList")
     }))
     
@@ -991,11 +991,11 @@ function renderTermToTopicLinks() {
 
     for (const term of termsList) {
 	for (const topic of topicsList) {
-	    if (!(topic.d.id in modelTermsToTopics[term.d.term].score_for_topics)) {
+	    if (!(topic.d.id in modelTermsToTopics.get(term.d.term).score_for_topics)) {
 		continue;
 	    }
 
-	    let termScore = modelTermsToTopics[term.d.term].score_for_topics[topic.d.id]
+	    let termScore = modelTermsToTopics.get(term.d.term).score_for_topics[topic.d.id]
 	    let text = "Topic #" + topic.d.id + "\n" + "Term: " + term.d.term + "\n" + "Score: " + termScore
 	    linkData.push({
 		termScore,

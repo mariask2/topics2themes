@@ -188,7 +188,7 @@ function resetAnalysisChoiceData(){
 function resetModelData(){
     jsonData = [];
     modelTerms = [];
-    modelTermsToTopics = {};
+    modelTermsToTopics = new Map();
     modelTermsToDocuments = {};
     modelTopicsToDocuments = {};
     modelTopics = [];
@@ -355,30 +355,28 @@ async function modelInitializeData(modelId) {
     // Terms have to be constructed from topics
     // At the same time, the reverse mapping from terms to topics should be established
     for (const topic of topics) {
-
         modelTopics.push({"id" : topic.id, "defaultlabel" : topic.label})
-	
+
         if (topic.topic_terms == undefined){
             alert("Terms missing for topic number  " +  topic.id);
-			continue;
+                        continue;
         }
 
         for (const topic_term of topic.topic_terms) {
-	    if (modelTermsToTopics[topic_term.term] == undefined) {
-		modelTermsToTopics[topic_term.term] = {
-		    "term": topic_term.term,
+            if (!modelTermsToTopics.has(topic_term.term)) {
+                modelTermsToTopics.set(topic_term.term, {
+                    "term": topic_term.term,
                     "score_for_topics": {}
-		};
+                });
             }
-            modelTermsToTopics[topic_term.term].score_for_topics[topic.id] = topic_term.score;
+            modelTermsToTopics.get(topic_term.term).score_for_topics[topic.id] = topic_term.score;
             maxTermScoreCache = undefined;
- 	}
-    
-	}
-    
-	// Extract the array of values from the dictionary
-	modelTerms = Object.values(modelTermsToTopics);
-    
+        }
+    }
+
+    // Extract the array of values from the dictionary
+    modelTerms = Array.from(modelTermsToTopics.values());
+
 	// Establish the reverse mappings from topics to documents and terms to documents
 	modelTopicsToDocuments = {};
 	modelTermsToDocuments = {};
@@ -432,7 +430,7 @@ async function modelInitializeData(modelId) {
 
 
 function getScoreForTermTopic(term, topicId){
-    return modelTermsToTopics[term].score_for_topics[topicId];
+    return modelTermsToTopics.get(term).score_for_topics[topicId];
 }
 
 // TODO: Implement this as a dictionary instead. If the list of text gets long, this might be slow?
@@ -466,7 +464,7 @@ let maxTermScoreCache;
 
 function getMaxTermScore(){
     if (maxTermScoreCache === undefined) {
-        let all_scores = _.flatten(_.map(modelTermsToTopics, (v, k) => _.values(v.score_for_topics)), 1);
+        let all_scores = _.flatten(modelTermsToTopics.map(([k, v]) => _.values(v.score_for_topics)), 1);
         let max_score = _.max(all_scores)
         maxTermScoreCache = max_score
         return max_score
@@ -483,19 +481,12 @@ function getMaxThemeScore(){
 }
 
 function getMaxTopicScore(){
-    let all_scores = [];
-    for (const topic of modelTopics){
-        let topicId = topic.id
-        let tot_score = 0
     // Let the score of a topic be the total score for the terms that belong to it
     // TODO: This code is duplicated, make a function
-        $.each(modelTermsToTopics, function(k, v){
-            tot_score = tot_score + (v.score_for_topics[topicId] || 0)
-        });
-        all_scores = all_scores.concat(tot_score)
-    }
-    return _.max(all_scores)
-
+    let all_scores = modelTopics.map(topic =>
+                                     sum(modelTermsToTopics.map(([k, v]) =>
+                                                                v.score_for_topics[topic.id] || 0)))
+    return _.max(_.flatten(all_scores, 1))
 }
 
 function getMaxDocumentScore(){
@@ -1033,8 +1024,8 @@ function calculateTermsTopicsNumber(termElements) {
 
         // Calculate the number
         let number = 0;
-        if (d.term in modelTermsToTopics) {
-            number = _.size(modelTermsToTopics[d.term].score_for_topics);
+        if (modelTermsToTopics.has(d.term)) {
+            number = _.size(modelTermsToTopics.get(d.term).score_for_topics);
         }
 
         // TODO: instead of simply using the count of topics,
@@ -1141,8 +1132,8 @@ function sortTermsAlphaAsc(termElements) {
 //////
 
 function isAssociatedTermTopic(term, topicId){
-    return (term in modelTermsToTopics
-            && topicId in modelTermsToTopics[term].score_for_topics);
+    return (modelTermsToTopics.has(term)
+            && topicId in modelTermsToTopics.get(term).score_for_topics);
 }
 
 function isAssociatedTextTopic(textId, topicId){
