@@ -192,7 +192,7 @@ function resetModelData(){
     modelTermsToDocuments = new Map();
     modelTopicsToDocuments = new Map();
     modelTopics = [];
-    modelDocuments = [];
+    modelDocuments = new Map();
     modelLabelCategories = [];
     modelCategoryToColor = {};
     resetSelectedDataExcept();
@@ -395,7 +395,7 @@ async function modelInitializeData(modelId) {
         if doc.marked_text_tok.length > 100:
             snippetVersion = doc.marked_text_tok.substring()
             */
-            modelDocuments.push({"id" : doc.id, "text" : doc.text, "label": doc.label, "marked_text_tok": doc.marked_text_tok, "additional_labels" : doc.additional_labels, "snippet": snippet, "base_name" : doc.base_name})
+            modelDocuments.set(doc.id, {"id" : doc.id, "text" : doc.text, "label": doc.label, "marked_text_tok": doc.marked_text_tok, "additional_labels" : doc.additional_labels, "snippet": snippet, "base_name" : doc.base_name})
 		
 		if (doc.document_topics == undefined)
 			continue;
@@ -425,28 +425,20 @@ function getScoreForTermTopic(term, topicId){
     return modelTermsToTopics.get(term).score_for_topics[topicId];
 }
 
-// TODO: Implement this as a dictionary instead. If the list of text gets long, this might be slow?
 function getLabelForText(textId){
-    for (const modelDocument of modelDocuments){
-        if (modelDocument.id == textId){
-            let label = modelGetTextLabelForId(modelDocument.id);
-            if (label == undefined){ // No user label, use automatic label
-                label = modelDocument.label;
-            }
-            return label;
-        }
+    let modelDocument = modelDocuments.get(textId)
+    if (modelDocument === undefined) {
+        return undefined
     }
-    return undefined;
+    return modelGetTextLabelForId(modelDocument.id) ?? modelDocument.label
 }
 
-// TODO: Implement this as a dictionary instead. If the list of text gets long, this might be slow?
 function getAdditionalLabelsForText(textId){
-    for (const modelDocument of modelDocuments){
-        if (modelDocument.id == textId){
-            return modelDocument.additional_labels.sort();
-        }
+    let modelDocument = modelDocuments.get(textId)
+    if (modelDocument === undefined) {
+        return undefined
     }
-    return undefined;
+    return modelDocument.additional_labels.sort();
 }
 
 ////
@@ -1002,7 +994,7 @@ function isAssociatedSelectedForTerm(term) {
     let isSelected = false
 
     let isRelatedTopicSelected = modelTopics.some(topic => isAssociatedTermTopic(term, topic.id) && currentTopicIds.has(topic.id))
-    let isRelatedTextSelected = modelDocuments.some(text => isAssociatedTextTerm(text.id, term) && currentTextIds.has(text.id))
+    let isRelatedTextSelected = modelDocuments.some(([textId, text]) => isAssociatedTextTerm(text.id, term) && currentTextIds.has(text.id))
     let isRelatedThemeSelected = modelThemes.some(theme => isAssociatedThemeTerm(theme.id, term) && currentThemeIds.has(theme.id))
 
     return isRelatedTopicSelected || isRelatedTextSelected || isRelatedThemeSelected

@@ -627,7 +627,7 @@ function controllerDoPopulateInterface() {
 function controllerDoPopulateTextElements(){
     $("#textsList").empty();
     let textElementSelection = d3.select("#textsList").selectAll("li")
-	.data(modelDocuments)
+	.data(Array.from(modelDocuments.values()))
 	.enter()
 	.append("li");
     //.attr("draggable", true)
