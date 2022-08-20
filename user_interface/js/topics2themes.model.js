@@ -204,7 +204,7 @@ function resetModelData(){
 function resetUserAnalysisData(){
     modelThemes = [];
     modelThemesToTexts = new Map();
-    modelTextsToThemes = {};
+    modelTextsToThemes = new Map();
     modelTopicNames = {};
     modelUserTextLabels = {};
     
@@ -488,13 +488,10 @@ function modelAddTextThemeLink(themeId, textId){
 
     modelThemesToTexts.get(themeId).texts.add(textId)
 
-    if (!(textId in modelTextsToThemes)){
-	// For storing connections between texts and themes
-	modelTextsToThemes[textId] = {"themes" : new Set()};
-    }
+    modelTextsToThemes
+        .setdefault(textId, {"themes" : new Set()})
+        .themes.add(themeId)
 
-    modelTextsToThemes[textId].themes.add(themeId);
-    
     let addTextThemeLinkUrl = "add_theme_document_connection";
     let data = {"theme_number" :themeId,
         "document_id":textId, "analysis_id": modelCurrentAnalysisVersionId};
@@ -531,7 +528,7 @@ function removeTheme(themeId){
 async function removeTextThemeLink(themeId, textId){
     modelThemesToTexts.get(themeId).texts.delete(textId);
     
-    modelTextsToThemes[textId].themes.delete(themeId);
+    modelTextsToThemes.get(textId).themes.delete(themeId);
 
     await deleteDatabaseTextThemeLink(themeId, textId);
 }
@@ -652,7 +649,7 @@ function isAssociatedSelectedForText(textId) {
 function calculateTextThemesScore(textElements) {
     return $.map(textElements, function(element, i){
         let d = d3.select(element).datum();
-        let number = modelTextsToThemes[d.id]?.themes.size ?? 0;
+        let number = modelTextsToThemes.get(d.id)?.themes.size ?? 0;
 
         // The flag below is used to sort the selected elements separately
         // to ensure proper sorting for all sorting modes (desc/asc)
@@ -1287,11 +1284,9 @@ async function getSavedThemes(){
             modelThemesToTexts.get(themeId).texts.add(textId)
 
 	    // Also store the reverse connection
-	    if (!(textId in modelTextsToThemes)) {
-		modelTextsToThemes[textId] = {"themes" : new Set()};
-	    }
-
-	    modelTextsToThemes[textId].themes.add(themeId)
+	    modelTextsToThemes
+                .setdefault(textId, {"themes" : new Set()})
+	        .themes.add(themeId)
         }
     }
 }
