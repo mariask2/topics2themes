@@ -742,12 +742,6 @@ function calculateTopicScore(topicElements) {
     return $.map(topicElements, function(element, i){
                  let d = d3.select(element).datum();
 
-                // The flag below is used to sort the selected elements separately
-         	// to ensure proper sorting for all sorting modes (desc/asc)
-                 let isSelected = false;
- 
-
-         		
                  
                  // TODO: Enable a sorting based on total term score as well
                 // Code for computing the total term score for a topic
@@ -783,42 +777,21 @@ function calculateTopicScore(topicElements) {
                  // Let the score of a topic be the mean score for the texts that
                  // belong to it
                  
-                 // Compute the means score among the associated text
-                 let textScores = [];
-                 $.each(modelTopicsToDocuments, function(k, v){
-                        let document_index = v.documents_index[d.id];
-                        if (document_index !== undefined) {
-                            textScores.push(v.topic_confidences[document_index]);
-                        }
-                });
-                let totTextScore = 0;
-                for (const textScore of textScores){
-                    totTextScore = totTextScore + textScore;
-                }
-                let finalTextScore = totTextScore/textScores.length;
-                 
-                // Check if term is selected
-                for (const term of currentTermIds){
+        // Compute the means score among the associated text
+        let associations = Object.values(modelTopicsToDocuments).filter(v => d.id in v.documents_index)
+        let textScores = associations.map(v => v.topic_confidences[v.documents_index[d.id]])
+        let totTextScore = sum(textScores);
+        let finalTextScore = totTextScore/textScores.length;
+
         
-                    if (isAssociatedTermTopic(term, d.id)){
-                            isSelected = true;
-                    }
-                 }
+        let isRelatedTermSelected = currentTermIds.some(term => isAssociatedTermTopic(term, d.id))
                  
-                 for (const text of currentTextIds){
-                    if (isAssociatedTextTopic(text, d.id)){
-                        isSelected = true;
-                 }}
+        let isRelatedTextSelected = currentTextIds.some(text => isAssociatedTextTopic(text, d.id))
    
-                 for (const theme of currentThemeIds){
-                 
-                    if (isAssociatedThemeTopic(theme, d.id)){
-                        isSelected = true;
-                 }}
-                 
+        let isRelatedThemeSelected = currentThemeIds.some(theme => isAssociatedThemeTopic(theme, d.id))
                 
-                 return { index: i, element: element, value: finalTextScore, isSelected: isSelected};
-       });
+        return { index: i, element: element, value: finalTextScore, isSelected: isRelatedTermSelected || isRelatedTextSelected || isRelatedThemeSelected};
+    });
     
 }
 
