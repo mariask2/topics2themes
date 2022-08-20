@@ -422,11 +422,11 @@ async function modelInitializeData(modelId) {
 			for (const doc_term of doc_topic.terms_in_topic) {
 				if (modelTermsToDocuments[doc_term.term] == undefined) {
 					modelTermsToDocuments[doc_term.term] = {
-						"term": doc_term,
-						"documents": []
+					    "term": doc_term,
+					    "documents": new Set()
 					};
 				}
-				modelTermsToDocuments[doc_term.term].documents.push(doc.id)
+				modelTermsToDocuments[doc_term.term].documents.add(doc.id)
 			}
 		}
 	}
@@ -1113,7 +1113,7 @@ function calculateTermsDocsNumber(termElements) {
 		// Calculate the number
 		let number = 0;
 		if (d.term in modelTermsToDocuments) {
-			number = modelTermsToDocuments[d.term].documents.length;
+			number = modelTermsToDocuments[d.term].documents.size;
 		}
 		
 		// The flag below is used to sort the selected elements separately
@@ -1227,44 +1227,35 @@ function sortTermsAlphaAsc(termElements) {
 //////
 
 function isAssociatedTermTopic(term, topicId){
-    return (modelTermsToTopics[term] != undefined
+    return (term in modelTermsToTopics
             && topicId in modelTermsToTopics[term].score_for_topics);
 }
 
 function isAssociatedTextTopic(textId, topicId){
-    return (modelTopicsToDocuments[topicId] != undefined
-            && modelTopicsToDocuments[topicId].documents_index[textId] !== undefined);
+    return (topicId in modelTopicsToDocuments
+            && textId in modelTopicsToDocuments[topicId].documents_index);
 }
 
 
 function isAssociatedThemeTopic(themeId, topicId){
-    if (modelTopicsToDocuments[topicId] == undefined || modelThemesToTexts[themeId] == undefined){
+    if (!(topicId in modelTopicsToDocuments) || !(themeId in modelThemesToTexts)) {
         return false;
     }
     let themeTexts = modelThemesToTexts[themeId].texts;
     
     let modelTexts = modelTopicsToDocuments[topicId].documents;
-    for (const text of modelTexts){
-        if (themeTexts.has(text)) {
-            return true;
-        }
-    }
-    return false;
+
+    return modelTexts.some(text => themeTexts.has(text))
 }
 
 function isAssociatedThemeTerm(themeId, term){
-    if (modelThemesToTexts[themeId] == undefined){
+    if (!(themeId in modelThemesToTexts)) {
         return false;
     }
 
     let themeTexts = modelThemesToTexts[themeId].texts;
-    
-    for (const loopTextId of themeTexts){
-        if (isAssociatedTextTerm(loopTextId, term)) {
-            return true;
-        }
-    }
-    return false;
+
+    return themeTexts.some(textId => isAssociatedTextTerm(textId, term))
 }
 
 // Same as above, just to simpyfy the controller code
@@ -1273,10 +1264,8 @@ function isAssociatedTermTheme(term, themeId){
 }
 
 function isAssociatedTextTheme(textId, themeId){
-    let associated = modelThemesToTexts[themeId] != undefined
+    return themeId in modelThemesToTexts
 	&& modelThemesToTexts[themeId].texts.has(textId);
-
-    return associated;
 }
 
 // Same as above, just to simpyfy the controller code
@@ -1286,8 +1275,8 @@ function isAssociatedThemeText(themeId, textId){
 
 function isAssociatedTextTerm(textId, term)
 {
-    return (modelTermsToDocuments[term] != undefined
-            && modelTermsToDocuments[term].documents.indexOf(textId) > -1);
+    return term in modelTermsToDocuments
+        && modelTermsToDocuments[term].documents.has(textId);
 }
 
 // Same as above, just to simpyfy the controller code
