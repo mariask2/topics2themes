@@ -651,11 +651,8 @@ function isAssociatedSelectedForText(textId) {
 
 function calculateTextThemesScore(textElements) {
     return $.map(textElements, function(element, i){
-        let number = 0;
         let d = d3.select(element).datum();
-        if (d.id in modelTextsToThemes) {
-            number = modelTextsToThemes[d.id].themes.size;
-        }
+        let number = modelTextsToThemes[d.id]?.themes.size ?? 0;
 
         // The flag below is used to sort the selected elements separately
         // to ensure proper sorting for all sorting modes (desc/asc)
@@ -671,11 +668,7 @@ function getLabelForSort(textElements) {
     return $.map(textElements, function(element, i){
 
         let d = d3.select(element).datum();
-        let label = d.label;
-
-        if (d.id in modelUserTextLabels){
-            label = modelUserTextLabels[d.id]
-        }
+        let label = modelUserTextLabels[d.id] ?? d.label
 
         // The flag below is used to sort the selected elements separately
         // to ensure proper sorting for all sorting modes (desc/asc)
@@ -1109,13 +1102,11 @@ function sortTermsAlphaAsc(termElements) {
 //////
 
 function isAssociatedTermTopic(term, topicId){
-    return (modelTermsToTopics.has(term)
-            && topicId in modelTermsToTopics.get(term).score_for_topics);
+    return topicId in modelTermsToTopics.get(term)?.score_for_topics ?? false;
 }
 
 function isAssociatedTextTopic(textId, topicId){
-    return (modelTopicsToDocuments.has(topicId)
-            && modelTopicsToDocuments.get(topicId).documents.has(textId));
+    return modelTopicsToDocuments.get(topicId)?.documents.has(textId) ?? false;
 }
 
 
@@ -1301,9 +1292,7 @@ async function getSavedThemes(){
     
         for (const textIdString of theme.document_ids){
             let textId = parseInt(textIdString)
-            if (!(modelThemesToTexts.get(themeId).texts.has(textId))) {
-                modelThemesToTexts.get(themeId).texts.add(textId)
-            }
+            modelThemesToTexts.get(themeId).texts.add(textId)
 
 	    // Also store the reverse connection
 	    if (!(textId in modelTextsToThemes)) {
