@@ -993,10 +993,7 @@ function calculateTermsTopicsNumber(termElements) {
         let d = d3.select(element).datum();
 
         // Calculate the number
-        let number = 0;
-        if (modelTermsToTopics.has(d.term)) {
-            number = _.size(modelTermsToTopics.get(d.term).score_for_topics);
-        }
+        let number = _.size(modelTermsToTopics.get(d.term)?.score_for_topics ?? {})
 
         // TODO: instead of simply using the count of topics,
         // check if the topics are filtered out, if this is necessary
@@ -1034,10 +1031,7 @@ function calculateTermsDocsNumber(termElements) {
         let d = d3.select(element).datum();
 
         // Calculate the number
-        let number = 0;
-        if (modelTermsToDocuments.has(d.term)) {
-            number = modelTermsToDocuments.get(d.term).documents.size;
-        }
+        let number = modelTermsToDocuments.get(d.term)?.documents.size ?? 0;
 
         // The flag below is used to sort the selected elements separately
         // to ensure proper sorting for all sorting modes (desc/asc)
@@ -1137,8 +1131,7 @@ function isAssociatedTermTheme(term, themeId){
 }
 
 function isAssociatedTextTheme(textId, themeId) {
-    return modelThemesToTexts.has(themeId)
-        && modelThemesToTexts.get(themeId).texts.has(textId);
+    return modelThemesToTexts.get(themeId)?.texts.has(textId) ?? false;
 }
 
 // Same as above, just to simpyfy the controller code
@@ -1148,8 +1141,7 @@ function isAssociatedThemeText(themeId, textId) {
 
 function isAssociatedTextTerm(textId, term)
 {
-    return modelTermsToDocuments.has(term)
-        && modelTermsToDocuments.get(term).documents.has(textId);
+    return modelTermsToDocuments.get(term)?.documents.has(textId) ?? false;
 }
 
 // Same as above, just to simpyfy the controller code
