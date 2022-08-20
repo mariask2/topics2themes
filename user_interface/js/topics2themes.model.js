@@ -409,15 +409,12 @@ async function modelInitializeData(modelId) {
 		    if (modelTopicsToDocuments[doc_topic.topic_index] == undefined) {
 			modelTopicsToDocuments[doc_topic.topic_index] = {
 			    "topic": doc_topic.topic_index,
-			    "documents": [],
-			    "documents_index": [],
-			    "topic_confidences" : []
+			    "documents": new Set(),
+			    "topic_confidences" : new Map()
 			};
 		    }
-		    modelTopicsToDocuments[doc_topic.topic_index].documents.push(doc.id);
-		    modelTopicsToDocuments[doc_topic.topic_index].documents_index[doc.id] = modelTopicsToDocuments[doc_topic.topic_index].documents.length - 1;
-
-		    modelTopicsToDocuments[doc_topic.topic_index].topic_confidences.push(doc_topic.topic_confidence);
+		    modelTopicsToDocuments[doc_topic.topic_index].documents.add(doc.id);
+		    modelTopicsToDocuments[doc_topic.topic_index].topic_confidences.set(doc.id, doc_topic.topic_confidence)
 			
 			for (const doc_term of doc_topic.terms_in_topic) {
 				if (modelTermsToDocuments[doc_term.term] == undefined) {
@@ -502,7 +499,7 @@ function getMaxTopicScore(){
 }
 
 function getMaxDocumentScore(){
-    return _.max(_.map(modelTopicsToDocuments, (v, k) => _.max(v.topic_confidences)));
+    return _.max(_.map(modelTopicsToDocuments, (v, k) => _.max(Array.from(v.topic_confidences.values()))));
 }
 
 
@@ -652,25 +649,16 @@ function calculateTextScore(textElements) {
 	let isRelatedTopicSelected = currentAssociatedTextTopics.length > 0;
 
 	if (isRelatedTopicSelected) {
-	    let accScore = sum(currentAssociatedTextTopics.map(currentTopicId => {
-                // TODO: Strange structure in modelTopicsToDocuments makes this code a bit strange, should restructure
-                let textIndexIn_ModelTopicsToDocuments = modelTopicsToDocuments[currentTopicId].documents_index[d.id];
-                let topicConfidence = modelTopicsToDocuments[currentTopicId].topic_confidences[textIndexIn_ModelTopicsToDocuments];
-                return topicConfidence;
-	    }))
+	    let accScore = sum(currentAssociatedTextTopics.map(currentTopicId => modelTopicsToDocuments[currentTopicId].topic_confidences.get(d.id)))
             return { index: i, element: element, value: accScore, isSelected: isRelatedTopicSelected, secondaryValue: -1*d.text.length};
 	}
 	let isSelected = false;
 	let associatedTextTopics = modelTopics.filter(topic => isAssociatedTextTopic(d.id, topic.id));
-        let scores = associatedTextTopics.map(topic => {
-                // This is the standard score to give to the term, an
-                // accumulation of each topic it
-                // is associated to, if no topic is chosen
-                // TODO: Strange structure in modelTopicsToDocuments makes this code a bit strange, should restructure
-                let textIndexIn_ModelTopicsToDocuments = modelTopicsToDocuments[topic.id].documents_index[d.id];
-                let topicConfidence = modelTopicsToDocuments[topic.id].topic_confidences[textIndexIn_ModelTopicsToDocuments];
-            return topicConfidence
-        })
+
+        // This is the standard score to give to the term, an
+        // accumulation of each topic it
+        // is associated to, if no topic is chosen
+        let scores = associatedTextTopics.map(topic => modelTopicsToDocuments[topic.id].topic_confidences.get(d.id))
 
         // When no topic is chosen, use the mean strength for the topics
         let accScore = sum(scores) / scores.length;
@@ -778,8 +766,8 @@ function calculateTopicScore(topicElements) {
                  // belong to it
                  
         // Compute the means score among the associated text
-        let associations = Object.values(modelTopicsToDocuments).filter(v => d.id in v.documents_index)
-        let textScores = associations.map(v => v.topic_confidences[v.documents_index[d.id]])
+        let associations = Object.values(modelTopicsToDocuments).filter(v => v.documents.has(d.id))
+        let textScores = associations.map(v => v.topic_confidences.get(d.id))
         let totTextScore = sum(textScores);
         let finalTextScore = totTextScore/textScores.length;
 
@@ -1233,7 +1221,7 @@ function isAssociatedTermTopic(term, topicId){
 
 function isAssociatedTextTopic(textId, topicId){
     return (topicId in modelTopicsToDocuments
-            && textId in modelTopicsToDocuments[topicId].documents_index);
+            && modelTopicsToDocuments[topicId].documents.has(textId));
 }
 
 

@@ -1067,14 +1067,14 @@ function renderTopicToTextLinks() {
     let linkData = []
 
     for (const topic of topicsList) {
-        let relevantDocumentsIndex = modelTopicsToDocuments[topic.d.id].documents_index;
+        let relevantDocuments = modelTopicsToDocuments[topic.d.id].documents;
 
 	for (const text of textsList) {
-	    if (!(text.d.id in relevantDocumentsIndex)) {
+	    if (!(relevantDocuments.has(text.d.id))) {
 		continue;
 	    }
 
-	    var strokeScore = modelTopicsToDocuments[topic.d.id].topic_confidences[relevantDocumentsIndex[text.d.id]]
+	    var strokeScore = modelTopicsToDocuments[topic.d.id].topic_confidences.get(text.d.id)
 	    linkData.push({
 		termScore:strokeScore,
 		topic: topic.d.id,
