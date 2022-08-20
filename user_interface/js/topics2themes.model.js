@@ -673,53 +673,49 @@ function calculateTextScore(textElements) {
     });
 }
 
+function isAssociatedSelectedForText(textId) {
+    let isRelatedTopicSelected = modelTopics.some(topic => isAssociatedTextTopic(textId, topic.id) && currentTopicIds.has(topic.id));
+    let isRelatedTermSelected = modelTerms.some(term => isAssociatedTextTerm(textId, term.term) && currentTermIds.has(term.term));
+    let isRelatedThemeSelected = modelThemes.some(theme => isAssociatedTextTheme(textId, theme.id) && currentThemeIds.has(theme.id));
+
+    return isRelatedTopicSelected || isRelatedTermSelected || isRelatedThemeSelected
+}
 
 function calculateTextThemesScore(textElements) {
-	return $.map(textElements, function(element, i){
+    return $.map(textElements, function(element, i){
+        let number = 0;
+        let d = d3.select(element).datum();
+        if (d.id in modelTextsToThemes) {
+            number = modelTextsToThemes[d.id].themes.size;
+        }
 
-	    let number = 0;
-	    let d = d3.select(element).datum();
-	    if (d.id in modelTextsToThemes) {
-		number = modelTextsToThemes[d.id].themes.size;
-	    }
-	   
-	    // The flags below are used to sort the selected elements separately
-	    // to ensure proper sorting for all sorting modes (desc/asc)
+        // The flag below is used to sort the selected elements separately
+        // to ensure proper sorting for all sorting modes (desc/asc)
+        let isSelected = isAssociatedSelectedForText(d.id)
 
-            let isRelatedTopicSelected = modelTopics.some(topic => isAssociatedTextTopic(d.id, topic.id) && currentTopicIds.has(topic.id));
-
-            let isRelatedTermSelected = modelTerms.some(term => isAssociatedTextTerm(d.id, term.term) && currentTermIds.has(term.term));
-
-            let isRelatedThemeSelected = modelThemes.some(theme => isAssociatedTextTheme(d.id, theme.id) && currentThemeIds.has(theme.id));
-
-		// Prepare the resulting element
-		return { index: i, element: element, value: number, isSelected: isRelatedTopicSelected || isRelatedTermSelected || isRelatedThemeSelected };
-	});
+        // Prepare the resulting element
+        return { index: i, element: element, value: number, isSelected: isSelected };
+    });
 }
 
 
 function getLabelForSort(textElements) {
-	return $.map(textElements, function(element, i){
+    return $.map(textElements, function(element, i){
 
-	    let d = d3.select(element).datum();
-	    let label = d.label;
+        let d = d3.select(element).datum();
+        let label = d.label;
 
-	    if (d.id in modelUserTextLabels){
-		label = modelUserTextLabels[d.id]
-	    }
+        if (d.id in modelUserTextLabels){
+            label = modelUserTextLabels[d.id]
+        }
 
-	    // The flags below are used to sort the selected elements separately
-	    // to ensure proper sorting for all sorting modes (desc/asc)
+        // The flag below is used to sort the selected elements separately
+        // to ensure proper sorting for all sorting modes (desc/asc)
+        let isSelected = isAssociatedSelectedForText(d.id)
 
-            let isRelatedTopicSelected = modelTopics.some(topic => isAssociatedTextTopic(d.id, topic.id) && currentTopicIds.has(topic.id));
-
-            let isRelatedTermSelected = modelTerms.some(term => isAssociatedTextTerm(d.id, term.term) && currentTermIds.has(term.term));
-
-            let isRelatedThemeSelected = modelThemes.some(theme => isAssociatedTextTheme(d.id, theme.id) && currentThemeIds.has(theme.id));
-				
-		// Prepare the resulting element
-		return { index: i, element: element, value: label, isSelected: isRelatedTopicSelected || isRelatedTermSelected || isRelatedThemeSelected};
-	});
+        // Prepare the resulting element
+        return { index: i, element: element, value: label, isSelected: isSelected};
+    });
 }
 
 
