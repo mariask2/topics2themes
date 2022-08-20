@@ -203,7 +203,7 @@ function resetModelData(){
 
 function resetUserAnalysisData(){
     modelThemes = [];
-    modelThemesToTexts = {};
+    modelThemesToTexts = new Map();
     modelTextsToThemes = {};
     modelTopicNames = {};
     modelUserTextLabels = {};
@@ -261,9 +261,9 @@ function addNewTheme(themeId, newLabel){
                      creation_time: currentTime
                      });
     
-    modelThemesToTexts[themeId] = {
+    modelThemesToTexts.set(themeId, {
         "texts" : new Set()
-    }
+    })
 }
 
 /////////
@@ -480,15 +480,13 @@ function getMaxDocumentScore(){
 
 
 function modelAddTextThemeLink(themeId, textId){
-    if (!(themeId in modelThemesToTexts)){
+    if (!modelThemesToTexts.has(themeId)) {
         console.log("themeId not in modelThemesToTexts");
         console.log(themeId);
         return;
     }
 
-    if (!modelThemesToTexts[themeId].texts.has(textId)) {
-        modelThemesToTexts[themeId].texts.add(textId)
-    }
+    modelThemesToTexts.get(themeId).texts.add(textId)
 
     if (!(textId in modelTextsToThemes)){
 	// For storing connections between texts and themes
@@ -507,12 +505,7 @@ function modelAddTextThemeLink(themeId, textId){
 }
 
 function hasThemeAssociatedTexts(themeId){
-    if (modelThemesToTexts[themeId] != undefined){
-        if (modelThemesToTexts[themeId].texts.size > 0) {
-            return true;
-        }
-    }
-    return false;
+    return modelThemesToTexts.get(themeId)?.texts.size > 0
 }
 
 
@@ -526,7 +519,7 @@ function removeTheme(themeId){
     	return false;
 
     modelThemes.splice(index, 1);
-    delete modelThemesToTexts[themeId];
+    modelThemesToTexts.delete(themeId);
     
     deleteDatabaseTheme(themeId)
     // Reset all selections when a theme is removed
@@ -536,7 +529,7 @@ function removeTheme(themeId){
 }
 
 async function removeTextThemeLink(themeId, textId){
-    modelThemesToTexts[themeId].texts.delete(textId);
+    modelThemesToTexts.get(themeId).texts.delete(textId);
     
     modelTextsToThemes[textId].themes.delete(themeId);
 
@@ -770,7 +763,7 @@ function calculateThemesScore(themeElements) {
         let isRelatedTermSelected = currentTermIds.some(term => isAssociatedThemeTerm(d.id, term));
         let isRelatedTextSelected = currentTextIds.some(text => isAssociatedTextTheme(text, d.id));
 
-        let numberOfAssociateTexts = modelThemesToTexts[d.id].texts.size;
+        let numberOfAssociateTexts = modelThemesToTexts.get(d.id).texts.size;
 
         return { index: i, element: element, value: tot_score,
                  isSelected: isRelatedTopicSelected || isRelatedTermSelected || isRelatedTextSelected,
@@ -1127,22 +1120,22 @@ function isAssociatedTextTopic(textId, topicId){
 
 
 function isAssociatedThemeTopic(themeId, topicId){
-    if (!modelTopicsToDocuments.has(topicId) || !(themeId in modelThemesToTexts)) {
+    if (!modelTopicsToDocuments.has(topicId) || !modelThemesToTexts.has(themeId)) {
         return false;
     }
-    let themeTexts = modelThemesToTexts[themeId].texts;
+    let themeTexts = modelThemesToTexts.get(themeId).texts;
     
     let modelTexts = modelTopicsToDocuments.get(topicId).documents;
 
     return modelTexts.some(text => themeTexts.has(text))
 }
 
-function isAssociatedThemeTerm(themeId, term){
-    if (!(themeId in modelThemesToTexts)) {
+function isAssociatedThemeTerm(themeId, term) {
+    if (!modelThemesToTexts.has(themeId)) {
         return false;
     }
 
-    let themeTexts = modelThemesToTexts[themeId].texts;
+    let themeTexts = modelThemesToTexts.get(themeId).texts;
 
     return themeTexts.some(textId => isAssociatedTextTerm(textId, term))
 }
@@ -1152,13 +1145,13 @@ function isAssociatedTermTheme(term, themeId){
     return isAssociatedThemeTerm(themeId, term)
 }
 
-function isAssociatedTextTheme(textId, themeId){
-    return themeId in modelThemesToTexts
-	&& modelThemesToTexts[themeId].texts.has(textId);
+function isAssociatedTextTheme(textId, themeId) {
+    return modelThemesToTexts.has(themeId)
+        && modelThemesToTexts.get(themeId).texts.has(textId);
 }
 
 // Same as above, just to simpyfy the controller code
-function isAssociatedThemeText(themeId, textId){
+function isAssociatedThemeText(themeId, textId) {
     return isAssociatedTextTheme(textId, themeId);
 }
 
@@ -1308,8 +1301,8 @@ async function getSavedThemes(){
     
         for (const textIdString of theme.document_ids){
             let textId = parseInt(textIdString)
-	    if (!(modelThemesToTexts[themeId].texts.has(textId))) {
-                modelThemesToTexts[themeId].texts.add(textId)
+            if (!(modelThemesToTexts.get(themeId).texts.has(textId))) {
+                modelThemesToTexts.get(themeId).texts.add(textId)
             }
 
 	    // Also store the reverse connection

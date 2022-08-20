@@ -864,7 +864,7 @@ function populateThemeElements(themesList) {
 
 function getBadges(d) {
     let themeId = d.id
-    let theme = modelThemesToTexts[themeId];
+    let theme = modelThemesToTexts.get(themeId);
     if (theme === undefined) {
 	return []
     }
@@ -873,7 +873,7 @@ function getBadges(d) {
 }
 
 function getAdditionalLabels(d) {
-    let labels = getAdditionalLabelsCounter(modelThemesToTexts[d.id]).sortedEntries()
+    let labels = getAdditionalLabelsCounter(modelThemesToTexts.get(d.id)).sortedEntries()
     return labels.map(([label, count]) => ({label, count}))
 }
 
@@ -1126,15 +1126,15 @@ function renderTextsToThemeLinks() {
     let rightPosCache = new Cache();
 
     let {themesList, textsList} = linksCache.get("textsToTheme", () => ({
-	themesList: getDisplayedElements("#themesList", (d) => d.id in modelThemesToTexts),
-	textsList: getDisplayedElements("#textsList")
+        themesList: getDisplayedElements("#themesList", (d) => modelThemesToTexts.has(d.id)),
+        textsList: getDisplayedElements("#textsList")
     }))
 
 
     let linkData = []
 
     for (const theme of themesList) {
-	let relevantTexts = modelThemesToTexts[theme.d.id].texts;
+        let relevantTexts = modelThemesToTexts.get(theme.d.id).texts;
 
 	for (const text of textsList) {
 	    if (!(relevantTexts.has(text.d.id))) {
