@@ -363,13 +363,10 @@ async function modelInitializeData(modelId) {
         }
 
         for (const topic_term of topic.topic_terms) {
-            if (!modelTermsToTopics.has(topic_term.term)) {
-                modelTermsToTopics.set(topic_term.term, {
+            modelTermsToTopics.setdefault(topic_term.term, {
                     "term": topic_term.term,
                     "score_for_topics": {}
-                });
-            }
-            modelTermsToTopics.get(topic_term.term).score_for_topics[topic.id] = topic_term.score;
+            }).score_for_topics[topic.id] = topic_term.score;
             maxTermScoreCache = undefined;
         }
     }

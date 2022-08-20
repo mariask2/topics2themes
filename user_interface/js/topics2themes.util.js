@@ -1,5 +1,11 @@
 Map.prototype.map = function (f) { return Array.from(this.entries()).map(f) }
 Map.prototype.some = function (f) { return Array.from(this.entries()).some(f) }
+Map.prototype.setdefault = function (key, defaultValue) {
+    if (!this.has(key)) {
+        this.set(key, defaultValue)
+    }
+    return this.get(key)
+}
 
 Set.prototype.map = function (f) { return Array.from(this.values()).map(f) }
 Set.prototype.some = function (f) { return Array.from(this.values()).some(f) }
