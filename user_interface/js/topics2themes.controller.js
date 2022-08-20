@@ -1626,20 +1626,14 @@ function fillSplittedCurrentTermList(){
 }
 
 function onTermElementClick(){
-
-    let term = d3.select($(this).get(0)).datum();
+    let element = d3.select(this)
+    let term = element.datum()
     
     toggleChosenElement(term.term, modelToggleTermElement);
-    
-    if (currentTermIds.has(term.term)) { // if chosen
-        $(this).addClass(DIRECTCHOOSEN);
-        setTimeout(() => highlightTermElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
-    }
-    else{
-        $(this).removeClass(DIRECTCHOOSEN);
-        setTimeout(() => highlightTermElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
-    }
-    
+
+    element.classed(DIRECTCHOOSEN, currentTermIds.has(term.term)) // if chosen
+    setTimeout(() => highlightTermElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0)
+
     // For the other panels, which were not recently clicked, they should show the beginning of the panel, so scroll up
     scrollTopForAllExceptRecentlyClicked("#termsList");
 
@@ -1658,18 +1652,13 @@ function onTopicElementClick(event){
         // Discard clicks on the subcomponents within a topic element
         return;
     }
-	
-    let topic = d3.select($(this).get(0)).datum();
-    toggleChosenElement(topic.id, modelToggleTopicElement);
 
-    if (currentTopicIds.has(topic.id)) { // if chosen
-        $(this).addClass(DIRECTCHOOSEN);
-        setTimeout(() => highlightTopicElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
-    }
-    else{
-        $(this).removeClass(DIRECTCHOOSEN);
-        setTimeout(() => highlightTopicElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
-    }
+    let element = d3.select(this)
+    let topic = element.datum()
+    toggleChosenElement(topic.id, modelToggleTopicElement)
+
+    element.classed(DIRECTCHOOSEN, currentTopicIds.has(topic.id))
+    setTimeout(() => highlightTopicElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0)
     
     // For the other panels, which were not recently clicked, they should show the beginning of the panel, so scroll up
     scrollTopForAllExceptRecentlyClicked("#topicsList");
@@ -1689,21 +1678,15 @@ function onTextElementClick(event){
     }
 
     event.preventDefault();
-    
-    let text = d3.select($(this).get(0)).datum();
-    toggleChosenElement(text.id, modelToggleTextElement);
-    
-    
+
+    let element = d3.select(this)
+    let text = element.datum()
+    toggleChosenElement(text.id, modelToggleTextElement)
+
     // Sort other lists and render the links
-    
-    if (currentTextIds.has(text.id)) { // if chosen
-        $(this).addClass(DIRECTCHOOSEN);
-        setTimeout(() => highlightTextElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
-    }
-    else{
-        $(this).removeClass(DIRECTCHOOSEN);
-        setTimeout(() => highlightTextElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
-    }
+
+    element.classed(DIRECTCHOOSEN, currentTextIds.has(text.id))
+    setTimeout(() => highlightTextElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
     
     // For the other panels, which were not recently clicked, they should show the beginning of the panel, so scroll up
     scrollTopForAllExceptRecentlyClicked("#textsList");
@@ -1726,19 +1709,14 @@ function onThemeElementClick(event){
         // Discard clicks on the subcomponents within a theme element
         return;
     }
-    
-    let theme = d3.select($(this).get(0)).datum();
-    toggleChosenElement(theme.id, modelToggleThemeElement);
-    
-    if (currentThemeIds.has(theme.id)) { // if chosen
-        $(this).addClass(DIRECTCHOOSEN);
-        setTimeout(() => highlightThemeElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
-    }
-    else{
-        $(this).removeClass(DIRECTCHOOSEN);
-        setTimeout(() => highlightThemeElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0);
-    }
-    
+
+    let element = d3.select(this)
+    let theme = element.datum()
+    toggleChosenElement(theme.id, modelToggleThemeElement)
+
+    element.classed(DIRECTCHOOSEN, currentThemeIds.has(theme.id))
+    setTimeout(() => highlightThemeElement($(this), DIRECTHIGHLIGHT, HIGHLIGHT), 0)
+
     // For the other panels, which were not recently clicked, they should show the beginning of the panel, so scroll up
     scrollTopForAllExceptRecentlyClicked("#themesList");
     setTimeout(resetPanelHeadings, 0);
@@ -2153,15 +2131,9 @@ function doResetHighlightAfterStateChange(){
     }
     
     else{
-	for (const modelTopic of modelTopics) {
-             let topic = modelTopic["id"];
-             // If topic is selected
-             if (currentTopicIds.has(topic)) {
-		 d3.selectAll('.topic_' + topic).classed("termintextnotchosen", false);
-             }
-             else{
-		 d3.selectAll('.topic_' + topic).classed("termintextnotchosen", true);
-             }
+        for (const modelTopic of modelTopics) {
+            let topic = modelTopic["id"]
+            d3.selectAll('.topic_' + topic).classed("termintextnotchosen", !currentTopicIds.has(topic))
         }
 	d3.selectAll(".term-to-mark").classed("specifictermchosen", false);
     }
