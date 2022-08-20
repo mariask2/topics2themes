@@ -189,8 +189,8 @@ function resetModelData(){
     jsonData = [];
     modelTerms = [];
     modelTermsToTopics = new Map();
-    modelTermsToDocuments = {};
-    modelTopicsToDocuments = {};
+    modelTermsToDocuments = new Map();
+    modelTopicsToDocuments = new Map();
     modelTopics = [];
     modelDocuments = [];
     modelLabelCategories = [];
@@ -374,9 +374,9 @@ async function modelInitializeData(modelId) {
     // Extract the array of values from the dictionary
     modelTerms = Array.from(modelTermsToTopics.values());
 
-	// Establish the reverse mappings from topics to documents and terms to documents
-	modelTopicsToDocuments = {};
-	modelTermsToDocuments = {};
+    // Establish the reverse mappings from topics to documents and terms to documents
+    modelTopicsToDocuments.clear()
+    modelTermsToDocuments.clear()
 
         for (var doc of documents) {
 	
@@ -400,27 +400,22 @@ async function modelInitializeData(modelId) {
 		if (doc.document_topics == undefined)
 			continue;
 		
-		for (const doc_topic of doc.document_topics) {
-		    if (modelTopicsToDocuments[doc_topic.topic_index] == undefined) {
-			modelTopicsToDocuments[doc_topic.topic_index] = {
-			    "topic": doc_topic.topic_index,
-			    "documents": new Set(),
-			    "topic_confidences" : new Map()
-			};
-		    }
-		    modelTopicsToDocuments[doc_topic.topic_index].documents.add(doc.id);
-		    modelTopicsToDocuments[doc_topic.topic_index].topic_confidences.set(doc.id, doc_topic.topic_confidence)
-			
-			for (const doc_term of doc_topic.terms_in_topic) {
-				if (modelTermsToDocuments[doc_term.term] == undefined) {
-					modelTermsToDocuments[doc_term.term] = {
-					    "term": doc_term,
-					    "documents": new Set()
-					};
-				}
-				modelTermsToDocuments[doc_term.term].documents.add(doc.id)
-			}
-		}
+                for (const doc_topic of doc.document_topics) {
+                    modelTopicsToDocuments.setdefault(doc_topic.topic_index, {
+                            "topic": doc_topic.topic_index,
+                            "documents": new Set(),
+                            "topic_confidences" : new Map()
+                    })
+                    modelTopicsToDocuments.get(doc_topic.topic_index).documents.add(doc.id);
+                    modelTopicsToDocuments.get(doc_topic.topic_index).topic_confidences.set(doc.id, doc_topic.topic_confidence)
+
+                    for (const doc_term of doc_topic.terms_in_topic) {
+                        modelTermsToDocuments.setdefault(doc_term.term, {
+                            "term": doc_term,
+                            "documents": new Set()
+                        }).documents.add(doc.id)
+                    }
+                }
 	}
     
 }
@@ -487,7 +482,7 @@ function getMaxTopicScore(){
 }
 
 function getMaxDocumentScore(){
-    return _.max(_.map(modelTopicsToDocuments, (v, k) => _.max(Array.from(v.topic_confidences.values()))));
+    return _.max(modelTopicsToDocuments.map(([k, v]) => _.max(Array.from(v.topic_confidences.values()))));
 }
 
 
@@ -637,7 +632,7 @@ function calculateTextScore(textElements) {
 	let isRelatedTopicSelected = currentAssociatedTextTopics.length > 0;
 
 	if (isRelatedTopicSelected) {
-	    let accScore = sum(currentAssociatedTextTopics.map(currentTopicId => modelTopicsToDocuments[currentTopicId].topic_confidences.get(d.id)))
+	    let accScore = sum(currentAssociatedTextTopics.map(currentTopicId => modelTopicsToDocuments.get(currentTopicId).topic_confidences.get(d.id)))
             return { index: i, element: element, value: accScore, isSelected: isRelatedTopicSelected, secondaryValue: -1*d.text.length};
 	}
 	let isSelected = false;
@@ -646,7 +641,7 @@ function calculateTextScore(textElements) {
         // This is the standard score to give to the term, an
         // accumulation of each topic it
         // is associated to, if no topic is chosen
-        let scores = associatedTextTopics.map(topic => modelTopicsToDocuments[topic.id].topic_confidences.get(d.id))
+        let scores = associatedTextTopics.map(topic => modelTopicsToDocuments.get(topic.id).topic_confidences.get(d.id))
 
         // When no topic is chosen, use the mean strength for the topics
         let accScore = sum(scores) / scores.length;
@@ -750,7 +745,7 @@ function calculateTopicScore(topicElements) {
                  // belong to it
                  
         // Compute the means score among the associated text
-        let associations = Object.values(modelTopicsToDocuments).filter(v => v.documents.has(d.id))
+        let associations = Array.from(modelTopicsToDocuments.values()).filter(v => v.documents.has(d.id))
         let textScores = associations.map(v => v.topic_confidences.get(d.id))
         let totTextScore = sum(textScores);
         let finalTextScore = totTextScore/textScores.length;
@@ -1062,8 +1057,8 @@ function calculateTermsDocsNumber(termElements) {
 
         // Calculate the number
         let number = 0;
-        if (d.term in modelTermsToDocuments) {
-            number = modelTermsToDocuments[d.term].documents.size;
+        if (modelTermsToDocuments.has(d.term)) {
+            number = modelTermsToDocuments.get(d.term).documents.size;
         }
 
         // The flag below is used to sort the selected elements separately
@@ -1134,18 +1129,18 @@ function isAssociatedTermTopic(term, topicId){
 }
 
 function isAssociatedTextTopic(textId, topicId){
-    return (topicId in modelTopicsToDocuments
-            && modelTopicsToDocuments[topicId].documents.has(textId));
+    return (modelTopicsToDocuments.has(topicId)
+            && modelTopicsToDocuments.get(topicId).documents.has(textId));
 }
 
 
 function isAssociatedThemeTopic(themeId, topicId){
-    if (!(topicId in modelTopicsToDocuments) || !(themeId in modelThemesToTexts)) {
+    if (!modelTopicsToDocuments.has(topicId) || !(themeId in modelThemesToTexts)) {
         return false;
     }
     let themeTexts = modelThemesToTexts[themeId].texts;
     
-    let modelTexts = modelTopicsToDocuments[topicId].documents;
+    let modelTexts = modelTopicsToDocuments.get(topicId).documents;
 
     return modelTexts.some(text => themeTexts.has(text))
 }
@@ -1177,8 +1172,8 @@ function isAssociatedThemeText(themeId, textId){
 
 function isAssociatedTextTerm(textId, term)
 {
-    return term in modelTermsToDocuments
-        && modelTermsToDocuments[term].documents.has(textId);
+    return modelTermsToDocuments.has(term)
+        && modelTermsToDocuments.get(term).documents.has(textId);
 }
 
 // Same as above, just to simpyfy the controller code

@@ -1060,21 +1060,21 @@ function renderTopicToTextLinks() {
     let rightPosCache = new Cache();
 
     let {topicsList, textsList} = linksCache.get("topicToText", () => ({
-	topicsList: getDisplayedElements("#topicsList", (d) => d.id in modelTopicsToDocuments),
+	topicsList: getDisplayedElements("#topicsList", (d) => modelTopicsToDocuments.has(d.id)),
 	textsList: getDisplayedElements("#textsList")
     }))
 
     let linkData = []
 
     for (const topic of topicsList) {
-        let relevantDocuments = modelTopicsToDocuments[topic.d.id].documents;
+        let relevantDocuments = modelTopicsToDocuments.get(topic.d.id).documents;
 
 	for (const text of textsList) {
 	    if (!(relevantDocuments.has(text.d.id))) {
 		continue;
 	    }
 
-	    var strokeScore = modelTopicsToDocuments[topic.d.id].topic_confidences.get(text.d.id)
+	    var strokeScore = modelTopicsToDocuments.get(topic.d.id).topic_confidences.get(text.d.id)
 	    linkData.push({
 		termScore:strokeScore,
 		topic: topic.d.id,
