@@ -364,9 +364,9 @@ async function modelInitializeData(modelId) {
 
         for (const topic_term of topic.topic_terms) {
             modelTermsToTopics.setdefault(topic_term.term, {
-                    "term": topic_term.term,
-                    "score_for_topics": {}
-            }).score_for_topics[topic.id] = topic_term.score;
+                "term": topic_term.term,
+                "score_for_topics": new Map()
+            }).score_for_topics.set(topic.id, topic_term.score)
             maxTermScoreCache = undefined;
         }
     }
@@ -422,7 +422,7 @@ async function modelInitializeData(modelId) {
 
 
 function getScoreForTermTopic(term, topicId){
-    return modelTermsToTopics.get(term).score_for_topics[topicId];
+    return modelTermsToTopics.get(term).score_for_topics.get(topicId);
 }
 
 function getLabelForText(textId){
@@ -448,7 +448,7 @@ let maxTermScoreCache;
 
 function getMaxTermScore(){
     if (maxTermScoreCache === undefined) {
-        let all_scores = _.flatten(modelTermsToTopics.map(([k, v]) => _.values(v.score_for_topics)), 1);
+        let all_scores = _.flatten(modelTermsToTopics.map(([k, v]) => Array.from(v.score_for_topics.values())), 1);
         let max_score = _.max(all_scores)
         maxTermScoreCache = max_score
         return max_score
@@ -469,7 +469,7 @@ function getMaxTopicScore(){
     // TODO: This code is duplicated, make a function
     let all_scores = modelTopics.map(topic =>
                                      sum(modelTermsToTopics.map(([k, v]) =>
-                                                                v.score_for_topics[topic.id] || 0)))
+                                                                v.score_for_topics.get(topic.id) ?? 0)))
     return _.max(_.flatten(all_scores, 1))
 }
 
@@ -990,7 +990,7 @@ function calculateTermsTopicsNumber(termElements) {
         let d = d3.select(element).datum();
 
         // Calculate the number
-        let number = _.size(modelTermsToTopics.get(d.term)?.score_for_topics ?? {})
+        let number = modelTermsToTopics.get(d.term)?.score_for_topics.size ?? 0
 
         // TODO: instead of simply using the count of topics,
         // check if the topics are filtered out, if this is necessary
@@ -1092,12 +1092,12 @@ function sortTermsAlphaAsc(termElements) {
 // Help functions for the highlighting
 //////
 
-function isAssociatedTermTopic(term, topicId){
-    return topicId in modelTermsToTopics.get(term)?.score_for_topics ?? false;
+function isAssociatedTermTopic(term, topicId) {
+    return modelTermsToTopics.get(term)?.score_for_topics.has(topicId) ?? false
 }
 
-function isAssociatedTextTopic(textId, topicId){
-    return modelTopicsToDocuments.get(topicId)?.documents.has(textId) ?? false;
+function isAssociatedTextTopic(textId, topicId) {
+    return modelTopicsToDocuments.get(topicId)?.documents.has(textId) ?? false
 }
 
 

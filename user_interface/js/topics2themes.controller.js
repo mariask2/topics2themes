@@ -991,11 +991,11 @@ function renderTermToTopicLinks() {
 
     for (const term of termsList) {
 	for (const topic of topicsList) {
-	    if (!(topic.d.id in modelTermsToTopics.get(term.d.term).score_for_topics)) {
+	    if (!modelTermsToTopics.get(term.d.term).score_for_topics.has(topic.d.id)) {
 		continue;
 	    }
 
-	    let termScore = modelTermsToTopics.get(term.d.term).score_for_topics[topic.d.id]
+	    let termScore = modelTermsToTopics.get(term.d.term).score_for_topics.get(topic.d.id)
 	    let text = "Topic #" + topic.d.id + "\n" + "Term: " + term.d.term + "\n" + "Score: " + termScore
 	    linkData.push({
 		termScore,
