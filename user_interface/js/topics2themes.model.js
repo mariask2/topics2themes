@@ -1028,52 +1028,39 @@ function sortThemesTimeDesc(themeElements) {
     return sortElements(themeElements, calculateThemesScore, compareIdDesc, compareValuesThemesRankingAscMachineLearning);
 }
 
+function isAssociatedSelectedForTerm(term) {
+    let isSelected = false
+
+    let isRelatedTopicSelected = modelTopics.some(topic => isAssociatedTermTopic(term, topic.id) && currentTopicIds.has(topic.id))
+    let isRelatedTextSelected = modelDocuments.some(text => isAssociatedTextTerm(text.id, term) && currentTextIds.has(text.id))
+    let isRelatedThemeSelected = modelThemes.some(theme => isAssociatedThemeTerm(theme.id, term) && currentThemeIds.has(theme.id))
+
+    return isRelatedTopicSelected || isRelatedTextSelected || isRelatedThemeSelected
+}
+
+
 // Calculates the total number of relevant topics for the provided array of term list elements
 function calculateTermsTopicsNumber(termElements) {
-	return $.map(termElements, function(element, i){
-		let d = d3.select(element).datum();
-		
-		// Calculate the number
-		let number = 0;
-		if (d.term in modelTermsToTopics) {
-		    number = _.size(modelTermsToTopics[d.term].score_for_topics);
-		}
-		
-		// TODO: instead of simply using the count of topics,
-		// check if the topics are filtered out, if this is necessary
-		
-		
-		// The flag below is used to sort the selected elements separately
-		// to ensure proper sorting for all sorting modes (desc/asc)
-		let isSelected = false;
+    return $.map(termElements, function(element, i){
+        let d = d3.select(element).datum();
 
-		for (const topic of modelTopics){
-			if (isAssociatedTermTopic(d.term, topic.id)){
-				if (currentTopicIds.has(topic.id)) {
-					isSelected = true;
-				}
-			}
-		}
+        // Calculate the number
+        let number = 0;
+        if (d.term in modelTermsToTopics) {
+            number = _.size(modelTermsToTopics[d.term].score_for_topics);
+        }
 
-		for (const text of modelDocuments){
-			if (isAssociatedTextTerm(text.id, d.term)){
-				if (currentTextIds.has(text.id)) {
-					isSelected = true;
-				}
-			}
-		}
+        // TODO: instead of simply using the count of topics,
+        // check if the topics are filtered out, if this is necessary
 
-		for (const theme of modelThemes){
-			if (isAssociatedThemeTerm(theme.id, d.term)){
-				if (currentThemeIds.has(theme.id)) {
-					isSelected = true;
-				}
-			}
-		}
-				
-		// Prepare the resulting element
-		return { index: i, element: element, value: number, isSelected: isSelected};
-	});
+
+        // The flag below is used to sort the selected elements separately
+        // to ensure proper sorting for all sorting modes (desc/asc)
+        let isSelected = isAssociatedSelectedForTerm(d.term);
+
+        // Prepare the resulting element
+        return { index: i, element: element, value: number, isSelected: isSelected };
+    });
 }
 
 // Returns a sorted copy of the provided array of term list elements
@@ -1095,46 +1082,22 @@ function sortTermsTopicsAsc(termElements) {
 
 // Calculates the total number of relevant documents for the provided array of term list elements
 function calculateTermsDocsNumber(termElements) {
-	return $.map(termElements, function(element, i){
-		let d = d3.select(element).datum();
-		
-		// Calculate the number
-		let number = 0;
-		if (d.term in modelTermsToDocuments) {
-			number = modelTermsToDocuments[d.term].documents.size;
-		}
-		
-		// The flag below is used to sort the selected elements separately
-		// to ensure proper sorting for all sorting modes (desc/asc)
-		let isSelected = false;
+    return $.map(termElements, function(element, i){
+        let d = d3.select(element).datum();
 
-		for (const topic of modelTopics){
-			if (isAssociatedTermTopic(d.term, topic.id)){
-				if (currentTopicIds.has(topic.id)) {
-					isSelected = true;
-				}
-			}
-		}
+        // Calculate the number
+        let number = 0;
+        if (d.term in modelTermsToDocuments) {
+            number = modelTermsToDocuments[d.term].documents.size;
+        }
 
-		for (const text of modelDocuments){
-			if (isAssociatedTextTerm(text.id, d.term)){
-				if (currentTextIds.has(text.id)) {
-					isSelected = true;
-				}
-			}
-		}
+        // The flag below is used to sort the selected elements separately
+        // to ensure proper sorting for all sorting modes (desc/asc)
+        let isSelected = isAssociatedSelectedForTerm(d.term);
 
-		for (const theme of modelThemes){
-			if (isAssociatedThemeTerm(theme.id, d.term)){
-				if (currentThemeIds.has(theme.id)) {
-					isSelected = true;
-				}
-			}
-		}
-		
-		// Prepare the resulting element
-		return { index: i, element: element, value: number, isSelected: isSelected};
-	});
+        // Prepare the resulting element
+        return { index: i, element: element, value: number, isSelected: isSelected};
+    });
 }
 
 // Returns a sorted copy of the provided array of term list elements
@@ -1155,40 +1118,16 @@ function sortTermsDocsAsc(termElements) {
 
 // Provides a sorting value for term elements
 function getTermStrings(termElements) {
-	return $.map(termElements, function(element, i){
-		let d = d3.select(element).datum();
-				
-		// The flag below is used to sort the selected elements separately
-		// to ensure proper sorting for all sorting modes (desc/asc)
-		let isSelected = false;
+    return $.map(termElements, function(element, i){
+        let d = d3.select(element).datum();
 
-		for (const topic of modelTopics){
-			if (isAssociatedTermTopic(d.term, topic.id)){
-				if (currentTopicIds.has(topic.id)) {
-					isSelected = true;
-				}
-			}
-		}
+        // The flag below is used to sort the selected elements separately
+        // to ensure proper sorting for all sorting modes (desc/asc)
+        let isSelected = isAssociatedSelectedForTerm(d.term);
 
-		for (const text of modelDocuments){
-			if (isAssociatedTextTerm(text.id, d.term)){
-				if (currentTextIds.has(text.id)) {
-					isSelected = true;
-				}
-			}
-		}
-
-		for (const theme of modelThemes){
-			if (isAssociatedThemeTerm(theme.id, d.term)){
-				if (currentThemeIds.has(theme.id)) {
-					isSelected = true;
-				}
-			}
-		}
-		
-		// Prepare the resulting element
-		return { index: i, element: element, value: d.term, isSelected: isSelected};
-	});
+        // Prepare the resulting element
+        return { index: i, element: element, value: d.term, isSelected: isSelected};
+    });
 }
 
 // Returns a sorted copy of the provided array of term list elements
