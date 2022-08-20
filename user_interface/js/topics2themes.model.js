@@ -782,34 +782,25 @@ function calculateTopicScore(topicElements) {
 
 // Calculates the total score for the provided array of text list elements
 function calculateThemesScore(themeElements) {
-    return $.map(themeElements, function(element, i){
-                 let d = d3.select(element).datum();
-                 // Use creation time to dedice how to sort
-                 let tot_score = d.creation_time;
-                 
-                 // The flag below is used to sort the selected elements separately
-          		 // to ensure proper sorting for all sorting modes (desc/asc)
-          		 let isSelected = false;
-                 
-                 for (const topic of currentTopicIds){
-                    if (isAssociatedThemeTopic(d.id, topic)){
-                            isSelected = true;
-                 }}
-                 
-                 for (const term of currentTermIds){
-                    if (isAssociatedThemeTerm(d.id, term)){
-                        isSelected = true;
-                 }}
-                 
-                 for (const text of currentTextIds){
-                    if (isAssociatedTextTheme(text, d.id)){
-                        isSelected = true;
-                 }}
-                 
-                 let numberOfAssociateTexts = modelThemesToTexts[d["id"]].texts.size;
-               
-                 return { index: i, element: element, value: tot_score, isSelected: isSelected, id: d["id"], numberOfTexts: numberOfAssociateTexts };
-    	});
+    return $.map(themeElements, function(element, i) {
+        let d = d3.select(element).datum();
+        // Use creation time to dedice how to sort
+        let tot_score = d.creation_time;
+
+        // The flag below is used to sort the selected elements separately
+        // to ensure proper sorting for all sorting modes (desc/asc)
+        let isSelected = false;
+
+        let isRelatedTopicSelected = currentTopicIds.some(topic => isAssociatedThemeTopic(d.id, topic));
+        let isRelatedTermSelected = currentTermIds.some(term => isAssociatedThemeTerm(d.id, term));
+        let isRelatedTextSelected = currentTextIds.some(text => isAssociatedTextTheme(text, d.id));
+
+        let numberOfAssociateTexts = modelThemesToTexts[d.id].texts.size;
+
+        return { index: i, element: element, value: tot_score,
+                 isSelected: isRelatedTopicSelected || isRelatedTermSelected || isRelatedTextSelected,
+                 id: d.id, numberOfTexts: numberOfAssociateTexts };
+    });
 }
 
 // Help function for sorting element, called by all sorting functions
