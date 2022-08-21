@@ -617,7 +617,6 @@ function calculateTextScore(textElements) {
 	    let accScore = sum(currentAssociatedTextTopics.map(currentTopicId => modelTopicsToDocuments.get(currentTopicId).topic_confidences.get(d.id)))
             return { index: i, element: element, value: accScore, isSelected: isRelatedTopicSelected, secondaryValue: -1*d.text.length};
 	}
-	let isSelected = false;
 	let associatedTextTopics = modelTopics.filter(topic => isAssociatedTextTopic(d.id, topic.id));
 
         // This is the standard score to give to the term, an
@@ -745,9 +744,8 @@ function calculateThemesScore(themeElements) {
         // Use creation time to dedice how to sort
         let tot_score = d.creation_time;
 
-        // The flag below is used to sort the selected elements separately
+        // The flags below are used to sort the selected elements separately
         // to ensure proper sorting for all sorting modes (desc/asc)
-        let isSelected = false;
 
         let isRelatedTopicSelected = currentTopicIds.some(topic => isAssociatedThemeTopic(d.id, topic));
         let isRelatedTermSelected = currentTermIds.some(term => isAssociatedThemeTerm(d.id, term));
@@ -974,8 +972,6 @@ function sortThemesTimeDesc(themeElements) {
 }
 
 function isAssociatedSelectedForTerm(term) {
-    let isSelected = false
-
     let isRelatedTopicSelected = modelTopics.some(topic => isAssociatedTermTopic(term, topic.id) && currentTopicIds.has(topic.id))
     let isRelatedTextSelected = modelDocuments.some(([textId, text]) => isAssociatedTextTerm(text.id, term) && currentTextIds.has(text.id))
     let isRelatedThemeSelected = modelThemes.some(theme => isAssociatedThemeTerm(theme.id, term) && currentThemeIds.has(theme.id))
