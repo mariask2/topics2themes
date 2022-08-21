@@ -231,7 +231,7 @@ class MongoConnector:
         topic_names = self.get_topic_name_collection().find({self.ANALYSIS_ID : analysis_id})
         all_topic_names = []
         for post in topic_names:
-            return_post = {self.TOPIC_ID : post[self.TOPIC_ID], self.TOPIC_NAME : post[self.TOPIC_NAME]}
+            return_post = {self.TOPIC_ID : int(post[self.TOPIC_ID]), self.TOPIC_NAME : post[self.TOPIC_NAME]}
             all_topic_names.append(return_post)
     
         return all_topic_names

@@ -162,7 +162,7 @@ def make_model_for_collection():
 def update_topic_name():
     try:
         authenticate()
-        topic_id = request.values.get("topic_id")
+        topic_id = int(request.values.get("topic_id"))
         topic_name = request.values.get("topic_name")
         analysis_id = request.values.get("analysis_id")
         topic_name_update_result =  mongo_con.save_or_update_topic_name(topic_id, topic_name, analysis_id)
