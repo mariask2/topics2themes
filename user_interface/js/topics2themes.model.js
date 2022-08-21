@@ -1213,9 +1213,7 @@ async function modelFillDataSetChoices(){
     modelDataSetChoices = [];
     let choices = await get_data_async(getDataChoicesUrl, {});
 
-    for (const choice of choices) {
-        modelDataSetChoices.push({"value" : choice})
-    }
+    modelDataSetChoices = choices.map(choice => ({"value" : choice}))
     
     modelDataSetChoices.push({"value" : SELECTDATASETTEXT})
 }
