@@ -205,7 +205,7 @@ function resetUserAnalysisData(){
     modelThemes = [];
     modelThemesToTexts = new Map();
     modelTextsToThemes = new Map();
-    modelTopicNames = {};
+    modelTopicNames = new Map();
     modelUserTextLabels = {};
     
     modelResetRecentlyClickedForMachineLearningSorting();
@@ -1229,8 +1229,8 @@ async function modelGetDataSetChoices(){
 // Save and fetch topic names
 /////////////////////
 
-async function modelRenameTopic(topicId, newLabel){
-    modelTopicNames[topicId] = newLabel;
+async function modelRenameTopic(topicId, newLabel) {
+    modelTopicNames.set(topicId, newLabel)
     
     let updateTopicNameUrl = "update_topic_name";
     let data = {"topic_id" : topicId, "topic_name" : newLabel, "analysis_id" : modelCurrentAnalysisVersionId};
@@ -1243,19 +1243,17 @@ async function getSavedTopicNames(){
     let data = {"analysis_id" : modelCurrentAnalysisVersionId};
 
     let topic_names = await get_data_async(savedTopicNamesUrl, data);
-   
-    for (const topic_name of topic_names){
-        modelTopicNames[topic_name.topic_id] = topic_name.topic_name;
-    }
+
+    modelTopicNames = new Map(topic_names.map(topic_name => [topic_name.topic_id, topic_name.topic_name]))
 }
     
-function modelGetTopicNameForId(topic_id){
-    if (modelTopicNames[topic_id] == undefined){
-	return undefined; // There is no user defined name for this topic
+function modelGetTopicNameForId(topic_id) {
+    if (!modelTopicNames.has(topic_id)) {
+        return undefined; // There is no user defined name for this topic
         // This part of the code is unneccssary, but keeping it for clairity
     }
-    return modelTopicNames[topic_id]
-    
+
+    return modelTopicNames.get(topic_id)
 }
 
 
