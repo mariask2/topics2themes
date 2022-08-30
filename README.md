@@ -9,76 +9,60 @@ GUI example from ''Snippets of Folk Legends: Adapting a Text Mining Tool to a Co
 ## Publications
 
 <ul>
-                             <li>
-                Ahltorp, M., D&uuml;rlich L., Skeppstedt, M. 
-               2021. Textual Contexts for "Democracy":
-                             Using Topic- and Word-Models for Exploring Swedish
-                             Government Official
-                             Reports. pp 49-56. 1st Workshop on Computational Linguistics for Political and Social Sciences (CPSS)
-                    <a href = "https://old.gscl.org/en/arbeitskreise/cpss/cpss-2021/workshop-proceedings">pdf</a>
-                </li>
-                
-                <li>
-                 Skeppstedt, M., Ahltorp, M., Eriksson, G., Domeij, R.
-               2021. A Pipeline for Manual Annotations of
-               Risk Factor Mentions in the COVID-19 Open
-               Research Dataset. Selected Papers from the
-               CLARIN Annual Conference 2020. pp 214-225.
-                    <a href = "https://ecp.ep.liu.se/index.php/clarin/article/view/23/23">pdf</a>
-                </li>
-        
-                <li>
-                 Skeppstedt, M., Domeij R., Skott F. 2021. Snippets of
-                              Folk Legends: Adapting a
-                              Text Mining Tool to a
-                              Collection of Folk Legends. Post-Proceedings of the 5th Conference Digital Humanities in the Nordic Countries (DHN 2020).
-                    <a href = "http://ceur-ws.org/Vol-2865/poster5.pdf">pdf</a>
-                </li>
-        
-                
-                <li>
-                    Skeppstedt, M., Domeij, R., and Skott F. 2020. Adapting a Topic Modelling Tool to the Task of Finding Recurring Themes in Folk Legends. 2020. Proceedings of the Digital Humanities in the Nordic Countries 5th Conference (DHN 2020). pp. 388-392.
-                    <a href = "http://ceur-ws.org/Vol-2612/poster3.pdf">pdf</a>
-                </li>
-                
-                
-                <li>
-                    Skeppstedt, M., Ahltorp, M., Eriksson, G., Domeij, R. 2020. Annotating risk factor mentions in the COVID-19 Open Research Dataset. Proceedings of CLARIN Annual Conference 2020. pp. 52-55.
-                    <a href = "https://office.clarin.eu/v/CE-2020-1738-CLARIN2020_ConferenceProceedings.pdf">pdf</a>
-                </li>
-                
-                
-                <li>
-                    Skeppstedt, M., Ahltorp, M., Kostiantyn, K., Kerren, A., Rzepka, R., Araki, K. 2020. Topic modelling applied to a second language: A language adaption and tool evaluation study. Selected Papers from the CLARIN Annual Conference 2019. pp. 145-156.
-                    <a href = "https://ep.liu.se/en/conference-article.aspx?series=ecp&issue=172&Article_No=17">pdf</a>
-                </li>
-                
-                
-                <li>
-                    Skeppstedt, M., Ahltorp, M., Kerren, A., Rzepka, R., Araki, K. 2019. Application of a topic model visualisation tool to a second language. Book of Abstracts of the CLARIN Annual Conference 2019. Leipzig, Germany.
-                    <a href = "http://cs.lnu.se/isovis/pubs/docs/skeppstedt-clarin19.pdf">pdf</a>
-                </li>
-                
-
-               <li>
-                   Skeppstedt, M., Kerren, A., Stede, M. 2019. Finding Reasons for Vaccination Hesitancy: Evaluating Semi-Automatic Coding of Internet Discussion Forums. MEDINFO 2019: Health and Wellbeing e-Networks for All: Proceedings of the 17th World Congress on Medical and Health Informatics. pp. 348-352.
-                    <a href = "http://ebooks.iospress.nl/publication/52006">pdf</a>
-
-               </li>
-               
-              <li>
-              Skeppstedt, M., Stede, M., Kerren, A. 2018. Stance-Taking in Topics Extracted from Vaccine-Related Tweets and Discussion Forum Posts. Proceedings of the 2018 EMNLP Workshop SMM4H : The 3rd Social Media Mining for Health Applications Workshop and Shared Task. pp. 5-8.
-              <a href = "https://aclweb.org/anthology/W18-5902">pdf</a>
-              </li>
-
-              <li>
-            Kucher, K., Skeppstedt, M., Kerren, A. 2018. Application of Interactive Computer-Assisted Argument Extraction to Opinionated Social Media Texts. Proceedings of the 11th International Symposium on Visual Information Communication and Interaction (VINCI '18). pp. 102-103.
-            </li>
-
-              <li>Skeppstedt, M., Kucher, K., Stede, M., Kerren, A. 2018. Topics2Themes: Computer-assisted argument extraction
-           by visual analysis of important topics. Proceedings of the 3rd Workshop on Visualization as Added Value in the Development, Use and Evaluation of Language Resources (VisLR III)
-                <a href = "http://lrec-conf.org/workshops/lrec2018/W16/pdf/2_W16.pdf">pdf</a>
-            </li>
+<li>
+Ahltorp, M., D&uuml;rlich L., Skeppstedt, M. 
+2021. Textual Contexts for "Democracy":
+ Using Topic- and Word-Models for Exploring Swedish
+Government Official
+Reports. pp 49-56. 1st Workshop on Computational Linguistics for Political and Social Sciences (CPSS)
+<a href = "https://old.gscl.org/en/arbeitskreise/cpss/cpss-2021/workshop-proceedings">pdf</a>
+</li>
+<li>
+Skeppstedt, M., Ahltorp, M., Eriksson, G., Domeij, R.
+2021. A Pipeline for Manual Annotations of
+Risk Factor Mentions in the COVID-19 Open
+Research Dataset. Selected Papers from the
+CLARIN Annual Conference 2020. pp 214-225.
+<a href = "https://ecp.ep.liu.se/index.php/clarin/article/view/23/23">pdf</a>
+</li>
+<li>
+Skeppstedt, M., Domeij R., Skott F. 2021. Snippets of
+Folk Legends: Adapting a
+Text Mining Tool to a
+Collection of Folk Legends. Post-Proceedings of the 5th Conference Digital Humanities in the Nordic Countries (DHN 2020).
+<a href = "http://ceur-ws.org/Vol-2865/poster5.pdf">pdf</a>
+</li>
+<li>
+Skeppstedt, M., Domeij, R., and Skott F. 2020. Adapting a Topic Modelling Tool to the Task of Finding Recurring Themes in Folk Legends. 2020. Proceedings of the Digital Humanities in the Nordic Countries 5th Conference (DHN 2020). pp. 388-392.
+<a href = "http://ceur-ws.org/Vol-2612/poster3.pdf">pdf</a>
+</li>
+<li>
+Skeppstedt, M., Ahltorp, M., Eriksson, G., Domeij, R. 2020. Annotating risk factor mentions in the COVID-19 Open Research Dataset. Proceedings of CLARIN Annual Conference 2020. pp. 52-55.
+<a href = "https://office.clarin.eu/v/CE-2020-1738-CLARIN2020_ConferenceProceedings.pdf">pdf</a>
+</li>
+<li>
+Skeppstedt, M., Ahltorp, M., Kostiantyn, K., Kerren, A., Rzepka, R., Araki, K. 2020. Topic modelling applied to a second language: A language adaption and tool evaluation study. Selected Papers from the CLARIN Annual Conference 2019. pp. 145-156.
+<a href = "https://ep.liu.se/en/conference-article.aspx?series=ecp&issue=172&Article_No=17">pdf</a>
+</li>
+<li>
+Skeppstedt, M., Ahltorp, M., Kerren, A., Rzepka, R., Araki, K. 2019. Application of a topic model visualisation tool to a second language. Book of Abstracts of the CLARIN Annual Conference 2019. Leipzig, Germany.
+<a href = "http://cs.lnu.se/isovis/pubs/docs/skeppstedt-clarin19.pdf">pdf</a>
+</li>
+<li>
+Skeppstedt, M., Kerren, A., Stede, M. 2019. Finding Reasons for Vaccination Hesitancy: Evaluating Semi-Automatic Coding of Internet Discussion Forums. MEDINFO 2019: Health and Wellbeing e-Networks for All: Proceedings of the 17th World Congress on Medical and Health Informatics. pp. 348-352.
+<a href = "http://ebooks.iospress.nl/publication/52006">pdf</a>
+</li>
+<li>
+ Skeppstedt, M., Stede, M., Kerren, A. 2018. Stance-Taking in Topics Extracted from Vaccine-Related Tweets and Discussion Forum Posts. Proceedings of the 2018 EMNLP Workshop SMM4H : The 3rd Social Media Mining for Health Applications Workshop and Shared Task. pp. 5-8.
+<a href = "https://aclweb.org/anthology/W18-5902">pdf</a>
+</li>
+<li>
+Kucher, K., Skeppstedt, M., Kerren, A. 2018. Application of Interactive Computer-Assisted Argument Extraction to Opinionated Social Media Texts. Proceedings of the 11th International Symposium on Visual Information Communication and Interaction (VINCI '18). pp. 102-103.
+ </li>
+<li>Skeppstedt, M., Kucher, K., Stede, M., Kerren, A. 2018. Topics2Themes: Computer-assisted argument extraction
+by visual analysis of important topics. Proceedings of the 3rd Workshop on Visualization as Added Value in the Development, Use and Evaluation of Language Resources (VisLR III)
+<a href = "http://lrec-conf.org/workshops/lrec2018/W16/pdf/2_W16.pdf">pdf</a>
+</li>
  </ul>               
                 
 Note: The name of the repository was recently changed. It still works to clone from and push to the repository using the old name, but to avoid confusion, it can be good to do:
