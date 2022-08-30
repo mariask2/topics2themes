@@ -1,5 +1,5 @@
 
-#Topics2Themes
+# Topics2Themes
 
 Topics2Themes is a visual analysis tool for computer-assisted coding of frequently occurring topics in collections of text documents. The tool in mainly built on topic modelling, but also on clustering of word embeddings and on nearest neighbour classification.
 
