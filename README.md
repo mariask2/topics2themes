@@ -1,3 +1,11 @@
+
+#Topics2Themes
+
+Topics2Themes is a visual analysis tool for computer-assisted coding of frequently occurring topics in collections of text documents. The tool in mainly built on topic modelling, but also on clustering of word embeddings and on nearest neighbour classification.
+
+GUI example from ''Snippets of Folk Legends: Adapting a Text Mining Tool to a Collection of Folk Legends'' by Maria Skeppstedt, Rickard Domeij and Fredrik Skott.
+![alttext](snippets-image.png)
+
 Note: The name of the repository was recently changed. It still works to clone from and push to the repository using the old name, but to avoid confusion, it can be good to do:
 
 git remote set-url origin https://github.com/mariask2/topics2themes.git
