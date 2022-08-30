@@ -6,6 +6,19 @@ Topics2Themes is a visual analysis tool for computer-assisted coding of frequent
 GUI example from ''Snippets of Folk Legends: Adapting a Text Mining Tool to a Collection of Folk Legends'' by Maria Skeppstedt, Rickard Domeij and Fredrik Skott.
 ![alttext](snippets-image.png)
 
+## Publications
+
+<ul>
+                             <li>
+                Ahltorp, M., D&uuml;rlich L., Skeppstedt, M. 
+               2021. Textual Contexts for "Democracy":
+                             Using Topic- and Word-Models for Exploring Swedish
+                             Government Official
+                             Reports. pp 49-56. 1st Workshop on Computational Linguistics for Political and Social Sciences (CPSS)
+                    <a href = "https://old.gscl.org/en/arbeitskreise/cpss/cpss-2021/workshop-proceedings">pdf</a>
+                </li>
+ </ul>               
+                
 Note: The name of the repository was recently changed. It still works to clone from and push to the repository using the old name, but to avoid confusion, it can be good to do:
 
 git remote set-url origin https://github.com/mariask2/topics2themes.git
