@@ -34,4 +34,6 @@ FIXED: 9 JAN 2020
 12) There is no functionality for sorting texts according to their static and dynamic labels. 
 ADDED A SORTING ACCORDING TO STATIC LABELS (BUT NOTHING FOR DYNAMIC).
 
+13) When a model is created, a reload has to be done in order to access that model.
+
 
