@@ -174,6 +174,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
     documents = [el[TEXT] for el in file_list]
 
 
+    if len(documents) == 0:
+        print("No documents found. Remember that only documents with the suffix '.txt' are used")
     print("Make models for "+ str(len(documents)) + " documents.")
 
     MAX_NR_OF_MODEL_SIZE_RERUNS = 50
