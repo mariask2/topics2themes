@@ -3,6 +3,8 @@
 
 Topics2Themes is a visual analysis tool for computer-assisted coding of frequently occurring topics in collections of text documents. The tool in mainly built on topic modelling, but also on clustering of word embeddings and on nearest neighbour classification.
 
+The tool has been constructed by researchers at Linnaeus University, Potsdam University, Hokkaido University and the Institute for Language and Folklore. (For people involved, see publication list below.)
+
 GUI example from ''Snippets of Folk Legends: Adapting a Text Mining Tool to a Collection of Folk Legends'' by Maria Skeppstedt, Rickard Domeij and Fredrik Skott.
 ![alttext](snippets-image.png)
 

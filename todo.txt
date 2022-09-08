@@ -36,4 +36,6 @@ ADDED A SORTING ACCORDING TO STATIC LABELS (BUT NOTHING FOR DYNAMIC).
 
 13) When a model is created, a reload has to be done in order to access that model.
 
+14) When a term is selected, a topic is not automatically de-selected.
 
+15) Ingen notifiering till användaren när saker går fel. (Till exempel databasen inte igång.)
