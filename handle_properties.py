@@ -233,6 +233,12 @@ class PropertiesContainer:
             self.NUMBER_OF_SENTENCES_IN_SUMMARY = default_topic_model_configuration.NUMBER_OF_SENTENCES_IN_SUMMARY
             
         
+        try:
+            self.CLUSTERING_TYPE = properties.CLUSTERING_TYPE
+            if properties.CLUSTERING_TYPE not in ["dbscan", "agglomerative"]:
+                raise Exception("CLUSTERING_TYPE can only be dbscan or agglomerative")
+        except AttributeError:
+            self.CLUSTERING_TYPE = default_topic_model_configuration.CLUSTERING_TYPE
 
 
 

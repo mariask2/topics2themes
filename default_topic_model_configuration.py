@@ -208,6 +208,8 @@ def get_data_from_html(html_str):
 
 CLEANING_METHOD = get_data_from_html
 
+CLUSTERING_TYPE = "dbscan"
+
 def no_cleaning(text):
 
     return text

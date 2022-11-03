@@ -145,7 +145,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
     word2vecwrapper = None
     if properties.PRE_PROCESS:
         word2vecwrapper = Word2vecWrapper(properties.SPACE_FOR_PATH, properties.VECTOR_LENGTH, properties.MAX_DIST_FOR_CLUSTERING,\
-                                      words_not_to_include_in_clustering, properties.MANUAL_CLUSTER_FILE, properties.BINARY_SPACE, properties.GENSIM_FORMAT, path_slash_format)
+                                      words_not_to_include_in_clustering, properties.MANUAL_CLUSTER_FILE, properties.BINARY_SPACE, properties.GENSIM_FORMAT, path_slash_format, properties.CLUSTERING_TYPE)
     
     data_set_name = os.path.basename(path_slash_format)
  

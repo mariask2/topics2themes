@@ -8,6 +8,7 @@ from sklearn import preprocessing
 import numpy as np
 import gc
 from sklearn.cluster import DBSCAN
+from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics.pairwise import euclidean_distances
 
 
@@ -32,7 +33,7 @@ class Word2vecWrapper:
     A class for storing the information regarding the distributional semantics space
     """
 
-    def __init__(self, model_path, semantic_vector_length, cluster_eps, no_match, manual_made_dict_file, binary, gensim_format, path_slash_format):
+    def __init__(self, model_path, semantic_vector_length, cluster_eps, no_match, manual_made_dict_file, binary, gensim_format, path_slash_format, clustering_type):
 
         self.manual_made_dict_file = manual_made_dict_file
         self.path_slash_format = path_slash_format
@@ -45,6 +46,7 @@ class Word2vecWrapper:
         self.binary = binary
         self.gensim_format = gensim_format
         self.cluster_eps = cluster_eps
+        self.clustering_type = clustering_type
 
         if semantic_vector_length is not None:
             self.default_vector = [0] * self.semantic_vector_length
@@ -176,8 +178,13 @@ class Word2vecWrapper:
         # Compute DBSCAN
         X = np.matrix(X_vectors)
         self.cluster_dict = {}
-        db = DBSCAN(self.cluster_eps, min_samples=1).fit(X)
-        labels = db.labels_
+        if self.clustering_type == "agglomerative":
+            cluster_output = clustering = AgglomerativeClustering(linkage="ward",
+                                distance_threshold = self.cluster_eps,
+                                n_clusters=None).fit(X)
+        else:
+            cluster_output = DBSCAN(self.cluster_eps, min_samples=1).fit(X)
+        labels = cluster_output.labels_
 
         for label, term, vector in zip(labels, cluster_words, X_vectors):
             term = term.lower()
