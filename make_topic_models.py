@@ -435,10 +435,10 @@ def pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_form
     word_vectorizer = CountVectorizer(binary = True, stop_words=stopwords_for_word2vec, lowercase=False,\
         min_df = properties.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING)
     transformation = word_vectorizer.fit_transform(documents)
-    word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names())
+    word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names_out())
     word2vecwrapper.load_clustering(synonym_file, transformation, not_found_words_file, stopwords_for_word2vec)
     
-    term_visualiser.set_vocabulary(word_vectorizer.get_feature_names(), path_slash_format)
+    term_visualiser.set_vocabulary(word_vectorizer.get_feature_names_out(), path_slash_format)
     
     print("Start replacing with similars")
     pre_processed_documents = []
@@ -475,10 +475,10 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
     ngram_vectorizer.fit_transform(documents)
     
     if allowed_n_gram_components == None:
-        allowed_ngrams = ngram_vectorizer.get_feature_names()
+        allowed_ngrams = ngram_vectorizer.get_feature_names_out()
     else:
         allowed_ngrams = []
-        for el in ngram_vectorizer.get_feature_names():
+        for el in ngram_vectorizer.get_feature_names_out():
             sp = el.split(" ")
             add_ngram = True
             for gram in sp:
@@ -501,7 +501,7 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
 
     token_vectorizer = CountVectorizer(binary = True, ngram_range = (1, 1), min_df= 1 + max_occurrence_outside_collocation)
     token_vectorizer.fit_transform(new_documents)
-    no_ngrams_features = set([token for token in token_vectorizer.get_feature_names() if " " not in token])
+    no_ngrams_features = set([token for token in token_vectorizer.get_feature_names_out() if " " not in token])
 
 
 
@@ -533,15 +533,15 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
 
     final_documents_vectorizer = CountVectorizer(binary = True, ngram_range = (1, 1), min_df = 1)
     final_documents_vectorizer.fit_transform(new_filtered_documents)
-    final_features = set(final_documents_vectorizer.get_feature_names())
+    final_features = set(final_documents_vectorizer.get_feature_names_out())
 
     # remove e.g. bigrams that only occur in the context of a three-gram
     if allowed_n_gram_components == None:
-        filtered_final_feautures = set(final_documents_vectorizer.get_feature_names())
+        filtered_final_feautures = set(final_documents_vectorizer.get_feature_names_out())
     else:
         filtered_final_feautures = []
         # Add n-grams and the terms in the documents that are not included in the n-grams
-        for el in final_documents_vectorizer.get_feature_names():
+        for el in final_documents_vectorizer.get_feature_names_out():
             add = True
             for sub_part in el.split(collocation_marker):
                 if sub_part not in allowed_n_gram_components:
@@ -602,7 +602,7 @@ def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_sla
     to_return = []
     for el in inversed:
         to_return.append(list(el))
-    print("Vocabulary size: " + str(len(tf_vectorizer.get_feature_names())))
+    print("Vocabulary size: " + str(len(tf_vectorizer.get_feature_names_out())))
     print("Finished transforming the text into vectors")
     
     return to_return, tf_vectorizer, tf
@@ -766,7 +766,7 @@ def get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of
     H = model.components_
         
     ret_list = []
-    feature_names = vectorizer.get_feature_names() 
+    feature_names = vectorizer.get_feature_names_out()
     for topic_idx, topic in enumerate(H):
         # terms
         term_list = []

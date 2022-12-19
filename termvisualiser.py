@@ -29,12 +29,16 @@ class TermVisualiser:
 
     def set_vocabulary(self, terms_in_corpus, path_slash_format):
         self.terms_in_corpus = terms_in_corpus
+        # @TODO: Temporirily removed this, since it didn't work with
+        # new scikit-learn version
+        """
         j = json.dumps(self.terms_in_corpus)
         file_name = os.path.join(self.get_working_dir(path_slash_format), ALL_TERMS_FILE)
         f = open(file_name, "w")
         f.write(j)
         f.close()
-    
+        """
+        
     def add_terms(self, term_dict, nr):
         self.termdict_dict[nr] = term_dict
 
