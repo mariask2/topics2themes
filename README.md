@@ -64,13 +64,22 @@ conda install nltk
 
 conda install joblib
 
-pip install Flask
+conda install -c anaconda flask
 
-pip install -U flask-cors
+conda install -c conda-forge flask-cors
+
+
+or
+
+(pip install Flask
+
+pip install -U flask-cors)
+
 
 If you want to plot extracted terms, you also need:
 
 conda install matplotlib
+
 conda install -c conda-forge adjusttext
 
 When you run the code the first time, you'll get the following error message:
