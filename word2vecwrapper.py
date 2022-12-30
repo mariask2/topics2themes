@@ -113,22 +113,46 @@ class Word2vecWrapper:
                             +"while the configuration file states that is should have length "\
                             + str(self.semantic_vector_length))
 
-        
+
+    # Very simple compound spitting, not really language independent, but also not very weell adapted to any language
+    def get_compound_vector(self, word):
+        return_vector = None
+        for i in range(4, len(word) - 3):
+            first = word[:i].lower()
+            second = word[i:].lower()
+            if first in self.word2vec_model and second in self.word2vec_model:
+                first_v = self.word2vec_model[first]
+                second_v = self.word2vec_model[second]
+                return_vector = np.add(first_v, second_v)
+                return return_vector
+                
+        for j in range(len(word)-1, 6, -1):
+            first_alone = word[:j].lower()
+            if first_alone in self.word2vec_model:
+                return_vector = self.word2vec_model[first_alone]
+                return return_vector
+            second_alone = word[-j:].lower()
+            if second_alone in self.word2vec_model:
+                return_vector = self.word2vec_model[second_alone]
+                return return_vector
+        return return_vector
+                
     def get_vector(self, word):
         if len(word) == 3 and word[1] == "_":
             word = word[0] # To cover for a bug in scikit learn, one char tokens have been transformed to longer. These are here transformed back
-        try:
-            self.load()
+        
+        self.load()
+        if word in self.word2vec_model:
             raw_vec = self.word2vec_model[word]
             self.check_vector_length(raw_vec)
             return raw_vec
-        except KeyError:
-            try:
-                raw_vec = self.word2vec_model[word.lower()]
-                self.check_vector_length(raw_vec)
-                return raw_vec
-            except KeyError:
-                return self.default_vector
+        elif word.lower() in self.word2vec_model:
+            raw_vec = self.word2vec_model[word.lower()]
+            self.check_vector_length(raw_vec)
+            return raw_vec
+        else:
+            return self.get_compound_vector(word)
+  
 
     def load_clustering(self, output_file, transformation, not_found_words_file_name, stopwords_for_word2vec):
         not_found_words_file = open(not_found_words_file_name, "w")
@@ -160,12 +184,12 @@ class Word2vecWrapper:
             if word.lower() != word and word.lower() in has_lower_set: # if there is a non-cap version of the word use that one
                 continue
             vector = self.get_vector(word)
-            if not all([el1 == el2 for el1, el2 in zip(vector, self.default_vector)]):
+            if type(vector) == np.ndarray:
                 norm_vector = preprocessing.normalize(np.reshape(vector, newshape = (1, self.semantic_vector_length)), norm='l2') # normalize the vector (l2 = eucledian)  
                 list_vector = norm_vector[0]
                 X_vectors.append(list_vector)
                 cluster_words.append(word.lower())
-            else:
+            else: #not in model
                 # default vector
                 nr_of_not_found = nr_of_not_found + 1
                 if word not in set(self.manual_made_dict.keys()) and word.lower() not in set(self.manual_made_dict.keys()):
