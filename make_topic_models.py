@@ -1318,8 +1318,7 @@ if __name__ == '__main__':
         print("Saved to file")
     
         convert_to_csv.do_csv_export(path_slash_format, analysis_id_str)
-        print("converted to csv for: ", path_slash_format)
-    
+        
     mongo_con.close_connection()
 
 

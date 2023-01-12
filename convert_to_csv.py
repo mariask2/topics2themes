@@ -57,11 +57,12 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
     
     index_end_topics = len(header_list)
     header_list.append("Filename")
-    output_file_name = os.path.join(folder, model_nr + "_tab_separated.txt")
-    print("Writing csv export to: ", output_file_name)
-    outputfile = open(output_file_name, 'w')
-    to_write = "\t".join(header_list) + "\n"
-    outputfile.write(to_write)
+    
+    result_matrix = []
+    result_matrix.append(header_list)
+    #    to_write = "\t".join(header_list) + "\n"
+    #result_write.writerows(
+    #outputfile.write(to_write)
         
     included_file_names = set()
     for document in json_model["topic_model_output"]["documents"]:
@@ -109,11 +110,18 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
         #name of text
         row_list[index_end_topics] = document['base_name'].replace(".txt", "")
         
-        to_write_row = "\t".join(row_list) + "\n"
-        outputfile.write(to_write_row)
-        
+        #to_write_row = "\t".join(row_list) + "\n"
+        #outputfile.write(to_write_row)
+        result_matrix.append(row_list)
         
         included_file_names.add(document['base_name'])
+    
+    output_file_name = os.path.join(folder, model_nr + "_tab_separated.csv")
+    print("To access the output file write: ")
+    print("open " + output_file_name)
+    outputfile = open(output_file_name, 'w')
+    result_writer = csv.writer(outputfile, dialect="excel-tab")
+    result_writer.writerows(result_matrix)
     
     # TODO: Check if this works
     if convert_not_covered:
