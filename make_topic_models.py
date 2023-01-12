@@ -1284,11 +1284,19 @@ def make_model_for_collection(collection_name, model_name, mongo_con):
 ###
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    properties, path_slash_format, path_dot_format = handle_properties.load_properties(parser)
+    properties, path_slash_format, path_dot_format, model_name = handle_properties.load_properties(parser)
     
-    mongo_con = None #MongoConnector()
-    result_dict, time, post_id, most_typical_model = run_make_topic_models(mongo_con, properties, path_slash_format,\
-                                                       datetime.datetime.now(), save_in_database = False)
+    try:
+        mongo_con = MongoConnector()
+    except:
+        e = sys.exc_info()
+        print("The following error occurred: ")
+        print(e)
+        print("The pymongo database might not be running")
+        mongo_con = MongoConnector()
+        exit(1)
+        
+    result_dict, time, post_id, most_typical_model = run_make_topic_models(mongo_con, properties, path_slash_format, model_name)
 
 
     print("created " + str(len(result_dict["topics"])) + " topics.")

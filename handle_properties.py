@@ -2,6 +2,7 @@ import importlib
 import argparse
 import os
 import sys
+import datetime
 
 # An import that should function both locally and when running an a remote server
 try:
@@ -284,24 +285,35 @@ def load_properties(parser):
     parser.add_argument('--project', action='store', dest='project_path', \
                         help='The path, separated by dots, to where the project i located. For instance: data.example_project')
     parser.add_argument('--data_directory', action='store', dest='data_directory', \
-                                            help="The path, separated by slash, for the root of the data "\
-                                            + DATA_FOLDER + " is located.")
+                                            help='The path, separated by slash, for the root of the data '\
+                                            + DATA_FOLDER + ' is located.')
+    parser.add_argument('--model_name', action='store', dest='model_name', \
+                                            help='The name you choose for your model')
                         
     args = parser.parse_args()
     if not args.project_path:
-        print("The argument '--project' with the path to the data needs to be given")
+        print("The argument '--project' with the path to the data needs to be given.")
         exit(1)
+    
+    model_name = str(datetime.datetime.now())
+    if not args.model_name:
+        print("The argument '--model_name' is not given. Use the current time as name")
+    else:
+        model_name = args.model_name
 
-    """
     data_directory = "."
     if not args.data_directory:
         print("The argument '--data_directory' not given. Will use the current directory")
     else:
         data_directory = args.data_directory
-    """
+    
     print(args.project_path)
-    return load_properties_from_parameters(args.project_path)
-
+    print(args.model_name)
+    print(args.data_directory)
+    properties, path_slash_format, path_dot_format = load_properties_from_parameters(args.project_path)
+    
+    
+    return properties, path_slash_format, path_dot_format, model_name
 
 def load_properties_from_parameters(project_path):
     

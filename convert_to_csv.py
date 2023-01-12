@@ -9,6 +9,8 @@ def fill_zero(str):
     return str
 
 def convert_to_csv(json_topic_names, json_model, json_themes, file_name_text_dict):
+
+    
     
     document_theme_dict = {}
     for theme_el in json_themes:
@@ -30,9 +32,19 @@ def convert_to_csv(json_topic_names, json_model, json_themes, file_name_text_dic
     index_start_topics = len(header_list)
     
     id_index_dict = {}
+    for nr, el in enumerate(json_model["topic_model_output"]["topics"]):
+        print("id", el["id"])
+        id_index_dict[int(el["id"])] = nr
+        header_list.append(str(el["id"]))
+    print("***")
+    
+    # TODO: Put names back
+    """
     for nr, el in enumerate(topic_names_sorted):
+        print(nr, el)
         header_list.append(el['topic_name'].strip())
         id_index_dict[int(el['topic_id'])] = nr
+    """
     
     index_end_topics = len(header_list)
     header_list.append("Filename")
@@ -60,7 +72,7 @@ def convert_to_csv(json_topic_names, json_model, json_themes, file_name_text_dic
         key_words = []
         for document_topic in document["document_topics"]:
             key_words.extend(document_topic['terms_found_in_text'])
-            id_index = id_index_dict[document_topic['topic_index']]
+            id_index = id_index_dict[document_topic["topic_index"]]
             row_list[index_start_topics + id_index] = str(round(document_topic['topic_confidence'], 2)).replace(".",",") # Swedish Excel
         
         key_words = list(set(key_words))
@@ -90,6 +102,7 @@ def convert_to_csv(json_topic_names, json_model, json_themes, file_name_text_dic
         to_write_row = "\t".join(row_list) + "\n"
         outputfile.write(to_write_row)
         
+        
         included_file_names.add(document['base_name'])
     
     not_covered = set(file_name_text_dict.keys()) - included_file_names
@@ -99,7 +112,8 @@ def convert_to_csv(json_topic_names, json_model, json_themes, file_name_text_dic
         row_list[1] = file_name_text_dict[file_name].replace("\t", " ").replace("\n", " ").strip()
         to_write_row = "\t".join(row_list) + "\n"
         outputfile.write(to_write_row)
-        
+    
+    print("Written to: ", outputfile)
     outputfile.close()
         
 if __name__ == '__main__':
@@ -108,9 +122,9 @@ if __name__ == '__main__':
     #model_nr = "61dcc03a8002335ed70e493f"
     #model_nr = "61df484b2ca8753abecb663a"
     
-    folder = "/Users/marsk757/topic2themes/topics2themes/data_folder/cycling/topics2themes_exports_folder_created_by_system"
-    model_nr = "61ea6c0301c7c1346b1ff9f4"
-    files_folder = "/Users/marsk757/topic2themes/topics2themes/data_folder/cycling/cycling/"
+    folder="/Users/marsk757/topics2themes/topics2themes/data_folder/cirkel/topics2themes_exports_folder_created_by_system"
+    model_nr = "63bfd6da0159ab8a98b21e6d"
+    files_folder = "/Users/marsk757/topics2themes/topics2themes/data_folder/cirkel/unmarked/"
     
     file_names = glob.glob(os.path.join(files_folder, "*.txt"))
     file_name_text_dict = {}
