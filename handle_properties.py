@@ -284,36 +284,28 @@ def load_properties(parser):
     
     parser.add_argument('--project', action='store', dest='project_path', \
                         help='The path, separated by dots, to where the project i located. For instance: data.example_project')
+                        
+    # TODO: Not used at the moment. Assumes current directory
     parser.add_argument('--data_directory', action='store', dest='data_directory', \
                                             help='The path, separated by slash, for the root of the data '\
-                                            + DATA_FOLDER + ' is located.')
+                                            + DATA_FOLDER + ' is located.', default=".")
     parser.add_argument('--model_name', action='store', dest='model_name', \
-                                            help='The name you choose for your model')
-                        
+                                            help='The name you choose for your model', default=str(datetime.datetime.now()))
+    
+    parser.add_argument('--export', action='store_true')
+    parser.add_argument('--no-export', dest='export', action='store_false')
+    parser.set_defaults(export=False)
+
     args = parser.parse_args()
     if not args.project_path:
         print("The argument '--project' with the path to the data needs to be given.")
         exit(1)
     
-    model_name = str(datetime.datetime.now())
-    if not args.model_name:
-        print("The argument '--model_name' is not given. Use the current time as name")
-    else:
-        model_name = args.model_name
-
-    data_directory = "."
-    if not args.data_directory:
-        print("The argument '--data_directory' not given. Will use the current directory")
-    else:
-        data_directory = args.data_directory
-    
-    print(args.project_path)
-    print(args.model_name)
-    print(args.data_directory)
+   
     properties, path_slash_format, path_dot_format = load_properties_from_parameters(args.project_path)
     
     
-    return properties, path_slash_format, path_dot_format, model_name
+    return properties, path_slash_format, path_dot_format, args.model_name, args.export
 
 def load_properties_from_parameters(project_path):
     

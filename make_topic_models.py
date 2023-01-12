@@ -31,11 +31,13 @@ except:
 if RUN_LOCALLY:
     from topic_model_constants import *
     import handle_properties
+    import convert_to_csv
     from mongo_connector import MongoConnector
     from word2vecwrapper import Word2vecWrapper
     from termvisualiser import TermVisualiser
 else:
     from topics2themes.topic_model_constants import *
+    import topics2themes.convert_to_csv as convert_to_csv
     import topics2themes.handle_properties as handle_properties
     from topics2themes.mongo_connector import MongoConnector
     from topics2themes.word2vecwrapper import Word2vecWrapper
@@ -1284,7 +1286,7 @@ def make_model_for_collection(collection_name, model_name, mongo_con):
 ###
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    properties, path_slash_format, path_dot_format, model_name = handle_properties.load_properties(parser)
+    properties, path_slash_format, path_dot_format, model_name, export = handle_properties.load_properties(parser)
     
     try:
         mongo_con = MongoConnector()
@@ -1298,11 +1300,27 @@ if __name__ == '__main__':
         
     result_dict, time, post_id, most_typical_model = run_make_topic_models(mongo_con, properties, path_slash_format, model_name)
 
-
+    
     print("created " + str(len(result_dict["topics"])) + " topics.")
+    print("with id: ", post_id)
     print("Created model saved at " + str(time))
 
-    #mongo_con.close_connection()
+    if export:
+        post_id_str = str(post_id)
+        analysis_res = mongo_con.create_new_analysis(post_id_str, "default analysis")
+        print("Created analysis: ", analysis_res)
+        analysis_id_str = str(analysis_res["_id"])
+    
+        found_analyses =  mongo_con.get_all_analyses_for_model(post_id_str)
+        print("Created analysis", found_analyses)
+    
+        mongo_con.save_analysis_to_file_for_analysis_id(analysis_id_str)
+        print("Saved to file")
+    
+        convert_to_csv.do_csv_export(path_slash_format, analysis_id_str)
+        print("converted to csv for: ", path_slash_format)
+    
+    mongo_con.close_connection()
 
 
 

@@ -3,15 +3,24 @@ import json
 import csv
 import glob
 
+# An import that should function both locally and when running an a remote server
+try:
+    from environment_configuration import *
+except:
+    from topics2themes.environment_configuration import *
+
+if RUN_LOCALLY:
+    from topic_model_constants import *
+else:
+    from topics2themes.topic_model_constants import *
+    
 def fill_zero(str):
     while len(str) < 4:
         str = "0" + str
     return str
 
-def convert_to_csv(json_topic_names, json_model, json_themes, file_name_text_dict):
+def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, convert_not_covered = False, files_folder = None):
 
-    
-    
     document_theme_dict = {}
     for theme_el in json_themes:
         for document_id in theme_el['document_ids']:
@@ -48,8 +57,9 @@ def convert_to_csv(json_topic_names, json_model, json_themes, file_name_text_dic
     
     index_end_topics = len(header_list)
     header_list.append("Filename")
-    
-    outputfile = open('test_output.txt', 'w')
+    output_file_name = os.path.join(folder, model_nr + "_tab_separated.txt")
+    print("Writing csv export to: ", output_file_name)
+    outputfile = open(output_file_name, 'w')
     to_write = "\t".join(header_list) + "\n"
     outputfile.write(to_write)
         
@@ -105,32 +115,28 @@ def convert_to_csv(json_topic_names, json_model, json_themes, file_name_text_dic
         
         included_file_names.add(document['base_name'])
     
-    not_covered = set(file_name_text_dict.keys()) - included_file_names
-    for file_name in list(not_covered):
-        row_list = [""]*len(header_list)
-        row_list[index_end_topics] = file_name.replace(".txt", "")
-        row_list[1] = file_name_text_dict[file_name].replace("\t", " ").replace("\n", " ").strip()
-        to_write_row = "\t".join(row_list) + "\n"
-        outputfile.write(to_write_row)
+    # TODO: Check if this works
+    if convert_not_covered:
+        file_names = glob.glob(os.path.join(files_folder, "*.txt"))
+        file_name_text_dict = {}
+        for file_name in file_names:
+            with open(file_name) as f:
+                file_name_text_dict[os.path.basename(file_name)] = f.read()
+            
+        not_covered = set(file_name_text_dict.keys()) - included_file_names
+        for file_name in list(not_covered):
+            row_list = [""]*len(header_list)
+            row_list[index_end_topics] = file_name.replace(".txt", "")
+            row_list[1] = file_name_text_dict[file_name].replace("\t", " ").replace("\n", " ").strip()
+            to_write_row = "\t".join(row_list) + "\n"
+            outputfile.write(to_write_row)
     
-    print("Written to: ", outputfile)
     outputfile.close()
         
-if __name__ == '__main__':
-    #folder = "/Users/marsk757/topic2themes/topics2themes/data_folder/språk-tilltal-delat/topics2themes_exports_folder_created_by_system"
-    #model_nr = "61d9bbb060423d19911efd8a"
-    #model_nr = "61dcc03a8002335ed70e493f"
-    #model_nr = "61df484b2ca8753abecb663a"
-    
-    folder="/Users/marsk757/topics2themes/topics2themes/data_folder/cirkel/topics2themes_exports_folder_created_by_system"
-    model_nr = "63bfd6da0159ab8a98b21e6d"
-    files_folder = "/Users/marsk757/topics2themes/topics2themes/data_folder/cirkel/unmarked/"
-    
-    file_names = glob.glob(os.path.join(files_folder, "*.txt"))
-    file_name_text_dict = {}
-    for file_name in file_names:
-        with open(file_name) as f:
-            file_name_text_dict[os.path.basename(file_name)] = f.read()
+
+def do_csv_export(folder_base, model_nr, convert_not_covered = False, files_folder = None):
+
+    folder = os.path.join(folder_base, EXPORT_DIR)
     
     topic_names = open(os.path.join(folder, model_nr + "_topic_name.json"), "r")
     
@@ -145,4 +151,10 @@ if __name__ == '__main__':
     topic_names.close()
     model.close()
     themes.close()
-    convert_to_csv(json_topic_names, json_model, json_themes, file_name_text_dict)
+    convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, convert_not_covered, files_folder)
+
+if __name__ == '__main__':
+    folder="/Users/marsk757/topics2themes/topics2themes/data_folder/cirkel/"
+    model_nr = "63bfd6da0159ab8a98b21e6d"
+    
+    do_csv_export(folder, model_nr)
