@@ -42,12 +42,11 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
     
     id_index_dict = {}
     for nr, el in enumerate(json_model["topic_model_output"]["topics"]):
-        print("id", el["id"])
+
         id_index_dict[int(el["id"])] = nr
-        header_list.append(str(el["id"]))
-    print("***")
-    
-    # TODO: Put names back
+        header_list.append(str(el["label"]))
+
+    # TODO: Perhaps put user-defined names back
     """
     for nr, el in enumerate(topic_names_sorted):
         print(nr, el)
