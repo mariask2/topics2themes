@@ -433,20 +433,12 @@ def replace_spaces(text):
 
 
 def pre_process(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
-
-    """
-    documents = []
-    for d in raw_documents:
-        documents.append(properties.CLEANING_METHOD (d))
-    """
     
-    if not properties.PRE_PROCESS:
+    if properties.PRE_PROCESS:
+        return pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
+    else:
         return documents
-    
-    pre_processed_documents = pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
-
-    return pre_processed_documents
-
+            
 def pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
 
     synonym_output_dir = os.path.join(path_slash_format, SYNONYM_FOLDER_NAME)
