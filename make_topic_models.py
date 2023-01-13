@@ -168,7 +168,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                   manual_collocations.append(word.strip())
                   
     
-    file_list = read_discussion_documents(properties.DATA_LABEL_LIST,
+    file_list = read_and_first_process_documents(properties.DATA_LABEL_LIST,
                                             data_set_name,
                                           properties.REMOVE_DUPLICATES, properties.MIN_NGRAM_LENGTH_FOR_DUPLICATE, properties.CLEANING_METHOD,
                                           manual_collocations)
@@ -180,7 +180,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
         print("No documents found. Remember that only documents with the suffix '.txt' are used")
     print("Make models for "+ str(len(documents)) + " documents.")
 
-    MAX_NR_OF_MODEL_SIZE_RERUNS = 50
+    MAX_NR_OF_MODEL_SIZE_RERUNS = 1   #50 : TODO Perhaps change this back
 
 
     if properties.TOPIC_MODEL_ALGORITHM == NMF_NAME:
@@ -250,11 +250,29 @@ def get_current_file_name(name, topic_model_algorithm):
     return os.path.join(PATH_TOPIC_MODEL_OUTPUT, name + "_" + topic_model_algorithm)
 
 ######
+# First pre-processing
+######
+
+def replace_collocations(file_list, manual_collocations):
+    sorted_collocations = sorted(manual_collocations, reverse=True)
+    for el in file_list:
+        for collocation in sorted_collocations:
+            if collocation in el[TEXT]:
+                to_replace = collocation.replace(" ", COLLOCATION_BINDER)
+                el[TEXT] = el[TEXT].replace(collocation, to_replace)
+            """
+            # TODO: solve with regexp instead
+            elif collocation in el[TEXT].lower():
+                to_replace = collocation.replace(" ", COLLOCATION_BINDER)
+                el[TEXT] = el[TEXT].replace(collocation, to_replace)
+            """
+    
+######
 # Read documents from file
 ######
-def read_discussion_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method, manual_collocations):
-    file_list = []
 
+def read_documents(data_label_list, data_set_name):
+    file_list = []
     print("data_label_list", data_label_list)
     for data_info in data_label_list:
         data_dir = os.path.join(WORKSPACE_FOLDER, DATA_FOLDER, data_set_name, data_info[DIRECTORY_NAME])
@@ -268,19 +286,26 @@ def read_discussion_documents(data_label_list, data_set_name, whether_to_remove_
             base_name = os.path.basename(f)
             opened = open(f)
             text = opened.read()
-            text.replace("  ", " ")
-            
-            for collocation in sorted(manual_collocations, reverse=True):
-                if collocation in text:
-                    to_replace = collocation.replace(" ", COLLOCATION_BINDER)
-                    text = text.replace(collocation, to_replace)
-                #elif collocation in text.lower():
-                #    to_replace = collocation.replace(" ", COLLOCATION_BINDER)
-                #    text = text.replace(collocation, to_replace)
-                
+                        
             file_list.append({TEXT: text, LABEL: data_info[DATA_LABEL], BASE_NAME: base_name, FULL_NAME: f})
             opened.close()
+            
+    return file_list
+            
+def read_and_first_process_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method, manual_collocations):
+    
+    if True:
+        file_list = read_documents(data_label_list, data_set_name)
 
+    replace_collocations(file_list, manual_collocations)
+    
+    """
+    with open("temp_debug.txt", "w") as temp_debug:
+        for fl in file_list:
+            temp_debug.write(str(fl))
+            temp_debug.write("\n")
+    """
+    
     #remove duplicates. Just keep the first occurrence, and remove the once comming after
     previous_texts = set()
     filtered_file_list = []
@@ -295,7 +320,8 @@ def read_discussion_documents(data_label_list, data_set_name, whether_to_remove_
             if ch.isalpha() or (ch == " " and (len(filtered_text) > 0 and filtered_text[-1] != " ")): #don't add several white space in a row
                 filtered_text.append(ch.lower())
         filtered_text_text = "".join(filtered_text).strip()
-        
+        filtered_text_text = filtered_text_text.replace("  ", " ")
+                    
         if whether_to_remove_duplicates:
             sp = filtered_text_text.split(" ")
             add_this_file, found_duplicate = is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
