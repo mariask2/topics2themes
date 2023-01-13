@@ -254,12 +254,15 @@ def get_current_file_name(name, topic_model_algorithm):
 ######
 
 def replace_collocations(file_list, manual_collocations):
+    if not manual_collocations:
+        return
     sorted_collocations = sorted(manual_collocations, reverse=True)
-    for el in file_list:
+    for i in range(0, len(file_list)):
+        el = file_list[i]
         for collocation in sorted_collocations:
             if collocation in el[TEXT]:
                 to_replace = collocation.replace(" ", COLLOCATION_BINDER)
-                el[TEXT] = el[TEXT].replace(collocation, to_replace)
+                file_list[i][TEXT] = el[TEXT].replace(collocation, to_replace)
             """
             # TODO: solve with regexp instead
             elif collocation in el[TEXT].lower():
