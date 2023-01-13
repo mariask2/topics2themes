@@ -294,21 +294,32 @@ def read_documents(data_label_list, data_set_name):
             opened.close()
             
     return file_list
-            
-def read_and_first_process_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method, manual_collocations):
-    
-    if True:
-        file_list = read_documents(data_label_list, data_set_name)
 
-    replace_collocations(file_list, manual_collocations)
+
+def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts):
+    found_duplicate = None
+    n_gram_length = n_gram_length_conf
+        
+    add_this_file = True
+    sub_tokens = []
+    for token in sp:
+        if token.strip() == "":
+            continue
+        sub_tokens.append(token)
+        if len(sub_tokens) > n_gram_length:
+            del sub_tokens[0]
+            sub_text = "".join(sub_tokens)
+            if sub_text not in previous_sub_texts:
+                previous_sub_texts.add(sub_text)
+            else: # this subtext has appeared before
+                add_this_file = False
+                found_duplicate = sub_text
+                break
+    return add_this_file, found_duplicate
     
-    """
-    with open("temp_debug.txt", "w") as temp_debug:
-        for fl in file_list:
-            temp_debug.write(str(fl))
-            temp_debug.write("\n")
-    """
-    
+
+def remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, n_gram_length_conf):
+
     #remove duplicates. Just keep the first occurrence, and remove the once comming after
     previous_texts = set()
     filtered_file_list = []
@@ -347,26 +358,17 @@ def read_and_first_process_documents(data_label_list, data_set_name, whether_to_
     print("The number of removed files is: ", nr_of_removed_files, " Adjust the parameter 'MIN_NGRAM_LENGTH_FOR_DUPLICATE' for more or less strict duplicate removal." )
     return filtered_file_list
 
-def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts):
-    found_duplicate = None
-    n_gram_length = n_gram_length_conf
-        
-    add_this_file = True
-    sub_tokens = []
-    for token in sp:
-        if token.strip() == "":
-            continue
-        sub_tokens.append(token)
-        if len(sub_tokens) > n_gram_length:
-            del sub_tokens[0]
-            sub_text = "".join(sub_tokens)
-            if sub_text not in previous_sub_texts:
-                previous_sub_texts.add(sub_text)
-            else: # this subtext has appeared before
-                add_this_file = False
-                found_duplicate = sub_text
-                break
-    return add_this_file, found_duplicate
+
+ 
+def read_and_first_process_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method, manual_collocations):
+    
+    if True:
+        file_list = read_documents(data_label_list, data_set_name)
+
+    file_list = remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, n_gram_length_conf)
+    replace_collocations(file_list, manual_collocations)
+    return file_list
+    
     
 ###########
 # Overall functionality for pre-processing, training models and printing output
