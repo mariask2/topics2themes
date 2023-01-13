@@ -328,15 +328,15 @@ def remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, 
     
     nr_of_removed_files = 0
     file_list_len_sorted = sorted(file_list, key=lambda x: len(x[TEXT]))
-    for file in file_list_len_sorted:
-        filtered_text = []
-        for ch in cleaning_method(file[TEXT]).strip():
-            if ch.isalpha() or (ch == " " and (len(filtered_text) > 0 and filtered_text[-1] != " ")): #don't add several white space in a row
-                filtered_text.append(ch.lower())
-        filtered_text_text = "".join(filtered_text).strip()
-        filtered_text_text = filtered_text_text.replace("  ", " ")
+    if whether_to_remove_duplicates:
+        for file in file_list_len_sorted:
+            filtered_text = []
+            for ch in cleaning_method(file[TEXT]).strip():
+                if ch.isalpha() or (ch == " " and (len(filtered_text) > 0 and filtered_text[-1] != " ")): #don't add several white space in a row
+                    filtered_text.append(ch.lower())
+            filtered_text_text = "".join(filtered_text).strip()
+            filtered_text_text = filtered_text_text.replace("  ", " ")
                     
-        if whether_to_remove_duplicates:
             sp = filtered_text_text.split(" ")
             add_this_file, found_duplicate = is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
     
@@ -352,12 +352,11 @@ def remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, 
                 filtered_file_list.append(file)
             else:
                 nr_of_removed_files = nr_of_removed_files + 1
-        else: # no dupblicate_remove
-            filtered_file_list.append(file)
-
-    print("The number of removed files is: ", nr_of_removed_files, " Adjust the parameter 'MIN_NGRAM_LENGTH_FOR_DUPLICATE' for more or less strict duplicate removal." )
-    return filtered_file_list
-
+        
+        print("The number of removed files is: ", nr_of_removed_files, " Adjust the parameter 'MIN_NGRAM_LENGTH_FOR_DUPLICATE' for more or less strict duplicate removal." )
+        return filtered_file_list
+    else:
+        return file_list
 
  
 def read_and_first_process_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method, manual_collocations):
