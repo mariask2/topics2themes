@@ -241,7 +241,10 @@ class PropertiesContainer:
         except AttributeError:
             self.CLUSTERING_TYPE = default_topic_model_configuration.CLUSTERING_TYPE
 
-
+        try:
+            self.DEBUG = properties.DEBUG
+        except AttributeError:
+            self.DEBUG = default_topic_model_configuration.DEBUG
 
     def get_properties_in_json(self):
         """

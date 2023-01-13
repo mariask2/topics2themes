@@ -101,7 +101,7 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
                  
             repr_terms.append("/".join(terms_to_pick_as_rep))
         
-        row_list[0] = ", ".join(repr_terms)
+        row_list[0] = ", ".join(sorted(repr_terms))
         
         #text
         row_list[1] = document['text'].replace("\t", " ").replace("\n", " ").strip()

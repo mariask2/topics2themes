@@ -186,6 +186,7 @@ def simple_tag_removal(text):
     cleaned_text = TAG_RE.sub('', text)
     return cleaned_text
 
+
 def no_additiona_labels(doc_id):
     return []
 
@@ -210,9 +211,12 @@ CLEANING_METHOD = get_data_from_html
 
 CLUSTERING_TYPE = "dbscan"
 
+DEBUG = False
+
 def no_cleaning(text):
 
     return text
+
 
 ###
 # Testing the default functionality

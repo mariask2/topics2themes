@@ -393,11 +393,15 @@ def train_scikit_nmf_model(properties, documents, word2vecwrapper, path_slash_fo
     pre_processed_documents = pre_process(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
     texts, tfidf_vectorizer, tfidf = get_scikit_bow(properties, pre_processed_documents, TfidfVectorizer, stopword_handler, path_slash_format, nmf=True)
     
+    random_state = None
+    if properties.DEBUG:
+        random_state = 0
+        
     model_list = []
     for i in range(0, properties.NUMBER_OF_RUNS):
         print("Running topic model nr " + str(i))
         #nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='random').fit(tfidf)
-        nmf = NMF(n_components= properties.NUMBER_OF_TOPICS, alpha=.1, l1_ratio=.5, init='nndsvd', shuffle = True).fit(tfidf)
+        nmf = NMF(n_components=properties.NUMBER_OF_TOPICS, alpha=.1, l1_ratio=.5, init='nndsvd', shuffle = True, random_state=random_state).fit(tfidf)
         model_list.append(nmf)
     print("Start getting topic model info")
     topic_info, most_typical_model = get_scikit_topics(properties, model_list, tfidf_vectorizer, tfidf, documents)
@@ -1035,7 +1039,7 @@ def print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_
             document_topic_obj = {}
             document_topic_obj["topic_index"] = el[TOPIC_NUMBER]
             document_topic_obj["topic_confidence"] = document[DOCUMENT_TOPIC_STRENGTH]
-            document_topic_obj["terms_found_in_text"] = document[FOUND_CONCEPTS]
+            document_topic_obj["terms_found_in_text"] = sorted(document[FOUND_CONCEPTS])
 
             # It is only the terms that are actually included in the document that are added here
             document_topic_obj["terms_in_topic"] = []
