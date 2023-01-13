@@ -274,7 +274,7 @@ def replace_collocations(file_list, manual_collocations):
 # Read documents from file
 ######
 
-def read_documents(data_label_list, data_set_name):
+def read_documents(data_label_list, data_set_name, cleaning_method):
     file_list = []
     print("data_label_list", data_label_list)
     for data_info in data_label_list:
@@ -290,11 +290,10 @@ def read_documents(data_label_list, data_set_name):
             opened = open(f)
             text = opened.read()
                         
-            file_list.append({TEXT: text, LABEL: data_info[DATA_LABEL], BASE_NAME: base_name, FULL_NAME: f})
+            file_list.append({TEXT: cleaning_method(text), LABEL: data_info[DATA_LABEL], BASE_NAME: base_name, FULL_NAME: f})
             opened.close()
             
     return file_list
-
 
 def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts):
     found_duplicate = None
@@ -331,7 +330,7 @@ def remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, 
     if whether_to_remove_duplicates:
         for file in file_list_len_sorted:
             filtered_text = []
-            for ch in cleaning_method(file[TEXT]).strip():
+            for ch in file[TEXT].strip():
                 if ch.isalpha() or (ch == " " and (len(filtered_text) > 0 and filtered_text[-1] != " ")): #don't add several white space in a row
                     filtered_text.append(ch.lower())
             filtered_text_text = "".join(filtered_text).strip()
@@ -362,7 +361,7 @@ def remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, 
 def read_and_first_process_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method, manual_collocations):
     
     if True:
-        file_list = read_documents(data_label_list, data_set_name)
+        file_list = read_documents(data_label_list, data_set_name, cleaning_method)
 
     file_list = remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, n_gram_length_conf)
     replace_collocations(file_list, manual_collocations)
@@ -433,30 +432,19 @@ def replace_spaces(text):
 #####
 
 
-def pre_process(properties, raw_documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
+def pre_process(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
 
+    """
     documents = []
     for d in raw_documents:
         documents.append(properties.CLEANING_METHOD (d))
+    """
     
     if not properties.PRE_PROCESS:
         return documents
     
-    #documents, n_grams, final_features = find_frequent_n_grams(raw_documents, collocation_cut_off,\
-    #                                                         max_occurrence_outside_collocation=min_document_frequency,\
-    #                                                          collocation_marker = PRE_PROCESS_COLLOCATION_MARKER)
-
-
-    #vectorizer = CountVectorizer(binary = True, min_df=collocation_cut_off, max_features = max_features)
-    #vectorizer.fit_transform(raw_documents)
-    #features = vectorizer.get_feature_names()
-    #print(features)
-
-
-
     pre_processed_documents = pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
 
-    print("***************")
     return pre_processed_documents
 
 def pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
