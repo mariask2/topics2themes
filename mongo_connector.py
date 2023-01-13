@@ -19,7 +19,8 @@ if RUN_LOCALLY:
 else:
     from topics2themes.topic_model_constants import *
 
-DEFAULT_DATABASE_NAME = "default_database_name"
+DEFAULT_DATABASE_NAME = "default_database_name_topics2themes"
+DEFAULT_DATABASE_PORT = 27017
 
 class MongoConnector:
     def __init__(self):
@@ -28,7 +29,14 @@ class MongoConnector:
             self.TOPIC_MODEL_DATABASE = DATABASE_NAME
         except:
             self.TOPIC_MODEL_DATABASE = DEFAULT_DATABASE_NAME
+            
+        try:
+            self.DATABASE_PORT = DATABASE_PORT
+        except:
+            self.DATABASE_PORT = DEFAULT_DATABASE_PORT
        
+        print("The name of the database: ", self.TOPIC_MODEL_DATABASE)
+        
         self.client = None
         self.DATE = "date"
         self.ID = "_id"
@@ -65,7 +73,8 @@ class MongoConnector:
         
         maxSevSelDelay = 5 #Check that the server is listening, wait max 5 sec
         if not self.client:
-            self.client = MongoClient(serverSelectionTimeoutMS=maxSevSelDelay)
+            self.client = MongoClient(serverSelectionTimeoutMS=maxSevSelDelay,\
+                port=self.DATABASE_PORT)
         #self.client = MongoClient('localhost', 27017, serverSelectionTimeoutMS=maxSevSelDelay)
         #self.server_info = self.client.server_info()
         return self.client

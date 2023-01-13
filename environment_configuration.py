@@ -22,8 +22,11 @@ DATABASE_NAME = "database_1"
 # Whether it should be allowed to create new models
 # If no value is given, the default value is that a model
 # can be created
-
 ALLOWED_TO_CREATE_MODEL = True
+
+# The database port. The default is the standard database port for MongoDB (27017)
+DATABASE_PORT = 27017
+
 
 
 

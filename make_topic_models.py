@@ -1285,6 +1285,9 @@ def make_model_for_collection(collection_name, model_name, mongo_con):
 # Start
 ###
 if __name__ == '__main__':
+
+    print("You have configured the workspace folder to be (will be used for relative paths): " +  WORKSPACE_FOLDER)
+    
     parser = argparse.ArgumentParser()
     properties, path_slash_format, path_dot_format, model_name, export = handle_properties.load_properties(parser)
     
@@ -1305,7 +1308,7 @@ if __name__ == '__main__':
     print("with id: ", post_id)
     print("Created model saved at " + str(time))
 
-    if export:
+    if export: # Maka an analysis instance and export the topic model + empty analysis
         post_id_str = str(post_id)
         analysis_res = mongo_con.create_new_analysis(post_id_str, "default analysis")
         print("Created analysis: ", analysis_res)

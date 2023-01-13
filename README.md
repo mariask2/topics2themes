@@ -92,12 +92,22 @@ Resource punkt not found.
 Follow the NLTK instructions to fix this
 
 ******
+## Setting up the database server
 To run the code you need a mongdodb server to be running.
 
 To achieve that, create the directory where the data is to be saved, e.g., “data/db
 Then start the server giving that directory as a parameter:
+```
 mongod --dbpath data/db/
-(mongodb listenes as default on port 27017. Currently that port is assumed to be the one used)
+```
+As default, mongodb listenes on port 27017, and that is also the default port used by Topics2Themes. To specify another port, you can start mongodb as follows:
+```
+mongod --dbpath data/db/ --port 27019
+```
+
+You then also need to configure Topics2Themes to connect to this other port, by setting the variable `DATABASE_PORT` in `environment_configuration.py`
+
+## Run the Flask server
 
 You write the following to run the code:
 
@@ -124,20 +134,33 @@ Each text collection is positioned in a subfolder of "data_folder". This subfold
 ********
 As a default, the "data_folder" is positioned as a subdirectory in the folder with the python code.
 The variable "WORKSPACE_FOLDER" in the file "environment_configuration.py"  can, however, be changed to another location, and the "data_folder" can be positioned there.
-
 **********
 
+(
 If you are using conda, don't forget to activate the environment, 
 
 source activate <name of environment>
 
 For instance:
 source activate topic_modelling
+)
 
-You used to be able to create a model without
-To create a new topic model for the data in the folders data_folder/vaccination_constructed_data
+## Running Topics2Themes in batch mode
+You can also create a model in batch mode without running Flask
+For instance, to create a new topic model for the data in the folders `data_folder/vaccination_constructed_data` write:
+```
 python make_topic_models.py --project data_folder.vaccination_constructed_data_marked
-(This will not be save to the database, only written to a file)
+```
+
+To give the model a name (and not use the default name in form of the time stamp), use the option `--model_name`. To export the output to a csv file, use the option `--export`
+
+## Technical configuration
+The technical configuration is changed in the file `environment_configuration.py`. You can, for instance, change the name of the database and the port for the database.
+
+
+
+
+
 
 Part of the code is inspired from:
 https://medium.com/@aneesha/topic-modeling-with-scikit-learn-e80d33668730

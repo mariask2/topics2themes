@@ -280,18 +280,10 @@ class PropertiesContainer:
         return dict
     
 def load_properties(parser):
- 
-    
     parser.add_argument('--project', action='store', dest='project_path', \
                         help='The path, separated by dots, to where the project i located. For instance: data.example_project')
-                        
-    # TODO: Not used at the moment. Assumes current directory
-    parser.add_argument('--data_directory', action='store', dest='data_directory', \
-                                            help='The path, separated by slash, for the root of the data '\
-                                            + DATA_FOLDER + ' is located.', default=".")
     parser.add_argument('--model_name', action='store', dest='model_name', \
                                             help='The name you choose for your model', default=str(datetime.datetime.now()))
-    
     parser.add_argument('--export', action='store_true')
     parser.add_argument('--no-export', dest='export', action='store_false')
     parser.set_defaults(export=False)
@@ -301,7 +293,6 @@ def load_properties(parser):
         print("The argument '--project' with the path to the data needs to be given.")
         exit(1)
     
-   
     properties, path_slash_format, path_dot_format = load_properties_from_parameters(args.project_path)
     
     
