@@ -274,28 +274,36 @@ def replace_collocations(file_list, manual_collocations):
 # Read documents from file
 ######
 
-def read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf):
+def read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, remove_duplicates):
+    previous_texts = set()
+    previous_sub_texts = set()
+    nr_of_removed_files = 0
+            
     file_list = []
+    files_to_read = []
     print("data_label_list", data_label_list)
     for data_info in data_label_list:
         data_dir = os.path.join(WORKSPACE_FOLDER, DATA_FOLDER, data_set_name, data_info[DIRECTORY_NAME])
+        print("Collecting files from", os.path.join(data_dir))
         if not os.path.isdir(data_dir):
             print(os.path.abspath(data_dir), " does not exist")
-        files = sorted(Path(data_dir).rglob("*.txt"), key =  lambda x: os.stat(x).st_size, reverse=True)
+        files_to_read.extend([(x, data_info[DATA_LABEL]) for x in Path(data_dir).rglob("*.txt")])
 
-        print("Reading", os.path.join(data_dir))
+    if remove_duplicates:
+        files_to_read = sorted(files_to_read, key = lambda x: os.stat(x[0]).st_size, reverse=True)
 
-        previous_texts = set()
-        previous_sub_texts = set()
+    for f, user_label in files_to_read:
+        base_name = os.path.basename(f)
+        opened = open(f)
+        text = cleaning_method(opened.read())
+       
+        if (not remove_duplicates) or should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length_conf):
+            file_list.append({TEXT: text, LABEL: user_label, BASE_NAME: base_name, FULL_NAME: f})
+        else:
+            nr_of_removed_files = nr_of_removed_files + 1
+        opened.close()
         
-        for f in files:
-            base_name = os.path.basename(f)
-            opened = open(f)
-            text = cleaning_method(opened.read())
-                        
-            file_list.append({TEXT: text, LABEL: data_info[DATA_LABEL], BASE_NAME: base_name, FULL_NAME: f})
-            opened.close()
-            
+    print("The number of removed files is: ", nr_of_removed_files, " Adjust the parameter 'MIN_NGRAM_LENGTH_FOR_DUPLICATE' for more or less strict duplicate removal." )
     return file_list
 
 def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts):
@@ -341,34 +349,12 @@ def should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length
                 break
     return add_this_file
    
-#Just keep the first occurrence, and remove the once comming after
-def remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, n_gram_length_conf):
-    
-    nr_of_removed_files = 0
-    file_list_len_sorted = sorted(file_list, key=lambda x: len(x[TEXT]))
-    if whether_to_remove_duplicates:
-        filtered_file_list = []
-    
-        previous_texts = set()
-        previous_sub_texts = set()
-        for file in file_list_len_sorted:
-            if should_text_be_added(file[TEXT], previous_texts, previous_sub_texts, n_gram_length_conf):
-                filtered_file_list.append(file)
-            else:
-                nr_of_removed_files = nr_of_removed_files + 1
-        
-        print("The number of removed files is: ", nr_of_removed_files, " Adjust the parameter 'MIN_NGRAM_LENGTH_FOR_DUPLICATE' for more or less strict duplicate removal." )
-        return filtered_file_list
-    else:
-        return file_list
 
- 
 def read_and_first_process_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method, manual_collocations):
     
     if True:
-        file_list = read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf)
+        file_list = read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, whether_to_remove_duplicates)
 
-    file_list = remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, n_gram_length_conf)
     replace_collocations(file_list, manual_collocations)
     return file_list
     
