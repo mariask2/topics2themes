@@ -245,6 +245,11 @@ class PropertiesContainer:
             self.DEBUG = properties.DEBUG
         except AttributeError:
             self.DEBUG = default_topic_model_configuration.DEBUG
+            
+        try:
+            self.READ_FUNCTION = properties.READ_FUNCTION
+        except AttributeError:
+            self.READ_FUNCTION = default_topic_model_configuration.READ_FUNCTION
 
     def get_properties_in_json(self):
         """

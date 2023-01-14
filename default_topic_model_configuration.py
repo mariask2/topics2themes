@@ -217,6 +217,7 @@ def no_cleaning(text):
 
     return text
 
+READ_FUNCTION = None
 
 ###
 # Testing the default functionality

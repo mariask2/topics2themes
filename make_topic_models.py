@@ -171,7 +171,8 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
     documents, meta_data_list = read_and_first_process_documents(properties.DATA_LABEL_LIST,
                                             data_set_name,
                                           properties.REMOVE_DUPLICATES, properties.MIN_NGRAM_LENGTH_FOR_DUPLICATE, properties.CLEANING_METHOD,
-                                          manual_collocations)
+                                          manual_collocations,
+                                          properties.READ_FUNCTION)
 
     #documents = [el[TEXT] for el in file_list]
     
@@ -353,10 +354,12 @@ def should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length
     return add_this_file
    
 
-def read_and_first_process_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method, manual_collocations):
+def read_and_first_process_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method, manual_collocations, read_function):
     
-    if True:
+    if read_function == None: # Then use default
         documents, meta_data_list = read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, whether_to_remove_duplicates)
+    else:
+        documents, meta_data_list = read_function(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, whether_to_remove_duplicates)
 
     
     replace_collocations(documents, manual_collocations)
