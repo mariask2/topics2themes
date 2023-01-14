@@ -274,7 +274,7 @@ def replace_collocations(file_list, manual_collocations):
 # Read documents from file
 ######
 
-def read_documents(data_label_list, data_set_name, cleaning_method):
+def read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf):
     file_list = []
     print("data_label_list", data_label_list)
     for data_info in data_label_list:
@@ -282,15 +282,18 @@ def read_documents(data_label_list, data_set_name, cleaning_method):
         if not os.path.isdir(data_dir):
             print(os.path.abspath(data_dir), " does not exist")
         files = sorted(Path(data_dir).rglob("*.txt"), key =  lambda x: os.stat(x).st_size, reverse=True)
-    
+
         print("Reading", os.path.join(data_dir))
 
+        previous_texts = set()
+        previous_sub_texts = set()
+        
         for f in files:
             base_name = os.path.basename(f)
             opened = open(f)
-            text = opened.read()
+            text = cleaning_method(opened.read())
                         
-            file_list.append({TEXT: cleaning_method(text), LABEL: data_info[DATA_LABEL], BASE_NAME: base_name, FULL_NAME: f})
+            file_list.append({TEXT: text, LABEL: data_info[DATA_LABEL], BASE_NAME: base_name, FULL_NAME: f})
             opened.close()
             
     return file_list
@@ -317,9 +320,9 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
     return add_this_file, found_duplicate
     
 
-def should_file_be_added(file, previous_texts, previous_sub_texts, n_gram_length_conf):
+def should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length_conf):
     filtered_text = []
-    for ch in file[TEXT].strip():
+    for ch in text.strip():
         if ch.isalpha() or (ch == " " and (len(filtered_text) > 0 and filtered_text[-1] != " ")): #don't add several white space in a row
             filtered_text.append(ch.lower())
     filtered_text_text = "".join(filtered_text).strip()
@@ -349,7 +352,7 @@ def remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, 
         previous_texts = set()
         previous_sub_texts = set()
         for file in file_list_len_sorted:
-            if should_file_be_added(file, previous_texts, previous_sub_texts, n_gram_length_conf):
+            if should_text_be_added(file[TEXT], previous_texts, previous_sub_texts, n_gram_length_conf):
                 filtered_file_list.append(file)
             else:
                 nr_of_removed_files = nr_of_removed_files + 1
@@ -363,7 +366,7 @@ def remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, 
 def read_and_first_process_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method, manual_collocations):
     
     if True:
-        file_list = read_documents(data_label_list, data_set_name, cleaning_method)
+        file_list = read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf)
 
     file_list = remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, n_gram_length_conf)
     replace_collocations(file_list, manual_collocations)
