@@ -358,6 +358,7 @@ def read_and_first_process_documents(data_label_list, data_set_name, whether_to_
     if True:
         documents, meta_data_list = read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, whether_to_remove_duplicates)
 
+    
     replace_collocations(documents, manual_collocations)
     return documents, meta_data_list
     
@@ -1002,9 +1003,14 @@ def print_and_get_topic_info(properties, topic_info, documents, meta_data_list, 
                 document_obj["id_source"] = int(str(document[DOC_ID]))
                 document_obj["timestamp"] = int(str(document[DOC_ID]))
                 document_obj["document_topics"] = []
-                document_obj[LABEL] = meta_data_list[document[DOC_ID]][LABEL]
-                document_obj[BASE_NAME] = meta_data_list[document[DOC_ID]][BASE_NAME]
-                document_obj["additional_labels"] = sorted(properties.ADDITIONAL_LABELS_METHOD(meta_data_list[document[DOC_ID]][FULL_NAME]))
+                if meta_data_list:
+                    document_obj[LABEL] = meta_data_list[document[DOC_ID]][LABEL]
+                    document_obj[BASE_NAME] = meta_data_list[document[DOC_ID]][BASE_NAME]
+                    document_obj["additional_labels"] = sorted(properties.ADDITIONAL_LABELS_METHOD(meta_data_list[document[DOC_ID]][FULL_NAME]))
+                else:
+                    document_obj[LABEL] = "no label"
+                    document_obj[BASE_NAME] = "nr " + str(document[DOC_ID])
+                    document_obj["additional_labels"] = []
                 document_dict[document[DOC_ID]] = document_obj
                 if document_obj["text"] != documents[document[DOC_ID]]:
                     print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(documents[document[DOC_ID]]))
