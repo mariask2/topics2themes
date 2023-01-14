@@ -168,13 +168,13 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                   manual_collocations.append(word.strip())
                   
     
-    file_list = read_and_first_process_documents(properties.DATA_LABEL_LIST,
+    file_list, meta_data_list = read_and_first_process_documents(properties.DATA_LABEL_LIST,
                                             data_set_name,
                                           properties.REMOVE_DUPLICATES, properties.MIN_NGRAM_LENGTH_FOR_DUPLICATE, properties.CLEANING_METHOD,
                                           manual_collocations)
 
     documents = [el[TEXT] for el in file_list]
-
+    
 
     if len(documents) == 0:
         print("No documents found. Remember that only documents with the suffix '.txt' are used")
@@ -210,7 +210,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
         print("Using model with " + str(len(topic_info)) + " stable topics")
         
         result_dict, time, post_id = \
-            print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_set_name, model_name, save_in_database,\
+            print_and_get_topic_info(properties, topic_info, file_list, meta_data_list, mongo_con, data_set_name, model_name, save_in_database,\
                                                               most_typical_model, tf_vectorizer, stopword_handler, path_slash_format)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
@@ -241,7 +241,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
         
         print("Using model with " + str(len(topic_info)) + " stable topics")
         result_dict, time, post_id = \
-            print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_set_name, model_name, save_in_database,\
+            print_and_get_topic_info(properties, topic_info, file_list, meta_data_list, mongo_con, data_set_name, model_name, save_in_database,\
                                                           most_typical_model, tf_vectorizer, stopword_handler, path_slash_format)
         return result_dict, time, post_id, most_typical_model
 
@@ -279,8 +279,8 @@ def read_documents(data_label_list, data_set_name, cleaning_method, n_gram_lengt
     previous_sub_texts = set()
     nr_of_removed_files = 0
             
-    file_list = []
     files_to_read = []
+    
     print("data_label_list", data_label_list)
     for data_info in data_label_list:
         data_dir = os.path.join(WORKSPACE_FOLDER, DATA_FOLDER, data_set_name, data_info[DIRECTORY_NAME])
@@ -292,6 +292,8 @@ def read_documents(data_label_list, data_set_name, cleaning_method, n_gram_lengt
     if remove_duplicates:
         files_to_read = sorted(files_to_read, key = lambda x: os.stat(x[0]).st_size, reverse=True)
 
+    file_list = []
+    meta_data_list = []
     for f, user_label in files_to_read:
         base_name = os.path.basename(f)
         opened = open(f)
@@ -299,12 +301,13 @@ def read_documents(data_label_list, data_set_name, cleaning_method, n_gram_lengt
        
         if (not remove_duplicates) or should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length_conf):
             file_list.append({TEXT: text, LABEL: user_label, BASE_NAME: base_name, FULL_NAME: f})
+            meta_data_list.append({LABEL: user_label, BASE_NAME: base_name, FULL_NAME: f})
         else:
             nr_of_removed_files = nr_of_removed_files + 1
         opened.close()
         
     print("The number of removed files is: ", nr_of_removed_files, " Adjust the parameter 'MIN_NGRAM_LENGTH_FOR_DUPLICATE' for more or less strict duplicate removal." )
-    return file_list
+    return file_list, meta_data_list
 
 def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts):
     found_duplicate = None
@@ -353,10 +356,10 @@ def should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length
 def read_and_first_process_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method, manual_collocations):
     
     if True:
-        file_list = read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, whether_to_remove_duplicates)
+        file_list, meta_data_list = read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, whether_to_remove_duplicates)
 
     replace_collocations(file_list, manual_collocations)
-    return file_list
+    return file_list, meta_data_list
     
     
 ###########
@@ -908,7 +911,7 @@ def is_term_combination_in_document(comb_term, document):
 """
 Filelist is a list of document-info-dict, with the same order as for the documents sent to the topic modelling
 """
-def print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_set_name, model_name, save_in_database,\
+def print_and_get_topic_info(properties, topic_info, file_list, meta_data_list, mongo_con, data_set_name, model_name, save_in_database,\
     most_typical_model, tf_vectorizer, stopword_handler, path_slash_format):
 
 #def print_and_get_topic_info(topic_info, file_list, mongo_con, topic_model_algorithm,\
@@ -920,7 +923,7 @@ def print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_
         Prints output/returns from the topic model in txt and json format (depending on whether it is run as server or as a program)
         
         """
-  
+    
     json_properties = properties.get_properties_in_json()
     
     document_dict = {}
@@ -999,9 +1002,9 @@ def print_and_get_topic_info(properties, topic_info, file_list, mongo_con, data_
                 document_obj["id_source"] = int(str(document[DOC_ID]))
                 document_obj["timestamp"] = int(str(document[DOC_ID]))
                 document_obj["document_topics"] = []
-                document_obj["label"] = file_list[document[DOC_ID]][LABEL]
-                document_obj["base_name"] = file_list[document[DOC_ID]][BASE_NAME]
-                document_obj["additional_labels"] = sorted(properties.ADDITIONAL_LABELS_METHOD(file_list[document[DOC_ID]][FULL_NAME]))
+                document_obj[LABEL] = meta_data_list[document[DOC_ID]][LABEL]
+                document_obj[BASE_NAME] = meta_data_list[document[DOC_ID]][BASE_NAME]
+                document_obj["additional_labels"] = sorted(properties.ADDITIONAL_LABELS_METHOD(meta_data_list[document[DOC_ID]][FULL_NAME]))
                 document_dict[document[DOC_ID]] = document_obj
                 if document_obj["text"] != file_list[document[DOC_ID]][TEXT]:
                     print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(file_list[document[DOC_ID]][TEXT]))
