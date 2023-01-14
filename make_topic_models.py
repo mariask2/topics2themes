@@ -317,37 +317,39 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
     return add_this_file, found_duplicate
     
 
-def remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, n_gram_length_conf):
+def should_file_be_added(file, previous_texts, previous_sub_texts, n_gram_length_conf):
+    filtered_text = []
+    for ch in file[TEXT].strip():
+        if ch.isalpha() or (ch == " " and (len(filtered_text) > 0 and filtered_text[-1] != " ")): #don't add several white space in a row
+            filtered_text.append(ch.lower())
+    filtered_text_text = "".join(filtered_text).strip()
+    filtered_text_text = filtered_text_text.replace("  ", " ")
+            
+    sp = filtered_text_text.split(" ")
+    add_this_file, found_duplicate = is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
 
-    #remove duplicates. Just keep the first occurrence, and remove the once comming after
-    previous_texts = set()
-    filtered_file_list = []
-    
-    previous_sub_texts = set()
+    # For short texts, also check with other n-gram length than configured by n_gram_lenth
+    if add_this_file and len(sp) <= n_gram_length_conf + 2:
+        n_gram_length_short = int(len(sp) - len(sp)/4)
+        add_this_file_exact = is_duplicate(filtered_text_text, sp, n_gram_length_short, previous_sub_texts)
+        for j in range(n_gram_length_short, len(sp) + 1):
+            add_this_file, found_duplicate = is_duplicate(filtered_text_text, sp, j, previous_sub_texts)
+            if not add_this_file:
+                break
+    return add_this_file
+   
+#Just keep the first occurrence, and remove the once comming after
+def remove_duplicates(file_list, cleaning_method, whether_to_remove_duplicates, n_gram_length_conf):
     
     nr_of_removed_files = 0
     file_list_len_sorted = sorted(file_list, key=lambda x: len(x[TEXT]))
     if whether_to_remove_duplicates:
-        for file in file_list_len_sorted:
-            filtered_text = []
-            for ch in file[TEXT].strip():
-                if ch.isalpha() or (ch == " " and (len(filtered_text) > 0 and filtered_text[-1] != " ")): #don't add several white space in a row
-                    filtered_text.append(ch.lower())
-            filtered_text_text = "".join(filtered_text).strip()
-            filtered_text_text = filtered_text_text.replace("  ", " ")
-                    
-            sp = filtered_text_text.split(" ")
-            add_this_file, found_duplicate = is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
+        filtered_file_list = []
     
-            # For short texts, also check with other n-gram length than configured by n_gram_lenth
-            if add_this_file and len(sp) <= n_gram_length_conf + 2:
-                n_gram_length_short = int(len(sp) - len(sp)/4)
-                add_this_file_exact = is_duplicate(filtered_text_text, sp, n_gram_length_short, previous_sub_texts)
-                for j in range(n_gram_length_short, len(sp) + 1):
-                    add_this_file, found_duplicate = is_duplicate(filtered_text_text, sp, j, previous_sub_texts)
-                    if not add_this_file:
-                        break
-            if add_this_file:
+        previous_texts = set()
+        previous_sub_texts = set()
+        for file in file_list_len_sorted:
+            if should_file_be_added(file, previous_texts, previous_sub_texts, n_gram_length_conf):
                 filtered_file_list.append(file)
             else:
                 nr_of_removed_files = nr_of_removed_files + 1
@@ -1322,7 +1324,7 @@ if __name__ == '__main__':
     print("with id: ", post_id)
     print("Created model saved at " + str(time))
 
-    if export: # Maka an analysis instance and export the topic model + empty analysis
+    if export: # Make an analysis instance and export the topic model + empty analysis
         post_id_str = str(post_id)
         analysis_res = mongo_con.create_new_analysis(post_id_str, "default analysis")
         print("Created analysis: ", analysis_res)
