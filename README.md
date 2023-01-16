@@ -82,6 +82,9 @@ conda install matplotlib
 
 conda install -c conda-forge adjusttext
 
+If you want to used pandas for storing and importing data (not the default way), you also need:
+conda install -c anaconda pandas
+
 When you run the code the first time, you'll get the following error message:
 
 Resource punkt not found.

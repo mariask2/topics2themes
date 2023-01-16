@@ -3,9 +3,10 @@ import pandas as pd
 
 TEXT = "text"
 file_name = "newsgroups_test.pkl"
-LARGE_SET_SIZE = 50
+LARGE_SET_SIZE = 6
 
 def get_data():
+    """
     newsgroups_train = fetch_20newsgroups()
     data = newsgroups_train.data
     text_list = []
@@ -29,6 +30,8 @@ def get_data():
     print()
     
     df.to_pickle(file_name)
+    """
+    
     read_df = pd.read_pickle(file_name)
     print("Read dataframe: ")
     print(read_df)
@@ -49,7 +52,7 @@ def get_data():
 def read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, remove_duplicates):
     meta_data_list = None # No metadata
     
-    read_df = pd.read_pickle(file_name)
+    read_df = pd.read_pickle("newsgroups_test.pkl")
     print("Read dataframe: ")
     print(read_df)
     
