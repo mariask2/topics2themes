@@ -222,9 +222,24 @@ class Word2vecWrapper:
 
         self.term_similar_dict = self.manual_made_dict
         for label, items in self.cluster_dict.items():
+            freq_tuple_list = []
+            for w in items:
+                if w in word_freq_dict:
+                    f = word_freq_dict[w]
+                elif w[0].upper() + w[1:] in word_freq_dict:
+                    f = word_freq_dict[w[0].upper() + w[1:]]
+                elif w.upper() in word_freq_dict:
+                    f = word_freq_dict[w.upper()]
+                else:
+                    f = 0
+                if f > 0:
+                    freq_tuple_list.append((f, w))
+                else:
+                    print("Not found: ", w)
+            freq_tuple_list = sorted(freq_tuple_list, reverse=True)
             if len(items) > 1: # only include clusters with at least 2 items
                 for term in items:
-                    self.term_similar_dict[term] = SYNONYM_BINDER.join(items)
+                    self.term_similar_dict[term] = SYNONYM_BINDER.join([s for (f, s) in freq_tuple_list])
 
         f = open(output_file, "w")
         for item in sorted(list(set(self.term_similar_dict.values()))):

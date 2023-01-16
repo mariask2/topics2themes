@@ -84,6 +84,9 @@ conda install -c conda-forge adjusttext
 
 If you want to used pandas for storing and importing data (not the default way), you also need:
 conda install -c anaconda pandas
+conda install -c conda-forge fastparquet
+conda install -c conda-forge python-snappy
+conda install -c conda-forge pyarrow
 
 When you run the code the first time, you'll get the following error message:
 
