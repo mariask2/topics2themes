@@ -433,6 +433,7 @@ def replace_spaces(text):
 def pre_process(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
     
     if properties.PRE_PROCESS:
+        print("Pre-processing documents")
         return pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
     else:
         return documents
