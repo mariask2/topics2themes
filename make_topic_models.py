@@ -380,6 +380,7 @@ def train_scikit_lda_model(properties, documents, word2vecwrapper, path_slash_fo
     
     model_list = []
     for i in range(0, properties.NUMBER_OF_RUNS):
+        print("Training model nr: ", i)
         lda = LatentDirichletAllocation(n_components= properties.NUMBER_OF_TOPICS, max_iter=10, learning_method='online', learning_offset=50.).fit(tf)
         model_list.append(lda)
     
@@ -654,14 +655,17 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
     # Code for removing the model re-runs with an output with the smallest overlap with other model re-runs
     # Keep the properties.PERCENTATE_NONE_OUTLIERS of the re-runs
     term_results = []
+    all_terms = set() # Terms from all topics and all re-runs
     for ret_list in model_results:
-        term_set = set()
-        for el in ret_list:
-            for term, prob in el[TERM_LIST]:
+        term_set = set() # Terms from this re-run
+        for ret_topics in ret_list:
+            for term, prob in ret_topics[TERM_LIST]:
                 term_set.add(term)
-
+                all_terms.add(term)
         term_results.append(term_set)
 
+    """
+    print("term_results", term_results)
     overlap_averages = []
     for nr, terms in enumerate(term_results):
         set_size = len(terms)
@@ -674,7 +678,15 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
         overlap_averages.append((overlap_prop_avg, nr))
     overlap_averages_sorted = sorted(overlap_averages, reverse=True)
     overlap_averages_sorted_removed_outliers = [nr for (overl, nr) in overlap_averages_sorted[:math.ceil(len(overlap_averages_sorted)*percentage_none_outliers)]]
-
+    """
+    overlaps = []
+    for output_nr, terms in enumerate(term_results):
+        overlap_number = len(all_terms.intersection(set(terms)))
+        overlaps.append((overlap_number, output_nr))
+    overlaps = sorted(overlaps, reverse=True)
+    print("overlaps", overlaps)
+    overlap_averages_sorted_removed_outliers = [nr for (overl, nr) in overlaps[:math.ceil(len(overlaps)*percentage_none_outliers)]]
+    print("overlap_averages_sorted_removed_outliers", overlap_averages_sorted_removed_outliers)
     most_typical_model = None
     model_results_filtered = []
 
@@ -687,6 +699,7 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
 
     for nr, ret_list in enumerate(model_results_filtered):
         print("Analysing output from fold nr: ", nr)
+        print("Nr of topics found in output: ", len(ret_list))
         for el in ret_list:
             current_topic = {}
             current_topic[TERM_LIST] = {}
@@ -706,7 +719,7 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
                 previous_topic_list_to_append_to.append(current_topic) # if an existing similar topic is found, attach to this one
             else: # if there is no existing topic to which to assign the currently searched topic result, create a new one
                 previous_topic_list_list.append([current_topic])
-
+            print("maximum_overlap", maximum_overlap)
 
     # When the matching between differnt folds has been carried out. Go through the result
     # and decide which topics to keep
