@@ -651,6 +651,7 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
         ret_list = get_scikit_topics_one_model(model, vectorizer, transformed, documents, nr_of_top_words, no_top_documents)
         model_results.append(ret_list)
 
+    NR_OF_TERMS_FOR_COUNTING_OUTLIERS = 5
     print("Original nr of models: ", str(len(model_results)))
     # Code for removing the model re-runs with an output with the smallest overlap with other model re-runs
     # Keep the properties.PERCENTATE_NONE_OUTLIERS of the re-runs
@@ -659,13 +660,20 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
     for ret_list in model_results:
         term_set = set() # Terms from this re-run
         for ret_topics in ret_list:
-            for term, prob in ret_topics[TERM_LIST]:
+            terms_to_include_for_counting_topic_outliers = ret_topics[TERM_LIST]
+            if len(terms_to_include_for_counting_topic_outliers) > NR_OF_TERMS_FOR_COUNTING_OUTLIERS:
+                terms_to_include_for_counting_topic_outliers = terms_to_include_for_counting_topic_outliers[:NR_OF_TERMS_FOR_COUNTING_OUTLIERS]
+            for term, prob in terms_to_include_for_counting_topic_outliers: # TODO: Perhaps only use the top n terms
                 term_set.add(term)
                 all_terms.add(term)
         term_results.append(term_set)
 
-    """
+    
     print("term_results", term_results)
+    print("all_terms", all_terms)
+      
+    """
+    
     overlap_averages = []
     for nr, terms in enumerate(term_results):
         set_size = len(terms)
@@ -719,12 +727,14 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
                 previous_topic_list_to_append_to.append(current_topic) # if an existing similar topic is found, attach to this one
             else: # if there is no existing topic to which to assign the currently searched topic result, create a new one
                 previous_topic_list_list.append([current_topic])
+                print("new topic:", current_topic[TERM_LIST])
             print("maximum_overlap", maximum_overlap)
+            print("****")
 
     # When the matching between differnt folds has been carried out. Go through the result
     # and decide which topics to keep
     
-    minimum_found_for_a_topic_to_be_kept = round(len(model_results_filtered))
+    minimum_found_for_a_topic_to_be_kept = round(len(model_results_filtered)*overlap_cut_off) #TODO: Make sure that this does not result in duplicate topics
     # A topic has to occurr in all folds to be included, therefore 'minimum_found_for_a_topic_to_be_kept' is equal to the number of folds
     
     average_list = [] # only include topics that have been stable in this, and average the information from each run
@@ -882,6 +892,25 @@ def construct_document_info_average(documents, selected_documents_strength, term
 
 
 def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
+    current_set = set(current_topic[TERM_LIST].keys())
+    if len(current_set) == 0:
+        return 0
+    overlaps = []
+    for previous_topic in previous_topic_list:
+        common_terms = set(previous_topic[TERM_LIST]).intersection(current_set)
+        percentage_common = len(common_terms)/len(current_set)
+        overlaps.append(percentage_common)
+    average_common = sum(overlaps)/len(overlaps)
+    if average_common > overlap_cut_off:
+        print("average_common", average_common)
+        print("current_set", current_set)
+        print("previous", [el[TERM_LIST] for el in previous_topic_list])
+        return average_common
+    else:
+        return 0
+
+    
+def is_overlap_old(current_topic, previous_topic_list, overlap_cut_off):
     """
     Check if the term list for two model overlap, with a cutoff of 'overlap_cut_off'
     """
