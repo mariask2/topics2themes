@@ -618,7 +618,18 @@ def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_sla
     to_return = []
     for el in inversed:
         to_return.append(list(el))
-    print("Vocabulary size: " + str(len(tf_vectorizer.get_feature_names_out())))
+    f_list = tf_vectorizer.get_feature_names_out()
+    print("Vocabulary size: " + str(len(f_list)))
+    
+    
+    synonym_output_dir = os.path.join(path_slash_format, SYNONYM_FOLDER_NAME)
+    if not os.path.exists(synonym_output_dir):
+        os.makedirs(synonym_output_dir)
+    synonym_file = os.path.join(synonym_output_dir, model_name + "_synonyms.txt")
+    
+    with open(synonym_file, "w") as synonym_out:
+        for item in sorted([s for s in f_list if SYNONYM_BINDER in s]):
+            synonym_out.write(item.replace(SYNONYM_BINDER, " ") + "\n")
     print("Finished transforming the text into vectors")
     
     return to_return, tf_vectorizer, tf

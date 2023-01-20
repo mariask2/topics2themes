@@ -240,11 +240,13 @@ class Word2vecWrapper:
             if len(items) > 1: # only include clusters with at least 2 items
                 for term in items:
                     self.term_similar_dict[term] = SYNONYM_BINDER.join([s for (f, s) in freq_tuple_list])
-
+        """
         f = open(output_file, "w")
         for item in sorted(list(set(self.term_similar_dict.values()))):
             f.write(item.replace(SYNONYM_BINDER, " ") + "\n")
-        f.close()   
+        f.close()
+        """
+        
         self.nr_of_clusters = len(set(labels)) 
         print("Clustered vectors")
         
