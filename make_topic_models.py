@@ -181,9 +181,13 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
         print("No documents found. Remember that only documents with the suffix '.txt' are used")
     print("Make models for "+ str(len(documents)) + " documents.")
 
+
     MAX_NR_OF_MODEL_SIZE_RERUNS = 1   #50 : TODO Perhaps change this back
-
-
+    
+    documents_to_vectorizer = documents
+    if properties.CLEANING_METHOD:
+        documents_to_vectorizer = [properties.CLEANING_METHOD(el) for el in documents_to_vectorizer]
+        
     if properties.TOPIC_MODEL_ALGORITHM == NMF_NAME:
         print()
         print("*************")
@@ -198,7 +202,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
             
             print("Training model with " + str(number_of_topics) + " requested topics")
             topic_info, most_typical_model, tf_vectorizer =\
-                train_scikit_nmf_model(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
+                train_scikit_nmf_model(properties, documents_to_vectorizer, word2vecwrapper, path_slash_format, model_name, stopword_handler)
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
             if (number_of_topics - len(topic_info) <= max_less_than_requested_models_returned) or len(topic_info) < 3: #Assume there is at least two topics
@@ -228,7 +232,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
             
             print("Training model with " + str(number_of_topics) + " requested topics")
             topic_info, most_typical_model, tf_vectorizer = \
-                train_scikit_lda_model(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
+                train_scikit_lda_model(properties, documents_to_vectorizer, word2vecwrapper, path_slash_format, model_name, stopword_handler)
             
 
             print("Found " + str(len(topic_info)) + " stable topics in re-run number " + str(rerun_nr))
@@ -298,8 +302,8 @@ def read_documents(data_label_list, data_set_name, cleaning_method, n_gram_lengt
     for f, user_label in files_to_read:
         base_name = os.path.basename(f)
         opened = open(f)
-        text = cleaning_method(opened.read())
-       
+        text = opened.read()
+        
         if (not remove_duplicates) or should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length_conf):
             documents.append(text)
             meta_data_list.append({LABEL: user_label, BASE_NAME: base_name, FULL_NAME: f})
@@ -361,7 +365,6 @@ def read_and_first_process_documents(data_label_list, data_set_name, whether_to_
     else:
         documents, meta_data_list = read_function(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, whether_to_remove_duplicates)
 
-    
     replace_collocations(documents, manual_collocations)
     return documents, meta_data_list
     
