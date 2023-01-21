@@ -1072,9 +1072,10 @@ def print_and_get_topic_info(properties, topic_info, documents, meta_data_list, 
                     document_obj[BASE_NAME] = "nr " + str(document[DOC_ID])
                     document_obj["additional_labels"] = []
                 document_dict[document[DOC_ID]] = document_obj
+                """
                 if document_obj["text"] != documents[document[DOC_ID]]:
-                    print("Warning, texts not macthing, \n" +  str(document_obj["original_text"]) + "\n" + str(documents[document[DOC_ID]]))
-
+                    print("Warning, texts not macthing, \n" +  str(document_obj["text"]) + "\n" + str(documents[document[DOC_ID]]))
+                """
             else:
                 document_dict[document[DOC_ID]]["marked_text_tok"] = marked_document
                 document_dict[document[DOC_ID]]["snippet"] = get_snippet_text(marked_document, terms_found_in_processed_documents_so_far, properties)
