@@ -748,7 +748,7 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
     # When the matching between differnt folds has been carried out. Go through the result
     # and decide which topics to keep
     
-    minimum_found_for_a_topic_to_be_kept = round(len(model_results_filtered)*overlap_cut_off) #TODO: Make sure that this does not result in duplicate topics
+    minimum_found_for_a_topic_to_be_kept = round(len(model_results_filtered))#*overlap_cut_off) #TODO: Make sure that this does not result in duplicate topics
     # A topic has to occurr in all folds to be included, therefore 'minimum_found_for_a_topic_to_be_kept' is equal to the number of folds
     
     average_list = [] # only include topics that have been stable in this, and average the information from each run
