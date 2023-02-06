@@ -136,6 +136,7 @@ class MongoConnector:
         model_id = self.get_model_for_analysis(analysis_id)
         model = self.get_model_for_model_id(model_id)
         data_dir = os.path.join(WORKSPACE_FOLDER, DATA_FOLDER, model[self.TEXT_COLLECTION_NAME], EXPORT_DIR)
+        data_dir_above_export = os.path.join(WORKSPACE_FOLDER, DATA_FOLDER, model[self.TEXT_COLLECTION_NAME])
         
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
@@ -150,7 +151,7 @@ class MongoConnector:
         
         self.save_analysis_data_to_folder(analysis_id, data_dir, self.USER_DEFINED_LABEL_FILE_NAME, self.get_all_user_defined_labels(analysis_id))
 
-        return data_dir
+        return data_dir_above_export
 
     """
         Right now, it only possible to write analyses. When this is done, it's model is also saved with the id of the analysis. Therefore, the saved analysisid is given

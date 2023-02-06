@@ -15,19 +15,20 @@ try:
 except:
     from topics2themes.environment_configuration import *
 
-
 if RUN_LOCALLY:
     from flask_cors import CORS
     import make_topic_models
     from mongo_connector import MongoConnector
     from theme_sorter import ThemeSorter
     from topic_model_constants import *
+    import convert_to_csv
 else:
     import topics2themes.make_topic_models as make_topic_models
     from topics2themes.mongo_connector import MongoConnector
     from topics2themes.theme_sorter import ThemeSorter
     from topics2themes.environment_configuration import *
     from topics2themes.topic_model_constants import *
+    import topics2themes.convert_to_csv as convert_to_csv
 
 
 app = Flask(__name__, template_folder="user_interface")
@@ -365,6 +366,8 @@ def export_analysis():
         authenticate()
         analysis_id = request.values.get("analysis_id")
         data_dir =  mongo_con.save_analysis_to_file_for_analysis_id(analysis_id)
+        convert_to_csv.do_csv_export(data_dir, analysis_id)
+                
         saved_data = {"analysis_id": analysis_id, "data_dir" : data_dir}
         resp = make_response(jsonify({"result" : saved_data}))
         resp.headers['Cache-Control'] = 'no-cache'

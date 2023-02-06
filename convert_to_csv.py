@@ -89,16 +89,24 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
         repr_terms = []
         for key_word in key_words:
             terms_to_pick_as_rep = []
-            splitted_key_word = sorted(key_word.split("__"), key=len)
-            terms_to_pick_as_rep.append(splitted_key_word[0])
-            for splitted in splitted_key_word[1:]:
-                add_splitted = True
-                for existing_reps in terms_to_pick_as_rep[:]:
-                    if (len(existing_reps) > 1 and existing_reps in splitted) or (len(existing_reps) > 3 and existing_reps[:-2] in splitted): # Adapted to only to suffixing lang.
-                        add_splitted = False # Don't add a longer form of a word
-                if add_splitted or "_" in splitted:
-                    terms_to_pick_as_rep.append(splitted)
-                 
+            splitted_key_word = sorted(key_word.split("__"), key=len, reverse=True)
+            for splitted in splitted_key_word:
+                if splitted.replace("_", " ") in document['text'].lower():
+                    if len(terms_to_pick_as_rep) == 0:
+                        terms_to_pick_as_rep.append(splitted)
+                    else:
+                        add_splitted = True
+                        for existing_reps in terms_to_pick_as_rep[:]:
+                            if splitted in existing_reps and " " + splitted + " " not in " " + document['text'].lower().replace(",", " ,").replace(".", " ."):
+                                add_splitted = False
+                        if add_splitted:
+                            terms_to_pick_as_rep.append(splitted)
+                        
+            if len(terms_to_pick_as_rep) == 0:
+                # If no keywords found, add all words, except inflections of the same
+                print("No keywords found in document", splitted_key_word)
+                terms_to_pick_as_rep = splitted_key_word
+                     
             repr_terms.append("/".join(terms_to_pick_as_rep))
         
         row_list[0] = ", ".join(sorted(repr_terms))
