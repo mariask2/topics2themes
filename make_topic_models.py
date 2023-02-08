@@ -406,7 +406,7 @@ def train_scikit_nmf_model(properties, documents, word2vecwrapper, path_slash_fo
     for i in range(0, properties.NUMBER_OF_RUNS):
         print("Running topic model nr " + str(i))
         #nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='random').fit(tfidf)
-        nmf = NMF(n_components=properties.NUMBER_OF_TOPICS, alpha=.1, l1_ratio=.5, init='nndsvd', shuffle = True, random_state=random_state, max_iter=100).fit(tfidf)
+        nmf = NMF(n_components=properties.NUMBER_OF_TOPICS, alpha=.1, l1_ratio=.5, init='nndsvd', shuffle = True, random_state=random_state, max_iter=100, verbose=0).fit(tfidf)
         model_list.append(nmf)
     print("Start getting topic model info")
     topic_info, most_typical_model = get_scikit_topics(properties, model_list, tfidf_vectorizer, tfidf, documents)
@@ -682,8 +682,6 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
         term_results.append(term_set)
 
     
-    print("term_results", term_results)
-    print("all_terms", all_terms)
       
     """
     
@@ -740,9 +738,9 @@ def get_scikit_topics(properties, model_list, vectorizer, transformed, documents
                 previous_topic_list_to_append_to.append(current_topic) # if an existing similar topic is found, attach to this one
             else: # if there is no existing topic to which to assign the currently searched topic result, create a new one
                 previous_topic_list_list.append([current_topic])
-                print("new topic:", current_topic[TERM_LIST])
-            print("maximum_overlap", maximum_overlap)
-            print("****")
+                #print("new topic:", current_topic[TERM_LIST])
+            #print("maximum_overlap", maximum_overlap)
+
 
     # When the matching between differnt folds has been carried out. Go through the result
     # and decide which topics to keep
@@ -915,9 +913,9 @@ def is_overlap(current_topic, previous_topic_list, overlap_cut_off):
         overlaps.append(percentage_common)
     average_common = sum(overlaps)/len(overlaps)
     if average_common > overlap_cut_off:
-        print("average_common", average_common)
-        print("current_set", current_set)
-        print("previous", [el[TERM_LIST] for el in previous_topic_list])
+        #print("average_common", average_common)
+        #print("current_set", current_set)
+        #print("previous", [el[TERM_LIST] for el in previous_topic_list])
         return average_common
     else:
         return 0
