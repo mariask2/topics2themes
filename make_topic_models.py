@@ -858,11 +858,12 @@ def construct_document_info_average(documents, selected_documents_strength, term
     for term, strength in terms_strength:
         term_strength_dict[term] = strength
         for split_synonym in term.split(SYNONYM_BINDER):
-            for split_collocation in split_synonym.split(COLLOCATION_BINDER):
-                term_list_replace.append(split_collocation)
-                if split_collocation not in term_preprocessed_dict:
-                    term_preprocessed_dict[split_collocation] = []
-                term_preprocessed_dict[split_collocation].append(term)
+            split_synonym = split_synonym.replace(COLLOCATION_BINDER, " ")
+            #for split_collocation in split_synonym.split(COLLOCATION_BINDER):
+            term_list_replace.append(split_synonym)
+            if split_synonym not in term_preprocessed_dict:
+                term_preprocessed_dict[split_synonym] = []
+            term_preprocessed_dict[split_synonym].append(term)
 
     term_list_replace = list(set(term_list_replace))
     term_list_replace.sort(key = len, reverse = True)

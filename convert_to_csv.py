@@ -103,8 +103,8 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
                             terms_to_pick_as_rep.append(splitted)
                         
             if len(terms_to_pick_as_rep) == 0:
-                # If no keywords found, add all words, except inflections of the same
-                print("No keywords found in document", splitted_key_word)
+                # If no keywords found, add all words
+                print("No keywords found in document", splitted_key_word, document['text'].lower())
                 terms_to_pick_as_rep = splitted_key_word
                      
             repr_terms.append("/".join(terms_to_pick_as_rep))
