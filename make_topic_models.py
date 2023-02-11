@@ -624,14 +624,22 @@ def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_sla
     f_list = tf_vectorizer.get_feature_names_out()
     print("Vocabulary size: " + str(len(f_list)))
     
+    ## Calculate tf-idf as if the entire corpus was one document
+    corpus_vectorizer = TfidfVectorizer(vocabulary=f_list, use_idf=False, smooth_idf=False, norm=None)
+    all_corpus = [" ".join(documents)]
+    corpus_transformed = corpus_vectorizer.fit_transform(all_corpus)
+    corpus_inversed = corpus_vectorizer.inverse_transform(corpus_transformed)
+    tr_inv = sorted([(t, i) for t, i in zip(corpus_transformed[0].toarray()[0], corpus_inversed[0])], reverse=True)
+   
     synonym_output_dir = os.path.join(path_slash_format, SYNONYM_FOLDER_NAME)
     if not os.path.exists(synonym_output_dir):
         os.makedirs(synonym_output_dir)
     synonym_file = os.path.join(synonym_output_dir, model_name + "_synonyms.txt")
     
     with open(synonym_file, "w") as synonym_out:
-        for item in sorted([s for s in f_list if SYNONYM_BINDER in s], key=lambda x:len(x.split(SYNONYM_BINDER)), reverse=True):
-            synonym_out.write(item.replace(SYNONYM_BINDER, " ") + "\n")
+        #for item in sorted([s for s in f_list if SYNONYM_BINDER in s], key=lambda x:len(x.split(SYNONYM_BINDER)), reverse=True):
+        for t, i in [(t, i) for (t, i) in tr_inv if SYNONYM_BINDER in i]:
+            synonym_out.write(i.replace(SYNONYM_BINDER, " ") + "\t" + str(int(t)) + "\n")
     print("Finished transforming the text into vectors")
     
     return to_return, tf_vectorizer, tf
