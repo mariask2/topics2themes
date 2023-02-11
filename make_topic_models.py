@@ -858,7 +858,7 @@ def construct_document_info_average(documents, selected_documents_strength, term
     for term, strength in terms_strength:
         term_strength_dict[term] = strength
         for split_synonym in term.split(SYNONYM_BINDER):
-            split_synonym = split_synonym.replace(COLLOCATION_BINDER, " ")
+            #split_synonym = split_synonym.replace(COLLOCATION_BINDER, " ")
             #for split_collocation in split_synonym.split(COLLOCATION_BINDER):
             term_list_replace.append(split_synonym)
             if split_synonym not in term_preprocessed_dict:
@@ -880,7 +880,11 @@ def construct_document_info_average(documents, selected_documents_strength, term
             for el in simple_tokenised:
                 if el.lower() in term_list_replace:
                     found_concepts.extend(term_preprocessed_dict[el.lower()])
-
+            text_with_collocation_binder = documents[doc_i].replace(" ", COLLOCATION_BINDER)
+            for t in term_list_replace:
+                if COLLOCATION_BINDER in t and t in text_with_collocation_binder:
+                    print(t)
+                    found_concepts.extend(term_preprocessed_dict[t])
 
             if len(found_concepts) > 0 : # only include documents where at least on one of the terms is found
                 doc_list.append(\
