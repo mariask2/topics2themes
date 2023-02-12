@@ -635,11 +635,14 @@ def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_sla
     if not os.path.exists(synonym_output_dir):
         os.makedirs(synonym_output_dir)
     synonym_file = os.path.join(synonym_output_dir, model_name + "_synonyms.txt")
-    
+    all_features_file = os.path.join(synonym_output_dir, model_name + "_all_features.txt")
     with open(synonym_file, "w") as synonym_out:
+        with open(all_features_file, "w") as all_features_out:
         #for item in sorted([s for s in f_list if SYNONYM_BINDER in s], key=lambda x:len(x.split(SYNONYM_BINDER)), reverse=True):
-        for t, i in [(t, i) for (t, i) in tr_inv if SYNONYM_BINDER in i]:
-            synonym_out.write(i.replace(SYNONYM_BINDER, " ") + "\t" + str(int(t)) + "\n")
+            for t, i in tr_inv:
+                all_features_out.write(i.replace(SYNONYM_BINDER, " ") + "\t" + str(int(t)) + "\n")
+                if SYNONYM_BINDER in i:
+                    synonym_out.write(i.replace(SYNONYM_BINDER, " ") + "\t" + str(int(t)) + "\n")
     print("Finished transforming the text into vectors")
     
     return to_return, tf_vectorizer, tf
