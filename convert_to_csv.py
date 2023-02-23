@@ -56,7 +56,7 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
     
     index_end_topics = len(header_list)
     header_list.append("Filename")
-    
+    header_list.append("Additional labels")
     result_matrix = []
     result_matrix.append(header_list)
     #    to_write = "\t".join(header_list) + "\n"
@@ -84,6 +84,9 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
             key_words.extend(document_topic['terms_found_in_text'])
             id_index = id_index_dict[document_topic["topic_index"]]
             row_list[index_start_topics + id_index] = str(round(document_topic['topic_confidence'], 2)).replace(".",",") # Swedish Excel
+        
+        additonals = ", ".join([additional for additional in document["additional_labels"]])
+        row_list.append(additonals)
         
         key_words = list(set(key_words))
         repr_terms = []
