@@ -98,7 +98,7 @@ SUBLINEAR_TF = False
 """
 Whether to use document frequency or to weight it with inverse document frequency.
 """
-USE_IDF = False
+USE_IDF = True
 
 
 """
