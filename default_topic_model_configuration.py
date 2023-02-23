@@ -96,6 +96,11 @@ Set sublinear_tf = True, which use log(tf), to lower the advantage for long docu
 SUBLINEAR_TF = False
 
 """
+Whether to use document frequency or to weight it with inverse document frequency.
+"""
+USE_IDF = False
+
+"""
     Whether to show the argumentation buttons or not
 """
 

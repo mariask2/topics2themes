@@ -222,6 +222,13 @@ class PropertiesContainer:
              self.SUBLINEAR_TF = properties.SUBLINEAR_TF
         except AttributeError:
              self.SUBLINEAR_TF = default_topic_model_configuration.SUBLINEAR_TF
+             
+        try:
+             self.USE_IDF = properties.USE_IDF
+        except AttributeError:
+             self.USE_IDF = default_topic_model_configuration.USE_IDF
+
+                 
         
         try:
             self.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING = properties.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING

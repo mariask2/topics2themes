@@ -604,18 +604,20 @@ def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_sla
     min_document_frequency = properties.MIN_DOCUMENT_FREQUENCY
     max_features = properties.MAX_NR_OF_FEATURES
     binary = properties.BINARY_TF
+    use_idf = properties.USE_IDF
+    sublinear = properties.SUBLINEAR_TF
     
-    if properties.SUBLINEAR_TF and nmf:
-        tf_vectorizer = vectorizer(sublinear_tf = True, max_df= max_document_frequency, min_df=min_document_frequency,\
-                                   ngram_range = (1, ngram_length), stop_words = stop_words, max_features = max_features, binary = binary, use_idf=False)
-        print("Uses sublinear")
+    print("Binary: ", binary)
+    if nmf:
+        tf_vectorizer = vectorizer(sublinear_tf = sublinear, max_df= max_document_frequency, min_df=min_document_frequency,\
+                                   ngram_range = (1, ngram_length), stop_words = stop_words, max_features = max_features, binary = binary, use_idf=use_idf)
+        print("Sublinear: ", sublinear)
+        print("Use idf: ", use_idf)
     else:
         tf_vectorizer = vectorizer(max_df= max_document_frequency, min_df=min_document_frequency,\
                                    ngram_range = (1, ngram_length), stop_words=stop_words,
                                max_features = max_features, binary = binary)
-        
-        print("Uses standard tf-idf")
-        
+                               
     tf = tf_vectorizer.fit_transform(documents)
     inversed = tf_vectorizer.inverse_transform(tf)
     to_return = []
