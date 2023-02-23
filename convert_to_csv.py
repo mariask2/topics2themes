@@ -127,7 +127,7 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
         included_file_names.add(document['base_name'])
     
     output_file_name = os.path.join(folder, model_nr + "_tab_separated.csv")
-    print("To access the output file write: ")
+    print("To access the output files write: ")
     print("open " + output_file_name)
     outputfile = open(output_file_name, 'w')
     result_writer = csv.writer(outputfile, dialect="excel-tab")
@@ -151,7 +151,24 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
     
     outputfile.close()
         
-
+def convert_topics_to_csv(json_model, folder, model_nr):
+    output_file_name_terms = os.path.join(folder, model_nr + "_topic_terms.csv")
+    outputfile_terms = open(output_file_name_terms, 'w')
+    
+    term_result_matrix = []
+    for topic in json_model["topic_model_output"]["topics"]:
+        term_result_matrix.append([topic["id"]])
+        term_result_matrix.append([])
+        for term in topic["topic_terms"]:
+            term_result_matrix.append([term["term"], term["score"]])
+        term_result_matrix.append([])
+        term_result_matrix.append([])
+    terms_writer = csv.writer(outputfile_terms, dialect="excel-tab")
+    terms_writer.writerows(term_result_matrix)
+    
+    print("open " + output_file_name_terms)
+    outputfile_terms.close()
+    
 def do_csv_export(folder_base, model_nr, convert_not_covered = False, files_folder = None):
 
     folder = os.path.join(folder_base, EXPORT_DIR)
@@ -170,6 +187,8 @@ def do_csv_export(folder_base, model_nr, convert_not_covered = False, files_fold
     model.close()
     themes.close()
     convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, convert_not_covered, files_folder)
+    
+    convert_topics_to_csv(json_model, folder, model_nr)
 
 if __name__ == '__main__':
     folder="/Users/marsk757/topics2themes/topics2themes/data_folder/cirkel/"
