@@ -406,7 +406,9 @@ def train_scikit_nmf_model(properties, documents, word2vecwrapper, path_slash_fo
     for i in range(0, properties.NUMBER_OF_RUNS):
         print("Running topic model nr " + str(i))
         #nmf = NMF(n_components=number_of_topics, alpha=.1, l1_ratio=.5, init='random').fit(tfidf)
-        nmf = NMF(n_components=properties.NUMBER_OF_TOPICS, alpha=.1, l1_ratio=.5, init='nndsvd', shuffle = True, random_state=random_state, max_iter=100, verbose=0).fit(tfidf)
+        #nmf = NMF(n_components=properties.NUMBER_OF_TOPICS, alpha=.1, l1_ratio=.5, init='nndsvd', shuffle = True, random_state=random_state, max_iter=100, verbose=0).fit(tfidf)
+        nmf = NMF(n_components=properties.NUMBER_OF_TOPICS).fit(tfidf)
+        #beta_loss="frobenius", alpha_W=0.01, alpha_H='same', l1_ratio=0.5, random_state=random_state, init = "nndsvda", max_iter=properties.NR_OF_ITERATIONS).fit(tfidf)
         model_list.append(nmf)
     print("Start getting topic model info")
     topic_info, most_typical_model = get_scikit_topics(properties, model_list, tfidf_vectorizer, tfidf, documents)

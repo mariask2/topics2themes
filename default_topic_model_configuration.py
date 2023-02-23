@@ -100,6 +100,11 @@ Whether to use document frequency or to weight it with inverse document frequenc
 """
 USE_IDF = False
 
+
+"""
+How many times to iter, to find a good topic modell
+"""
+NR_OF_ITERATIONS = 200
 """
     Whether to show the argumentation buttons or not
 """

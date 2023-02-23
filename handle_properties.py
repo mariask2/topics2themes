@@ -228,7 +228,11 @@ class PropertiesContainer:
         except AttributeError:
              self.USE_IDF = default_topic_model_configuration.USE_IDF
 
-                 
+        try:
+             self.NR_OF_ITERATIONS = properties.NR_OF_ITERATIONS
+        except AttributeError:
+             self.NR_OF_ITERATIONS = default_topic_model_configuration.NR_OF_ITERATIONS
+
         
         try:
             self.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING = properties.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING
