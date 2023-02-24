@@ -156,8 +156,8 @@ def convert_topics_to_csv(json_model, folder, model_nr):
     outputfile_terms = open(output_file_name_terms, 'w')
     
     term_result_matrix = []
-    for topic in json_model["topic_model_output"]["topics"]:
-        term_result_matrix.append([topic["id"]])
+    for nr, topic in enumerate(json_model["topic_model_output"]["topics"]):
+        term_result_matrix.append(["Topic-nr:-" + str(nr) + "-Topic-id:-" + str(topic["id"])])
         term_result_matrix.append([])
         for term in topic["topic_terms"]:
             term_result_matrix.append([term["term"], term["score"]])
