@@ -21,6 +21,8 @@ def fill_zero(str):
 
 def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, convert_not_covered = False, files_folder = None):
 
+    all_found_terms = set()
+    
     document_theme_dict = {}
     for theme_el in json_themes:
         for document_id in theme_el['document_ids']:
@@ -110,6 +112,8 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
                 print("No keywords found in document", splitted_key_word, document['text'].lower())
                 terms_to_pick_as_rep = splitted_key_word
                      
+            for stat_term in terms_to_pick_as_rep:
+                all_found_terms.add(stat_term)
             repr_terms.append("/".join(terms_to_pick_as_rep))
         
         row_list[0] = ", ".join(sorted(repr_terms))
@@ -150,8 +154,9 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
             outputfile.write(to_write_row)
     
     outputfile.close()
+    return all_found_terms
         
-def convert_topics_to_csv(json_model, folder, model_nr):
+def convert_topics_to_csv(json_model, folder, model_nr, all_terms_found_in_texts):
     output_file_name_terms = os.path.join(folder, model_nr + "_topic_terms.csv")
     outputfile_terms = open(output_file_name_terms, 'w')
     
@@ -160,7 +165,14 @@ def convert_topics_to_csv(json_model, folder, model_nr):
         term_result_matrix.append(["Topic-nr:-" + str(nr) + "-Topic-id:-" + str(topic["id"])])
         term_result_matrix.append([])
         for term in topic["topic_terms"]:
-            term_result_matrix.append([term["term"], term["score"]])
+            terms_to_keep = []
+            ind_terms = term["term"].split(" / ")
+            for ind_term in ind_terms:
+                if ind_term in all_terms_found_in_texts:
+                    terms_to_keep.append(ind_term)
+                    if "_" in ind_term:
+                        print(ind_term)
+            term_result_matrix.append([" / ".join(terms_to_keep), term["score"]])
         term_result_matrix.append([])
         term_result_matrix.append([])
     terms_writer = csv.writer(outputfile_terms, dialect="excel-tab")
@@ -186,12 +198,17 @@ def do_csv_export(folder_base, model_nr, convert_not_covered = False, files_fold
     topic_names.close()
     model.close()
     themes.close()
-    convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, convert_not_covered, files_folder)
+    all_terms_found_in_texts = convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, convert_not_covered, files_folder)
     
-    convert_topics_to_csv(json_model, folder, model_nr)
+    print("Found collocations: ")
+    for t in list(all_terms_found_in_texts):
+        if "_" in t:
+            print(t)
+            
+    convert_topics_to_csv(json_model, folder, model_nr, all_terms_found_in_texts)
 
 if __name__ == '__main__':
-    folder="/Users/marsk757/topics2themes/topics2themes/data_folder/cirkel/"
-    model_nr = "63bfd6da0159ab8a98b21e6d"
+    folder="/Users/marsk757/topics2themes/topics2themes/data_folder/framtidens-kultur_automatiskt/"
+    model_nr = "63f800a8e74686ed89f702f6"
     
     do_csv_export(folder, model_nr)
