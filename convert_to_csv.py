@@ -96,7 +96,7 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
             terms_to_pick_as_rep = []
             splitted_key_word = sorted(key_word.split("__"), key=len, reverse=True)
             for splitted in splitted_key_word:
-                if splitted.replace("_", " ") in document['text'].lower():
+                if splitted.replace("_", " ") in document['text'].lower() or splitted in document['text'].lower():
                     if len(terms_to_pick_as_rep) == 0:
                         terms_to_pick_as_rep.append(splitted)
                     else:
