@@ -588,6 +588,7 @@ for loop_index, el in enumerate(topics_manually_sorted):
 file_name_topics = "topics_terms_new_sorting"
 plt.savefig(file_name_topics, dpi = 700, transparent=False, orientation = "landscape")
    #, bbox_inches='tight', , )
+plt.savefig(file_name_topics + ".pdf", dpi = 700, transparent=False, orientation = "landscape", format="pdf")
 print("Saved plot in " + file_name_topics)
 plt.close('all')
  
@@ -612,6 +613,7 @@ plt.gcf().subplots_adjust(hspace = 0.2, wspace = 0.2, left = 0.06, bottom = 0.1)
 
 file_name = "name_new_sorting"
 plt.savefig(file_name, dpi = 700, transparent=False, orientation = "landscape")
+plt.savefig(file_name + ".pdf", dpi = 700, transparent=False, orientation = "landscape", format="pdf")
 #, bbox_inches='tight', , )
 print("Saved plot in " + file_name)
 plt.close('all')
