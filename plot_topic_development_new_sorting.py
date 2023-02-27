@@ -339,7 +339,7 @@ with open("../klimat/master_table.tsv") as master:
 
 
 obj = None
-model_file = "/Users/marsk757/topic2themes/topics2themes/data_folder/climate-editorials-graph/topics2themes_exports_folder_created_by_system/602f89d39962f2a59e2653c4_model.json"
+model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/climate-editorials-graph/topics2themes_exports_folder_created_by_system/602f89d39962f2a59e2653c4_model.json"
 
  #"/Users/marsk757/topic2themes/topics2themes/data_folder/climate-editorials-graph/topics2themes_exports_folder_created_by_system/6025902c414336b264581333_model.json" #"/Users/marsk757/topic2themes/topics2themes/data_folder/climate-editorials-graph/topics2themes_exports_folder_created_by_system/5ff8fd96dede69ec1ede953a_model.json"
 # read file
@@ -418,7 +418,7 @@ for manual_id in manually_sorted_ids:
 topic_names = [topics[key] for key in manually_sorted_ids]
 
 
-topic_description_file = "/Users/marsk757/topic2themes/topics2themes/data_folder/climate-editorials-graph/topics2themes_exports_folder_created_by_system/602f89d39962f2a59e2653c4_topic_name.json"
+topic_description_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/climate-editorials-graph/topics2themes_exports_folder_created_by_system/602f89d39962f2a59e2653c4_topic_name.json"
 
 topic_name_dict = {}
 with open(topic_description_file, 'r') as f:
