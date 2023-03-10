@@ -10,7 +10,7 @@ GUI example from ''Snippets of Folk Legends: Adapting a Text Mining Tool to a Co
 
 ## Publications
 
-* Ahltorp, M., D&uuml;rlich L., Skeppstedt, M. 2021. Textual Contexts for "Democracy": Using Topic- and Word-Models for Exploring Swedish Government Official Reports. pp 49-56. 1st Workshop on Computational Linguistics for Political and Social Sciences (CPSS)
+* Ahltorp, M., D&uuml;rlich L., Skeppstedt, M. 2021. Textual Contexts for "Democracy": Using Topic- and Word-Models for Exploring Swedish Government Official Reports. pp 49-56. 1st Workshop on Computational Linguistics for Political and Social Sciences (CPSS).
 [pdf](https://people.dsv.su.se/~mariask/publications/demokrati.pdf)
 * Skeppstedt, M., Ahltorp, M., Eriksson, G., Domeij, R. 2021. A Pipeline for Manual Annotations of
 Risk Factor Mentions in the COVID-19 Open
