@@ -87,8 +87,8 @@ def convert_to_csv(json_topic_names, json_model, json_themes, folder, model_nr, 
             id_index = id_index_dict[document_topic["topic_index"]]
             row_list[index_start_topics + id_index] = str(round(document_topic['topic_confidence'], 2)).replace(".",",") # Swedish Excel
         
-        additonals = ", ".join([additional for additional in document["additional_labels"]])
-        row_list.append(additonals)
+        additonals = [additional for additional in document["additional_labels"]]
+        row_list.extend(additonals)
         
         key_words = list(set(key_words))
         repr_terms = []
