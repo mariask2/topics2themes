@@ -1152,7 +1152,7 @@ def print_and_get_topic_info(properties, topic_info, documents, meta_data_list, 
 
 
     if save_in_database:
-        saved_time, post_id = mongo_con.insert_new_model(result_dict, data_set_name, properties.STORE_IN_DATABASE)
+        saved_time, post_id = mongo_con.insert_new_model(result_dict, data_set_name, properties.STORE_IN_DATABASE, path_slash_format)
     else:
         print("Don't save in database (for debugging)")
 

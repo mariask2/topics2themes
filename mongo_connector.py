@@ -16,8 +16,10 @@ except:
 
 if RUN_LOCALLY:
     from topic_model_constants import *
+    import handle_properties
 else:
     from topics2themes.topic_model_constants import *
+    import topics2themes.handle_properties as handle_properties
 
 DEFAULT_DATABASE_NAME = "default_database_name_topics2themes"
 DEFAULT_DATABASE_PORT = 27017
@@ -101,6 +103,17 @@ class MongoConnector:
         document_spec = {self.TOPIC_MODEL_OUTPUT: document[self.TOPIC_MODEL_OUTPUT],\
                         self.TEXT_COLLECTION_NAME: document[self.TEXT_COLLECTION_NAME],\
                         self.ID : str(document[self.ID])}
+        if document_spec[self.TOPIC_MODEL_OUTPUT] == {}:
+            properties, path_slash_format, path_dot_format = handle_properties.load_properties_from_parameters(DATA_FOLDER + "." + document_spec[self.TEXT_COLLECTION_NAME])
+                
+            file_to_store_in = self.get_model_store_file_name(path_slash_format, id)
+            print("MODEL SAVED TO FILE")
+            print(path_slash_format)
+            print("document_spec[self.TEXT_COLLECTION_NAME]", document_spec[self.TEXT_COLLECTION_NAME])
+            print("file_to_store_in", file_to_store_in)
+            with open(file_to_store_in) as f:
+                model = json.loads(f.read())
+                document_spec[self.TOPIC_MODEL_OUTPUT] = model
         return document_spec
         
     def get_analysis_for_analysis_id(self, id):
@@ -176,27 +189,47 @@ class MongoConnector:
   
         documents = self.get_model_collection().find({self.TEXT_COLLECTION_NAME: text_collection_name})
         
-        document_spec = [{self.DATE: str(document['_id'].generation_time),\
+        document_spec_list = []
+        for document in documents:
+            if document[self.TOPIC_MODEL_OUTPUT] != {}:
+                model_name = document[self.TOPIC_MODEL_OUTPUT][META_DATA][MODEL_NAME]
+            else:
+                model_name = "unknown"
+            document_spec = {self.DATE: str(document['_id'].generation_time),\
                          self.TEXT_COLLECTION_NAME: document[self.TEXT_COLLECTION_NAME],\
                          self.ID : str(document[self.ID]),\
-                         MODEL_NAME : document[self.TOPIC_MODEL_OUTPUT][META_DATA][MODEL_NAME]}\
-                         for document in documents]
+                         MODEL_NAME : model_name}
+            document_spec_list.append(document_spec)
    
-        return document_spec
+        return document_spec_list
     
 
     def get_all_collections(self):
         return self.get_database().collection_names()
 
-    def insert_new_model(self, topic_model_output, text_collection_name, save_in_database):
+    def get_model_store_file_name(self, path_slash_format, post_id):
+        export_dir = os.path.join(path_slash_format, EXPORT_DIR)
+        if not os.path.exists(export_dir):
+            os.mkdir(export_dir)
+        return os.path.join(export_dir, "store_model_" + str(post_id) + ".json")
+    
+    def insert_new_model(self, topic_model_output, text_collection_name, save_in_database, path_slash_format):
+        
         time = datetime.datetime.utcnow()
         if save_in_database:
             post = {self.TEXT_COLLECTION_NAME : text_collection_name,\
                 self.TOPIC_MODEL_OUTPUT: topic_model_output}
+            post_id = self.get_model_collection().insert_one(post).inserted_id
         else:
             post = {self.TEXT_COLLECTION_NAME : text_collection_name,\
                 self.TOPIC_MODEL_OUTPUT: {}}
-        post_id = self.get_model_collection().insert_one(post).inserted_id
+            post_id = self.get_model_collection().insert_one(post).inserted_id
+            file_to_store_in = self.get_model_store_file_name(path_slash_format, post_id)
+            
+            print("file_to_store_in", file_to_store_in)
+            with open(file_to_store_in, "w") as store_json:
+                json.dump(topic_model_output, store_json)
+        
         return time, post_id
     
     
