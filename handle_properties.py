@@ -261,6 +261,13 @@ class PropertiesContainer:
             self.READ_FUNCTION = properties.READ_FUNCTION
         except AttributeError:
             self.READ_FUNCTION = default_topic_model_configuration.READ_FUNCTION
+        
+        try:
+            self.STORE_IN_DATABASE = properties.STORE_IN_DATABASE
+        except AttributeError:
+            self.STORE_IN_DATABASE = default_topic_model_configuration.STORE_IN_DATABASE
+            
+            
 
     def get_properties_in_json(self):
         """

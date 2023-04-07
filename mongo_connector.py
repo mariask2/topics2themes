@@ -188,10 +188,14 @@ class MongoConnector:
     def get_all_collections(self):
         return self.get_database().collection_names()
 
-    def insert_new_model(self, topic_model_output, text_collection_name):
+    def insert_new_model(self, topic_model_output, text_collection_name, save_in_database):
         time = datetime.datetime.utcnow()
-        post = {self.TEXT_COLLECTION_NAME : text_collection_name,\
+        if save_in_database:
+            post = {self.TEXT_COLLECTION_NAME : text_collection_name,\
                 self.TOPIC_MODEL_OUTPUT: topic_model_output}
+        else:
+            post = {self.TEXT_COLLECTION_NAME : text_collection_name,\
+                self.TOPIC_MODEL_OUTPUT: {}}
         post_id = self.get_model_collection().insert_one(post).inserted_id
         return time, post_id
     

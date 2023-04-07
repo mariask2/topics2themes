@@ -299,6 +299,8 @@ def read_documents(data_label_list, data_set_name, cleaning_method, n_gram_lengt
 
     documents = []
     meta_data_list = []
+    if remove_duplicates:
+        print("Searching for duplicates ")
     for f, user_label in files_to_read:
         base_name = os.path.basename(f)
         opened = open(f)
@@ -333,6 +335,8 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
                 add_this_file = False
                 found_duplicate = sub_text
                 break
+    if not add_this_file:
+        print(" ".join(sub_tokens))
     return add_this_file, found_duplicate
     
 
@@ -355,6 +359,8 @@ def should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length
             add_this_file, found_duplicate = is_duplicate(filtered_text_text, sp, j, previous_sub_texts)
             if not add_this_file:
                 break
+                
+        
     return add_this_file
    
 
@@ -626,13 +632,22 @@ def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_sla
     f_list = tf_vectorizer.get_feature_names_out()
     print("Vocabulary size: " + str(len(f_list)))
     
+    model_name_as_file = ''.join(ch for ch in model_name if ch.isalnum())
+    synonym_output_dir = os.path.join(path_slash_format, SYNONYM_FOLDER_NAME)
+    synonym_file = os.path.join(synonym_output_dir, model_name_as_file + "_synonyms.txt")
+    with open(synonym_file, "w") as synonym_out:
+        for i in f_list:
+            if SYNONYM_BINDER in i:
+                synonym_out.write(i.replace(SYNONYM_BINDER, " ") + "\n")
+        
+    """
     ## Calculate tf-idf as if the entire corpus was one document
     corpus_vectorizer = TfidfVectorizer(vocabulary=f_list, use_idf=False, smooth_idf=False, norm=None)
     all_corpus = [" ".join(documents)]
     corpus_transformed = corpus_vectorizer.fit_transform(all_corpus)
     corpus_inversed = corpus_vectorizer.inverse_transform(corpus_transformed)
     tr_inv = sorted([(t, i) for t, i in zip(corpus_transformed[0].toarray()[0], corpus_inversed[0])], reverse=True)
-   
+
     synonym_output_dir = os.path.join(path_slash_format, SYNONYM_FOLDER_NAME)
     if not os.path.exists(synonym_output_dir):
         os.makedirs(synonym_output_dir)
@@ -647,6 +662,7 @@ def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_sla
                 all_features_out.write(i.replace(SYNONYM_BINDER, " ") + "\t" + str(int(t)) + "\n")
                 if SYNONYM_BINDER in i:
                     synonym_out.write(i.replace(SYNONYM_BINDER, " ") + "\t" + str(int(t)) + "\n")
+    """
     print("Finished transforming the text into vectors")
     
     return to_return, tf_vectorizer, tf
@@ -1136,7 +1152,7 @@ def print_and_get_topic_info(properties, topic_info, documents, meta_data_list, 
 
 
     if save_in_database:
-        saved_time, post_id = mongo_con.insert_new_model(result_dict, data_set_name)
+        saved_time, post_id = mongo_con.insert_new_model(result_dict, data_set_name, properties.STORE_IN_DATABASE)
     else:
         print("Don't save in database (for debugging)")
 

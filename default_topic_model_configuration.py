@@ -229,6 +229,9 @@ def no_cleaning(text):
 
 READ_FUNCTION = None
 
+STORE_IN_DATABASE = True
+
+
 ###
 # Testing the default functionality
 ###
