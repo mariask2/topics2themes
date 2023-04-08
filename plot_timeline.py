@@ -305,6 +305,29 @@ with open(metadata_file_name) as metadata_file:
         base_name = os.path.basename(sp[0])
         meta_data_dict[time_stamp].append(base_name)
 
+spread_time_stamps = {}
+time_stamps = sorted(meta_data_dict.keys())
+
+for i in range(0, len(time_stamps)):
+    time_stamp = time_stamps[i]
+    if i + 1 >= len(time_stamps):
+        distance = time_stamp - time_stamps[i - 1]
+    else:
+        distance = time_stamps[i + 1] - time_stamp
+    
+        
+    documents = meta_data_dict[time_stamp]
+    if len(documents) == 1:
+        spread_time_stamps[time_stamp] = [documents[0]]
+    else:
+        to_add = distance/len(documents)
+        spread_time_stamp = time_stamp
+        for document in documents:
+           spread_time_stamps[spread_time_stamp] = [document]
+           spread_time_stamp = spread_time_stamp + to_add
+           
+    
+
 
 for el in obj["topic_model_output"]["documents"]:
     base_name = el["base_name"]
@@ -376,9 +399,9 @@ ax1.yaxis.tick_right()
 for y in range(0, len(topic_names)):
     plt.axhline(y=-y, linewidth=0.55, color='k')
     
-for time_stamp, name_list in meta_data_dict.items():
+for time_stamp, name_list in spread_time_stamps.items():
     time_stamp = float(time_stamp)
-    plt.axvline(x=time_stamp, linewidth=0.1, color='k')
+    plt.axvline(x=time_stamp, linewidth=0.001, color='lightgrey', zorder = -10000)
     for name in name_list:
         if name in document_info:
             document = document_info[name]
@@ -390,6 +413,7 @@ for time_stamp, name_list in meta_data_dict.items():
                 if confidence > 0.1:
                     #plt.scatter(time_stamp, -topic_nr)
                     ax1.plot([time_stamp, time_stamp], [ty + cw2, ty - cw2], '.-', linewidth=0.6, markersize=0, color = "black")
+                    plt.axvline(x=time_stamp, linewidth=0.05, color='silver', zorder = -1000)
                 
 plt.show()
 
