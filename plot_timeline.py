@@ -369,11 +369,17 @@ for y in range(0, len(topic_names)):
     
 for time_stamp, di in document_info.items():
     time_stamp = float(time_stamp)
+    plt.axvline(x=time_stamp, linewidth=0.1, color='k')
     for document in di:
-        plt.axvline(x=time_stamp, linewidth=0.55, color='k')
         for topic_for_document in document:
-            print(topic_nrs[topic_for_document['topic_index']])
-            print()
+            topic_nr = topic_nrs[topic_for_document['topic_index']]
+            confidence = topic_for_document["topic_confidence"]
+            ty = -topic_nr
+            cw2 = confidence/max_topic_confidence/1.2
+            if confidence > 0.1:
+                #plt.scatter(time_stamp, -topic_nr)
+                ax1.plot([time_stamp, time_stamp], [ty + cw2, ty - cw2], '.-', linewidth=0.6, markersize=0, color = "black")
+                
 plt.show()
 
 
