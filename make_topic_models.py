@@ -175,7 +175,15 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                           properties.READ_FUNCTION)
 
     #documents = [el[TEXT] for el in file_list]
-    
+    #TODO: print meta_data_list
+    meta_export_dir = os.path.join(path_slash_format, EXPORT_DIR)
+    if not os.path.exists(meta_export_dir):
+        os.mkdir(meta_export_dir)
+    metdata_filename = os.path.join(meta_export_dir, ALL_FILES)
+    with open(metdata_filename, "w") as metadata_file:
+        for el in meta_data_list:
+            metadata_file.write(str(el[FULL_NAME]) + "\t" +  "\t".join(properties.ADDITIONAL_LABELS_METHOD(str(el[FULL_NAME]))) + "\n")
+            
 
     if len(documents) == 0:
         print("No documents found. Remember that only documents with the suffix '.txt' are used")
@@ -219,6 +227,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                                               most_typical_model, tf_vectorizer, stopword_handler, path_slash_format)
         
         print("\nMade models for "+ str(len(documents)) + " documents.")
+        
         
         return result_dict, time, post_id, most_typical_model
 
