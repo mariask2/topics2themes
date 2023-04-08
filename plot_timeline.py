@@ -8,6 +8,7 @@ from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 from matplotlib import cm
 import math
 import matplotlib.colors as colors
+import os
 
 
 
@@ -125,7 +126,6 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
         title_list = year_title_dict[year]
         move_x = 1/len(title_list)
         for article_nr, article_title in enumerate(title_list):
-            #print(article_title)
             if last_iter_year != year:
                 x_moved = 0.0
             else:
@@ -223,7 +223,6 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
 
 
 def create_scatter_dict_and_year_title_tuple(document_info):
-    print(document_info)
     exit()
     scatter_dict = {}
     year_title_dict = {}
@@ -253,7 +252,6 @@ def create_scatter_dict_and_year_title_tuple(document_info):
         # vector with information of how strong the topic is
         # for this document
         if id in document_info: # topic in document
-            #print(document_info[el[0]])
             for topic_in_document in document_info[id]["document_topics"]:
                 index_for_topic_in_scatter = sorted(topics.keys()).index(topic_in_document["topic_index"])
                 scatter_for_editorial[index_for_topic_in_scatter] =      topic_in_document["topic_confidence"]
@@ -286,18 +284,30 @@ def create_scatter_dict_and_year_title_tuple(document_info):
 
 obj = None
 model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/framtidens-kultur_automatiskt/topics2themes_exports_folder_created_by_system/64307ccf714f076e957c9bea_model.json"
-
+metadata_file_name = "/Users/marsk757/topics2themes/topics2themes/data_folder/framtidens-kultur_automatiskt/topics2themes_exports_folder_created_by_system/all_files.csv"
  
 with open(model_file, 'r') as f:
     data = f.read()
     obj = json.loads(data)
 
 document_info = {}
+meta_data_dict = {}
 max_topic_confidence = 0
 min_time_stamp = math.inf
 max_time_stamp = -math.inf
 
+with open(metadata_file_name) as metadata_file:
+    for line in metadata_file:
+        sp = line.strip().split("\t")
+        time_stamp = float(sp[1])
+        if time_stamp not in meta_data_dict:
+            meta_data_dict[time_stamp] = []
+        base_name = os.path.basename(sp[0])
+        meta_data_dict[time_stamp].append(base_name)
+
+
 for el in obj["topic_model_output"]["documents"]:
+    base_name = el["base_name"]
     if len(el["additional_labels"]) > 1:
         print("More than one timestamp", el)
         exit()
@@ -320,9 +330,8 @@ for el in obj["topic_model_output"]["documents"]:
         document_topics.append(topic_info)
         if t["topic_confidence"] > max_topic_confidence:
             max_topic_confidence = t["topic_confidence"]
-    if time_stamp not in document_info:
-        document_info[time_stamp] = []
-    document_info[time_stamp].append(document_topics)
+            
+    document_info[base_name] = document_topics
 
 
 
@@ -356,7 +365,7 @@ topic_sorted_for_id = sorted(obj["topic_model_output"]["topics"], key=lambda t: 
 #scatter_dict_science, year_title_dict_science, max_topic_confidence_science = create_scatter_dict_and_year_title_tuple(document_info)
 
 print("max_topic_confidence", max_topic_confidence)
-print(topic_names)
+
 
 fig, ax1 = plt.subplots()
 
@@ -367,18 +376,20 @@ ax1.yaxis.tick_right()
 for y in range(0, len(topic_names)):
     plt.axhline(y=-y, linewidth=0.55, color='k')
     
-for time_stamp, di in document_info.items():
+for time_stamp, name_list in meta_data_dict.items():
     time_stamp = float(time_stamp)
     plt.axvline(x=time_stamp, linewidth=0.1, color='k')
-    for document in di:
-        for topic_for_document in document:
-            topic_nr = topic_nrs[topic_for_document['topic_index']]
-            confidence = topic_for_document["topic_confidence"]
-            ty = -topic_nr
-            cw2 = confidence/max_topic_confidence/1.2
-            if confidence > 0.1:
-                #plt.scatter(time_stamp, -topic_nr)
-                ax1.plot([time_stamp, time_stamp], [ty + cw2, ty - cw2], '.-', linewidth=0.6, markersize=0, color = "black")
+    for name in name_list:
+        if name in document_info:
+            document = document_info[name]
+            for topic_for_document in document:
+                topic_nr = topic_nrs[topic_for_document['topic_index']]
+                confidence = topic_for_document["topic_confidence"]
+                ty = -topic_nr
+                cw2 = confidence/max_topic_confidence/1.2
+                if confidence > 0.1:
+                    #plt.scatter(time_stamp, -topic_nr)
+                    ax1.plot([time_stamp, time_stamp], [ty + cw2, ty - cw2], '.-', linewidth=0.6, markersize=0, color = "black")
                 
 plt.show()
 
