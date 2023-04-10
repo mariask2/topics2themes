@@ -11,6 +11,7 @@ import matplotlib.colors as colors
 import os
 
 
+plt.rcParams["font.family"] = "monospace"
 
 def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, title, file_name, min_year, max_year, year_title_dict, ax, xlabels, color_map, max_topic_confidence):
 
@@ -305,30 +306,9 @@ with open(metadata_file_name) as metadata_file:
         base_name = os.path.basename(sp[0])
         meta_data_dict[time_stamp].append(base_name)
 
-spread_time_stamps = {}
-time_stamps = sorted(meta_data_dict.keys())
 
-for i in range(0, len(time_stamps)):
-    time_stamp = time_stamps[i]
-    if i + 1 >= len(time_stamps):
-        distance = time_stamp - time_stamps[i - 1]
-    else:
-        distance = time_stamps[i + 1] - time_stamp
+
     
-        
-    documents = meta_data_dict[time_stamp]
-    if len(documents) == 1:
-        spread_time_stamps[time_stamp] = [documents[0]]
-    else:
-        to_add = distance/len(documents)
-        spread_time_stamp = time_stamp
-        for document in documents:
-           spread_time_stamps[spread_time_stamp] = [document]
-           spread_time_stamp = spread_time_stamp + to_add
-           
-    
-
-
 for el in obj["topic_model_output"]["documents"]:
     base_name = el["base_name"]
     if len(el["additional_labels"]) > 1:
@@ -350,14 +330,33 @@ for el in obj["topic_model_output"]["documents"]:
         topic_info["topic_index"] = t["topic_index"]
         topic_info["topic_confidence"] = t["topic_confidence"]
         #if len(topic_info["terms_found_in_text"]) > 1: # At least two terms included in text to include
+        
         document_topics.append(topic_info)
+        """
         if t["topic_confidence"] > max_topic_confidence:
             max_topic_confidence = t["topic_confidence"]
-            
+        """
     document_info[base_name] = document_topics
 
+min_time_stamp = min_time_stamp - (max_time_stamp - min_time_stamp)*0.1 #TODO: Make more generic
+max_time_stamp = max_time_stamp + (max_time_stamp - min_time_stamp)*0.1  #TODO: Make more generic
 
-
+timestamp_topics_dict = {}
+max_texts = 0
+for timestamp, base_names in meta_data_dict.items():
+    timestamp_topics_dict[timestamp] = {}
+    if len(base_names) > max_texts:
+        max_texts = len(base_names)
+    for base_name in base_names:
+        if base_name in document_info:
+            for document_topic in document_info[base_name]:
+                topic_index = document_topic["topic_index"]
+                if topic_index not in timestamp_topics_dict[timestamp]:
+                    timestamp_topics_dict[timestamp][topic_index] = 0
+                timestamp_topics_dict[timestamp][topic_index] = timestamp_topics_dict[timestamp][topic_index] + document_topic["topic_confidence"]
+                if timestamp_topics_dict[timestamp][topic_index] > max_topic_confidence:
+                    max_topic_confidence = timestamp_topics_dict[timestamp][topic_index]
+                
 topic_names = []
 topic_nrs = {}
 for nr, el in enumerate(obj["topic_model_output"]["topics"]):
@@ -377,13 +376,13 @@ for nr, el in enumerate(obj["topic_model_output"]["topics"]):
         repr_terms.append(term_to_pick_as_rep.strip())
         
     third_length = int(len(repr_terms)/3)
-    topic_name = ", ".join(repr_terms)[0:50].strip() +"..."
+    topic_name = ", ".join(repr_terms)[0:25].strip() +"..."
     topic_names.append(topic_name)
 
 
 
 topic_sorted_for_id = sorted(obj["topic_model_output"]["topics"], key=lambda t: t["id"])
-
+timestamps_sorted = sorted(timestamp_topics_dict.keys())
 
 #scatter_dict_science, year_title_dict_science, max_topic_confidence_science = create_scatter_dict_and_year_title_tuple(document_info)
 
@@ -394,28 +393,30 @@ fig, ax1 = plt.subplots()
 
 ax1.set(xlim=(min_time_stamp, max_time_stamp))
 plt.yticks([-y for y in range(0, len(topic_names))], topic_names)
+plt.xticks(timestamps_sorted, [int(x) for x in timestamps_sorted]) # TODO: Make more general
+ax1.set_xticklabels(ax1.xaxis.get_majorticklabels(), rotation=-90)
+
 ax1.yaxis.set_label_position("right")
 ax1.yaxis.tick_right()
 for y in range(0, len(topic_names)):
     plt.axhline(y=-y, linewidth=0.55, color='k')
     
-for time_stamp, name_list in spread_time_stamps.items():
+    
+for time_stamp, topic_dict in timestamp_topics_dict.items():
+    nr_of_texts = len(meta_data_dict[time_stamp])
     time_stamp = float(time_stamp)
-    plt.axvline(x=time_stamp, linewidth=0.001, color='lightgrey', zorder = -10000)
-    for name in name_list:
-        if name in document_info:
-            document = document_info[name]
-            for topic_for_document in document:
-                topic_nr = topic_nrs[topic_for_document['topic_index']]
-                confidence = topic_for_document["topic_confidence"]
-                ty = -topic_nr
-                cw2 = confidence/max_topic_confidence/1.2
-                if confidence > 0.1:
-                    #plt.scatter(time_stamp, -topic_nr)
-                    ax1.plot([time_stamp, time_stamp], [ty + cw2, ty - cw2], '.-', linewidth=0.6, markersize=0, color = "black")
-                    plt.axvline(x=time_stamp, linewidth=0.05, color='silver', zorder = -1000)
-                
-plt.show()
+    for topic_index, confidence in topic_dict.items():
+        topic_nr = topic_nrs[topic_index]
+        ty = -topic_nr
+        cw2 = confidence/max_topic_confidence/2
+        ax1.plot([time_stamp, time_stamp], [ty + cw2, ty - cw2], '.-', linewidth=2, markersize=0, color = "black")
+        plt.axvline(x=time_stamp, linewidth=2*nr_of_texts/max_texts, color='lightgrey', zorder = -1000)
+
+#plt.subplots_adjust(wspace=20, hspace=20)
+file_name = "temp_out"
+plt.yticks(fontsize=6)
+plt.tight_layout()
+plt.savefig(file_name + ".pdf", dpi = 700, transparent=False, orientation = "landscape", format="pdf")
 
 
 
