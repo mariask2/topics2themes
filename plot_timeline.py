@@ -44,9 +44,9 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
     
  
     # The tick labels for the topics (y axis), and horisontal color bars
-    TOPIC_DESCRIPTION_LENGTH = 20
+    TOPIC_DESCRIPTION_LENGTH = 150
     y_width = 0.35
-    y_ticks = [el[:20].replace("_", " ") + "..." for el in topics_reps] + [""]
+    y_ticks = [el[:TOPIC_DESCRIPTION_LENGTH].replace("_", " ") + "..." for el in topics_reps] + [""]
     
     # Before these row numbers (= y), the manual labels will be printed
     at_which_y_to_print_labels = [0, 1, 5, 9, 12, 13]
@@ -217,7 +217,7 @@ def plot_topics_text(topics_reps,  topic_in_text_dict, manually_sorted_ids, titl
                 x_moved = x_moved + move_x
         
     plt.xticks(ha='center')
-    ax.set_title(title, fontsize=6, loc="right") # x=-0.41,y=0.92)# )rotation='vertical'
+    ax.set_title(title, fontsize=9, loc="right") # x=-0.41,y=0.92)# )rotation='vertical'
               
     #fig.tight_layout()
     
@@ -284,7 +284,7 @@ def create_scatter_dict_and_year_title_tuple(document_info):
 #####
 
 obj = None
-model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/framtidens-kultur_automatiskt/topics2themes_exports_folder_created_by_system/64307ccf714f076e957c9bea_model.json"
+model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/framtidens-kultur_automatiskt/topics2themes_exports_folder_created_by_system/6435235bfa0b2425fb69e3bf_model.json"
 metadata_file_name = "/Users/marsk757/topics2themes/topics2themes/data_folder/framtidens-kultur_automatiskt/topics2themes_exports_folder_created_by_system/all_files.csv"
  
 with open(model_file, 'r') as f:
@@ -338,8 +338,8 @@ for el in obj["topic_model_output"]["documents"]:
         """
     document_info[base_name] = document_topics
 
-min_time_stamp = min_time_stamp - (max_time_stamp - min_time_stamp)*0.1 #TODO: Make more generic
-max_time_stamp = max_time_stamp + (max_time_stamp - min_time_stamp)*0.1  #TODO: Make more generic
+min_time_stamp = min_time_stamp - (max_time_stamp - min_time_stamp)*0.05 #TODO: Make more generic
+max_time_stamp = max_time_stamp + (max_time_stamp - min_time_stamp)*0.05  #TODO: Make more generic
 
 timestamp_topics_dict = {}
 max_texts = 0
@@ -376,7 +376,7 @@ for nr, el in enumerate(obj["topic_model_output"]["topics"]):
         repr_terms.append(term_to_pick_as_rep.strip())
         
     third_length = int(len(repr_terms)/3)
-    topic_name = ", ".join(repr_terms)[0:25].strip() +"..."
+    topic_name = ", ".join(repr_terms)[0:70].strip() +"..."
     topic_names.append(topic_name)
 
 
@@ -388,35 +388,53 @@ timestamps_sorted = sorted(timestamp_topics_dict.keys())
 
 print("max_topic_confidence", max_topic_confidence)
 
-
-fig, ax1 = plt.subplots()
+#plt.figure(figsize = (8.268, 11.693))
+fig, ax1 = plt.subplots(figsize = (11.693, 8.268))
 
 ax1.set(xlim=(min_time_stamp, max_time_stamp))
-plt.yticks([-y for y in range(0, len(topic_names))], topic_names)
+plt.yticks([-y for y in range(0, 2*len(topic_names), 2)], topic_names)
 plt.xticks(timestamps_sorted, [int(x) for x in timestamps_sorted]) # TODO: Make more general
 ax1.set_xticklabels(ax1.xaxis.get_majorticklabels(), rotation=-90)
 
 ax1.yaxis.set_label_position("right")
 ax1.yaxis.tick_right()
-for y in range(0, len(topic_names)):
-    plt.axhline(y=-y, linewidth=0.55, color='k')
-    
-    
+
+current_color = "lavender"
+current_edge_color = "lavender"
+for y in range(0, 2*len(topic_names)-1, 2):
+    ty = -y
+    y_width = 0.8
+    plt.axhline(y=ty, linewidth=0.5, color='black', zorder = -50)
+    ax1.fill([min_time_stamp, max_time_stamp, max_time_stamp, min_time_stamp, min_time_stamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = current_edge_color, zorder = -10000)
+    if current_color == "lavender":
+        current_color = "honeydew"
+        current_edge_color = "honeydew"
+    else:
+        current_color = "lavender"
+        current_edge_color = "lavender"
+
+        
 for time_stamp, topic_dict in timestamp_topics_dict.items():
+    bar_height = 1.5
+    bar_width = 10
+    bar_strength = 2
     nr_of_texts = len(meta_data_dict[time_stamp])
     time_stamp = float(time_stamp)
     for topic_index, confidence in topic_dict.items():
         topic_nr = topic_nrs[topic_index]
-        ty = -topic_nr
-        cw2 = confidence/max_topic_confidence/2
-        ax1.plot([time_stamp, time_stamp], [ty + cw2, ty - cw2], '.-', linewidth=2, markersize=0, color = "black")
-        plt.axvline(x=time_stamp, linewidth=2*nr_of_texts/max_texts, color='lightgrey', zorder = -1000)
+        ty = -topic_nr*2
+        cw2 = bar_height*confidence/max_topic_confidence/2
+        ax1.plot([time_stamp, time_stamp], [ty + cw2, ty - cw2], '-', markersize=0, color = "black", linewidth=bar_strength)
+
+        #plt.axvline(x=time_stamp, linewidth=bar_width*nr_of_texts/max_texts, color='lightgrey', zorder = -1000)
+        plt.axvline(x=time_stamp, linewidth=1, color='lightgrey', zorder = -1000)
 
 #plt.subplots_adjust(wspace=20, hspace=20)
 file_name = "temp_out"
-plt.yticks(fontsize=6)
+plt.yticks(fontsize=9)
 plt.tight_layout()
-plt.savefig(file_name + ".pdf", dpi = 700, transparent=False, orientation = "landscape", format="pdf")
+
+plt.savefig(file_name + ".pdf", dpi = 700, transparent=False, format="pdf")
 
 
 
