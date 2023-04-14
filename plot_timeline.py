@@ -96,7 +96,9 @@ for timestamp, base_names in meta_data_dict.items():
                 timestamp_topics_dict[timestamp][topic_index] = timestamp_topics_dict[timestamp][topic_index] + document_topic["topic_confidence"]
                 if timestamp_topics_dict[timestamp][topic_index] > max_topic_confidence:
                     max_topic_confidence = timestamp_topics_dict[timestamp][topic_index]
-                
+
+print("max_texts", max_texts)
+
 topic_names = []
 topic_nrs = {}
 for nr, el in enumerate(obj["topic_model_output"]["topics"]):
@@ -159,6 +161,7 @@ for time_stamp, topic_dict in timestamp_topics_dict.items():
     bar_width = 10
     bar_strength = 2
     nr_of_texts = len(meta_data_dict[time_stamp])
+    plt.axvline(x=time_stamp, linewidth=0.0001, color='silver', zorder = -1000)
     for topic_index, confidence in topic_dict.items():
         topic_nr = topic_nrs[topic_index]
         ty = -topic_nr*2
@@ -166,7 +169,7 @@ for time_stamp, topic_dict in timestamp_topics_dict.items():
         ax1.plot([time_stamp, time_stamp], [ty + cw2, ty - cw2], '-', markersize=0, color = "black", linewidth=bar_strength)
 
         #plt.axvline(x=time_stamp, linewidth=bar_width*nr_of_texts/max_texts, color='lightgrey', zorder = -1000)
-        plt.axvline(x=time_stamp, linewidth=1, color='lightgrey', zorder = -1000)
+        
 
 #plt.subplots_adjust(wspace=20, hspace=20)
 file_name = "temp_out"
