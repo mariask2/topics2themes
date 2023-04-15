@@ -203,14 +203,18 @@ for y in range(0, 2*len(topic_names)-1, 2):
 for timestamp, topic_dict in timestamp_topics_dict.items():
     year = timestamp.astype(object).year
                 
-    bar_height = 1
+    bar_height = 1.5
     bar_strength = 0.2
     plt.axvline(x=timestamp, linewidth=0.0000001, color='silver', zorder = -1000)
     
     for topic_index, confidence in topic_dict.items():
         topic_nr = topic_nrs[topic_index]
         ty = -topic_nr*2
-        cw2 = 2*bar_height*confidence/max_topic_confidence
+        cw2 = bar_height*confidence/max_topic_confidence
+        #if cw2 > 0.9:
+        #    cw2 = 0.9
+        ax1.scatter(timestamp, ty, color="black", s=cw2*2, marker="*")
+        #ax1.scatter(timestamp, [ty - cw2], color="black", s=cw2)
         ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = "black", linewidth=bar_strength)
         
         # give labels to the most strong document occurrences
