@@ -26,7 +26,7 @@ metadata_file_name = "/Users/marsk757/topics2themes/topics2themes/data_folder/fr
 """
 
 
-model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/climate-news/topics2themes_exports_folder_created_by_system/6439bebd69a7cff6508f878a_model.json"
+model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/climate-news/topics2themes_exports_folder_created_by_system/643b17a648460386c298ed68_model.json"
 metadata_file_name = "/Users/marsk757/topics2themes/topics2themes/data_folder/climate-news/topics2themes_exports_folder_created_by_system/all_files.csv"
 
 with open(model_file, 'r') as f:
@@ -140,7 +140,7 @@ max_timestamp = max_timestamp + (max_timestamp - min_timestamp)*0.05  #TODO: Mak
 
 
 print("max_texts", max_texts)
-
+LABEL_LENGTH = 30 #70
 topic_names = []
 topic_nrs = {}
 for nr, el in enumerate(obj["topic_model_output"]["topics"]):
@@ -160,7 +160,7 @@ for nr, el in enumerate(obj["topic_model_output"]["topics"]):
         repr_terms.append(term_to_pick_as_rep.strip())
         
     third_length = int(len(repr_terms)/3)
-    topic_name = ", ".join(repr_terms)[0:70].strip() +"..."
+    topic_name = ", ".join(repr_terms)[0:LABEL_LENGTH].strip() +"..."
     topic_names.append(topic_name)
 
 

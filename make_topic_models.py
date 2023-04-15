@@ -174,8 +174,6 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                                           manual_collocations,
                                           properties.READ_FUNCTION)
 
-    #documents = [el[TEXT] for el in file_list]
-    #TODO: print meta_data_list
     meta_export_dir = os.path.join(path_slash_format, EXPORT_DIR)
     if not os.path.exists(meta_export_dir):
         os.mkdir(meta_export_dir)
@@ -270,19 +268,19 @@ def get_current_file_name(name, topic_model_algorithm):
 def replace_collocations(documents, manual_collocations):
     if not manual_collocations:
         return
-    sorted_collocations = sorted(manual_collocations, reverse=True)
+    sorted_collocations = sorted(manual_collocations, key=lambda s: len(s), reverse=True)
+    #print("sorted_collocations", sorted_collocations)
     for i in range(0, len(documents)):
+        replaced_with_collocations = documents[i].replace("  ", " ")
         for collocation in sorted_collocations:
-            el = documents[i]
-            if collocation in el:
+            if collocation in replaced_with_collocations:
                 to_replace = collocation.replace(" ", COLLOCATION_BINDER)
-                documents[i] = el.replace(collocation, to_replace)
-            """
-            # TODO: solve with regexp instead
-            elif collocation in el[TEXT].lower():
-                to_replace = collocation.replace(" ", COLLOCATION_BINDER)
-                el[TEXT] = el[TEXT].replace(collocation, to_replace)
-            """
+                replaced_with_collocations = replaced_with_collocations.replace(collocation, to_replace)
+                print(to_replace, replaced_with_collocations)
+        documents[i] = replaced_with_collocations
+        """
+        # TODO: solve with regexp instead, to cover capitalization
+        """
     
 ######
 # Read documents from file
