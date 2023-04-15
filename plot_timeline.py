@@ -79,6 +79,7 @@ for el in obj["topic_model_output"]["documents"]:
 
 timestamps = sorted(meta_data_dict.keys())
 timestamp_topics_dict = {}
+max_confidence_for_year_dict = {}
 timestamp_basename_dict = {}
 max_texts = 0
 
@@ -112,7 +113,6 @@ for i in range(0, len(timestamps)):
         
         for base_name in base_names:
             year = timestamp.astype(object).year
-            month = timestamp.astype(object).month
             
             if base_name in document_info:
                 for document_topic in document_info[base_name]:
@@ -123,12 +123,13 @@ for i in range(0, len(timestamps)):
                     if topic_confidence > max_topic_confidence:
                         max_topic_confidence = topic_confidence
                     
-                    if (year, month, topic_index) in timestamp_basename_dict:
-                        if timestamp_basename_dict[(year, month, topic_index)] < topic_confidence:
-                            timestamp_basename_dict[(year, month, topic_index)] = topic_confidence
+                    if (year, topic_index) in max_confidence_for_year_dict:
+                        if max_confidence_for_year_dict[(year, topic_index)] < topic_confidence:
+                            max_confidence_for_year_dict[(year, topic_index)] = topic_confidence
                     else:
-                        timestamp_basename_dict[(year, month, topic_index)] = topic_confidence
+                        max_confidence_for_year_dict[(year, topic_index)] = topic_confidence
                         
+            timestamp_basename_dict[timestamp] = base_name
             
             timestamp = timestamp + distance #spread out the documents over the day
             timestamp_topics_dict[timestamp] = {}
@@ -201,10 +202,8 @@ for y in range(0, 2*len(topic_names)-1, 2):
         
 for timestamp, topic_dict in timestamp_topics_dict.items():
     year = timestamp.astype(object).year
-    month = timestamp.astype(object).month
-    day = timestamp.astype(object).month
-            
-    bar_height = 1.0
+                
+    bar_height = 1
     bar_strength = 0.2
     plt.axvline(x=timestamp, linewidth=0.0000001, color='silver', zorder = -1000)
     
@@ -215,9 +214,14 @@ for timestamp, topic_dict in timestamp_topics_dict.items():
         ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = "black", linewidth=bar_strength)
         
         # give labels to the most strong document occurrences
-        max_confidence_for_topic_for_month = timestamp_basename_dict[(year, month, topic_index)]
-        if confidence > 0.95*max_confidence_for_topic_for_month:
-            ax1.text(timestamp, ty + cw2, str(year) + str(month) + str(day), size=0.01, color="lightgrey")
+        max_confidence_for_topic_for_year = max_confidence_for_year_dict[(year, topic_index)]
+        base_name = timestamp_basename_dict[timestamp]
+        if confidence == max_confidence_for_topic_for_year:
+            ax1.text(timestamp, ty + cw2, base_name, size=0.01, color="lightgrey")
+        elif confidence > max_confidence_for_topic_for_year*0.90:
+            ax1.text(timestamp, ty - cw2, base_name, size=0.01, color="lightgrey")
+        elif confidence > max_confidence_for_topic_for_year*0.80:
+            ax1.text(timestamp, ty, base_name, size=0.01, color="lightgrey")
             
         #plt.axvline(x=timestamp, linewidth=bar_width*nr_of_texts/max_texts, color='lightgrey', zorder = -1000)
         
