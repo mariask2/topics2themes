@@ -29,6 +29,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     document_info = {}
     meta_data_dict = {}
     max_topic_confidence = 0
+    nr_of_texts_for_max_topic_confidence = None
     min_timestamp = np.datetime64('9999-01-02')
     max_timestamp = np.datetime64('0000-01-02')
 
@@ -110,6 +111,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                         # Check if maximum summed topic confidence so far
                         if timestamp_topics_dict[timestamp][topic_index] > max_topic_confidence:
                             max_topic_confidence = timestamp_topics_dict[timestamp][topic_index]
+                            nr_of_texts_for_max_topic_confidence = len(base_names)
         else:
             part = int(1/len(base_names)*24)
             distance = np.timedelta64(part, 'h')
@@ -136,13 +138,14 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 timestamp = timestamp + distance #spread out the documents over the day
                 timestamp_topics_dict[timestamp] = {}
                 
-    print("max_confidence_for_year_dict", max_confidence_for_year_dict)
+    
     min_timestamp = min_timestamp - (max_timestamp - min_timestamp)*0.07 #TODO: Make more generic
     max_timestamp = max_timestamp + (max_timestamp - min_timestamp)*0.07
 #TODO: Make more generic
 
 
     print("max_texts", max_texts)
+    print("nr_of_texts_for_max_topic_confidence", nr_of_texts_for_max_topic_confidence)
      #70
     topic_names = []
     topic_nrs = {}
@@ -228,6 +231,12 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             #    cw2 = 0.9
             ax1.scatter(timestamp, ty, color="black", s=cw2*2, marker="*")
             #ax1.scatter(timestamp, [ty - cw2], color="black", s=cw2)
+            
+            if add_for_coliding_dates and normalise_for_nr_of_texts:
+                base_names = meta_data_dict[timestamp]
+                nr_of_texts = len(base_names)
+                max_weighted_confidence = max_topic_confidence/nr_of_texts_for_max_topic_confidence
+                cw2 = 0.6*confidence/nr_of_texts/max_weighted_confidence
             
             ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = "black", linewidth=bar_strength)
             
