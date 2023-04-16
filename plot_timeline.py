@@ -19,17 +19,9 @@ plt.rcParams["font.family"] = "monospace"
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, label_translations = None, normalise_for_nr_of_texts=False):
     obj = None
     
-    """
-    model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/framtidens-kultur_automatiskt/topics2themes_exports_folder_created_by_system/6435235bfa0b2425fb69e3bf_model.json"
-    metadata_file_name = "/Users/marsk757/topics2themes/topics2themes/data_folder/framtidens-kultur_automatiskt/topics2themes_exports_folder_created_by_system/all_files.csv"
-    """
-
-
-    
-
     with open(model_file, 'r') as f:
         data = f.read()
         obj = json.loads(data)
@@ -43,7 +35,11 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name):
     with open(metadata_file_name) as metadata_file:
         for line in metadata_file:
             sp = line.strip().split("\t")
-            timestamp = np.datetime64(sp[1])
+            str_date = sp[1]
+            if label_translations and str_date in label_translations:
+                str_date = label_translations[str_date]
+            timestamp = np.datetime64(str_date)
+            
             if timestamp not in meta_data_dict:
                 meta_data_dict[timestamp] = []
             base_name = os.path.basename(sp[0])
@@ -60,7 +56,11 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name):
         if len(el["additional_labels"]) == 0:
             print("No timestamp", el)
             exit()
-        timestamp = np.datetime64(el["additional_labels"][0])
+            
+        str_date = el["additional_labels"][0]
+        if label_translations and str_date in label_translations:
+            str_date = label_translations[str_date]
+        timestamp = np.datetime64(str_date)
       
         document_topics = []
         for t in el["document_topics"]:
@@ -84,7 +84,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name):
     timestamp_basename_dict = {}
     max_texts = 0
 
-    ADD = False
+    
     for i in range(0, len(timestamps)):
         timestamp = timestamps[i]
         base_names = meta_data_dict[timestamp]
@@ -96,7 +96,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name):
         if timestamp > max_timestamp:
             max_timestamp = timestamp
         
-        if ADD:
+        if add_for_coliding_dates:
             if len(base_names) > max_texts:
                 max_texts = len(base_names)
             for base_name in base_names:
@@ -106,6 +106,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name):
                         if topic_index not in timestamp_topics_dict[timestamp]:
                             timestamp_topics_dict[timestamp][topic_index] = 0
                         timestamp_topics_dict[timestamp][topic_index] = timestamp_topics_dict[timestamp][topic_index] + document_topic["topic_confidence"]
+                        
+                        # Check if maximum summed topic confidence so far
                         if timestamp_topics_dict[timestamp][topic_index] > max_topic_confidence:
                             max_topic_confidence = timestamp_topics_dict[timestamp][topic_index]
         else:
@@ -114,7 +116,6 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name):
             
             for base_name in base_names:
                 year = timestamp.astype(object).year
-                
                 if base_name in document_info:
                     for document_topic in document_info[base_name]:
                         topic_index = document_topic["topic_index"]
@@ -135,13 +136,14 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name):
                 timestamp = timestamp + distance #spread out the documents over the day
                 timestamp_topics_dict[timestamp] = {}
                 
-
-    min_timestamp = min_timestamp - (max_timestamp - min_timestamp)*0.05 #TODO: Make more generic
-    max_timestamp = max_timestamp + (max_timestamp - min_timestamp)*0.05  #TODO: Make more generic
+    print("max_confidence_for_year_dict", max_confidence_for_year_dict)
+    min_timestamp = min_timestamp - (max_timestamp - min_timestamp)*0.07 #TODO: Make more generic
+    max_timestamp = max_timestamp + (max_timestamp - min_timestamp)*0.07
+#TODO: Make more generic
 
 
     print("max_texts", max_texts)
-    LABEL_LENGTH = 30 #70
+     #70
     topic_names = []
     topic_nrs = {}
     for nr, el in enumerate(obj["topic_model_output"]["topics"]):
@@ -161,7 +163,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name):
             repr_terms.append(term_to_pick_as_rep.strip())
             
         third_length = int(len(repr_terms)/3)
-        topic_name = ", ".join(repr_terms)[0:LABEL_LENGTH].strip() +"..."
+        topic_name = ", ".join(repr_terms)[0:label_length].strip() +"..."
         topic_names.append(topic_name)
 
 
@@ -192,6 +194,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name):
         ty = -y
         y_width = 0.8
         plt.axhline(y=ty, linewidth=0.1, color='black', zorder = -50)
+        if add_for_coliding_dates: # To make the discrete times more connected
+            # make the horizontal line thicker
+            plt.axhline(y=ty, linewidth=0.9, color='black', zorder = -50)
         ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = current_edge_color, zorder = -10000)
         if current_color == "lavender":
             current_color = "honeydew"
@@ -208,6 +213,13 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name):
         bar_strength = 0.2
         plt.axvline(x=timestamp, linewidth=0.0000001, color='silver', zorder = -1000)
         
+        if add_for_coliding_dates: #make the line width represent the number of documents
+            base_names = meta_data_dict[timestamp]
+            nr_of_texts = len(base_names)
+            bar_strength = 3.0
+            bar_height = 0.9
+            plt.axvline(x=timestamp, linewidth=bar_strength*nr_of_texts/max_texts, color='lightgrey', zorder = -1000)
+             
         for topic_index, confidence in topic_dict.items():
             topic_nr = topic_nrs[topic_index]
             ty = -topic_nr*2
@@ -216,17 +228,19 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name):
             #    cw2 = 0.9
             ax1.scatter(timestamp, ty, color="black", s=cw2*2, marker="*")
             #ax1.scatter(timestamp, [ty - cw2], color="black", s=cw2)
+            
             ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = "black", linewidth=bar_strength)
             
             # give labels to the most strong document occurrences
-            max_confidence_for_topic_for_year = max_confidence_for_year_dict[(year, topic_index)]
-            base_name = timestamp_basename_dict[timestamp]
-            if confidence == max_confidence_for_topic_for_year:
-                ax1.text(timestamp, ty + cw2, base_name, size=0.01, color="lightgrey")
-            elif confidence > max_confidence_for_topic_for_year*0.90:
-                ax1.text(timestamp, ty - cw2, base_name, size=0.01, color="lightgrey")
-            elif confidence > max_confidence_for_topic_for_year*0.80:
-                ax1.text(timestamp, ty, base_name, size=0.01, color="lightgrey")
+            if not add_for_coliding_dates:
+                max_confidence_for_topic_for_year = max_confidence_for_year_dict[(year, topic_index)]
+                base_name = timestamp_basename_dict[timestamp]
+                if confidence == max_confidence_for_topic_for_year:
+                    ax1.text(timestamp, ty + cw2, base_name, size=0.01, color="lightgrey")
+                elif confidence > max_confidence_for_topic_for_year*0.90:
+                    ax1.text(timestamp, ty - cw2, base_name, size=0.01, color="lightgrey")
+                elif confidence > max_confidence_for_topic_for_year*0.80:
+                    ax1.text(timestamp, ty, base_name, size=0.01, color="lightgrey")
                 
 
     #file_name = "temp_out"
