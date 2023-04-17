@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 import matplotlib.markers as markers
-from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
+from matplotlib.ticker import (MultipleLocator, AutoMinorLocator, MaxNLocator, FixedLocator)
 from matplotlib import cm
 import math
 import matplotlib.colors as colors
@@ -19,7 +19,9 @@ plt.rcParams["font.family"] = "monospace"
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, label_translations = None, normalise_for_nr_of_texts=False):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, label_translations = None, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False):
+
+    print("use_date_format", use_date_format)
     obj = None
     
     with open(model_file, 'r') as f:
@@ -30,8 +32,12 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     meta_data_dict = {}
     max_topic_confidence = 0
     nr_of_texts_for_max_topic_confidence = None
-    min_timestamp = np.datetime64('9999-01-02')
-    max_timestamp = np.datetime64('0000-01-02')
+    if use_date_format:
+        min_timestamp = np.datetime64('9999-01-02')
+        max_timestamp = np.datetime64('0000-01-02')
+    else:
+        min_timestamp = math.inf
+        max_timestamp = -math.inf
 
     with open(metadata_file_name) as metadata_file:
         for line in metadata_file:
@@ -39,8 +45,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             str_date = sp[1]
             if label_translations and str_date in label_translations:
                 str_date = label_translations[str_date]
-            timestamp = np.datetime64(str_date)
-            
+            if use_date_format:
+                timestamp = np.datetime64(str_date)
+            else:
+                timestamp = float(str_date)
             if timestamp not in meta_data_dict:
                 meta_data_dict[timestamp] = []
             base_name = os.path.basename(sp[0])
@@ -51,9 +59,6 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         
     for el in obj["topic_model_output"]["documents"]:
         base_name = el["base_name"]
-        if len(el["additional_labels"]) > 1:
-            print("More than one timestamp", el)
-            exit()
         if len(el["additional_labels"]) == 0:
             print("No timestamp", el)
             exit()
@@ -61,7 +66,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         str_date = el["additional_labels"][0]
         if label_translations and str_date in label_translations:
             str_date = label_translations[str_date]
-        timestamp = np.datetime64(str_date)
+        if use_date_format:
+            timestamp = np.datetime64(str_date)
+        else:
+            timestamp = float(str_date)
       
         document_topics = []
         for t in el["document_topics"]:
@@ -113,11 +121,18 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                             max_topic_confidence = timestamp_topics_dict[timestamp][topic_index]
                             nr_of_texts_for_max_topic_confidence = len(base_names)
         else:
-            part = int(1/len(base_names)*24)
-            distance = np.timedelta64(part, 'h')
+            if use_date_format:
+                part = int(1/len(base_names)*24)
+                distance = np.timedelta64(part, 'h')
+            else:
+                distance = 1/len(base_names)
             
             for base_name in base_names:
-                year = timestamp.astype(object).year
+                if use_date_format:
+                    year = timestamp.astype(object).year
+                else:
+                    year = int(timestamp)
+                    
                 if base_name in document_info:
                     for document_topic in document_info[base_name]:
                         topic_index = document_topic["topic_index"]
@@ -183,9 +198,13 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
 
     ax1.set(xlim=(min_timestamp, max_timestamp))
     plt.yticks([-y for y in range(0, 2*len(topic_names), 2)], topic_names)
-    plt.gca().xaxis.set_major_locator(mdates.YearLocator())
-    plt.gca().xaxis.set_minor_locator(mdates.MonthLocator())
-    #plt.xticks(timestamps_sorted, [int(x) for x in timestamps_sorted]) # TODO: Make more general
+    if use_date_format:
+        plt.gca().xaxis.set_major_locator(mdates.YearLocator())
+        plt.gca().xaxis.set_minor_locator(mdates.MonthLocator())
+    else:
+        years = [int (a) for a in timestamps_sorted]
+        plt.gca().xaxis.set_major_locator(FixedLocator(years))
+   
     ax1.set_xticklabels(ax1.xaxis.get_majorticklabels(), rotation=-90)
 
     ax1.yaxis.set_label_position("right")
@@ -197,7 +216,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         ty = -y
         y_width = 0.8
         plt.axhline(y=ty, linewidth=0.1, color='black', zorder = -50)
-        if add_for_coliding_dates: # To make the discrete times more connected
+        if add_for_coliding_dates and vertical_line_to_represent_nr_of_documents: # To make the discrete times more connected
             # make the horizontal line thicker
             plt.axhline(y=ty, linewidth=0.9, color='black', zorder = -50)
         ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = current_edge_color, zorder = -10000)
@@ -210,19 +229,25 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
 
             
     for timestamp, topic_dict in timestamp_topics_dict.items():
-        year = timestamp.astype(object).year
-                    
+        if use_date_format:
+            year = timestamp.astype(object).year
+        else:
+            year = int(timestamp)
+            
         bar_height = 1.5
         bar_strength = 0.2
         plt.axvline(x=timestamp, linewidth=0.0000001, color='silver', zorder = -1000)
         
-        if add_for_coliding_dates: #make the line width represent the number of documents
+        if add_for_coliding_dates and vertical_line_to_represent_nr_of_documents: #make the line width represent the number of documents
             base_names = meta_data_dict[timestamp]
             nr_of_texts = len(base_names)
             bar_strength = 3.0
             bar_height = 0.9
             plt.axvline(x=timestamp, linewidth=bar_strength*nr_of_texts/max_texts, color='lightgrey', zorder = -1000)
-             
+        elif add_for_coliding_dates:
+            bar_strength = 1.1
+            bar_height = 1.0
+            
         for topic_index, confidence in topic_dict.items():
             topic_nr = topic_nrs[topic_index]
             ty = -topic_nr*2
