@@ -40,7 +40,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         min_timestamp = math.inf
         max_timestamp = -math.inf
 
-    max_decimal_part = 0
+    max_decimal_part_for_year = {}
     with open(metadata_file_name) as metadata_file:
         for line in metadata_file:
             sp = line.strip().split("\t")
@@ -56,9 +56,13 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             base_name = os.path.basename(sp[0])
             meta_data_dict[timestamp].append(base_name)
             if not use_date_format:
+                year = int(timestamp)
                 decimal_part = modf(timestamp)[0]
-                if decimal_part > max_decimal_part:
-                    max_decimal_part = decimal_part
+                if year in max_decimal_part_for_year:
+                    if decimal_part > max_decimal_part_for_year[year]:
+                        max_decimal_part_for_year[year] = decimal_part
+                else:
+                    max_decimal_part_for_year[year] = decimal_part
 
     for el in obj["topic_model_output"]["documents"]:
         base_name = el["base_name"]
@@ -239,12 +243,12 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         else:
             year = int(timestamp)
             dec_part = modf(timestamp)[0]
-            dec_part = dec_part*0.999/max_decimal_part # To make it more even spread out
+            dec_part = dec_part*0.999/max_decimal_part_for_year[year] # To make it more even spread out
             timestamp = year + dec_part
             
         bar_height = 1.5
         bar_strength = 0.2
-        plt.axvline(x=timestamp, linewidth=0.0000001, color='silver', zorder = -1000)
+        
         
         if add_for_coliding_dates and vertical_line_to_represent_nr_of_documents: #make the line width represent the number of documents
             base_names = meta_data_dict[timestamp]
@@ -253,8 +257,11 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             bar_height = 0.9
             plt.axvline(x=timestamp, linewidth=bar_strength*nr_of_texts/max_texts, color='lightgrey', zorder = -1000)
         elif add_for_coliding_dates:
-            bar_strength = 1.1
+            bar_strength = 0.1
             bar_height = 1.0
+            plt.axvline(x=int(timestamp), linewidth=0.1, color='silver', zorder = -1000)
+        else:
+            plt.axvline(x=timestamp, linewidth=0.0000001, color='silver', zorder = -1000)
             
         for topic_index, confidence in topic_dict.items():
             topic_nr = topic_nrs[topic_index]
