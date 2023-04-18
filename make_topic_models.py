@@ -342,8 +342,8 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
                 add_this_file = False
                 found_duplicate = sub_text
                 break
-    if not add_this_file:
-        print(" ".join(sub_tokens))
+    #if not add_this_file:
+    #    print(" ".join(sub_tokens))
     return add_this_file, found_duplicate
     
 
