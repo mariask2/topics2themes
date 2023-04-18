@@ -10,6 +10,7 @@ import math
 import matplotlib.colors as colors
 import os
 import matplotlib.dates as mdates
+from math import modf
 
 plt.rcParams["font.family"] = "monospace"
 
@@ -39,6 +40,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         min_timestamp = math.inf
         max_timestamp = -math.inf
 
+    max_decimal_part = 0
     with open(metadata_file_name) as metadata_file:
         for line in metadata_file:
             sp = line.strip().split("\t")
@@ -53,19 +55,22 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 meta_data_dict[timestamp] = []
             base_name = os.path.basename(sp[0])
             meta_data_dict[timestamp].append(base_name)
+            if not use_date_format:
+                decimal_part = modf(timestamp)[0]
+                if decimal_part > max_decimal_part:
+                    max_decimal_part = decimal_part
 
-
-
-        
     for el in obj["topic_model_output"]["documents"]:
         base_name = el["base_name"]
-        if len(el["additional_labels"]) == 0:
+        filtered_labels = [l for l in el["additional_labels"] if l.replace(".", "").replace("-", "").isdigit()]
+        if len(filtered_labels) == 0:
             print("No timestamp", el)
             exit()
             
-        str_date = el["additional_labels"][0]
+        str_date = filtered_labels[0]
         if label_translations and str_date in label_translations:
             str_date = label_translations[str_date]
+            
         if use_date_format:
             timestamp = np.datetime64(str_date)
         else:
@@ -233,6 +238,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             year = timestamp.astype(object).year
         else:
             year = int(timestamp)
+            dec_part = modf(timestamp)[0]
+            dec_part = dec_part*0.999/max_decimal_part # To make it more even spread out
+            timestamp = year + dec_part
             
         bar_height = 1.5
         bar_strength = 0.2
