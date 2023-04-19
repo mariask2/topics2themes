@@ -20,7 +20,7 @@ plt.rcParams["font.family"] = "monospace"
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, label_translations = None, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, label_translations = None, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False):
 
     print("use_date_format", use_date_format)
     obj = None
@@ -57,13 +57,14 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             meta_data_dict[timestamp].append(base_name)
             if not use_date_format:
                 year = int(timestamp)
+                print("year", year)
                 decimal_part = modf(timestamp)[0]
                 if year in max_decimal_part_for_year:
                     if decimal_part > max_decimal_part_for_year[year]:
                         max_decimal_part_for_year[year] = decimal_part
                 else:
                     max_decimal_part_for_year[year] = decimal_part
-
+    print(max_decimal_part_for_year)
     for el in obj["topic_model_output"]["documents"]:
         base_name = el["base_name"]
         filtered_labels = [l for l in el["additional_labels"] if l.replace(".", "").replace("-", "").isdigit()]
@@ -106,7 +107,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     for i in range(0, len(timestamps)):
         timestamp = timestamps[i]
         base_names = meta_data_dict[timestamp]
-        
+    
         timestamp_topics_dict[timestamp] = {}
         
         if timestamp < min_timestamp:
@@ -134,7 +135,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 part = int(1/len(base_names)*24)
                 distance = np.timedelta64(part, 'h')
             else:
-                distance = 1/len(base_names)
+                distance = 1/len(base_names) #TODO does not work
+                exit("SPREAD OUT NOT YET IMPLEMENTED FOR NON_DATES")
             
             for base_name in base_names:
                 if use_date_format:
@@ -166,7 +168,6 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     min_timestamp = min_timestamp - (max_timestamp - min_timestamp)*0.07 #TODO: Make more generic
     max_timestamp = max_timestamp + (max_timestamp - min_timestamp)*0.07
 #TODO: Make more generic
-
 
     print("max_texts", max_texts)
     print("nr_of_texts_for_max_topic_confidence", nr_of_texts_for_max_topic_confidence)
@@ -238,11 +239,12 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
 
             
     for timestamp, topic_dict in timestamp_topics_dict.items():
+        original_timestamp = timestamp
         if use_date_format:
             year = timestamp.astype(object).year
         else:
-            year = int(timestamp)
-            dec_part = modf(timestamp)[0]
+            dec_part, year = modf(timestamp)
+            year = int(year)
             dec_part = dec_part*0.999/max_decimal_part_for_year[year] # To make it more even spread out
             timestamp = year + dec_part
             
@@ -257,7 +259,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             bar_height = 0.9
             plt.axvline(x=timestamp, linewidth=bar_strength*nr_of_texts/max_texts, color='lightgrey', zorder = -1000)
         elif add_for_coliding_dates:
-            bar_strength = 0.1
+            bar_strength = 1.0
             bar_height = 1.0
             plt.axvline(x=int(timestamp), linewidth=0.1, color='silver', zorder = -1000)
         else:
@@ -267,6 +269,15 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             topic_nr = topic_nrs[topic_index]
             ty = -topic_nr*2
             cw2 = bar_height*confidence/max_topic_confidence
+            
+            if log:
+                if confidence < 0.1:
+                    continue # Don't plot very small values
+                multiplied_confidence = confidence*10
+                if multiplied_confidence < 1:
+                    print("To small confidence to plot", multiplied_confidence, confidence)
+                    exit()
+                cw2 = bar_height*math.log(multiplied_confidence, 1000)/math.log(10*max_topic_confidence, 1000)
             #if cw2 > 0.9:
             #    cw2 = 0.9
             ax1.scatter(timestamp, ty, color="black", s=cw2*2, marker="*")
@@ -283,7 +294,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             # give labels to the most strong document occurrences
             if not add_for_coliding_dates:
                 max_confidence_for_topic_for_year = max_confidence_for_year_dict[(year, topic_index)]
-                base_name = timestamp_basename_dict[timestamp]
+                base_name = timestamp_basename_dict[original_timestamp]
                 if confidence == max_confidence_for_topic_for_year:
                     ax1.text(timestamp, ty + cw2, base_name, size=0.01, color="lightgrey")
                 elif confidence > max_confidence_for_topic_for_year*0.90:

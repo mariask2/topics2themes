@@ -1,7 +1,19 @@
 import plot_timeline
 
+def test_allergy():
+    model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/DMW_allergy/topics2themes_exports_folder_created_by_system/643ff13f28541561dc43bb88_model.json"
+    metadata_file_name = "/Users/marsk757/topics2themes/topics2themes/data_folder/DMW_allergy/topics2themes_exports_folder_created_by_system/all_files.csv"
+    outputdir = "plots"
+    file_name = "allergy.pdf"
+    add_for_coliding_dates = False
+    label_length = 20
+    use_date_format = True
+
+    plot_timeline.make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=True)
+
+
 def test_marknad():
-    model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/marknad-titel/topics2themes_exports_folder_created_by_system/643dcb81b67425b3574f6450_model.json"
+    model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/marknad-titel/topics2themes_exports_folder_created_by_system/643e4468a2b68a9a97bc0cd0_model.json"
     metadata_file_name = "/Users/marsk757/topics2themes/topics2themes/data_folder/marknad-titel/topics2themes_exports_folder_created_by_system/all_files.csv"
     outputdir = "plots"
     file_name = "marknad.pdf"
@@ -10,7 +22,11 @@ def test_marknad():
     use_date_format = False
     dont_show_list = [17]
 
-    plot_timeline.make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates, label_length, use_date_format=use_date_format)
+    plot_timeline.make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=True)
+    
+    model_file_clustered = "/Users/marsk757/topics2themes/topics2themes/data_folder/marknad-titel/topics2themes_exports_folder_created_by_system/643eacd7e0ab745868812cb5_model.json"
+    file_name_clustered = "marknad-clustered.pdf"
+    plot_timeline.make_plot(model_file_clustered, outputdir, metadata_file_name, file_name_clustered, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=True)
     
 def test_climate():
     model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/climate-news/topics2themes_exports_folder_created_by_system/643b17a648460386c298ed68_model.json"
@@ -42,4 +58,5 @@ def test_fc():
 
 #test_climate()
 #test_fc()
-test_marknad()
+#test_marknad()
+test_allergy()
