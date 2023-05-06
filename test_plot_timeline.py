@@ -29,14 +29,16 @@ def test_marknad():
     plot_timeline.make_plot(model_file_clustered, outputdir, metadata_file_name, file_name_clustered, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=True)
     
 def test_climate():
-    model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/climate-news/topics2themes_exports_folder_created_by_system/643b17a648460386c298ed68_model.json"
+    model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/climate-news/topics2themes_exports_folder_created_by_system/644aca8c54cac60d53accbd7_model.json"
+    #643b17a648460386c298ed68_model.json"
     metadata_file_name = "/Users/marsk757/topics2themes/topics2themes/data_folder/climate-news/topics2themes_exports_folder_created_by_system/all_files.csv"
     outputdir = "plots"
     file_name = "climate-news.pdf"
     add_for_coliding_dates = False
-    label_length = 30
+    label_length = 20
+    log = True
 
-    plot_timeline.make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates, label_length)
+    plot_timeline.make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates, label_length, log=log)
 
 def test_fc():
 
@@ -56,7 +58,7 @@ def test_fc():
     normalise_for_nr_of_texts=True
     plot_timeline.make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates, label_length, label_translations, normalise_for_nr_of_texts, vertical_line_to_represent_nr_of_documents=False)
 
-#test_climate()
+test_climate()
 #test_fc()
 #test_marknad()
-test_allergy()
+#test_allergy()

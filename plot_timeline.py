@@ -192,7 +192,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             
         third_length = int(len(repr_terms)/3)
         topic_name = ", ".join(repr_terms)[0:label_length].strip() +"..."
-        topic_names.append(topic_name)
+        topic_names.append(str(nr + 1) + ": " + topic_name)
 
 
 
