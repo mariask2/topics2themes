@@ -199,10 +199,15 @@ def simple_tag_removal(text):
 
 def no_additiona_labels(doc_id):
     return []
+    
+def no_url(doc_id):
+    return ""
 
 ARE_THESE_TWO_TERMS_CONSIDERED_TO_BE_THE_SAME = simple_english_are_these_two_terms_considered_to_be_the_same
 
 ADDITIONAL_LABELS_METHOD = no_additiona_labels
+
+REF_URL_METHOD = no_url
 
 class HTMLParserContent(HTMLParser):
     def __init__(self):

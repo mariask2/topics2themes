@@ -1009,6 +1009,24 @@ def is_term_combination_in_document(comb_term, document):
         if is_collocation_in_document(synonym_sub_part, document):
             return True
     return False
+    
+
+"""
+An optional href link
+"""
+def get_pre_text_link(document, meta_data_list, properties):
+    
+    link_text = ""
+    
+    if meta_data_list:
+        link = properties.REF_URL_METHOD(meta_data_list[document[DOC_ID]][FULL_NAME])
+        if link != None and link != "":
+            link_text = '<a href = "' + link + '" style="text-decoration:none;">&#x1F517;</a> '
+            print(link_text)
+
+    return link_text
+    
+    
 """
 Filelist is a list of document-info-dict, with the same order as for the documents sent to the topic modelling
 """
@@ -1096,17 +1114,20 @@ def print_and_get_topic_info(properties, topic_info, documents, meta_data_list, 
             
             if document[DOC_ID] not in document_dict:
                 document_obj = {}
-                document_obj["text"] = document[ORIGINAL_DOCUMENT]
-                document_obj["snippet"] = get_snippet_text(marked_document, terms_found_in_processed_documents_so_far, properties)
+                document_obj["text"] = get_pre_text_link(document, meta_data_list, properties) + document[ORIGINAL_DOCUMENT]
+                document_obj["snippet"] = get_pre_text_link(document, meta_data_list, properties) + get_snippet_text(marked_document, terms_found_in_processed_documents_so_far, properties)
                 document_obj["id"] = int(str(document[DOC_ID]))
                 document_obj["marked_text_tok"] = marked_document
                 document_obj["id_source"] = int(str(document[DOC_ID]))
                 document_obj["timestamp"] = int(str(document[DOC_ID]))
                 document_obj["document_topics"] = []
+                
+                
                 if meta_data_list:
                     document_obj[LABEL] = meta_data_list[document[DOC_ID]][LABEL]
                     document_obj[BASE_NAME] = meta_data_list[document[DOC_ID]][BASE_NAME]
                     document_obj["additional_labels"] = sorted(properties.ADDITIONAL_LABELS_METHOD(meta_data_list[document[DOC_ID]][FULL_NAME]))
+                    
                 else:
                     document_obj[LABEL] = "no label"
                     document_obj[BASE_NAME] = "nr " + str(document[DOC_ID])
@@ -1217,7 +1238,8 @@ def get_snippet_text(marked_document, terms_found_in_processed_documents_so_far,
         #print(sentences_to_keep)
         #print(marked_document)
         
-    snippet_str = " ".join(sentences_to_keep).replace("]MARKING MARKING[", "").replace("MARKING[","[").replace("]MARKING","]")
+    # TODO: Is maximum 10 sentences a good number?
+    snippet_str = " ".join(sentences_to_keep[:10]).replace("]MARKING MARKING[", "").replace("MARKING[","[").replace("]MARKING","]")
     while ".........." in snippet_str:
         snippet_str = snippet_str.replace("..........","....") # Don't make it too loong
 

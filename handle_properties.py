@@ -158,6 +158,11 @@ class PropertiesContainer:
             self.ADDITIONAL_LABELS_METHOD = properties.ADDITIONAL_LABELS_METHOD
         except AttributeError:
             self.ADDITIONAL_LABELS_METHOD = default_topic_model_configuration.ADDITIONAL_LABELS_METHOD
+            
+        try:
+            self.REF_URL_METHOD = properties.REF_URL_METHOD
+        except AttributeError:
+            self.REF_URL_METHOD = default_topic_model_configuration.REF_URL_METHOD
 
         try:
             self.MAX_NR_OF_FEATURES = properties.MAX_NR_OF_FEATURES
