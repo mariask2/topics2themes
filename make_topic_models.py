@@ -1021,7 +1021,7 @@ def get_pre_text_link(document, meta_data_list, properties):
     if meta_data_list:
         link = properties.REF_URL_METHOD(meta_data_list[document[DOC_ID]][FULL_NAME])
         if link != None and link != "":
-            link_text = '<a href = "' + link + '" style="text-decoration:none;">&#x1F517;</a> '
+            link_text = '<a href = "' + link + '" style="text-decoration:none;"  target="_blank">&#x1F517;</a> '
             print(link_text)
 
     return link_text
