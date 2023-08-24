@@ -392,7 +392,7 @@ def read_and_first_process_documents(data_label_list, data_set_name, whether_to_
 def train_scikit_lda_model(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
     
     pre_processed_documents = pre_process(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
-    texts, tf_vectorizer, tf = get_scikit_bow(properties, pre_processed_documents, CountVectorizer, stopword_handler, path_slash_format, nmf=False)
+    texts, tf_vectorizer, tf = get_scikit_bow(properties, pre_processed_documents, CountVectorizer, stopword_handler, path_slash_format, model_name, nmf=False)
     
     model_list = []
     for i in range(0, properties.NUMBER_OF_RUNS):
@@ -409,7 +409,7 @@ def train_scikit_lda_model(properties, documents, word2vecwrapper, path_slash_fo
 def train_scikit_nmf_model(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler):
                            
     pre_processed_documents = pre_process(properties, documents, word2vecwrapper, path_slash_format, model_name, stopword_handler)
-    texts, tfidf_vectorizer, tfidf = get_scikit_bow(properties, pre_processed_documents, TfidfVectorizer, stopword_handler, path_slash_format, nmf=True)
+    texts, tfidf_vectorizer, tfidf = get_scikit_bow(properties, pre_processed_documents, TfidfVectorizer, stopword_handler, path_slash_format, model_name, nmf=True)
     
     random_state = None
     if properties.DEBUG:
@@ -588,7 +588,7 @@ def find_frequent_n_grams(documents, collocation_cut_off, nr_of_words_that_have_
 
     
 
-def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_slash_format, nmf=True):
+def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_slash_format, model_name, nmf=True):
     """
     Will tranform the list of documents that are given as input, to a list of terms
     that occurr in these documents
@@ -1418,11 +1418,8 @@ def make_model_for_collection(collection_name, model_name, mongo_con):
     
     return result_dict
 
-###
-# Start
-###
-if __name__ == '__main__':
 
+def main():
     print("You have configured the workspace folder to be (will be used for relative paths): " +  WORKSPACE_FOLDER)
     
     parser = argparse.ArgumentParser()
@@ -1462,4 +1459,8 @@ if __name__ == '__main__':
     mongo_con.close_connection()
 
 
-
+###
+# Start
+###
+if __name__ == '__main__':
+    main()
