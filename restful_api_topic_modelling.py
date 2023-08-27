@@ -386,16 +386,16 @@ def get_hash(path):
             b = f.read1(65536)
     return hash.hexdigest()
 
-from jinja2 import contextfilter
+from jinja2 import pass_context
 
 @app.template_filter('staticfile')
-@contextfilter
+@pass_context
 def staticfile_hash(context, filename):
     h = get_hash("user_interface/js/" + filename)
     return "js/" + h + "/" + filename
 
 @app.template_filter('staticfile_css')
-@contextfilter
+@pass_context
 def staticfile_css_hash(context, filename):
     h = get_hash("user_interface/css/" + filename)
     return "css/" + h + "/" + filename
