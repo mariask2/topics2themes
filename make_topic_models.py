@@ -464,7 +464,7 @@ def pre_process_word2vec(properties, documents, word2vecwrapper, path_slash_form
     not_found_words_file = os.path.join(synonym_output_dir, model_name + "_notfound.txt")
         
     stopwords_for_word2vec = stop_words=stopword_handler.get_stop_word_set(properties.STOP_WORD_FILE, properties.STOP_WORD_SET, path_slash_format)
-    word_vectorizer = CountVectorizer(binary = True, stop_words=stopwords_for_word2vec, lowercase=False,\
+    word_vectorizer = CountVectorizer(binary = True, stop_words=list(stopwords_for_word2vec), lowercase=False,\
         min_df = properties.MIN_DOCUMENT_FREQUENCY_TO_INCLUDE_IN_CLUSTERING)
     transformation = word_vectorizer.fit_transform(documents)
     word2vecwrapper.set_vocabulary(word_vectorizer.get_feature_names_out())
@@ -623,12 +623,12 @@ def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_sla
     print("Binary: ", binary)
     if nmf:
         tf_vectorizer = vectorizer(sublinear_tf = sublinear, max_df= max_document_frequency, min_df=min_document_frequency,\
-                                   ngram_range = (1, ngram_length), stop_words = stop_words, max_features = max_features, binary = binary, use_idf=use_idf)
+                                   ngram_range = (1, ngram_length), stop_words = list(stop_words), max_features = max_features, binary = binary, use_idf=use_idf)
         print("Sublinear: ", sublinear)
         print("Use idf: ", use_idf)
     else:
         tf_vectorizer = vectorizer(max_df= max_document_frequency, min_df=min_document_frequency,\
-                                   ngram_range = (1, ngram_length), stop_words=stop_words,
+                                   ngram_range = (1, ngram_length), stop_words=list(stop_words),
                                max_features = max_features, binary = binary)
                                
     tf = tf_vectorizer.fit_transform(documents)
