@@ -464,7 +464,10 @@ async function onConstructNewModel(){
     } else {
         disableModelChoices();
         disableAnalysisChoices();
-        await modelConstructNewModel(modelName);
+        let id = await modelConstructNewModel(modelName);
+        controllerDoPopulateModelChoices(modelModelsForCurrentDataset);
+        $("#modelVersion").children("#" + id).attr("selected", "selected");
+        await onModelVersionListChange();
     }
 }
 

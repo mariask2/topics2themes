@@ -1335,8 +1335,9 @@ async function modelLoadModelForSelectedDataSet(currentDataset){
 async function modelConstructNewModel(modelName){
     let contructNewModelUrl = "make_model_for_collection";
     let data = {"collection_name" : modelCurrentDataset, "model_name" : modelName};
-    await save_data_async(contructNewModelUrl, data);
+    let result = await save_data_async(contructNewModelUrl, data);
     await modelLoadModelForSelectedDataSet(modelCurrentDataset);
+    return result.id;
 }
 
 
