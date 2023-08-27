@@ -116,6 +116,15 @@ def can_model_be_created():
     except Exception as e:
         return get_exception_info(e)
 
+@app.route('/topics2themes/api/v1.0/can_analysis_be_exported', methods=['GET'])
+def can_analysis_be_exported():
+    try:
+        authenticate()
+        resp = make_response(jsonify({"result" : ALLOWED_TO_EXPORT_ANALYSIS}))
+        resp.headers['Cache-Control'] = 'no-cache'
+        return resp
+    except Exception as e:
+        return get_exception_info(e)
 
 @app.route('/topics2themes/api/v1.0/get_data_sets', methods=['GET', 'POST'])
 def get_data_sets():
@@ -365,10 +374,13 @@ def export_analysis():
     try:
         authenticate()
         analysis_id = request.values.get("analysis_id")
-        data_dir =  mongo_con.save_analysis_to_file_for_analysis_id(analysis_id)
-        convert_to_csv.do_csv_export(data_dir, analysis_id)
+        if ALLOWED_TO_EXPORT_ANALYSIS:
+            data_dir =  mongo_con.save_analysis_to_file_for_analysis_id(analysis_id)
+            convert_to_csv.do_csv_export(data_dir, analysis_id)
                 
-        saved_data = {"analysis_id": analysis_id, "data_dir" : data_dir}
+            saved_data = {"analysis_id": analysis_id, "data_dir" : data_dir}
+        else:
+            saved_data = None
         resp = make_response(jsonify({"result" : saved_data}))
         resp.headers['Cache-Control'] = 'no-cache'
         return resp

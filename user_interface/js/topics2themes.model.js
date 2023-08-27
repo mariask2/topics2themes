@@ -84,6 +84,7 @@ var modelShowArgumentation = undefined;
 var modelShowSentiment = undefined;
 
 var modelDisableModelCreation = undefined;
+var modelAnalysisExportEnabled = undefined;
 
 ////////////////
 // Comparators for sorting
@@ -1197,6 +1198,15 @@ async function modelCanModelBeCreated(){
     if (createModel == "False"){
 	modelDisableModelCreation = 1; 
     }
+}
+
+//////
+// For determining if analysis can be exported
+//////
+
+async function modelCanAnalysisBeExported(){
+    let canAnalysisBeExportedUrl = "can_analysis_be_exported";
+    modelAnalysisExportEnabled = await get_data_async(canAnalysisBeExportedUrl, {});
 }
 
 ///////

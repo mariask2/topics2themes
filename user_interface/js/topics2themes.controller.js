@@ -224,6 +224,8 @@ $(document).ready(function(){
                   
     // Check if the create model button is to be enabled
     modelCanModelBeCreated();
+    // Check if the analysis export button is to be enabled
+    modelCanAnalysisBeExported();
 });
 
 
@@ -329,8 +331,10 @@ function disableThemeButtons(){
 }
 
 function enableThemeButtons(){
-    $("#exportAnalysis").removeClass("disabled")
-    $("#exportAnalysis").attr("disabled", false);
+    if (modelAnalysisExportEnabled) {
+        $("#exportAnalysis").removeClass("disabled");
+        $("#exportAnalysis").attr("disabled", false);
+    }
 
     $("#newTheme").removeClass("disabled")
     $("#newTheme").attr("disabled", false);
