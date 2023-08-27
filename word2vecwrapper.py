@@ -205,9 +205,9 @@ class Word2vecWrapper:
         if self.clustering_type == "agglomerative":
             cluster_output = clustering = AgglomerativeClustering(linkage="ward",
                                 distance_threshold = self.cluster_eps,
-                                n_clusters=None).fit(X)
+                                n_clusters=None).fit(np.asarray(X))
         else:
-            cluster_output = DBSCAN(self.cluster_eps, min_samples=1).fit(X)
+            cluster_output = DBSCAN(self.cluster_eps, min_samples=1).fit(np.asarray(X))
         labels = cluster_output.labels_
 
         for label, term, vector in zip(labels, cluster_words, X_vectors):
