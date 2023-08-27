@@ -1187,7 +1187,7 @@ def print_and_get_topic_info(properties, topic_info, documents, meta_data_list, 
         print("Don't save in database (for debugging)")
 
     term_visualiser.dump_term_dict(path_slash_format)
-
+    result_dict["id"] = str(post_id)
     return result_dict, saved_time, post_id
 
 
