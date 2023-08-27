@@ -641,6 +641,8 @@ def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_sla
     
     model_name_as_file = ''.join(ch for ch in model_name if ch.isalnum())
     synonym_output_dir = os.path.join(path_slash_format, SYNONYM_FOLDER_NAME)
+    if not os.path.exists(synonym_output_dir):
+        os.makedirs(synonym_output_dir)
     synonym_file = os.path.join(synonym_output_dir, model_name_as_file + "_synonyms.txt")
     with open(synonym_file, "w") as synonym_out:
         for i in f_list:
