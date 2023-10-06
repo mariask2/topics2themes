@@ -11,6 +11,8 @@ import matplotlib.colors as colors
 import os
 import matplotlib.dates as mdates
 from math import modf
+import sys
+import datetime
 
 plt.rcParams["font.family"] = "monospace"
 
@@ -20,8 +22,13 @@ plt.rcParams["font.family"] = "monospace"
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, label_translations = None, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001):
 
+    if log:
+        print("Not yet implemented")
+        sys.exit(0)
+        
+    label_translations = False # TODO: Add as an option
     print("use_date_format", use_date_format)
     obj = None
     
@@ -45,8 +52,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         for line in metadata_file:
             sp = line.strip().split("\t")
             str_date = sp[1]
-            if label_translations and str_date in label_translations:
-                str_date = label_translations[str_date]
+            if label_translations:
+                if str_date in label_translations:
+                    str_date = label_translations[str_date]
             if use_date_format:
                 timestamp = np.datetime64(str_date)
             else:
@@ -67,14 +75,15 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     print(max_decimal_part_for_year)
     for el in obj["topic_model_output"]["documents"]:
         base_name = el["base_name"]
-        filtered_labels = [l for l in el["additional_labels"] if l.replace(".", "").replace("-", "").isdigit()]
+        filtered_labels = [l for l in el["additional_labels"] if l.replace(".", "").replace("-", "").replace(":", "").replace("T", "").isdigit()]
         if len(filtered_labels) == 0:
             print("No timestamp", el)
             exit()
             
         str_date = filtered_labels[0]
-        if label_translations and str_date in label_translations:
-            str_date = label_translations[str_date]
+        if label_translations:
+            if str_date in label_translations:
+                str_date = label_translations[str_date]
             
         if use_date_format:
             timestamp = np.datetime64(str_date)
@@ -97,6 +106,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         document_info[base_name] = document_topics
 
 
+        
     timestamps = sorted(meta_data_dict.keys())
     timestamp_topics_dict = {}
     max_confidence_for_year_dict = {}
@@ -132,7 +142,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                             nr_of_texts_for_max_topic_confidence = len(base_names)
         else:
             if use_date_format:
-                part = int(1/len(base_names)*24)
+                part = int(1/len(base_names)*hours_between_label_dates)
                 distance = np.timedelta64(part, 'h')
             else:
                 distance = 1/len(base_names) #TODO does not work
@@ -163,8 +173,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 
                 timestamp = timestamp + distance #spread out the documents over the day
                 timestamp_topics_dict[timestamp] = {}
-                
-    
+         
+    for key, item in timestamp_topics_dict.items():
+        print(key, item)
+
     min_timestamp = min_timestamp - (max_timestamp - min_timestamp)*0.07 #TODO: Make more generic
     max_timestamp = max_timestamp + (max_timestamp - min_timestamp)*0.07
 #TODO: Make more generic
@@ -243,10 +255,11 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         if use_date_format:
             year = timestamp.astype(object).year
         else:
-            dec_part, year = modf(timestamp)
-            year = int(year)
-            dec_part = dec_part*0.999/max_decimal_part_for_year[year] # To make it more even spread out
-            timestamp = year + dec_part
+            if max_decimal_part_for_year[year] != 0: #TODO: Check if it works
+                dec_part, year = modf(timestamp)
+                year = int(year)
+                dec_part = dec_part*0.999/max_decimal_part_for_year[year] # To make it more even spread out
+                timestamp = year + dec_part
             
         bar_height = 1.5
         bar_strength = 0.2
@@ -261,9 +274,11 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         elif add_for_coliding_dates:
             bar_strength = 1.0
             bar_height = 1.0
-            plt.axvline(x=int(timestamp), linewidth=0.1, color='silver', zorder = -1000)
+            
+            plt.axvline(x=int(timestamp), linewidth=0.1, color='gainsboro', zorder = -1000)
         else:
-            plt.axvline(x=timestamp, linewidth=0.0000001, color='silver', zorder = -1000)
+            plt.axvline(x=timestamp, linewidth=width_vertical_line, color='gainsboro', zorder = -1000)
+
             
         for topic_index, confidence in topic_dict.items():
             topic_nr = topic_nrs[topic_index]
