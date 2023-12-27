@@ -640,14 +640,16 @@ def get_scikit_bow(properties, documents, vectorizer, stopword_handler, path_sla
     print("Vocabulary size: " + str(len(f_list)))
     
     model_name_as_file = ''.join(ch for ch in model_name if ch.isalnum())
-    synonym_output_dir = os.path.join(path_slash_format, SYNONYM_FOLDER_NAME)
-    if not os.path.exists(synonym_output_dir):
-        os.makedirs(synonym_output_dir)
-    synonym_file = os.path.join(synonym_output_dir, model_name_as_file + "_synonyms.txt")
-    with open(synonym_file, "w") as synonym_out:
-        for i in f_list:
-            if SYNONYM_BINDER in i:
-                synonym_out.write(i.replace(SYNONYM_BINDER, " ") + "\n")
+
+    if properties.PRE_PROCESS:
+        synonym_output_dir = os.path.join(path_slash_format, SYNONYM_FOLDER_NAME)
+        if not os.path.exists(synonym_output_dir):
+            os.makedirs(synonym_output_dir)
+        synonym_file = os.path.join(synonym_output_dir, model_name_as_file + "_synonyms.txt")
+        with open(synonym_file, "w") as synonym_out:
+            for i in f_list:
+                if SYNONYM_BINDER in i:
+                    synonym_out.write(i.replace(SYNONYM_BINDER, " ") + "\n")
         
     """
     ## Calculate tf-idf as if the entire corpus was one document
@@ -923,7 +925,7 @@ def construct_document_info_average(documents, selected_documents_strength, term
             text_with_collocation_binder = documents[doc_i].replace(" ", COLLOCATION_BINDER)
             for t in term_list_replace:
                 if COLLOCATION_BINDER in t and t in text_with_collocation_binder:
-                    print(t)
+                    #print(t)
                     found_concepts.extend(term_preprocessed_dict[t])
 
             if len(found_concepts) > 0 : # only include documents where at least on one of the terms is found
@@ -1024,7 +1026,7 @@ def get_pre_text_link(document, meta_data_list, properties):
         link = properties.REF_URL_METHOD(meta_data_list[document[DOC_ID]][FULL_NAME])
         if link != None and link != "":
             link_text = '<a href = "' + link + '" style="text-decoration:none;"  target="_blank">&#x1F517;</a> '
-            print(link_text)
+            #print(link_text)
 
     return link_text
     

@@ -151,7 +151,7 @@ class Word2vecWrapper:
             self.check_vector_length(raw_vec)
             return raw_vec
         else:
-            return self.get_compound_vector(word)
+            return None # self.get_compound_vector(word)
   
 
     def load_clustering(self, output_file, transformation, not_found_words_file_name, stopwords_for_word2vec):

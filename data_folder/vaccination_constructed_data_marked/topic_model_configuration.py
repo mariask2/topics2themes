@@ -55,19 +55,22 @@ NUMBER_OF_RUNS = 3
 Mininimum overlap of retrieved terms to considered the retrieved topic as
 the same topic of a another one
 """
-OVERLAP_CUT_OFF = 0.70
+OVERLAP_CUT_OFF = 0.40
 
 
 """
 Whether to use pre-processing (collocation detection and synonym clustering)
 """
-#PRE_PROCESS = True
 PRE_PROCESS = False
-VECTOR_LENGTH = 400
-SPACE_FOR_PATH = "/Users/marsk757/wordspaces/word2vec_twitter_tokens.bin"
+VECTOR_LENGTH = 100
+#SPACE_FOR_PATH = "/Users/marsk757/wordspaces/word2vec_twitter_tokens.bin"
+SPACE_FOR_PATH = "/Users/marsk757/wordspaces/glove/glove.27B.100d.w2vformat.txt"
 MAX_DIST_FOR_CLUSTERING = 0.7
 WORDS_NOT_TO_INCLUDE_IN_CLUSTERING_FILE = "not_cluster.txt"
-MANUAL_CLUSTER_FILE = "manual_clusters.txt"
+#MANUAL_CLUSTER_FILE = "manual_clusters.txt"
+BINARY_SPACE = False
+
+
 BINARY_TF = True
 
 """
@@ -175,6 +178,7 @@ def corpus_specific_text_cleaning(text):
 
 CLEANING_METHOD = corpus_specific_text_cleaning
 
+STORE_IN_DATABASE = False
 """
 NO_MATCH = set(["polio", "measles", "measle", "chickenpox", "flu", "meningitis", "mumps", "pertussis", "capable",\
                 "incapable", "likely", "unlikely", "black", "white",\
