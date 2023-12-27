@@ -89,11 +89,13 @@ def test_diabetes_lemmatised():
     use_date_format = True
     metadata_file_name = "/Users/marsk757/topics2themes/topics2themes/data_folder/diabetes_lemmas/topics2themes_exports_folder_created_by_system/all_files.csv"
         
-        
+    order_mapping = [[1, 8, 15, 21, 29, 31, 41], [2, 3, 6, 9, 10, 12, 13, 22, 23, 25, 28, 38, 46, 48], [4, 5, 7, 11, 14, 17, 18, 24, 26, 30, 32, 33, 34, 36, 39, 47, 49, 50, 51], [16, 19, 35, 40, 42,], [27, 37, 43, 44], 20, 45]
+    
     # 23-10-08 04:16:23
     file_name_2 = "diabetes-with-clusters-lemmas.pdf"
     model_file_2 = "/Users/marsk757/topics2themes/topics2themes/data_folder/diabetes_lemmas/topics2themes_exports_folder_created_by_system/654817afb0e85021c547b821_model.json"
-    plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_2, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=False, hours_between_label_dates=720, width_vertical_line=0.0000000001, extra_x_length=0.001)
+    plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_2, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=False, hours_between_label_dates=720, width_vertical_line=0.0000000001, extra_x_length=0.001, order_mapping=order_mapping)
+    
 #test_climate()
 #test_fc()
 #test_marknad()
