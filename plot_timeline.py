@@ -232,26 +232,34 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     ax1.yaxis.set_label_position("right")
     ax1.yaxis.tick_right()
 
-    current_color = "lavender"
-    current_edge_color = "lavender"
+    #current_color = "lavender"
     
-    viridis = plt.colormaps['viridis'].resampled(8)
+    #current_edge_color = "lavender"
+    
+    main_colors = plt.colormaps['viridis'].resampled(len(topic_names))
     
     for y in range(0, len(topic_names), 1):
         ty = -y
         y_width = 0.5
+        
         plt.axhline(y=ty, linewidth=0.1, color='black', zorder = -50)
         if add_for_coliding_dates and vertical_line_to_represent_nr_of_documents: # To make the discrete times more connected
             # make the horizontal line thicker
             plt.axhline(y=ty, linewidth=0.9, color='black', zorder = -50)
-        ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = "lightgrey", linewidth=0.05, zorder = -10000)
+            
+        current_color = main_colors.colors[y]
+        current_color[3] = 0.5
+        
+        ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = "black", linewidth=0.05, zorder = -10000)
+        
+        """
         if current_color == "lavender":
             current_color = "honeydew"
-            current_edge_color = "honeydew"
+            #current_edge_color = "honeydew"
         else:
             current_color = "lavender"
-            current_edge_color = "lavender"
-
+            #current_edge_color = "lavender"
+        """
 
     
     for timestamp, topic_dict in timestamp_topics_dict.items():
