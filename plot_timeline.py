@@ -22,7 +22,7 @@ plt.rcParams["font.family"] = "monospace"
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.07):
 
     if log:
         print("Not yet implemented")
@@ -177,8 +177,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     for key, item in timestamp_topics_dict.items():
         print(key, item)
 
-    min_timestamp = min_timestamp - (max_timestamp - min_timestamp)*0.07 #TODO: Make more generic
-    max_timestamp = max_timestamp + (max_timestamp - min_timestamp)*0.07
+    min_timestamp = min_timestamp - (max_timestamp - min_timestamp)*extra_x_length #TODO: Make more generic
+    max_timestamp = max_timestamp + (max_timestamp - min_timestamp)*extra_x_length
 #TODO: Make more generic
 
     print("max_texts", max_texts)
@@ -219,7 +219,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     fig, ax1 = plt.subplots(figsize = (11.693, 8.268))
 
     ax1.set(xlim=(min_timestamp, max_timestamp))
-    plt.yticks([-y for y in range(0, 2*len(topic_names), 2)], topic_names)
+    plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names)
     if use_date_format:
         plt.gca().xaxis.set_major_locator(mdates.YearLocator())
         plt.gca().xaxis.set_minor_locator(mdates.MonthLocator())
@@ -234,14 +234,17 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
 
     current_color = "lavender"
     current_edge_color = "lavender"
-    for y in range(0, 2*len(topic_names)-1, 2):
+    
+    viridis = plt.colormaps['viridis'].resampled(8)
+    
+    for y in range(0, len(topic_names), 1):
         ty = -y
-        y_width = 0.8
+        y_width = 0.5
         plt.axhline(y=ty, linewidth=0.1, color='black', zorder = -50)
         if add_for_coliding_dates and vertical_line_to_represent_nr_of_documents: # To make the discrete times more connected
             # make the horizontal line thicker
             plt.axhline(y=ty, linewidth=0.9, color='black', zorder = -50)
-        ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = current_edge_color, zorder = -10000)
+        ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = "lightgrey", linewidth=0.05, zorder = -10000)
         if current_color == "lavender":
             current_color = "honeydew"
             current_edge_color = "honeydew"
@@ -249,7 +252,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             current_color = "lavender"
             current_edge_color = "lavender"
 
-            
+
+    
     for timestamp, topic_dict in timestamp_topics_dict.items():
         original_timestamp = timestamp
         if use_date_format:
@@ -261,7 +265,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 dec_part = dec_part*0.999/max_decimal_part_for_year[year] # To make it more even spread out
                 timestamp = year + dec_part
             
-        bar_height = 1.5
+        bar_height = 0.5
         bar_strength = 0.2
         
         
@@ -278,11 +282,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             plt.axvline(x=int(timestamp), linewidth=0.1, color='gainsboro', zorder = -1000)
         else:
             plt.axvline(x=timestamp, linewidth=width_vertical_line, color='gainsboro', zorder = -1000)
-
-            
+        
         for topic_index, confidence in topic_dict.items():
             topic_nr = topic_nrs[topic_index]
-            ty = -topic_nr*2
+            ty = -topic_nr
             cw2 = bar_height*confidence/max_topic_confidence
             
             if log:
