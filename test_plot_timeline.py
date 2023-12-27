@@ -90,7 +90,7 @@ def test_diabetes_lemmatised():
     metadata_file_name = "/Users/marsk757/topics2themes/topics2themes/data_folder/diabetes_lemmas/topics2themes_exports_folder_created_by_system/all_files.csv"
         
     order_mapping = [[1, 8, 15, 21, 29, 31, 41], [2, 3, 6, 9, 10, 12, 13, 22, 23, 25, 28, 38, 46, 48], [4, 5, 7, 11, 14, 17, 18, 24, 26, 30, 32, 33, 34, 36, 39, 47, 49, 50, 51], [16, 19, 35, 40, 42,], [27, 37, 43, 44], 20, 45]
-    
+    #order_mapping = [1, [2, 3, 4], 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, [33, 34, 35], 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, [47, 48, 49], 50, 51]
     # 23-10-08 04:16:23
     file_name_2 = "diabetes-with-clusters-lemmas.pdf"
     model_file_2 = "/Users/marsk757/topics2themes/topics2themes/data_folder/diabetes_lemmas/topics2themes_exports_folder_created_by_system/654817afb0e85021c547b821_model.json"

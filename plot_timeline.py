@@ -18,12 +18,44 @@ plt.rcParams["font.family"] = "monospace"
 
 #https://stackoverflow.com/questions/60952034/add-a-hyperlink-in-a-matplotlib-plot-inside-a-pdfpages-page-python
 
+def get_order_mapping(original_nr, order_mapping_flattened, order_mapping):
+    if not order_mapping:
+        return original_nr
+    else:
+        original_nr = original_nr + 1
+        return order_mapping_flattened.index(original_nr)
+        
+def flatten_extend(order_list):
+    flat_list = []
+    for item in order_list:
+        if type(item) is list:
+            flat_list.extend(item)
+        else:
+            flat_list.append(item)
+    return flat_list
+        
+def update_color(current_color_number, index_for_color_number, order_mapping):
+    if not order_mapping:
+        return current_color_number + 1, index_for_color_number
+    
+    if not type(order_mapping[current_color_number]) is list:
+        return current_color_number + 1, index_for_color_number
+    
+    if index_for_color_number + 1 >= len(order_mapping[current_color_number]):
+         return current_color_number + 1, 0
+    else:
+        return current_color_number, index_for_color_number + 1
+
+
 ###
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.07):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.07, order_mapping=None):
 
+    order_mapping_flattened = flatten_extend(order_mapping)
+
+    
     if log:
         print("Not yet implemented")
         sys.exit(0)
@@ -204,7 +236,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             
         third_length = int(len(repr_terms)/3)
         topic_name = ", ".join(repr_terms)[0:label_length].strip() +"..."
-        topic_names.append(str(nr + 1) + ": " + topic_name)
+        nr_str = str(nr + 1)
+        if len(nr_str) == 1:
+            nr_str = " " + nr_str
+        topic_names.append(nr_str + ": " + topic_name)
 
 
 
@@ -219,7 +254,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     fig, ax1 = plt.subplots(figsize = (11.693, 8.268))
 
     ax1.set(xlim=(min_timestamp, max_timestamp))
-    plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names)
+    #plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names)
+    
     if use_date_format:
         plt.gca().xaxis.set_major_locator(mdates.YearLocator())
         plt.gca().xaxis.set_minor_locator(mdates.MonthLocator())
@@ -231,14 +267,38 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
 
     ax1.yaxis.set_label_position("right")
     ax1.yaxis.tick_right()
-
-    #current_color = "lavender"
     
-    #current_edge_color = "lavender"
-    
+    # Make the horizontal colors and lines
+    topic_names_resorted = [0]*len(topic_names)
     main_colors = plt.colormaps['viridis'].resampled(len(topic_names))
-    
-    for y in range(0, len(topic_names), 1):
+    if order_mapping:
+        main_colors = plt.colormaps['viridis'].resampled(len(order_mapping))
+        
+    # Create a color list
+    current_color_number = 0
+    index_for_color_number = 0
+    color_list = [0]*len(topic_names)
+    for el in range(0, len(topic_names)):
+        if type(order_mapping[current_color_number]) is list:
+            index = order_mapping[current_color_number][index_for_color_number]
+        else:
+            index = order_mapping[current_color_number]
+         
+        index = index - 1
+        
+        current_color = main_colors.colors[current_color_number]
+        current_color[3] = 0.8
+        color_list[index] = current_color
+        
+        current_color_number, index_for_color_number = update_color(current_color_number, index_for_color_number, order_mapping)
+     
+
+    for y_orig in range(0, len(topic_names), 1):
+        
+        y = get_order_mapping(y_orig, order_mapping_flattened, order_mapping)
+        
+        topic_names_resorted[y] = topic_names[y_orig]
+        
         ty = -y
         y_width = 0.5
         
@@ -247,20 +307,16 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             # make the horizontal line thicker
             plt.axhline(y=ty, linewidth=0.9, color='black', zorder = -50)
             
-        current_color = main_colors.colors[y]
-        current_color[3] = 0.5
+        current_color = color_list[y_orig]
         
-        ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = "black", linewidth=0.05, zorder = -10000)
         
-        """
-        if current_color == "lavender":
-            current_color = "honeydew"
-            #current_edge_color = "honeydew"
-        else:
-            current_color = "lavender"
-            #current_edge_color = "lavender"
-        """
-
+        edgecolor = [0.9, 0.9, 0.9, 0.2]
+            
+        ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = edgecolor, linewidth=2, linestyle="solid", zorder = -10000)
+      
+    plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted)
+    print("Created background")
+      
     
     for timestamp, topic_dict in timestamp_topics_dict.items():
         original_timestamp = timestamp
@@ -292,7 +348,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             plt.axvline(x=timestamp, linewidth=width_vertical_line, color='gainsboro', zorder = -1000)
         
         for topic_index, confidence in topic_dict.items():
-            topic_nr = topic_nrs[topic_index]
+            topic_nr_orig = topic_nrs[topic_index]
+            topic_nr = get_order_mapping(topic_nr_orig, order_mapping_flattened, order_mapping)
+                   
             ty = -topic_nr
             cw2 = bar_height*confidence/max_topic_confidence
             
@@ -327,9 +385,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                     ax1.text(timestamp, ty - cw2, base_name, size=0.01, color="lightgrey")
                 elif confidence > max_confidence_for_topic_for_year*0.80:
                     ax1.text(timestamp, ty, base_name, size=0.01, color="lightgrey")
-                
 
-    #file_name = "temp_out"
+   
+    
     plt.yticks(fontsize=9)
     plt.tight_layout()
 
