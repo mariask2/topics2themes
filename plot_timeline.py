@@ -26,6 +26,8 @@ def get_y_value_for_user_topic_nr(original_nr, order_mapping_flattened, order_ma
         return order_mapping_flattened.index(original_nr)
         
 def flatten_extend(order_list):
+    if not order_list: #None
+        return order_list
     flat_list = []
     for item in order_list:
         if type(item) is list:
@@ -302,33 +304,42 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     index_for_color_number = 0
     current_simplifyed_color = "lavender"
     color_mapping = {} # Mapping from user-shown topic nr:s to colors
-    ys_when_color_is_updated = [] # To be able to draw a line between the colors
+    ys_when_color_is_updated = [] # To be able to draw a line between the colors-shifts
+    
+    
     for el in range(0, len(topic_names)):
-        if type(order_mapping[current_color_number]) is list:
-            user_topic_nr = order_mapping[current_color_number][index_for_color_number]
-        else:
-            user_topic_nr = order_mapping[current_color_number]
-        
-        """ # Perhaps use colormap later
-        current_color = list(main_colors_contrast[current_color_number])
-        current_color[3] = 0.7
-        color_mapping[user_topic_nr] = current_color
-        """
-        
-        current_color_number, index_for_color_number = update_color(current_color_number, index_for_color_number, order_mapping)
-     
-        color_mapping[user_topic_nr] = current_simplifyed_color
-        if current_color_number != previous_color_number: #color is updated
-            ys_when_color_is_updated.append(el)
+        if order_mapping:
+            if type(order_mapping[current_color_number]) is list:
+                user_topic_nr = order_mapping[current_color_number][index_for_color_number]
+            else:
+                user_topic_nr = order_mapping[current_color_number]
             
+            """ # Perhaps use colormap later
+            current_color = list(main_colors_contrast[current_color_number])
+            current_color[3] = 0.7
+            color_mapping[user_topic_nr] = current_color
+            """
+            
+            current_color_number, index_for_color_number = update_color(current_color_number, index_for_color_number, order_mapping)
+         
+            color_mapping[user_topic_nr] = current_simplifyed_color
+            if current_color_number != previous_color_number: #color is updated
+                ys_when_color_is_updated.append(el)
+                
+                if current_simplifyed_color == "lavender":
+                    current_simplifyed_color = "honeydew"
+                else:
+                    current_simplifyed_color = "lavender"
+            
+
+            previous_color_number = current_color_number
+        else: # Use every other
+            color_mapping[el + 1] = current_simplifyed_color
             if current_simplifyed_color == "lavender":
                 current_simplifyed_color = "honeydew"
             else:
                 current_simplifyed_color = "lavender"
-        
-
-        previous_color_number = current_color_number
-        
+  
 
     
     # Make the horizontal colors and lines
@@ -355,14 +366,17 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             
         ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = edgecolor, linewidth=2, linestyle="solid", zorder = -10000)
       
-    plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted, minor=True)
+    
     
     # lines separating the colors
-    plt.axhline(y=+y_width, linewidth=1, color='black', zorder = -50)
-    for y in ys_when_color_is_updated:
-        plt.axhline(y=-y-y_width, linewidth=0.5, color='black', zorder = -50)
-    plt.yticks([+y_width] + [-y-y_width for y in ys_when_color_is_updated], [], minor=False) # Mark color change with y-tick-lines also
-    
+    if order_mapping:
+        plt.axhline(y=+y_width, linewidth=1, color='black', zorder = -50)
+        for y in ys_when_color_is_updated:
+            plt.axhline(y=-y-y_width, linewidth=0.5, color='black', zorder = -50)
+        plt.yticks([+y_width] + [-y-y_width for y in ys_when_color_is_updated], [], minor=False) # Mark color change with y-tick-lines also
+        plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted, minor=True)
+    else:
+        plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted, minor=False)
     print("Created background")
     
       
