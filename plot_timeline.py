@@ -274,10 +274,11 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     if order_mapping:
         main_colors = plt.colormaps['viridis'].resampled(len(order_mapping))
         
+    previous_color_number = 0
     current_color_number = 0
     index_for_color_number = 0
     color_mapping = {} # Mapping from user-shown topic nr:s to colors
-    color_updated_ys = []
+    ys_when_color_is_updated = [] # To be able to draw a line between the colors
     for el in range(0, len(topic_names)):
         if type(order_mapping[current_color_number]) is list:
             user_topic_nr = order_mapping[current_color_number][index_for_color_number]
@@ -290,8 +291,15 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         
         current_color_number, index_for_color_number = update_color(current_color_number, index_for_color_number, order_mapping)
      
+        if current_color_number != previous_color_number: #color is updated
+            ys_when_color_is_updated.append(el)
+        previous_color_number = current_color_number
+        
+
+    
     # Make the horizontal colors and lines
     topic_names_resorted = [0]*len(topic_names) # For the y-tick-labels
+    y_width = 0.5
     for user_topic_nr in range(0, len(topic_names), 1):
         
         y = get_y_value_for_user_topic_nr(user_topic_nr, order_mapping_flattened, order_mapping)
@@ -299,7 +307,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         topic_names_resorted[y] = topic_names[user_topic_nr]
         
         ty = -y
-        y_width = 0.5
+        
         
         plt.axhline(y=ty, linewidth=0.1, color='black', zorder = -50)
         if add_for_coliding_dates and vertical_line_to_represent_nr_of_documents: # To make the discrete times more connected
@@ -314,7 +322,12 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = edgecolor, linewidth=2, linestyle="solid", zorder = -10000)
       
     plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted)
+    
+    plt.axhline(y=+y_width, linewidth=1, color='black', zorder = -50)
+    for y in ys_when_color_is_updated:
+        plt.axhline(y=-y-y_width, linewidth=1, color='black', zorder = -50)
     print("Created background")
+    
       
     
     for timestamp, topic_dict in timestamp_topics_dict.items():
