@@ -321,11 +321,13 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             
         ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = edgecolor, linewidth=2, linestyle="solid", zorder = -10000)
       
-    plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted)
+    plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted, minor=True)
     
+    # lines separating the colors
     plt.axhline(y=+y_width, linewidth=1, color='black', zorder = -50)
     for y in ys_when_color_is_updated:
         plt.axhline(y=-y-y_width, linewidth=1, color='black', zorder = -50)
+    plt.yticks([+y_width] + [-y-y_width for y in ys_when_color_is_updated], [], minor=False) # Mark color change with y-tick-lines also
     print("Created background")
     
       
