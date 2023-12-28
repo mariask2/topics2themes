@@ -18,10 +18,10 @@ plt.rcParams["font.family"] = "monospace"
 
 #https://stackoverflow.com/questions/60952034/add-a-hyperlink-in-a-matplotlib-plot-inside-a-pdfpages-page-python
 
-def get_order_mapping(original_nr, order_mapping_flattened, order_mapping):
+def get_y_value_for_user_topic_nr(original_nr, order_mapping_flattened, order_mapping):
     if not order_mapping:
         return original_nr
-    else:
+    else: # User don't use 0
         original_nr = original_nr + 1
         return order_mapping_flattened.index(original_nr)
         
@@ -217,10 +217,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     print("nr_of_texts_for_max_topic_confidence", nr_of_texts_for_max_topic_confidence)
      #70
     topic_names = []
-    topic_nrs = {}
+    show_to_user_nr_topic_index_mapping = {}
     for nr, el in enumerate(obj["topic_model_output"]["topics"]):
         topic_index = el["id"]
-        topic_nrs[topic_index] = nr
+        show_to_user_nr_topic_index_mapping[topic_index] = nr
         terms = [t['term'] for t in el['topic_terms']]
         repr_terms = []
         for t in terms:
@@ -268,36 +268,35 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     ax1.yaxis.set_label_position("right")
     ax1.yaxis.tick_right()
     
-    # Make the horizontal colors and lines
-    topic_names_resorted = [0]*len(topic_names)
+    
+    # Create a color mapping
     main_colors = plt.colormaps['viridis'].resampled(len(topic_names))
     if order_mapping:
         main_colors = plt.colormaps['viridis'].resampled(len(order_mapping))
         
-    # Create a color list
     current_color_number = 0
     index_for_color_number = 0
-    color_list = [0]*len(topic_names)
+    color_mapping = {} # Mapping from user-shown topic nr:s to colors
+    color_updated_ys = []
     for el in range(0, len(topic_names)):
         if type(order_mapping[current_color_number]) is list:
-            index = order_mapping[current_color_number][index_for_color_number]
+            user_topic_nr = order_mapping[current_color_number][index_for_color_number]
         else:
-            index = order_mapping[current_color_number]
+            user_topic_nr = order_mapping[current_color_number]
          
-        index = index - 1
-        
         current_color = main_colors.colors[current_color_number]
         current_color[3] = 0.8
-        color_list[index] = current_color
+        color_mapping[user_topic_nr] = current_color
         
         current_color_number, index_for_color_number = update_color(current_color_number, index_for_color_number, order_mapping)
      
-
-    for y_orig in range(0, len(topic_names), 1):
+    # Make the horizontal colors and lines
+    topic_names_resorted = [0]*len(topic_names) # For the y-tick-labels
+    for user_topic_nr in range(0, len(topic_names), 1):
         
-        y = get_order_mapping(y_orig, order_mapping_flattened, order_mapping)
+        y = get_y_value_for_user_topic_nr(user_topic_nr, order_mapping_flattened, order_mapping)
         
-        topic_names_resorted[y] = topic_names[y_orig]
+        topic_names_resorted[y] = topic_names[user_topic_nr]
         
         ty = -y
         y_width = 0.5
@@ -307,7 +306,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             # make the horizontal line thicker
             plt.axhline(y=ty, linewidth=0.9, color='black', zorder = -50)
             
-        current_color = color_list[y_orig]
+        current_color = color_mapping[user_topic_nr + 1]
         
         
         edgecolor = [0.9, 0.9, 0.9, 0.2]
@@ -348,10 +347,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             plt.axvline(x=timestamp, linewidth=width_vertical_line, color='gainsboro', zorder = -1000)
         
         for topic_index, confidence in topic_dict.items():
-            topic_nr_orig = topic_nrs[topic_index]
-            topic_nr = get_order_mapping(topic_nr_orig, order_mapping_flattened, order_mapping)
+            topic_nr_show_to_user = show_to_user_nr_topic_index_mapping[topic_index]
+            y_value_for_topic_nr = get_y_value_for_user_topic_nr(topic_nr_show_to_user, order_mapping_flattened, order_mapping)
                    
-            ty = -topic_nr
+            ty = -y_value_for_topic_nr
             cw2 = bar_height*confidence/max_topic_confidence
             
             if log:
