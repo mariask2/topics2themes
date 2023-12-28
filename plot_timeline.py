@@ -13,8 +13,15 @@ import matplotlib.dates as mdates
 from math import modf
 import sys
 import datetime
+import matplotlib
 
-plt.rcParams["font.family"] = "monospace"
+#matplotlib.use('pgf')
+
+
+#plt.rcParams["font.family"] = "monospace"
+#plt.rc('text', usetex=True)
+#plt.rc('font', family='serif')
+#matplotlib.rcParams['pgf.preamble'] = [r'\usepackage{hyperref}', ]
 
 #https://stackoverflow.com/questions/60952034/add-a-hyperlink-in-a-matplotlib-plot-inside-a-pdfpages-page-python
 
@@ -384,7 +391,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     nr_of_plotted = 0
     vertical_line_color = "lightgrey"
     bar_height = 0.5
-    bar_strength = 0.2
+    bar_strength = 0.5
     
     for timestamp, topic_dict in timestamp_topics_dict.items():
         original_timestamp = timestamp
@@ -439,8 +446,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                     exit()
                 cw2 = bar_height*math.log(multiplied_confidence, 1000)/math.log(10*max_topic_confidence, 1000)
 
-            # Probably only confuses, so remove
-            #ax1.scatter(timestamp, ty, color="black", s=cw2*2, marker="*")
+
             
             if add_for_coliding_dates and normalise_for_nr_of_texts:
                 base_names = meta_data_dict[timestamp]
@@ -450,8 +456,14 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             
             ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = "black", linewidth=bar_strength)
             
+            
+            s = ax1.scatter([timestamp, timestamp, timestamp], [ty + cw2, ty, ty - cw2], color="grey", marker="s", s=cw2*35, facecolor=[1, 1, 1, 0.01], linewidth=0.1)
+            s.set_urls(['https://www.bbc.com/news', 'https://www.dn.se/', 'https://www.dn.se/'])
+    
+
+            
             # give labels to the most strong document occurrences
-            if not add_for_coliding_dates:
+            if False: #not add_for_coliding_dates:
                 max_confidence_for_topic_for_year = max_confidence_for_year_dict[(year, topic_index)]
                 base_name = timestamp_basename_dict[original_timestamp]
                 if confidence == max_confidence_for_topic_for_year:
@@ -473,11 +485,19 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     plt.yticks(fontsize=9)
     plt.tight_layout()
 
+    #ax1.text(0, .9, r"\textsc{text}", fontsize=9)
+
     if not os.path.exists(outputdir):
         os.mkdir(outputdir)
     save_to = os.path.join(outputdir, file_name)
+    
+    """
+    s = plt.scatter([1, 2, 3], [4, 5, 6])
+    s.set_urls(['https://www.bbc.com/news', 'https://www.google.com/', 'https://www.dn.se/'])
+    """
+    
     print("Save plot in: ", save_to)
-    plt.savefig(save_to, dpi = 700, transparent=False, format="pdf")
+    plt.savefig(save_to, dpi = 700, transparent=False, format="svg")
 
 
 
