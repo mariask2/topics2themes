@@ -331,7 +331,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     print("Created background")
     
       
-    
+    nr_of_plotted = 0
     for timestamp, topic_dict in timestamp_topics_dict.items():
         original_timestamp = timestamp
         if use_date_format:
@@ -360,6 +360,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             plt.axvline(x=int(timestamp), linewidth=0.1, color='gainsboro', zorder = -1000)
         else:
             plt.axvline(x=timestamp, linewidth=width_vertical_line, color='gainsboro', zorder = -1000)
+        
         
         for topic_index, confidence in topic_dict.items():
             topic_nr_show_to_user = show_to_user_nr_topic_index_mapping[topic_index]
@@ -400,7 +401,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 elif confidence > max_confidence_for_topic_for_year*0.80:
                     ax1.text(timestamp, ty, base_name, size=0.01, color="lightgrey")
 
-   
+            nr_of_plotted = nr_of_plotted + 1
+            if nr_of_plotted % 100 == 0:
+                print(timestamp, end=" ", flush=True)
+
     
     plt.yticks(fontsize=9)
     plt.tight_layout()
