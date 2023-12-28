@@ -51,7 +51,7 @@ def update_color(current_color_number, index_for_color_number, order_mapping):
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.07, order_mapping=None):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.07, order_mapping=None, use_separate_max_confidence_for_each_topic=True):
 
     order_mapping_flattened = flatten_extend(order_mapping)
 
@@ -68,9 +68,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         data = f.read()
         obj = json.loads(data)
 
-    document_info = {}
+    
     meta_data_dict = {}
     max_topic_confidence = 0
+    
     nr_of_texts_for_max_topic_confidence = None
     if use_date_format:
         min_timestamp = np.datetime64('9999-01-02')
@@ -105,6 +106,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 else:
                     max_decimal_part_for_year[year] = decimal_part
     print(max_decimal_part_for_year)
+    
+    # Collect all topics for the documents. # Store in document_info, with "base_name" of the documetn as the key
+    document_info = {}
+    max_topic_confidence_for_topic = {}
     for el in obj["topic_model_output"]["documents"]:
         base_name = el["base_name"]
         filtered_labels = [l for l in el["additional_labels"] if l.replace(".", "").replace("-", "").replace(":", "").replace("T", "").isdigit()]
@@ -131,21 +136,23 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             #if len(topic_info["terms_found_in_text"]) > 1: # At least two terms included in text to include
             
             document_topics.append(topic_info)
-            """
-            if t["topic_confidence"] > max_topic_confidence:
-                max_topic_confidence = t["topic_confidence"]
-            """
+            
+            # Record information on max confidence for topic in max_topic_confidence_for_topic
+            if topic_info["topic_index"] not in max_topic_confidence_for_topic:
+                max_topic_confidence_for_topic[topic_info["topic_index"]] = topic_info["topic_confidence"]
+            else:
+                if topic_info["topic_confidence"] > max_topic_confidence_for_topic[topic_info["topic_index"]]:
+                    max_topic_confidence_for_topic[topic_info["topic_index"]] = topic_info["topic_confidence"]
+ 
         document_info[base_name] = document_topics
 
-
-        
+    #
     timestamps = sorted(meta_data_dict.keys())
     timestamp_topics_dict = {}
     max_confidence_for_year_dict = {}
     timestamp_basename_dict = {}
     max_texts = 0
 
-    
     for i in range(0, len(timestamps)):
         timestamp = timestamps[i]
         base_names = meta_data_dict[timestamp]
@@ -216,6 +223,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     print("max_texts", max_texts)
     print("nr_of_texts_for_max_topic_confidence", nr_of_texts_for_max_topic_confidence)
      #70
+     
+    # Give the topics their labels to show to the user and the number for the topic to show to the user
     topic_names = []
     show_to_user_nr_topic_index_mapping = {}
     for nr, el in enumerate(obj["topic_model_output"]["topics"]):
@@ -270,13 +279,28 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     
     
     # Create a color mapping
-    main_colors = plt.colormaps['viridis'].resampled(len(topic_names))
+    """
+    # Perhaps use later. Currently, only use two colors
+    main_colors = plt.colormaps['cool'].resampled(len(topic_names))
+    
     if order_mapping:
-        main_colors = plt.colormaps['viridis'].resampled(len(order_mapping))
-        
+        main_colors = plt.colormaps['cool'].resampled(len(order_mapping))
+    
+    colors_as_list = list(set([main_colors(a) for a in np.linspace(0,1,len(topic_names))]))
+    
+    
+    main_colors_contrast = [] # Make neighbouring colors as much contrast as possible by
+    # combining to maps
+    for c1, c2 in zip(colors_as_list, colors_as_list[::-1]):
+        main_colors_contrast.append(c1)
+        main_colors_contrast.append(c2)
+    """
+    
+    
     previous_color_number = 0
     current_color_number = 0
     index_for_color_number = 0
+    current_simplifyed_color = "lavender"
     color_mapping = {} # Mapping from user-shown topic nr:s to colors
     ys_when_color_is_updated = [] # To be able to draw a line between the colors
     for el in range(0, len(topic_names)):
@@ -284,15 +308,25 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             user_topic_nr = order_mapping[current_color_number][index_for_color_number]
         else:
             user_topic_nr = order_mapping[current_color_number]
-         
-        current_color = main_colors.colors[current_color_number]
-        current_color[3] = 0.8
+        
+        """ # Perhaps use colormap later
+        current_color = list(main_colors_contrast[current_color_number])
+        current_color[3] = 0.7
         color_mapping[user_topic_nr] = current_color
+        """
         
         current_color_number, index_for_color_number = update_color(current_color_number, index_for_color_number, order_mapping)
      
+        color_mapping[user_topic_nr] = current_simplifyed_color
         if current_color_number != previous_color_number: #color is updated
             ys_when_color_is_updated.append(el)
+            
+            if current_simplifyed_color == "lavender":
+                current_simplifyed_color = "honeydew"
+            else:
+                current_simplifyed_color = "lavender"
+        
+
         previous_color_number = current_color_number
         
 
@@ -326,12 +360,18 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     # lines separating the colors
     plt.axhline(y=+y_width, linewidth=1, color='black', zorder = -50)
     for y in ys_when_color_is_updated:
-        plt.axhline(y=-y-y_width, linewidth=1, color='black', zorder = -50)
+        plt.axhline(y=-y-y_width, linewidth=0.5, color='black', zorder = -50)
     plt.yticks([+y_width] + [-y-y_width for y in ys_when_color_is_updated], [], minor=False) # Mark color change with y-tick-lines also
+    
     print("Created background")
     
       
+    
     nr_of_plotted = 0
+    vertical_line_color = "lightgrey"
+    bar_height = 0.5
+    bar_strength = 0.2
+    
     for timestamp, topic_dict in timestamp_topics_dict.items():
         original_timestamp = timestamp
         if use_date_format:
@@ -343,10 +383,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 dec_part = dec_part*0.999/max_decimal_part_for_year[year] # To make it more even spread out
                 timestamp = year + dec_part
             
-        bar_height = 0.5
-        bar_strength = 0.2
-        
-        
+
+        # The vertical line, representing documents
         if add_for_coliding_dates and vertical_line_to_represent_nr_of_documents: #make the line width represent the number of documents
             base_names = meta_data_dict[timestamp]
             nr_of_texts = len(base_names)
@@ -359,15 +397,24 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             
             plt.axvline(x=int(timestamp), linewidth=0.1, color='gainsboro', zorder = -1000)
         else:
-            plt.axvline(x=timestamp, linewidth=width_vertical_line, color='gainsboro', zorder = -1000)
+            plt.axvline(x=timestamp, linewidth=width_vertical_line, color=vertical_line_color, zorder = -1000)
         
+        if vertical_line_color == "lightgrey":
+            vertical_line_color = "gainsboro"
+        else:
+            vertical_line_color = "lightgrey"
         
+        # Plot the occurrences of topics in the documents
         for topic_index, confidence in topic_dict.items():
             topic_nr_show_to_user = show_to_user_nr_topic_index_mapping[topic_index]
             y_value_for_topic_nr = get_y_value_for_user_topic_nr(topic_nr_show_to_user, order_mapping_flattened, order_mapping)
-                   
+                 
+            max_confidence_for_topic = max_topic_confidence_for_topic[topic_index]
             ty = -y_value_for_topic_nr
-            cw2 = bar_height*confidence/max_topic_confidence
+            if use_separate_max_confidence_for_each_topic:
+                cw2 = bar_height*confidence/max_confidence_for_topic
+            else:
+                cw2 = bar_height*confidence/max_topic_confidence
             
             if log:
                 if confidence < 0.1:
@@ -377,10 +424,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                     print("To small confidence to plot", multiplied_confidence, confidence)
                     exit()
                 cw2 = bar_height*math.log(multiplied_confidence, 1000)/math.log(10*max_topic_confidence, 1000)
-            #if cw2 > 0.9:
-            #    cw2 = 0.9
-            ax1.scatter(timestamp, ty, color="black", s=cw2*2, marker="*")
-            #ax1.scatter(timestamp, [ty - cw2], color="black", s=cw2)
+
+            # Probably only confuses, so remove
+            #ax1.scatter(timestamp, ty, color="black", s=cw2*2, marker="*")
             
             if add_for_coliding_dates and normalise_for_nr_of_texts:
                 base_names = meta_data_dict[timestamp]
@@ -404,7 +450,11 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             nr_of_plotted = nr_of_plotted + 1
             if nr_of_plotted % 100 == 0:
                 print(timestamp, end=" ", flush=True)
-
+    
+    
+        if nr_of_plotted > 200:
+            #break
+            pass
     
     plt.yticks(fontsize=9)
     plt.tight_layout()
