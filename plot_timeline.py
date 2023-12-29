@@ -18,7 +18,7 @@ import matplotlib
 #matplotlib.use('pgf')
 
 
-#plt.rcParams["font.family"] = "monospace"
+plt.rcParams["font.family"] = "monospace"
 #plt.rc('text', usetex=True)
 #plt.rc('font', family='serif')
 #matplotlib.rcParams['pgf.preamble'] = [r'\usepackage{hyperref}', ]
@@ -457,7 +457,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = "black", linewidth=bar_strength)
             
             
-            s = ax1.scatter([timestamp, timestamp, timestamp], [ty + cw2, ty, ty - cw2], color="grey", marker="s", s=cw2*35, facecolor=[1, 1, 1, 0.01], linewidth=0.1)
+            s = ax1.scatter([timestamp, timestamp, timestamp], [ty + cw2, ty, ty - cw2], color=[0.5, 0.5, 0.5, 0.5], marker="s", s=cw2*35, facecolor=[1, 1, 1, 0.01], linewidth=0.1)
             s.set_urls(['https://www.bbc.com/news', 'https://www.dn.se/', 'https://www.dn.se/'])
     
 
@@ -477,7 +477,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             if nr_of_plotted % 100 == 0:
                 print(timestamp, end=" ", flush=True)
     
-    
+        # For debug
         if nr_of_plotted > 200:
             #break
             pass
@@ -485,19 +485,15 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     plt.yticks(fontsize=9)
     plt.tight_layout()
 
-    #ax1.text(0, .9, r"\textsc{text}", fontsize=9)
 
     if not os.path.exists(outputdir):
         os.mkdir(outputdir)
-    save_to = os.path.join(outputdir, file_name)
-    
-    """
-    s = plt.scatter([1, 2, 3], [4, 5, 6])
-    s.set_urls(['https://www.bbc.com/news', 'https://www.google.com/', 'https://www.dn.se/'])
-    """
-    
-    print("Save plot in: ", save_to)
-    plt.savefig(save_to, dpi = 700, transparent=False, format="svg")
+    save_to_pdf = os.path.join(outputdir, file_name + ".pdf")
+    save_to_svg = os.path.join(outputdir, file_name + ".svg")
+        
+    print("Save plot in: ", save_to_pdf, "and", save_to_svg)
+    plt.savefig(save_to_svg, dpi = 700, transparent=False, format="svg")
+    plt.savefig(save_to_pdf, dpi = 700, transparent=False, format="pdf")
 
 
 
