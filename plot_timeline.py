@@ -57,7 +57,11 @@ def update_color(current_color_number, index_for_color_number, order_mapping):
     else:
         return current_color_number, index_for_color_number + 1
 
-
+def get_weaker_form_of_named_color(color_name, transparancy):
+     rgb = list(colors.to_rgb(color_name))
+     rgb.append(transparancy)
+     return rgb
+     
 ###
 # Start
 #####
@@ -329,7 +333,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     previous_color_number = 0
     current_color_number = 0
     index_for_color_number = 0
-    current_simplifyed_color = "lavender"
+    current_simplifyed_color = get_weaker_form_of_named_color("lavender", 0.4)
     color_mapping = {} # Mapping from user-shown topic nr:s to colors
     ys_when_color_is_updated = [] # To be able to draw a line between the colors-shifts
     
@@ -353,19 +357,19 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             if current_color_number != previous_color_number: #color is updated
                 ys_when_color_is_updated.append(el)
                 
-                if current_simplifyed_color == "lavender":
-                    current_simplifyed_color = "honeydew"
+                if current_simplifyed_color == get_weaker_form_of_named_color("lavender", 0.4):
+                    current_simplifyed_color = get_weaker_form_of_named_color("honeydew", 0.5)
                 else:
-                    current_simplifyed_color = "lavender"
+                    current_simplifyed_color = get_weaker_form_of_named_color("lavender", 0.4)
             
 
             previous_color_number = current_color_number
         else: # Use every other
             color_mapping[el + 1] = current_simplifyed_color
-            if current_simplifyed_color == "lavender":
-                current_simplifyed_color = "honeydew"
+            if current_simplifyed_color == get_weaker_form_of_named_color("lavender", 0.4):
+                current_simplifyed_color = get_weaker_form_of_named_color("honeydew", 0.5)
             else:
-                current_simplifyed_color = "lavender"
+                current_simplifyed_color = get_weaker_form_of_named_color("lavender", 0.4)
   
 
     
@@ -411,7 +415,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     nr_of_plotted = 0
     vertical_line_color = "lightgrey"
     bar_height = 0.5
-    bar_strength = 0.5
+    bar_strength = 1
     for timestamp, topic_dict in timestamp_topics_dict.items():
         #print("timestamp", timestamp)
         original_timestamp = timestamp
@@ -438,12 +442,14 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             
             plt.axvline(x=int(timestamp), linewidth=0.1, color='gainsboro', zorder = -1000)
         else:
-            plt.axvline(x=timestamp, linewidth=width_vertical_line, color=vertical_line_color, zorder = -1000)
+            plt.axvline(x=timestamp, linewidth=width_vertical_line, color= [0.9, 0.9, 0.9, 1], zorder = -1000)
         
+        """
         if vertical_line_color == "lightgrey":
             vertical_line_color = "gainsboro"
         else:
             vertical_line_color = "lightgrey"
+        """
         
         # Plot the occurrences of topics in the documents
         for topic_index, confidence in topic_dict.items():
@@ -474,12 +480,13 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 max_weighted_confidence = max_topic_confidence/nr_of_texts_for_max_topic_confidence
                 cw2 = 0.6*confidence/nr_of_texts/max_weighted_confidence
             
-            ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = [0.1, 0.1, 0.1, 0.7], linewidth=bar_strength, zorder = -2*cw2)
+            ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = [0, 0, 0, 0.5], linewidth=bar_strength, zorder = -2*cw2)
                         
 
-            
+            s = ax1.scatter([timestamp], [ty], color=[0, 0, 0, 0.5], facecolor=[0, 0, 0, 0.1], marker="X", s=cw2*60, linewidth=0.1, zorder=-cw2)
             if link_mapping_func:
-                s = ax1.scatter([timestamp, timestamp], [ty + cw2 + cw2*0.5,  ty - cw2 - cw2*0.5], color=[0, 0, 0, 0.5], marker="s", s=cw2*15, facecolor=[1, 1, 1, 0.01], linewidth=0.1, zorder=-cw2)
+                #s = ax1.scatter([timestamp, timestamp], [ty + cw2,  ty - cw2], color=[0, 0, 0, 0.5], facecolor=[0, 0, 0, 0.5], marker="s", s=cw2*10, linewidth=0.1, zorder=-cw2)
+                
                 link = link_mapping_func(timestamp_basename_dict[timestamp])
                 s.set_urls([link, link, link])
                 # Can't set urls on lines, only scatter markers. So add three scatter markers with links
@@ -487,7 +494,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
 
             
             # give labels to the most strong document occurrences
-            if not add_for_coliding_dates:
+            if False: #not add_for_coliding_dates:
                 max_confidence_for_topic_for_year = max_confidence_for_year_dict[(year, topic_index)]
                 base_name = timestamp_basename_dict[original_timestamp]
                 if confidence == max_confidence_for_topic_for_year:
