@@ -24,6 +24,8 @@ plt.rcParams["font.family"] = "monospace"
 #matplotlib.rcParams['pgf.preamble'] = [r'\usepackage{hyperref}', ]
 
 #https://stackoverflow.com/questions/60952034/add-a-hyperlink-in-a-matplotlib-plot-inside-a-pdfpages-page-python
+#https://matplotlib.org/stable/gallery/misc/hyperlinks_sgskip.html
+# https://stackoverflow.com/questions/15417586/python-matlplotlib-add-hyperlink-to-text
 
 def get_y_value_for_user_topic_nr(original_nr, order_mapping_flattened, order_mapping):
     if not order_mapping:
@@ -60,7 +62,7 @@ def update_color(current_color_number, index_for_color_number, order_mapping):
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.07, order_mapping=None, use_separate_max_confidence_for_each_topic=True):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.07, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None):
 
     order_mapping_flattened = flatten_extend(order_mapping)
 
@@ -77,6 +79,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         data = f.read()
         obj = json.loads(data)
 
+    # Collect "meta_data_dict"
+    # In "meta_data_dict": Each item contains a date and the list of documents (basename for document) associated
+    # with this date. E.g.
+    # 1964-01-01 ['Diabetes_1964_vol014_nr001_0023.txt', 'Diabetes_1964_vol014_nr001_0020.txt', 'Diabetes_1964_vol014_nr001_0025.txt', 'Diabetes_1964_vol014_nr001_0009.txt', 'Diabetes_1964_vol014_nr001_0006.txt', 'Diabetes_1964_vol014_nr001_0010.txt', 'Diabetes_1964_vol014_nr001_0024.txt', 'Diabetes_1964_vol014_nr001_0016.txt', 'Diabetes_1964_vol014_nr001_0013.txt', 'Diabetes_1964_vol014_nr001_0007.txt', 'Diabetes_1964_vol014_nr001_0018.txt', 'Diabetes_1964_vol014_nr001_0022.txt', 'Diabetes_1964_vol014_nr001_0015.txt', 'Diabetes_1964_vol014_nr001_0011.txt', 'Diabetes_1964_vol014_nr001_0004.txt', 'Diabetes_1964_vol014_nr001_0014.txt', 'Diabetes_1964_vol014_nr001_0012.txt', 'Diabetes_1964_vol014_nr001_0032.txt', 'Diabetes_1964_vol014_nr001_0008.txt', 'Diabetes_1964_vol014_nr001_0019.txt', 'Diabetes_1964_vol014_nr001_0035.txt']
     
     meta_data_dict = {}
     max_topic_confidence = 0
@@ -114,9 +120,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                         max_decimal_part_for_year[year] = decimal_part
                 else:
                     max_decimal_part_for_year[year] = decimal_part
-    print(max_decimal_part_for_year)
-    
-    # Collect all topics for the documents. # Store in document_info, with "base_name" of the documetn as the key
+
+    # Collect all topics for the documents. # Store in document_info, with "base_name" of the document as the key
     document_info = {}
     max_topic_confidence_for_topic = {}
     for el in obj["topic_model_output"]["documents"]:
@@ -155,17 +160,21 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
  
         document_info[base_name] = document_topics
 
-    #
+    # Create timestamp_topics_dict
+    # Where the each element is a key with a timestamp, and
+    # which in turn contains a dictionary of confidence for the
+    # differen topics for this timestamp
+    # 1990-12-28T03 {16: 0.06963693325855479, 44: 0.08608091116481784, 47: 0.28642090183730934, 57: 0.4293435359283798}
     timestamps = sorted(meta_data_dict.keys())
     timestamp_topics_dict = {}
     max_confidence_for_year_dict = {}
-    timestamp_basename_dict = {}
+    timestamp_basename_dict = {} # To be able to connect timestamps to filename
     max_texts = 0
 
     for i in range(0, len(timestamps)):
         timestamp = timestamps[i]
-        base_names = meta_data_dict[timestamp]
-    
+        base_names = sorted(meta_data_dict[timestamp]) #Collected unsorted, so need to sort here
+        
         timestamp_topics_dict[timestamp] = {}
         
         if timestamp < min_timestamp:
@@ -196,6 +205,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 distance = 1/len(base_names) #TODO does not work
                 exit("SPREAD OUT NOT YET IMPLEMENTED FOR NON_DATES")
             
+            # Add one element in timestamp_topics_dict for each basename with topic
             for base_name in base_names:
                 if use_date_format:
                     year = timestamp.astype(object).year
@@ -208,32 +218,44 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                         topic_confidence = document_topic["topic_confidence"]
                         
                         timestamp_topics_dict[timestamp][topic_index] = topic_confidence
+                        
+                        # Gather max values
                         if topic_confidence > max_topic_confidence:
                             max_topic_confidence = topic_confidence
-                        
                         if (year, topic_index) in max_confidence_for_year_dict:
                             if max_confidence_for_year_dict[(year, topic_index)] < topic_confidence:
                                 max_confidence_for_year_dict[(year, topic_index)] = topic_confidence
                         else:
                             max_confidence_for_year_dict[(year, topic_index)] = topic_confidence
                             
+                #To be able to connect timestamps to filename, for links
                 timestamp_basename_dict[timestamp] = base_name
                 
                 timestamp = timestamp + distance #spread out the documents over the day
                 timestamp_topics_dict[timestamp] = {}
-         
-    for key, item in timestamp_topics_dict.items():
-        print(key, item)
+                
+                # Check that it is not spread out so much that
+                # documents from one year will be plotted for the next year
+                timestamp_year = timestamp.astype(object).year
+                timestamp_year_before_spreading_out = timestamps[i].astype(object).year
+                if timestamp_year != timestamp_year_before_spreading_out:
+                    print("Original year: ", timestamp_year, ". Year after spread out:", timestamp_year_before_spreading_out)
+                    print("ERROR: The documents are spread out so much that documents from one year will be plotted for the next year in the graph. Lower the parameter 'hours_between_label_dates'")
+                    exit(1)
+                    
+    # End filling "timestamp_basename_dict"
+    #for key, item in timestamp_topics_dict.items():
+    #    print(key, item)
+    
 
-    min_timestamp = min_timestamp - (max_timestamp - min_timestamp)*extra_x_length #TODO: Make more generic
+    min_timestamp = min_timestamp - (max_timestamp - min_timestamp)*extra_x_length
     max_timestamp = max_timestamp + (max_timestamp - min_timestamp)*extra_x_length
-#TODO: Make more generic
 
     print("max_texts", max_texts)
     print("nr_of_texts_for_max_topic_confidence", nr_of_texts_for_max_topic_confidence)
      #70
      
-    # Give the topics their labels to show to the user and the number for the topic to show to the user
+    # Give the topics the labels to show to the user and the number for the topic to show to the user
     topic_names = []
     show_to_user_nr_topic_index_mapping = {}
     for nr, el in enumerate(obj["topic_model_output"]["topics"]):
@@ -263,8 +285,6 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
 
     topic_sorted_for_id = sorted(obj["topic_model_output"]["topics"], key=lambda t: t["id"])
     timestamps_sorted = sorted(timestamp_topics_dict.keys())
-
-    #scatter_dict_science, year_title_dict_science, max_topic_confidence_science = create_scatter_dict_and_year_title_tuple(document_info)
 
     print("max_topic_confidence", max_topic_confidence)
 
@@ -387,13 +407,13 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     print("Created background")
     
       
-    
+    # For each document, plot its corresponding topics
     nr_of_plotted = 0
     vertical_line_color = "lightgrey"
     bar_height = 0.5
     bar_strength = 0.5
-    
     for timestamp, topic_dict in timestamp_topics_dict.items():
+        #print("timestamp", timestamp)
         original_timestamp = timestamp
         if use_date_format:
             year = timestamp.astype(object).year
@@ -411,7 +431,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             nr_of_texts = len(base_names)
             bar_strength = 3.0
             bar_height = 0.9
-            plt.axvline(x=timestamp, linewidth=bar_strength*nr_of_texts/max_texts, color='lightgrey', zorder = -1000)
+            plt.axvline(x=timestamp, linewidth=bar_strength*nr_of_texts/max_texts, color = [0.5, 0.5, 0.5, 0.5], zorder = -1000)
         elif add_for_coliding_dates:
             bar_strength = 1.0
             bar_height = 1.0
@@ -454,16 +474,20 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 max_weighted_confidence = max_topic_confidence/nr_of_texts_for_max_topic_confidence
                 cw2 = 0.6*confidence/nr_of_texts/max_weighted_confidence
             
-            ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = "black", linewidth=bar_strength)
+            ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = [0.1, 0.1, 0.1, 0.7], linewidth=bar_strength, zorder = -2*cw2)
+                        
+
             
-            
-            s = ax1.scatter([timestamp, timestamp, timestamp], [ty + cw2, ty, ty - cw2], color=[0.5, 0.5, 0.5, 0.5], marker="s", s=cw2*35, facecolor=[1, 1, 1, 0.01], linewidth=0.1)
-            s.set_urls(['https://www.bbc.com/news', 'https://www.dn.se/', 'https://www.dn.se/'])
+            if link_mapping_func:
+                s = ax1.scatter([timestamp, timestamp], [ty + cw2 + cw2*0.5,  ty - cw2 - cw2*0.5], color=[0, 0, 0, 0.5], marker="s", s=cw2*15, facecolor=[1, 1, 1, 0.01], linewidth=0.1, zorder=-cw2)
+                link = link_mapping_func(timestamp_basename_dict[timestamp])
+                s.set_urls([link, link, link])
+                # Can't set urls on lines, only scatter markers. So add three scatter markers with links
     
 
             
             # give labels to the most strong document occurrences
-            if False: #not add_for_coliding_dates:
+            if not add_for_coliding_dates:
                 max_confidence_for_topic_for_year = max_confidence_for_year_dict[(year, topic_index)]
                 base_name = timestamp_basename_dict[original_timestamp]
                 if confidence == max_confidence_for_topic_for_year:

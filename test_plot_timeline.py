@@ -81,6 +81,13 @@ def test_diabetes():
     model_file_2 = "/Users/marsk757/topics2themes/topics2themes/data_folder/diabetes_parsed/topics2themes_exports_folder_created_by_system/65222d18b8c0c1b7fbe2978b_model.json"
     plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_2, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=False, hours_between_label_dates=720, width_vertical_line=0.000000001, extra_x_length=0.001)
     
+def diabetes_link_mapping(name, dict=None):
+    acc_str = "http://127.0.0.1:9080/files/diabetes/pdf/"
+    name_parts = name.split("_")
+    year = name_parts[1]
+    acc_str = acc_str + year + "/" + name.replace(".txt", ".pdf")
+    return acc_str
+    
 def test_diabetes_lemmatised():
 
     outputdir = "plots"
@@ -94,7 +101,7 @@ def test_diabetes_lemmatised():
     # 23-10-08 04:16:23
     file_name_2 = "diabetes-with-clusters-lemmas"
     model_file_2 = "/Users/marsk757/topics2themes/topics2themes/data_folder/diabetes_lemmas/topics2themes_exports_folder_created_by_system/654817afb0e85021c547b821_model.json"
-    plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_2, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=False, hours_between_label_dates=720, width_vertical_line=0.01, extra_x_length=0.001, order_mapping=order_mapping)
+    plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_2, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=False, hours_between_label_dates=720, width_vertical_line=0.01, extra_x_length=0.001, order_mapping=order_mapping, link_mapping_func=diabetes_link_mapping)
     
 #test_climate()
 #test_fc()
