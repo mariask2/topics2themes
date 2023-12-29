@@ -401,9 +401,15 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     
     # lines separating the colors
     if order_mapping:
-        plt.axhline(y=+y_width, linewidth=1, color='black', zorder = -50)
-        for y in ys_when_color_is_updated:
-            plt.axhline(y=-y-y_width, linewidth=0.5, color='black', zorder = -50)
+        separating_color = "mediumpurple"
+        plt.axhline(y=+y_width, linewidth=0.7, color="black", zorder = -50)
+        for y in ys_when_color_is_updated[:-1]:
+            if separating_color == "mediumpurple":
+                separating_color = "darkseagreen"
+            else:
+                separating_color = "mediumpurple"
+            plt.axhline(y=-y-y_width, linewidth=0.7, color=separating_color, zorder = -50)
+        plt.axhline(y=-ys_when_color_is_updated[-1]-y_width, linewidth=0.7, color="black", zorder = -50)
         plt.yticks([+y_width] + [-y-y_width for y in ys_when_color_is_updated], [], minor=False) # Mark color change with y-tick-lines also
         plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted, minor=True)
     else:
@@ -520,7 +526,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     if not os.path.exists(outputdir):
         os.mkdir(outputdir)
     save_to_pdf = os.path.join(outputdir, file_name + ".pdf")
-    save_to_svg = os.path.join(outputdir, file_name + ".svg")
+    save_to_svg = os.path.join(outputdir, file_name + ".html")
         
     print("Save plot in: ", save_to_pdf, "and", save_to_svg)
     plt.savefig(save_to_svg, dpi = 700, transparent=False, format="svg")
