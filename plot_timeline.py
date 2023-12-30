@@ -295,7 +295,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     #plt.figure(figsize = (8.268, 11.693))
     fig, ax1 = plt.subplots(figsize = (11.693, 8.268))
 
-    ax1.set(xlim=(min_timestamp, max_timestamp))
+    ax1.set(xlim=(min_timestamp-20, max_timestamp+20))
     #plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names)
     
     if use_date_format:
@@ -305,11 +305,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         years = [int (a) for a in timestamps_sorted]
         plt.gca().xaxis.set_major_locator(FixedLocator(years))
    
-    ax1.set_xticklabels(ax1.xaxis.get_majorticklabels(), rotation=-90)
-
-    ax1.yaxis.set_label_position("right")
-    ax1.yaxis.tick_right()
+ 
     
+
     
     # Create a color mapping
     """
@@ -334,7 +332,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     current_color_number = 0
     index_for_color_number = 0
     current_simplifyed_color = get_weaker_form_of_named_color("lavender", 0.4)
+    current_stronger_color =  "mediumpurple"
     color_mapping = {} # Mapping from user-shown topic nr:s to colors
+    color_mapping_stronger = {}
     ys_when_color_is_updated = [] # To be able to draw a line between the colors-shifts
     
     
@@ -354,14 +354,17 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             current_color_number, index_for_color_number = update_color(current_color_number, index_for_color_number, order_mapping)
          
             color_mapping[user_topic_nr] = current_simplifyed_color
+            color_mapping_stronger[user_topic_nr] = current_stronger_color
+            
             if current_color_number != previous_color_number: #color is updated
                 ys_when_color_is_updated.append(el)
                 
                 if current_simplifyed_color == get_weaker_form_of_named_color("lavender", 0.4):
                     current_simplifyed_color = get_weaker_form_of_named_color("honeydew", 0.5)
+                    current_stronger_color = "darkseagreen"
                 else:
                     current_simplifyed_color = get_weaker_form_of_named_color("lavender", 0.4)
-            
+                    current_stronger_color = "mediumpurple"
 
             previous_color_number = current_color_number
         else: # Use every other
@@ -375,13 +378,14 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     
     # Make the horizontal colors and lines
     topic_names_resorted = [0]*len(topic_names) # For the y-tick-labels
+    topic_names_resorted_only_numbers = [0]*len(topic_names) # For left side y-tick-labels
     y_width = 0.5
     for user_topic_nr in range(0, len(topic_names), 1):
         
         y = get_y_value_for_user_topic_nr(user_topic_nr, order_mapping_flattened, order_mapping)
         
         topic_names_resorted[y] = topic_names[user_topic_nr]
-        
+        topic_names_resorted_only_numbers[y] = str(user_topic_nr + 1)
         ty = -y
         
         
@@ -391,11 +395,11 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             plt.axhline(y=ty, linewidth=0.9, color='black', zorder = -50)
             
         current_color = color_mapping[user_topic_nr + 1]
+        edgecolor = color_mapping_stronger[user_topic_nr + 1]
         
-        
-        edgecolor = [0.9, 0.9, 0.9, 0.2]
+        #edgecolor = "black" #[0.9, 0.9, 0.9, 0.2]
             
-        ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = edgecolor, linewidth=2, linestyle="solid", zorder = -10000)
+        ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = edgecolor, linewidth=0.1, linestyle="solid", zorder = -10000)
       
     
     
@@ -414,9 +418,35 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted, minor=True)
     else:
         plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted, minor=False)
-    print("Created background")
     
-      
+    ax1.set_xticklabels(ax1.xaxis.get_majorticklabels(), rotation=-90)
+
+    ax1.yaxis.set_label_position("right")
+    ax1.yaxis.tick_right()
+    
+    # Add topic number in small letters to the left
+    for y in range(0, len(topic_names)):
+        ax1.text(min_timestamp-5, -y, order_mapping_flattened[y], fontsize=1)
+        
+    # Make colors markings in the beginning and end of the timeline
+    striped_transpar = 1
+    for y in range(0, len(topic_names)):
+        user_nr = order_mapping_flattened[y]
+        color_to_use = color_mapping_stronger[user_nr]
+        
+        if striped_transpar:
+            color_to_use = get_weaker_form_of_named_color(color_to_use, 0.1)
+        
+        print(color_to_use)
+        ax1.plot([min_timestamp, min_timestamp], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
+        ax1.plot([min_timestamp+5, min_timestamp+5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
+        ax1.plot([max_timestamp, max_timestamp], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
+        ax1.plot([max_timestamp-5, max_timestamp-5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
+        if striped_transpar == 1:
+            striped_transpar = 0
+        else:
+            striped_transpar = 1
+    print("Created background")
     # For each document, plot its corresponding topics
     nr_of_plotted = 0
     vertical_line_color = "lightgrey"
