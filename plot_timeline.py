@@ -14,6 +14,7 @@ from math import modf
 import sys
 import datetime
 import matplotlib
+from collections import Counter
 
 #matplotlib.use('pgf')
 
@@ -69,7 +70,11 @@ def get_weaker_form_of_named_color(color_name, transparancy):
 def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.07, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None):
 
     order_mapping_flattened = flatten_extend(order_mapping)
-
+    counter = Counter(order_mapping_flattened)
+    potentinal_dupblicates = ([dbl for dbl in counter if counter[dbl] > 1])
+    if len(potentinal_dupblicates) > 0:
+        print("There are dublicates in 'order_mapping', remove them. The following: ", potentinal_dupblicates)
+        exit()
     
     if log:
         print("Not yet implemented")
@@ -125,7 +130,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 else:
                     max_decimal_part_for_year[year] = decimal_part
 
-    # Collect all topics for the documents. # Store in document_info, with "base_name" of the document as the key
+    print("Nr of dates found in metadata", len(meta_data_dict.keys()))
+    
+    # Loop through the documents, and collect topics for the documents. # Store in document_info, with "base_name" of the document as the key
     document_info = {}
     max_topic_confidence_for_topic = {}
     for el in obj["topic_model_output"]["documents"]:
@@ -164,6 +171,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
  
         document_info[base_name] = document_topics
 
+    print("Nr of documents found", len(document_info.items()))
     # Create timestamp_topics_dict
     # Where the each element is a key with a timestamp, and
     # which in turn contains a dictionary of confidence for the
@@ -174,7 +182,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     max_confidence_for_year_dict = {}
     timestamp_basename_dict = {} # To be able to connect timestamps to filename
     max_texts = 0
+    
+    latest_timestamp_used_so_far = np.datetime64('0000-01-02')
 
+    total_nr_of_topics_found_in_documents = 0
     for i in range(0, len(timestamps)):
         timestamp = timestamps[i]
         base_names = sorted(meta_data_dict[timestamp]) #Collected unsorted, so need to sort here
@@ -203,11 +214,22 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                             nr_of_texts_for_max_topic_confidence = len(base_names)
         else:
             if use_date_format:
-                part = int(1/len(base_names)*hours_between_label_dates)
-                distance = np.timedelta64(part, 'h')
+                if hours_between_label_dates >= 1:
+                    # TODO: Why divide by len(base_names)?
+                    part = math.ceil(1/len(base_names)*hours_between_label_dates)
+                    if part == 0:
+                        print("Warning the spread seems to be 0.")
+                        exit()
+                    spread_distance = np.timedelta64(part, 'h')
+                    print("Texts with the same timestamp will be spread out with ", spread_distance, "hours")
+                else:
+                    seconds = math.ceil(3600*hours_between_label_dates)
+                    spread_distance = np.timedelta64(seconds, 's')
+                    print("Texts with the same timestamp will be spread out with ", spread_distance, "seconds")
             else:
-                distance = 1/len(base_names) #TODO does not work
+                spread_distance = 1/len(base_names) #TODO does not work
                 exit("SPREAD OUT NOT YET IMPLEMENTED FOR NON_DATES")
+            
             
             # Add one element in timestamp_topics_dict for each basename with topic
             for base_name in base_names:
@@ -215,9 +237,12 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                     year = timestamp.astype(object).year
                 else:
                     year = int(timestamp)
+                
                     
                 if base_name in document_info:
                     for document_topic in document_info[base_name]:
+                            
+                        total_nr_of_topics_found_in_documents = total_nr_of_topics_found_in_documents + 1
                         topic_index = document_topic["topic_index"]
                         topic_confidence = document_topic["topic_confidence"]
                         
@@ -235,7 +260,28 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 #To be able to connect timestamps to filename, for links
                 timestamp_basename_dict[timestamp] = base_name
                 
-                timestamp = timestamp + distance #spread out the documents over the day
+                #Create a new timpestamp to spread out texts that would
+                # otherwise get the same x-vaile over the day
+                old_timestamp = timestamp
+                timestamp = timestamp + spread_distance
+                if timestamp <= latest_timestamp_used_so_far:
+                    print("The timestamps are spread out so much so that they collide with coming texts. Decrease the 'hours_between_label_dates' value when calling the visualisation")
+                    print("timestamp", timestamp)
+                    print("latest_timestamp_used_so_far", latest_timestamp_used_so_far)
+                    exit()
+                latest_timestamp_used_so_far = timestamp
+                
+                if timestamp == old_timestamp:
+                    print("Distance seems to be 0. New timestamp is same as old")
+                    print("old_timestamp", old_timestamp)
+                    print("timestamp", timestamp)
+                    print("spread_distance", spread_distance)
+                    exit()
+                if timestamp in timestamp_topics_dict:
+                    print(timestamp_topics_dict)
+                    print("The new timestamp is already in the dictionary. Something seems to be wrong")
+                    print("timestamp", timestamp)
+                    exit()
                 timestamp_topics_dict[timestamp] = {}
                 
                 # Check that it is not spread out so much that
@@ -246,11 +292,17 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                     print("Original year: ", timestamp_year, ". Year after spread out:", timestamp_year_before_spreading_out)
                     print("ERROR: The documents are spread out so much that documents from one year will be plotted for the next year in the graph. Lower the parameter 'hours_between_label_dates'")
                     exit(1)
-                    
-    # End filling "timestamp_basename_dict"
-    #for key, item in timestamp_topics_dict.items():
-    #    print(key, item)
+               
+    print("total_nr_of_topics_found_in_documents", total_nr_of_topics_found_in_documents)
     
+    
+    # End filling "timestamp_basename_dict"
+    nr_of_plots_to_make = 0
+    for key, item in timestamp_topics_dict.items():
+        nr_of_plots_to_make = nr_of_plots_to_make + len(item)
+    print("Nr of timestamps", len(timestamp_topics_dict.keys()))
+    #print(timestamp_topics_dict.keys())
+    print("nr_of_plots_to_make", nr_of_plots_to_make)
 
     min_timestamp = min_timestamp - (max_timestamp - min_timestamp)*extra_x_length
     max_timestamp = max_timestamp + (max_timestamp - min_timestamp)*extra_x_length
@@ -384,6 +436,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         
         y = get_y_value_for_user_topic_nr(user_topic_nr, order_mapping_flattened, order_mapping)
         
+        print(topic_names_resorted[y])
+        print(topic_names[user_topic_nr])
         topic_names_resorted[y] = topic_names[user_topic_nr]
         topic_names_resorted_only_numbers[y] = str(user_topic_nr + 1)
         ty = -y
@@ -395,12 +449,16 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             plt.axhline(y=ty, linewidth=0.9, color='black', zorder = -50)
             
         current_color = color_mapping[user_topic_nr + 1]
-        edgecolor = color_mapping_stronger[user_topic_nr + 1]
+        
+        if order_mapping:
+            edgecolor = color_mapping_stronger[user_topic_nr + 1]
         
         #edgecolor = "black" #[0.9, 0.9, 0.9, 0.2]
-            
-        ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = edgecolor, linewidth=0.1, linestyle="solid", zorder = -10000)
-      
+        if order_mapping:
+            ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = edgecolor, linewidth=0.1, linestyle="solid", zorder = -10000)
+        else:
+            ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, linewidth=0.1, linestyle="solid", zorder = -10000)
+        
     
     
     # lines separating the colors
@@ -425,27 +483,33 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     ax1.yaxis.tick_right()
     
     # Add topic number in small letters to the left
+    
     for y in range(0, len(topic_names)):
-        ax1.text(min_timestamp-5, -y, order_mapping_flattened[y], fontsize=1)
+        if order_mapping_flattened:
+            ax1.text(min_timestamp-5, -y, order_mapping_flattened[y], fontsize=1)
+        else:
+            ax1.text(min_timestamp-5, -y, str(y+1), fontsize=1)
         
     # Make colors markings in the beginning and end of the timeline
-    striped_transpar = 1
-    for y in range(0, len(topic_names)):
-        user_nr = order_mapping_flattened[y]
-        color_to_use = color_mapping_stronger[user_nr]
-        
-        if striped_transpar:
-            color_to_use = get_weaker_form_of_named_color(color_to_use, 0.1)
-        
-        print(color_to_use)
-        ax1.plot([min_timestamp, min_timestamp], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
-        ax1.plot([min_timestamp+5, min_timestamp+5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
-        ax1.plot([max_timestamp, max_timestamp], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
-        ax1.plot([max_timestamp-5, max_timestamp-5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
-        if striped_transpar == 1:
-            striped_transpar = 0
-        else:
-            striped_transpar = 1
+    if order_mapping:
+        striped_transpar = 1
+        for y in range(0, len(topic_names)):
+            user_nr = order_mapping_flattened[y]
+            color_to_use = color_mapping_stronger[user_nr]
+            
+            if striped_transpar:
+                color_to_use = get_weaker_form_of_named_color(color_to_use, 0.1)
+            
+            print(color_to_use)
+            ax1.plot([min_timestamp, min_timestamp], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
+            ax1.plot([min_timestamp+5, min_timestamp+5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
+            ax1.plot([max_timestamp, max_timestamp], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
+            ax1.plot([max_timestamp-5, max_timestamp-5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
+            if striped_transpar == 1:
+                striped_transpar = 0
+            else:
+                striped_transpar = 1
+            
     print("Created background")
     # For each document, plot its corresponding topics
     nr_of_plotted = 0
@@ -545,7 +609,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 print(timestamp, end=" ", flush=True)
     
         # For debug
-        if nr_of_plotted > 200:
+        if nr_of_plotted > 400:
             #break
             pass
     

@@ -1,4 +1,5 @@
 import plot_timeline
+import os
 
 def test_allergy():
     model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/DMW_allergy/topics2themes_exports_folder_created_by_system/6457fd84ed221bd819d9710c_model.json"
@@ -101,11 +102,30 @@ def test_diabetes_lemmatised():
     # 23-10-08 04:16:23
     file_name_2 = "diabetes-with-clusters-lemmas"
     model_file_2 = "/Users/marsk757/topics2themes/topics2themes/data_folder/diabetes_lemmas/topics2themes_exports_folder_created_by_system/654817afb0e85021c547b821_model.json"
-    plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_2, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=False, hours_between_label_dates=720, width_vertical_line=0.01, extra_x_length=0.001, order_mapping=order_mapping, link_mapping_func=diabetes_link_mapping)
+    plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_2, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=False, hours_between_label_dates=480, width_vertical_line=0.01, extra_x_length=0.001, order_mapping=order_mapping, link_mapping_func=diabetes_link_mapping)
+
+def get_url_marknad(doc_path, dict=None):
+    base_name = os.path.basename(doc_path)
+    sp = base_name.split("_")
+    url =  "https://data.riksdagen.se/dokument/" + sp[2] + ".html"
+    return url
     
+def test_marknad_agenda2030():
+
+    outputdir = "plots"
+    add_for_coliding_dates = False
+    label_length = 60
+    use_date_format = True
+    metadata_file_name = "/Users/marsk757/topics2themes/topics2themes/data_folder/marknad-titel_agenda2030/topics2themes_exports_folder_created_by_system/all_files.csv"
+        
+    order_mapping = [[1, 10, 16, 19, 25, 26], 2, 3, [4, 8], [5, 7, 28], [6, 9, 14], 11, 12, 13,  15, [17, 24], [18, 21],  20, 22, 23, 27]
+    file_name_2 = "marknad-titel_agenda2030"
+    model_file_2 = "/Users/marsk757/topics2themes/topics2themes/data_folder/marknad-titel_agenda2030/topics2themes_exports_folder_created_by_system/65931a29dae79880c480b92b_model.json"
+    plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_2, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=False, hours_between_label_dates=0.001, width_vertical_line=0.01, extra_x_length=0.001, order_mapping=order_mapping, link_mapping_func=get_url_marknad)
 #test_climate()
 #test_fc()
 #test_marknad()
 #test_allergy()
 #test_diabetes()
 test_diabetes_lemmatised()
+#test_marknad_agenda2030()
