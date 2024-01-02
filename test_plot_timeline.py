@@ -102,7 +102,7 @@ def test_diabetes_lemmatised():
     # 23-10-08 04:16:23
     file_name_2 = "diabetes-with-clusters-lemmas"
     model_file_2 = "/Users/marsk757/topics2themes/topics2themes/data_folder/diabetes_lemmas/topics2themes_exports_folder_created_by_system/654817afb0e85021c547b821_model.json"
-    plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_2, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=False, hours_between_label_dates=480, width_vertical_line=0.01, extra_x_length=0.001, order_mapping=order_mapping, link_mapping_func=diabetes_link_mapping, bar_transparency=0.1)
+    plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_2, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=False, hours_between_label_dates=28, width_vertical_line=0.001, order_mapping=order_mapping, link_mapping_func=diabetes_link_mapping, bar_transparency=0.2, bar_width=0.1)
 
 def get_url_marknad(doc_path, dict=None):
     base_name = os.path.basename(doc_path)

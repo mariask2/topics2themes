@@ -67,7 +67,7 @@ def get_weaker_form_of_named_color(color_name, transparancy):
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_transparency=0.5):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_transparency=0.5, bar_width = 1):
 
     order_mapping_flattened = flatten_extend(order_mapping)
     counter = Counter(order_mapping_flattened)
@@ -219,7 +219,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             if use_date_format:
                 if hours_between_label_dates >= 1:
                     # TODO: Why divide by len(base_names)?
-                    part = math.ceil(1/len(base_names)*hours_between_label_dates)
+                    #part = math.ceil(1/len(base_names)*hours_between_label_dates)
+                    part = abs(hours_between_label_dates)
                     if part == 0:
                         print("Warning the spread seems to be 0.")
                         exit()
@@ -291,11 +292,14 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 # documents from one year will be plotted for the next year
                 timestamp_year = timestamp.astype(object).year
                 timestamp_year_before_spreading_out = timestamps[i].astype(object).year
+                
+                #TODO. Consider to add this
+                """
                 if timestamp_year != timestamp_year_before_spreading_out:
                     print("Original year: ", timestamp_year, ". Year after spread out:", timestamp_year_before_spreading_out)
                     print("ERROR: The documents are spread out so much that documents from one year will be plotted for the next year in the graph. Lower the parameter 'hours_between_label_dates'")
                     exit(1)
-               
+                """
     print("total_nr_of_topics_found_in_documents", total_nr_of_topics_found_in_documents)
     
     
@@ -522,9 +526,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     print("Created background")
     # For each document, plot its corresponding topics
     nr_of_plotted = 0
-    vertical_line_color = "lightgrey"
     bar_height = 0.5
-    bar_strength = 1
+    
     for timestamp, topic_dict in timestamp_topics_dict.items():
         #print("timestamp", timestamp)
         original_timestamp = timestamp
@@ -542,23 +545,17 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         if add_for_coliding_dates and vertical_line_to_represent_nr_of_documents: #make the line width represent the number of documents
             base_names = meta_data_dict[timestamp]
             nr_of_texts = len(base_names)
-            bar_strength = 3.0
+            bar_width = 3.0
             bar_height = 0.9
-            plt.axvline(x=timestamp, linewidth=bar_strength*nr_of_texts/max_texts, color = [0.5, 0.5, 0.5, 0.5], zorder = -1000)
+            plt.axvline(x=timestamp, linewidth=bar_width*nr_of_texts/max_texts, color = [0, 0, 0, 0], zorder = -1000)
         elif add_for_coliding_dates:
-            bar_strength = 1.0
+            bar_width = 1.0
             bar_height = 1.0
             
             plt.axvline(x=int(timestamp), linewidth=0.1, color='gainsboro', zorder = -1000)
         else:
             plt.axvline(x=timestamp, linewidth=width_vertical_line, color= [0.9, 0.9, 0.9, 1], zorder = -1000)
         
-        """
-        if vertical_line_color == "lightgrey":
-            vertical_line_color = "gainsboro"
-        else:
-            vertical_line_color = "lightgrey"
-        """
         
         # Plot the occurrences of topics in the documents
         for topic_index, confidence in topic_dict.items():
@@ -590,11 +587,11 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 cw2 = 0.6*confidence/nr_of_texts/max_weighted_confidence
             
             # The actual vertical bar showing the strength of the topic for the text
-            ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = [0, 0, 0, bar_transparency], linewidth=bar_strength, zorder = -2*cw2)
+            ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = [0, 0, 0, bar_transparency], linewidth=bar_width, zorder = -2*cw2)
                         
 
-            s1 = ax1.scatter([timestamp], [ty], color=[0, 0, 0, bar_transparency], facecolor=[0, 0, 0, bar_transparency/5], marker="X", s=cw2*60, linewidth=0.1, zorder=-cw2)
-            s2 = ax1.scatter([timestamp, timestamp], [ty + cw2,  ty - cw2], color=[0, 0, 0, bar_transparency], facecolor=[0, 0, 0, bar_transparency/10], marker="s", s=cw2*5, linewidth=0.1, zorder=-cw2)
+            s1 = ax1.scatter([timestamp], [ty], color=[0, 0, 0, bar_transparency], facecolor=[0, 0, 0, bar_transparency/5], marker="o", s=cw2*cw2*400, linewidth=0.1, zorder=-cw2*20)
+            s2 = ax1.scatter([timestamp, timestamp], [ty + cw2,  ty - cw2], color=[0, 0, 0, bar_transparency], facecolor=[0, 0, 0, bar_transparency], marker="s", s=cw2*bar_width*1.5, linewidth=0.1, zorder=-cw2)
 
             if link_mapping_func:
                 #s = ax1.scatter([timestamp, timestamp], [ty + cw2,  ty - cw2], color=[0, 0, 0, 0.5], facecolor=[0, 0, 0, 0.5], marker="s", s=cw2*10, linewidth=0.1, zorder=-cw2)
@@ -623,7 +620,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     
         # For debug
         if nr_of_plotted > 400:
-            #break
+            break
             pass
     
     plt.yticks(fontsize=9)
