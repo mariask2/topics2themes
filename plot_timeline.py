@@ -67,7 +67,7 @@ def get_weaker_form_of_named_color(color_name, transparancy):
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.07, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_transparency=0.5):
 
     order_mapping_flattened = flatten_extend(order_mapping)
     counter = Counter(order_mapping_flattened)
@@ -213,6 +213,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                             max_topic_confidence = timestamp_topics_dict[timestamp][topic_index]
                             nr_of_texts_for_max_topic_confidence = len(base_names)
         else:
+            if hours_between_label_dates == 0:
+                print("'hours_between_label_dates' needs to be larger than 0")
+                exit()
             if use_date_format:
                 if hours_between_label_dates >= 1:
                     # TODO: Why divide by len(base_names)?
@@ -442,7 +445,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         topic_names_resorted_only_numbers[y] = str(user_topic_nr + 1)
         ty = -y
         
-        
+        # The horizontal line in the middle of each topic
         plt.axhline(y=ty, linewidth=0.1, color='black', zorder = -50)
         if add_for_coliding_dates and vertical_line_to_represent_nr_of_documents: # To make the discrete times more connected
             # make the horizontal line thicker
@@ -455,7 +458,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         
         #edgecolor = "black" #[0.9, 0.9, 0.9, 0.2]
         if order_mapping:
-            ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = edgecolor, linewidth=0.1, linestyle="solid", zorder = -10000)
+            ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = edgecolor, linewidth=0.2, linestyle="solid", zorder = -10000)
         else:
             ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, linewidth=0.1, linestyle="solid", zorder = -10000)
         
@@ -464,14 +467,14 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     # lines separating the colors
     if order_mapping:
         separating_color = "mediumpurple"
-        plt.axhline(y=+y_width, linewidth=0.7, color="black", zorder = -50)
+        plt.axhline(y=+y_width, linewidth=1, color="black", zorder = -40) #start with a black line
         for y in ys_when_color_is_updated[:-1]:
             if separating_color == "mediumpurple":
                 separating_color = "darkseagreen"
             else:
                 separating_color = "mediumpurple"
-            plt.axhline(y=-y-y_width, linewidth=0.7, color=separating_color, zorder = -50)
-        plt.axhline(y=-ys_when_color_is_updated[-1]-y_width, linewidth=0.7, color="black", zorder = -50)
+            plt.axhline(y=-y-y_width, linewidth=1, color=separating_color, zorder = -40)
+        plt.axhline(y=-ys_when_color_is_updated[-1]-y_width, linewidth=1, color="black", zorder = -40) # End with a black line
         plt.yticks([+y_width] + [-y-y_width for y in ys_when_color_is_updated], [], minor=False) # Mark color change with y-tick-lines also
         plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted, minor=True)
     else:
@@ -486,11 +489,12 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     
     for y in range(0, len(topic_names)):
         if order_mapping_flattened:
-            ax1.text(min_timestamp-5, -y, order_mapping_flattened[y], fontsize=1)
+            ax1.text(min_timestamp-5, -y, order_mapping_flattened[y], fontsize=2)
         else:
-            ax1.text(min_timestamp-5, -y, str(y+1), fontsize=1)
+            ax1.text(min_timestamp-5, -y, str(y+1), fontsize=2)
         
     # Make colors markings in the beginning and end of the timeline
+    # And extra horisonal, dotted lines
     if order_mapping:
         striped_transpar = 1
         for y in range(0, len(topic_names)):
@@ -501,10 +505,15 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 color_to_use = get_weaker_form_of_named_color(color_to_use, 0.1)
             
             print(color_to_use)
-            ax1.plot([min_timestamp, min_timestamp], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
-            ax1.plot([min_timestamp+5, min_timestamp+5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
-            ax1.plot([max_timestamp, max_timestamp], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
-            ax1.plot([max_timestamp-5, max_timestamp-5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=0.5, zorder=-500)
+            ax1.plot([min_timestamp+5, min_timestamp+5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=1, zorder=-500, linestyle="dotted")
+            ax1.plot([min_timestamp+10, min_timestamp+10], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=1, zorder=-500, linestyle="dotted")
+            ax1.plot([max_timestamp-5, max_timestamp-5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=1, zorder=-500, linestyle="dotted")
+            ax1.plot([max_timestamp-10, max_timestamp-10], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=1, zorder=-500, linestyle="dotted")
+            
+            if striped_transpar:
+                ax1.axhline(-y-0.5, color=color_mapping_stronger[user_nr], zorder=-50, linewidth=1, linestyle="dotted")
+            else:
+                ax1.axhline(-y-0.5, color=color_mapping_stronger[user_nr], zorder=-50, linewidth=0.1, linestyle="solid")
             if striped_transpar == 1:
                 striped_transpar = 0
             else:
@@ -580,15 +589,19 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 max_weighted_confidence = max_topic_confidence/nr_of_texts_for_max_topic_confidence
                 cw2 = 0.6*confidence/nr_of_texts/max_weighted_confidence
             
-            ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = [0, 0, 0, 0.5], linewidth=bar_strength, zorder = -2*cw2)
+            # The actual vertical bar showing the strength of the topic for the text
+            ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = [0, 0, 0, bar_transparency], linewidth=bar_strength, zorder = -2*cw2)
                         
 
-            s = ax1.scatter([timestamp], [ty], color=[0, 0, 0, 0.5], facecolor=[0, 0, 0, 0.1], marker="X", s=cw2*60, linewidth=0.1, zorder=-cw2)
+            s1 = ax1.scatter([timestamp], [ty], color=[0, 0, 0, bar_transparency], facecolor=[0, 0, 0, bar_transparency/5], marker="X", s=cw2*60, linewidth=0.1, zorder=-cw2)
+            s2 = ax1.scatter([timestamp, timestamp], [ty + cw2,  ty - cw2], color=[0, 0, 0, bar_transparency], facecolor=[0, 0, 0, bar_transparency/10], marker="s", s=cw2*5, linewidth=0.1, zorder=-cw2)
+
             if link_mapping_func:
                 #s = ax1.scatter([timestamp, timestamp], [ty + cw2,  ty - cw2], color=[0, 0, 0, 0.5], facecolor=[0, 0, 0, 0.5], marker="s", s=cw2*10, linewidth=0.1, zorder=-cw2)
                 
                 link = link_mapping_func(timestamp_basename_dict[timestamp])
-                s.set_urls([link, link, link])
+                s1.set_urls([link, link]) # Seems to be a bug, you need at least two links, although it's only one scatter point
+                s2.set_urls([link, link])
                 # Can't set urls on lines, only scatter markers. So add three scatter markers with links
     
 
