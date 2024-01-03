@@ -436,6 +436,12 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
 
     
     # Make the horizontal colors and lines
+    
+    min_year = min_timestamp.astype(object).year + 1
+    max_year = max_timestamp.astype(object).year + 1
+    years_to_plot = range(min_year, max_year)
+    
+                
     topic_names_resorted = [0]*len(topic_names) # For the y-tick-labels
     topic_names_resorted_only_numbers = [0]*len(topic_names) # For left side y-tick-labels
     y_width = 0.5
@@ -460,12 +466,27 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         if order_mapping:
             edgecolor = color_mapping_stronger[user_topic_nr + 1]
         
-        #edgecolor = "black" #[0.9, 0.9, 0.9, 0.2]
+        # The colored filling
         if order_mapping:
             ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, edgecolor = edgecolor, linewidth=0.2, linestyle="solid", zorder = -10000)
         else:
             ax1.fill([min_timestamp, max_timestamp, max_timestamp, min_timestamp, min_timestamp], [ty - y_width, ty - y_width, ty + y_width, ty + y_width, ty - y_width], color = current_color, linewidth=0.1, linestyle="solid", zorder = -10000)
-        
+            if current_color == get_weaker_form_of_named_color("lavender", 0.4):
+            #TODO: a better solution for comparing to get_weaker_form_of_named_color
+                dots_color = "mediumpurple"
+            else:
+                dots_color = "darkseagreen"
+                    
+            for year_to_plot in years_to_plot:
+                first_day = np.datetime64(str(year_to_plot) + "-01-01")
+                middle_year = np.datetime64(str(year_to_plot) + "-07-01")
+                ax1.scatter(first_day,-y-y_width, color=dots_color, zorder=-50, marker='D', s=0.1)
+                ax1.scatter(middle_year,-y-y_width, color=dots_color, zorder=-50, marker='D', s=0.01)
+    for year_to_plot in years_to_plot:
+        first_day = np.datetime64(str(year_to_plot) + "-01-01")
+        middle_year = np.datetime64(str(year_to_plot) + "-07-01")
+        ax1.scatter(first_day, 0+y_width, color="mediumpurple", zorder=-50, marker='D', s=0.1)
+        ax1.scatter(middle_year, 0+y_width, color="mediumpurple", zorder=-50, marker='D', s=0.01)
     
     
     # lines separating the colors
@@ -498,7 +519,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             ax1.text(min_timestamp-5, -y, str(y+1), fontsize=2)
         
     # Make colors markings in the beginning and end of the timeline
-    # And extra horisonal, dotted lines
+    # And extra horisonal, dotted lines when 'order_mapping' is given
     if order_mapping:
         striped_transpar = 1
         for y in range(0, len(topic_names)):
@@ -508,20 +529,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             if striped_transpar:
                 color_to_use = get_weaker_form_of_named_color(color_to_use, 0.1)
             
-            """
-            ax1.plot([min_timestamp+5, min_timestamp+5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=1, zorder=-500, linestyle="dotted")
-            ax1.plot([min_timestamp+10, min_timestamp+10], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=1, zorder=-500, linestyle="dotted")
-            ax1.plot([max_timestamp-5, max_timestamp-5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=1, zorder=-500, linestyle="dotted")
-            ax1.plot([max_timestamp-10, max_timestamp-10], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=1, zorder=-500, linestyle="dotted")
-            """
             
             if y not in ys_when_color_is_updated:
-                min_year = min_timestamp.astype(object).year + 1
-                max_year = max_timestamp.astype(object).year + 1
-                years_to_plot = range(min_year, max_year)
-                
-                
-                
                 if striped_transpar:
                     for year_to_plot in years_to_plot:
                         first_day = np.datetime64(str(year_to_plot) + "-01-01")
