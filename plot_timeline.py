@@ -67,7 +67,7 @@ def get_weaker_form_of_named_color(color_name, transparancy):
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_transparency=0.5, bar_width = 1):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400):
 
     order_mapping_flattened = flatten_extend(order_mapping)
     counter = Counter(order_mapping_flattened)
@@ -508,16 +508,28 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             if striped_transpar:
                 color_to_use = get_weaker_form_of_named_color(color_to_use, 0.1)
             
-            print(color_to_use)
+            """
             ax1.plot([min_timestamp+5, min_timestamp+5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=1, zorder=-500, linestyle="dotted")
             ax1.plot([min_timestamp+10, min_timestamp+10], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=1, zorder=-500, linestyle="dotted")
             ax1.plot([max_timestamp-5, max_timestamp-5], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=1, zorder=-500, linestyle="dotted")
             ax1.plot([max_timestamp-10, max_timestamp-10], [-y+0.5, -y-0.5], '-', markersize=0, color = color_to_use, linewidth=1, zorder=-500, linestyle="dotted")
+            """
             
-            if striped_transpar:
-                ax1.axhline(-y-0.5, color=color_mapping_stronger[user_nr], zorder=-50, linewidth=1, linestyle="dotted")
-            else:
-                ax1.axhline(-y-0.5, color=color_mapping_stronger[user_nr], zorder=-50, linewidth=0.1, linestyle="solid")
+            if y not in ys_when_color_is_updated:
+                min_year = min_timestamp.astype(object).year + 1
+                max_year = max_timestamp.astype(object).year + 1
+                years_to_plot = range(min_year, max_year)
+                
+                
+                
+                if striped_transpar:
+                    for year_to_plot in years_to_plot:
+                        first_day = np.datetime64(str(year_to_plot) + "-01-01")
+                        middle_year = np.datetime64(str(year_to_plot) + "-07-01")
+                        ax1.scatter(first_day,-y-0.5, color=color_mapping_stronger[user_nr], facecolor=color_mapping[user_nr], zorder=-50, marker='D', s=0.1)
+                        ax1.scatter(middle_year,-y-0.5, color=color_mapping_stronger[user_nr], facecolor=color_mapping[user_nr], zorder=-50, marker='D', s=0.01)
+                else:
+                    ax1.axhline(-y-0.5, color=color_mapping_stronger[user_nr], zorder=-50, linewidth=0.1, linestyle="solid")
             if striped_transpar == 1:
                 striped_transpar = 0
             else:
@@ -590,7 +602,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             ax1.plot([timestamp, timestamp], [ty + cw2, ty - cw2], '-', markersize=0, color = [0, 0, 0, bar_transparency], linewidth=bar_width, zorder = -2*cw2)
                         
 
-            s1 = ax1.scatter([timestamp], [ty], color=[0, 0, 0, bar_transparency], facecolor=[0, 0, 0, bar_transparency/5], marker="o", s=cw2*cw2*400, linewidth=0.1, zorder=-cw2*20)
+            s1 = ax1.scatter([timestamp], [ty], color=[0, 0, 0, bar_transparency], facecolor=[0, 0, 0, bar_transparency/5], marker="o", s=cw2*cw2*circle_scale_factor, linewidth=0.1, zorder=-cw2*20)
             s2 = ax1.scatter([timestamp, timestamp], [ty + cw2,  ty - cw2], color=[0, 0, 0, bar_transparency], facecolor=[0, 0, 0, bar_transparency], marker="s", s=cw2*bar_width*1.5, linewidth=0.1, zorder=-cw2)
 
             if link_mapping_func:
@@ -620,7 +632,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     
         # For debug
         if nr_of_plotted > 400:
-            break
+            #break
             pass
     
     plt.yticks(fontsize=9)
