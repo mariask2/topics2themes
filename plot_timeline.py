@@ -67,7 +67,7 @@ def get_weaker_form_of_named_color(color_name, transparancy):
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=24, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400):
 
     order_mapping_flattened = flatten_extend(order_mapping)
     counter = Counter(order_mapping_flattened)
@@ -320,6 +320,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
      
     # Give the topics the labels to show to the user and the number for the topic to show to the user
     topic_names = []
+    topic_info_for_table = [] # a sceleton of a latex table
     show_to_user_nr_topic_index_mapping = {}
     for nr, el in enumerate(obj["topic_model_output"]["topics"]):
         topic_index = el["id"]
@@ -338,12 +339,17 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             repr_terms.append(term_to_pick_as_rep.strip())
             
         third_length = int(len(repr_terms)/3)
-        topic_name = ", ".join(repr_terms)[0:label_length].strip() +"..."
+        topic_name = ", ".join(repr_terms)[0:label_length]
+        if topic_name[-1] == " ":
+            topic_name = topic_name[:-1] + "."
+        if topic_name[-2] == "," or topic_name[-2] == " ":
+            topic_name = topic_name[:-2] + ".."
+        topic_name = topic_name + "..."
         nr_str = str(nr + 1)
         if len(nr_str) == 1:
             nr_str = " " + nr_str
         topic_names.append(nr_str + ": " + topic_name)
-
+        topic_info_for_table.append(((nr + 1), ", ".join(repr_terms[:10])))
 
 
     topic_sorted_for_id = sorted(obj["topic_model_output"]["topics"], key=lambda t: t["id"])
@@ -481,7 +487,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 first_day = np.datetime64(str(year_to_plot) + "-01-01")
                 middle_year = np.datetime64(str(year_to_plot) + "-07-01")
                 ax1.scatter(first_day,-y-y_width, color=dots_color, zorder=-50, marker='D', s=0.1)
-                ax1.scatter(middle_year,-y-y_width, color=dots_color, zorder=-50, marker='D', s=0.01)
+                ax1.scatter(middle_year,-y-y_width, color=dots_color, zorder=-50, marker='D', s=0.005)
     for year_to_plot in years_to_plot:
         first_day = np.datetime64(str(year_to_plot) + "-01-01")
         middle_year = np.datetime64(str(year_to_plot) + "-07-01")
@@ -544,6 +550,13 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             else:
                 striped_transpar = 1
             
+    # Make table with topic terms
+    text_for_table_name = os.path.join(outputdir, file_name + "_table.txt")
+    with open(text_for_table_name, "w") as tftn:
+        if order_mapping:
+            for nr in order_mapping_flattened:
+                tftn.write(str(topic_info_for_table[nr-1][0]) + " & " + topic_info_for_table[nr-1][1] + " \\\\ \n")
+    
     print("Created background")
     # For each document, plot its corresponding topics
     nr_of_plotted = 0
@@ -615,8 +628,6 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             s2 = ax1.scatter([timestamp, timestamp], [ty + cw2,  ty - cw2], color=[0, 0, 0, bar_transparency], facecolor=[0, 0, 0, bar_transparency], marker="s", s=cw2*bar_width*1.5, linewidth=0.1, zorder=-cw2)
 
             if link_mapping_func:
-                #s = ax1.scatter([timestamp, timestamp], [ty + cw2,  ty - cw2], color=[0, 0, 0, 0.5], facecolor=[0, 0, 0, 0.5], marker="s", s=cw2*10, linewidth=0.1, zorder=-cw2)
-                
                 link = link_mapping_func(timestamp_basename_dict[timestamp])
                 s1.set_urls([link, link]) # Seems to be a bug, you need at least two links, although it's only one scatter point
                 s2.set_urls([link, link])
@@ -650,12 +661,17 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
 
     if not os.path.exists(outputdir):
         os.mkdir(outputdir)
-    save_to_pdf = os.path.join(outputdir, file_name + ".pdf")
-    save_to_svg = os.path.join(outputdir, file_name + ".html")
-        
-    print("Save plot in: ", save_to_pdf, "and", save_to_svg)
-    plt.savefig(save_to_svg, dpi = 700, transparent=False, format="svg")
-    plt.savefig(save_to_pdf, dpi = 700, transparent=False, format="pdf")
+    
+    if link_mapping_func:
+        save_to_svg = os.path.join(outputdir, file_name + ".html")
+        plt.savefig(save_to_svg, dpi = 700, transparent=False, format="svg")
+        print("Save plot in: ", save_to_svg)
+    else:
+        save_to_pdf = os.path.join(outputdir, file_name + ".pdf")
+        plt.savefig(save_to_pdf, dpi = 700, transparent=False, format="pdf")
+        print("Save plot in: ", save_to_pdf)
+    
+    
 
 
 

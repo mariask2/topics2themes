@@ -37,9 +37,9 @@ def test_climate():
     file_name = "climate-news.pdf"
     add_for_coliding_dates = False
     label_length = 20
-    log = True
+    #log = True
 
-    plot_timeline.make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates, label_length, log=log)
+    plot_timeline.make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates, label_length=40, circle_scale_factor=1000, bar_width=0.1, bar_transparency=0.3)
 
 def test_fc():
     model_file = "/Users/marsk757/topics2themes/topics2themes/data_folder/framtidens-kultur_automatiskt/topics2themes_exports_folder_created_by_system/"
@@ -93,7 +93,7 @@ def test_diabetes_lemmatised():
 
     outputdir = "plots"
     add_for_coliding_dates = False
-    label_length = 40
+    label_length = 30
     use_date_format = True
     metadata_file_name = "/Users/marsk757/topics2themes/topics2themes/data_folder/diabetes_lemmas/topics2themes_exports_folder_created_by_system/all_files.csv"
         
@@ -103,7 +103,7 @@ def test_diabetes_lemmatised():
     file_name_2 = "diabetes-with-clusters-lemmas"
     model_file_2 = "/Users/marsk757/topics2themes/topics2themes/data_folder/diabetes_lemmas/topics2themes_exports_folder_created_by_system/654817afb0e85021c547b821_model.json"
     plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_2, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=False, hours_between_label_dates=28, width_vertical_line=0.001, order_mapping=order_mapping, link_mapping_func=diabetes_link_mapping, bar_transparency=0.2, bar_width=0.1)
-
+    #link_mapping_func=diabetes_link_mapping
 def get_url_marknad(doc_path, dict=None):
     base_name = os.path.basename(doc_path)
     sp = base_name.split("_")
@@ -119,13 +119,18 @@ def test_marknad_agenda2030():
     metadata_file_name = "/Users/marsk757/topics2themes/topics2themes/data_folder/marknad-titel_agenda2030/topics2themes_exports_folder_created_by_system/all_files.csv"
         
     order_mapping = [[1, 10, 16, 19, 25, 26], 2, 3, [4, 8], [5, 7, 28], [6, 9, 14], 11, 12, 13,  15, [17, 24], [18, 21],  20, 22, 23, 27]
+    file_name_1 = "marknad-titel_agenda2030_common_scaling"
     file_name_2 = "marknad-titel_agenda2030"
     model_file_2 = "/Users/marsk757/topics2themes/topics2themes/data_folder/marknad-titel_agenda2030/topics2themes_exports_folder_created_by_system/65931a29dae79880c480b92b_model.json"
-    plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_2, add_for_coliding_dates, label_length, use_date_format=use_date_format, log=False, hours_between_label_dates=0.001, width_vertical_line=0.01, order_mapping=order_mapping, link_mapping_func=get_url_marknad, bar_transparency=0.05)
-#test_climate()
+    plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_1, add_for_coliding_dates, label_length, use_date_format=use_date_format,  hours_between_label_dates=0.001, width_vertical_line=0.01, order_mapping=None, link_mapping_func=get_url_marknad, use_separate_max_confidence_for_each_topic=False, bar_width=0.1, bar_transparency=0.08, circle_scale_factor=1300)
+    plot_timeline.make_plot(model_file_2, outputdir, metadata_file_name, file_name_2, add_for_coliding_dates, label_length, use_date_format=use_date_format,  hours_between_label_dates=0.001, width_vertical_line=0.01, order_mapping=None, link_mapping_func=get_url_marknad, use_separate_max_confidence_for_each_topic=True, bar_width=0.1, bar_transparency=0.08, circle_scale_factor=1300)
+
+    
+    
+test_climate()
 #test_fc()
 #test_marknad()
 #test_allergy()
 #test_diabetes()
-test_diabetes_lemmatised()
+#test_diabetes_lemmatised()
 #test_marknad_agenda2030()
