@@ -67,7 +67,7 @@ def get_weaker_form_of_named_color(color_name, transparancy):
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}):
 
     order_mapping_flattened = flatten_extend(order_mapping)
     counter = Counter(order_mapping_flattened)
@@ -328,6 +328,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         terms = [t['term'] for t in el['topic_terms']]
         repr_terms = []
         for t in terms:
+            
             term_to_pick_as_rep = "123456789123456789123456789123456789123456789123456789"
             #for s in t.split("/"):
             #    if "_" in s:
@@ -338,6 +339,12 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                     term_to_pick_as_rep = s.strip()
             repr_terms.append(term_to_pick_as_rep.strip())
             
+        if translation_dict:
+            repr_terms_new = repr_terms[:9]
+            repr_terms = []
+            for r in repr_terms_new:
+                repr_terms.append(translation_dict[r.strip()])
+            #term_to_pick_as_rep = translation_dict[term_to_pick_as_rep.strip()]
         third_length = int(len(repr_terms)/3)
         topic_name = ", ".join(repr_terms)[0:label_length]
         if topic_name[-1] == " ":
@@ -361,6 +368,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     fig, ax1 = plt.subplots(figsize = (11.693, 8.268))
 
     ax1.set(xlim=(min_timestamp-20, max_timestamp+20))
+    ax1.set(ylim=(-len(topic_names) - 0.5, 0.5))
     #plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names)
     
     if use_date_format:
@@ -511,8 +519,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     else:
         plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted, minor=False)
     
-    ax1.set_xticklabels(ax1.xaxis.get_majorticklabels(), rotation=-90)
-
+    #ax1.set_xticklabels(ax1.xaxis.get_majorticklabels(), rotation=270)
+    plt.xticks(rotation=270)
     ax1.yaxis.set_label_position("right")
     ax1.yaxis.tick_right()
     
