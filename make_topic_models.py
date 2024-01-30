@@ -8,7 +8,7 @@ from sklearn.decomposition import NMF, LatentDirichletAllocation
 from nltk.tokenize import sent_tokenize
 from html.parser import HTMLParser
 from pathlib import Path
-
+from nltk.metrics.distance import edit_distance
 import os
 import numpy as np
 import json
@@ -348,13 +348,33 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
     
 
 def should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length_conf):
+
     filtered_text = []
     for ch in text.strip():
         if ch.isalpha() or (ch == " " and (len(filtered_text) > 0 and filtered_text[-1] != " ")): #don't add several white space in a row
             filtered_text.append(ch.lower())
     filtered_text_text = "".join(filtered_text).strip()
     filtered_text_text = filtered_text_text.replace("  ", " ")
+    
+    for previous in previous_texts:
+        if filtered_text_text in previous:
+            return False
             
+        """
+        start_index = 0
+        for i in range(0, n_gram_length_conf):
+            if start_index + n_gram_length_conf > len(filtered_text_text):
+                break
+            sub_string = filtered_text_text[start_index: start_index + n_gram_length_conf]
+            if sub_string in previous:
+                return False
+            start_index = start_index + n_gram_length_conf
+        """
+    else:
+        previous_texts.add(filtered_text_text)
+        return True
+        
+
     sp = filtered_text_text.split(" ")
     add_this_file, found_duplicate = is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
 
