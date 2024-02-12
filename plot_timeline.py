@@ -67,7 +67,7 @@ def get_weaker_form_of_named_color(color_name, transparancy):
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}, user_defined_min_timestamp=None, user_defined_max_timestamp=None):
 
     order_mapping_flattened = flatten_extend(order_mapping)
     counter = Counter(order_mapping_flattened)
@@ -310,7 +310,11 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     print("Nr of timestamps", len(timestamp_topics_dict.keys()))
     #print(timestamp_topics_dict.keys())
     print("nr_of_plots_to_make", nr_of_plots_to_make)
-
+    
+    if user_defined_min_timestamp:
+        min_timestamp = np.datetime64(user_defined_min_timestamp)
+    if user_defined_max_timestamp:
+        max_timestamp = np.datetime64(user_defined_max_timestamp)
     min_timestamp = min_timestamp - (max_timestamp - min_timestamp)*extra_x_length
     max_timestamp = max_timestamp + (max_timestamp - min_timestamp)*extra_x_length
 
@@ -340,10 +344,16 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             repr_terms.append(term_to_pick_as_rep.strip())
             
         if translation_dict:
-            repr_terms_new = repr_terms[:9]
+            repr_terms_new = repr_terms[:10] #TODO: Don't hard-code the length
             repr_terms = []
             for r in repr_terms_new:
-                repr_terms.append(translation_dict[r.strip()])
+                r_strip = r.strip()
+                if r_strip in translation_dict:
+                    term_to_add = translation_dict[r_strip]
+                else:
+                    term_to_add = r_strip
+                    print(r_strip)
+                repr_terms.append(term_to_add)
             #term_to_pick_as_rep = translation_dict[term_to_pick_as_rep.strip()]
         third_length = int(len(repr_terms)/3)
         topic_name = ", ".join(repr_terms)[0:label_length]
@@ -502,7 +512,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         ax1.scatter(first_day, 0+y_width, color="mediumpurple", zorder=-50, marker='D', s=0.1)
         ax1.scatter(middle_year, 0+y_width, color="mediumpurple", zorder=-50, marker='D', s=0.01)
     
-    
+    print(topic_names_resorted)
+    print(len(topic_names_resorted))
     # lines separating the colors
     if order_mapping:
         separating_color = "mediumpurple"
@@ -515,7 +526,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             plt.axhline(y=-y-y_width, linewidth=1, color=separating_color, zorder = -40)
         plt.axhline(y=-ys_when_color_is_updated[-1]-y_width, linewidth=1, color="black", zorder = -40) # End with a black line
         plt.yticks([+y_width] + [-y-y_width for y in ys_when_color_is_updated], [], minor=False) # Mark color change with y-tick-lines also
-        plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted, minor=True)
+        plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted)
     else:
         plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted, minor=False)
     
