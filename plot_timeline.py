@@ -91,7 +91,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     # Collect "meta_data_dict"
     # In "meta_data_dict": Each item contains a date and the list of documents (basename for document) associated
     # with this date. E.g.
-    # 1964-01-01 ['Diabetes_1964_vol014_nr001_0023.txt', 'Diabetes_1964_vol014_nr001_0020.txt', 'Diabetes_1964_vol014_nr001_0025.txt', 'Diabetes_1964_vol014_nr001_0009.txt', 'Diabetes_1964_vol014_nr001_0006.txt', 'Diabetes_1964_vol014_nr001_0010.txt', 'Diabetes_1964_vol014_nr001_0024.txt', 'Diabetes_1964_vol014_nr001_0016.txt', 'Diabetes_1964_vol014_nr001_0013.txt', 'Diabetes_1964_vol014_nr001_0007.txt', 'Diabetes_1964_vol014_nr001_0018.txt', 'Diabetes_1964_vol014_nr001_0022.txt', 'Diabetes_1964_vol014_nr001_0015.txt', 'Diabetes_1964_vol014_nr001_0011.txt', 'Diabetes_1964_vol014_nr001_0004.txt', 'Diabetes_1964_vol014_nr001_0014.txt', 'Diabetes_1964_vol014_nr001_0012.txt', 'Diabetes_1964_vol014_nr001_0032.txt', 'Diabetes_1964_vol014_nr001_0008.txt', 'Diabetes_1964_vol014_nr001_0019.txt', 'Diabetes_1964_vol014_nr001_0035.txt']
+    # 1964-01-01 ['file_1.txt', 'file_2.txt', 'file_3.txt']
     
     meta_data_dict = {}
     max_topic_confidence = 0
