@@ -15,6 +15,7 @@ import sys
 import datetime
 import matplotlib
 from collections import Counter
+import re
 
 #matplotlib.use('pgf')
 
@@ -67,7 +68,7 @@ def get_weaker_form_of_named_color(color_name, transparancy):
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}, user_defined_min_timestamp=None, user_defined_max_timestamp=None):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}, user_defined_min_timestamp=None, user_defined_max_timestamp=None, order_colors=None):
 
     order_mapping_flattened = flatten_extend(order_mapping)
     counter = Counter(order_mapping_flattened)
@@ -412,7 +413,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     
     
     previous_color_number = 0
-    current_color_number = 0
+    current_color_number = 0 # index that is counted
     index_for_color_number = 0
     current_simplifyed_color = get_weaker_form_of_named_color("lavender", 0.4)
     current_stronger_color =  "mediumpurple"
@@ -420,6 +421,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     color_mapping_stronger = {}
     ys_when_color_is_updated = [] # To be able to draw a line between the colors-shifts
     
+    # Only used if order_colors is given
+    current_index_in_order_colors = 0
+    how_much_weaker = 0.02
     
     for el in range(0, len(topic_names)):
         if order_mapping:
@@ -436,10 +440,18 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             
             current_color_number, index_for_color_number = update_color(current_color_number, index_for_color_number, order_mapping)
          
-            color_mapping[user_topic_nr] = current_simplifyed_color
-            color_mapping_stronger[user_topic_nr] = current_stronger_color
-            
+            if not order_colors: # no color given by the user
+                color_mapping[user_topic_nr] = current_simplifyed_color
+                color_mapping_stronger[user_topic_nr] = current_stronger_color
+            else:
+                color_mapping_stronger[user_topic_nr] = order_colors[current_index_in_order_colors]
+                color_mapping[user_topic_nr] = get_weaker_form_of_named_color(order_colors[current_index_in_order_colors], 0.09 + how_much_weaker)
+                how_much_weaker = how_much_weaker * -1
             if current_color_number != previous_color_number: #color is updated
+                
+                current_index_in_order_colors = current_index_in_order_colors + 1
+                how_much_weaker = 0.02
+                
                 ys_when_color_is_updated.append(el)
                 
                 if current_simplifyed_color == get_weaker_form_of_named_color("lavender", 0.4):
@@ -518,12 +530,13 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     if order_mapping:
         separating_color = "mediumpurple"
         plt.axhline(y=+y_width, linewidth=1, color="black", zorder = -40) #start with a black line
-        for y in ys_when_color_is_updated[:-1]:
-            if separating_color == "mediumpurple":
-                separating_color = "darkseagreen"
-            else:
-                separating_color = "mediumpurple"
-            plt.axhline(y=-y-y_width, linewidth=1, color=separating_color, zorder = -40)
+        if not order_colors:
+            for y in ys_when_color_is_updated[:-1]:
+                if separating_color == "mediumpurple":
+                    separating_color = "darkseagreen"
+                else:
+                    separating_color = "mediumpurple"
+                plt.axhline(y=-y-y_width, linewidth=1, color=separating_color, zorder = -40)
         plt.axhline(y=-ys_when_color_is_updated[-1]-y_width, linewidth=1, color="black", zorder = -40) # End with a black line
         plt.yticks([+y_width] + [-y-y_width for y in ys_when_color_is_updated], [], minor=False) # Mark color change with y-tick-lines also
         plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names_resorted)
@@ -536,7 +549,6 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     ax1.yaxis.tick_right()
     
     # Add topic number in small letters to the left
-    
     for y in range(0, len(topic_names)):
         if order_mapping_flattened:
             ax1.text(min_timestamp-5, -y, order_mapping_flattened[y], fontsize=2)
@@ -685,6 +697,19 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         save_to_svg = os.path.join(outputdir, file_name + ".html")
         plt.savefig(save_to_svg, dpi = 700, transparent=False, format="svg")
         print("Save plot in: ", save_to_svg)
+        
+        with open(os.path.join(outputdir, file_name + ".html")) as orig_file:
+            content = orig_file.read()
+            p = re.compile('<a xlink:href=".*">')
+            matches = p.findall(content)
+            for m in matches:
+                link = m.replace("<a xlink:href=\"", "").replace("\">", "")
+                popup_link = f'<a href="#" onclick="window.open(\'{link}\', \'yourWindowName\', \'width=200,height=150\');">'
+                content = content.replace(m, popup_link)
+            with open(os.path.join(outputdir, file_name + "_popup.html"), "w") as write_to:
+                write_to.write(content)
+                
+        
     else:
         save_to_pdf = os.path.join(outputdir, file_name + ".pdf")
         plt.savefig(save_to_pdf, dpi = 700, transparent=False, format="pdf")
