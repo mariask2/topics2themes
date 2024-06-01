@@ -70,6 +70,8 @@ def get_weaker_form_of_named_color(color_name, transparancy):
 
 def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}, user_defined_min_timestamp=None, user_defined_max_timestamp=None, order_colors=None):
 
+    link_found_terms_mapping = {}
+                    
     order_mapping_flattened = flatten_extend(order_mapping)
     counter = Counter(order_mapping_flattened)
     potentinal_dupblicates = ([dbl for dbl in counter if counter[dbl] > 1])
@@ -184,6 +186,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     timestamp_basename_dict = {} # To be able to connect timestamps to filename
     max_texts = 0
     
+    # Experimental, to show tool tip
+    timestamp_terms_found_dict = {}
+    
     latest_timestamp_used_so_far = np.datetime64('0000-01-02')
 
     total_nr_of_topics_found_in_documents = 0
@@ -192,6 +197,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         base_names = sorted(meta_data_dict[timestamp]) #Collected unsorted, so need to sort here
         
         timestamp_topics_dict[timestamp] = {}
+        
+        # Experimental to show tool tip
+        timestamp_terms_found_dict[timestamp] = {}
+        
         
         if timestamp < min_timestamp:
             min_timestamp = timestamp
@@ -253,6 +262,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                         
                         timestamp_topics_dict[timestamp][topic_index] = topic_confidence
                         
+                        # Experimental code, to show tooltip
+                        timestamp_terms_found_dict[timestamp][topic_index] = document_topic["terms_found_in_text"]
+                        
                         # Gather max values
                         if topic_confidence > max_topic_confidence:
                             max_topic_confidence = topic_confidence
@@ -288,6 +300,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                     print("timestamp", timestamp)
                     exit()
                 timestamp_topics_dict[timestamp] = {}
+                
+                
+                # Experimental for tool tip
+                timestamp_terms_found_dict[timestamp] = {}
                 
                 # Check that it is not spread out so much that
                 # documents from one year will be plotted for the next year
@@ -594,6 +610,8 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     bar_height = 0.5
     
     for timestamp, topic_dict in timestamp_topics_dict.items():
+        
+    
         #print("timestamp", timestamp)
         original_timestamp = timestamp
         if use_date_format:
@@ -663,9 +681,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                 s1.set_urls([link, link]) # Seems to be a bug, you need at least two links, although it's only one scatter point
                 s2.set_urls([link, link])
                 # Can't set urls on lines, only scatter markers. So add three scatter markers with links
-    
-
-            
+                
+                link_found_terms_mapping[link] = timestamp_terms_found_dict[timestamp]
+               
             # give labels to the most strong document occurrences
             if False: #not add_for_coliding_dates:
                 max_confidence_for_topic_for_year = max_confidence_for_year_dict[(year, topic_index)]
@@ -704,8 +722,24 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             matches = p.findall(content)
             for m in matches:
                 link = m.replace("<a xlink:href=\"", "").replace("\">", "")
-                popup_link = f'<a href="#" onclick="window.open(\'{link}\', \'yourWindowName\', \'width=200,height=150\');">'
+                
+                
+                
+                title_part = ""
+                if link in link_found_terms_mapping:
+                    
+                    tool_tip_dict = {}
+                    for key, value in link_found_terms_mapping[link].items():
+                        # Another index is shown to the user, so use this index in the tool tip
+                        # Also add by + 1, because start with 1 (not 0) to user
+                        tool_tip_dict[show_to_user_nr_topic_index_mapping[key] + 1] = value
+                    
+                    title_part = "<title>" + str(tool_tip_dict) + "</title>"
+                popup_link = f'<a href="#" onclick="window.open(\'{link}\', \'yourWindowName\', \'width=200,height=150\');">{title_part}'
                 content = content.replace(m, popup_link)
+                
+
+                    
             with open(os.path.join(outputdir, file_name + "_popup.html"), "w") as write_to:
                 write_to.write(content)
                 
