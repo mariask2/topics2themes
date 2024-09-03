@@ -19,6 +19,7 @@ import argparse
 import datetime
 import time
 import math
+from rapidfuzz import fuzz
 
 
 
@@ -168,7 +169,7 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
                   manual_collocations.append(word.strip())
                   
     
-    documents, meta_data_list = read_and_first_process_documents(properties.DATA_LABEL_LIST,
+    documents, meta_data_list, removed_list = read_and_first_process_documents(properties.DATA_LABEL_LIST,
                                             data_set_name,
                                           properties.REMOVE_DUPLICATES, properties.MIN_NGRAM_LENGTH_FOR_DUPLICATE, properties.CLEANING_METHOD,
                                           manual_collocations,
@@ -177,6 +178,14 @@ def run_make_topic_models(mongo_con, properties, path_slash_format, model_name, 
     meta_export_dir = os.path.join(path_slash_format, EXPORT_DIR)
     if not os.path.exists(meta_export_dir):
         os.mkdir(meta_export_dir)
+        
+    removed_list = sorted(removed_list)
+    removed_file_name = os.path.join(meta_export_dir, "removed_files.txt")
+    with open(removed_file_name, "w") as rfn:
+        for (removed_line, removed_file_name) in removed_list:
+            rfn.write("***" + removed_line + "\t" + str(removed_file_name)+ "\n")
+            
+        
     metdata_filename = os.path.join(meta_export_dir, ALL_FILES)
     with open(metdata_filename, "w") as metadata_file:
         for el in meta_data_list:
@@ -276,7 +285,7 @@ def replace_collocations(documents, manual_collocations):
             if collocation in replaced_with_collocations:
                 to_replace = collocation.replace(" ", COLLOCATION_BINDER)
                 replaced_with_collocations = replaced_with_collocations.replace(collocation, to_replace)
-                print(to_replace, replaced_with_collocations)
+                #print(to_replace, replaced_with_collocations)
         documents[i] = replaced_with_collocations
         """
         # TODO: solve with regexp instead, to cover capitalization
@@ -285,9 +294,15 @@ def replace_collocations(documents, manual_collocations):
 ######
 # Read documents from file
 ######
-
+def remove_non_alpha_take_substring(text):
+    non_alpha =  "".join(([ch for ch in list(text) if ch.isalpha() or ch==" "]))
+    sub_part = non_alpha[:100] + non_alpha[-100:]
+    return sub_part
+    
 def read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, remove_duplicates):
-    previous_texts = set()
+    previous_texts = []
+    previous_duplicates = []
+    
     previous_sub_texts = set()
     nr_of_removed_files = 0
             
@@ -302,26 +317,33 @@ def read_documents(data_label_list, data_set_name, cleaning_method, n_gram_lengt
         files_to_read.extend([(x, data_info[DATA_LABEL]) for x in Path(data_dir).rglob("*.txt")])
 
     if remove_duplicates:
+        #files_to_read = sorted(files_to_read, key = lambda x: os.stat(x[0]).st_size, reverse=True)
         files_to_read = sorted(files_to_read, key = lambda x: os.stat(x[0]).st_size, reverse=True)
 
     documents = []
     meta_data_list = []
+    removed_list = []
     if remove_duplicates:
         print("Searching for duplicates ")
+    file_nr = 0
     for f, user_label in files_to_read:
+        if file_nr % 1000 == 0:
+            print(file_nr)
         base_name = os.path.basename(f)
         opened = open(f)
         text = opened.read()
         
-        if (not remove_duplicates) or should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length_conf):
+        if (not remove_duplicates) or should_text_be_added_2(text, previous_texts, previous_duplicates): #should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length_conf):
             documents.append(text)
             meta_data_list.append({LABEL: user_label, BASE_NAME: base_name, FULL_NAME: f})
         else:
             nr_of_removed_files = nr_of_removed_files + 1
+            removed_list.append((text.replace("\n", " "), f))
         opened.close()
+        file_nr += 1
         
     print("The number of removed files is: ", nr_of_removed_files, " Adjust the parameter 'MIN_NGRAM_LENGTH_FOR_DUPLICATE' for more or less strict duplicate removal." )
-    return documents, meta_data_list
+    return documents, meta_data_list, removed_list
 
 def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts):
     found_duplicate = None
@@ -345,6 +367,26 @@ def is_duplicate(filtered_text_text, sp, n_gram_length_conf, previous_sub_texts)
     #if not add_this_file:
     #    print(" ".join(sub_tokens))
     return add_this_file, found_duplicate
+
+# https://github.com/rapidfuzz/RapidFuzz
+def should_text_be_added_2(text, previous_texts, previous_duplicates):
+    sub_text = remove_non_alpha_take_substring(text)
+    
+    for previous_duplicate in previous_duplicates:
+        ratio = fuzz.QRatio(sub_text, previous_duplicate)
+        if ratio > 90:
+            return False
+            
+    for previous in previous_texts:
+        ratio = fuzz.QRatio(sub_text, previous)
+        if ratio > 90:
+            previous_duplicates.append(sub_text)
+            return False
+        
+    previous_texts.append(sub_text)
+    if len(previous_texts) > 500:
+        del previous_texts[0]
+    return True
     
 
 def should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length_conf):
@@ -357,6 +399,9 @@ def should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length
     filtered_text_text = filtered_text_text.replace("  ", " ")
     
     for previous in previous_texts:
+        ratio = fuzz.QRatio(filtered_text_text, previous)
+        if ratio > 90:
+            return False
         if filtered_text_text in previous:
             return False
             
@@ -394,12 +439,12 @@ def should_text_be_added(text, previous_texts, previous_sub_texts, n_gram_length
 def read_and_first_process_documents(data_label_list, data_set_name, whether_to_remove_duplicates, n_gram_length_conf, cleaning_method, manual_collocations, read_function):
     
     if read_function == None: # Then use default
-        documents, meta_data_list = read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, whether_to_remove_duplicates)
+        documents, meta_data_list, removed_list = read_documents(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, whether_to_remove_duplicates)
     else:
-        documents, meta_data_list = read_function(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, whether_to_remove_duplicates)
+        documents, meta_data_list, removed_list = read_function(data_label_list, data_set_name, cleaning_method, n_gram_length_conf, whether_to_remove_duplicates)
 
     replace_collocations(documents, manual_collocations)
-    return documents, meta_data_list
+    return documents, meta_data_list, removed_list
     
     
 ###########
