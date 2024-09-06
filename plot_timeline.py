@@ -68,7 +68,7 @@ def get_weaker_form_of_named_color(color_name, transparancy):
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}, user_defined_min_timestamp=None, user_defined_max_timestamp=None, order_colors=None):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}, user_defined_min_timestamp=None, user_defined_max_timestamp=None, order_colors=None, fontsize=9):
 
     link_found_terms_mapping = {}
                     
@@ -704,7 +704,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             #break
             pass
     
-    plt.yticks(fontsize=9)
+    plt.yticks(fontsize=fontsize)
     plt.tight_layout()
 
 
