@@ -68,7 +68,7 @@ def get_weaker_form_of_named_color(color_name, transparancy):
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}, user_defined_min_timestamp=None, user_defined_max_timestamp=None, order_colors=None, fontsize=9, save_wordrain_format_path=None):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}, user_defined_min_timestamp=None, user_defined_max_timestamp=None, order_colors=None, fontsize=9, save_wordrain_format_path=None, popup_link=False):
 
     link_found_terms_mapping = {}
                     
@@ -215,9 +215,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     for i in range(0, len(timestamps)):
         timestamp = timestamps[i]
         
-        if np.datetime64(timestamp) > max_timestamp_user_defined:
+        if user_defined_max_timestamp and np.datetime64(timestamp) > max_timestamp_user_defined:
             continue
-        if np.datetime64(timestamp) < min_timestamp_user_defined:
+        if user_defined_min_timestamp and np.datetime64(timestamp) < min_timestamp_user_defined:
             continue
 
         base_names = sorted(meta_data_dict[timestamp]) #Collected unsorted, so need to sort here
@@ -759,30 +759,31 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         plt.savefig(save_to_svg, dpi = 700, transparent=False, format="svg")
         print("Save plot in: ", save_to_svg)
         
-        with open(os.path.join(outputdir, file_name + ".html")) as orig_file:
-            content = orig_file.read()
-            p = re.compile('<a xlink:href=".*">')
-            matches = p.findall(content)
-            for m in matches:
-                link = m.replace("<a xlink:href=\"", "").replace("\">", "")
-                                
-                title_part = ""
-                if link in link_found_terms_mapping:
+        if popup_link:
+            with open(os.path.join(outputdir, file_name + ".html")) as orig_file:
+                content = orig_file.read()
+                p = re.compile('<a xlink:href=".*">')
+                matches = p.findall(content)
+                for m in matches:
+                    link = m.replace("<a xlink:href=\"", "").replace("\">", "")
+                                    
+                    title_part = ""
+                    if link in link_found_terms_mapping:
+                        
+                        tool_tip_dict = {}
+                        for key, value in link_found_terms_mapping[link].items():
+                            # Another index is shown to the user, so use this index in the tool tip
+                            # Also add by + 1, because start with 1 (not 0) to user
+                            tool_tip_dict[show_to_user_nr_topic_index_mapping[key] + 1] = value
+                        
+                        title_part = "<title>" + str(tool_tip_dict) + "</title>"
+                    popup_link = f'<a href="#" onclick="window.open(\'{link}\', \'yourWindowName\', \'width=200,height=150\');">{title_part}'
+                    content = content.replace(m, popup_link)
                     
-                    tool_tip_dict = {}
-                    for key, value in link_found_terms_mapping[link].items():
-                        # Another index is shown to the user, so use this index in the tool tip
-                        # Also add by + 1, because start with 1 (not 0) to user
-                        tool_tip_dict[show_to_user_nr_topic_index_mapping[key] + 1] = value
-                    
-                    title_part = "<title>" + str(tool_tip_dict) + "</title>"
-                popup_link = f'<a href="#" onclick="window.open(\'{link}\', \'yourWindowName\', \'width=200,height=150\');">{title_part}'
-                content = content.replace(m, popup_link)
-                
 
-                    
-            with open(os.path.join(outputdir, file_name + "_popup.html"), "w") as write_to:
-                write_to.write(content)
+                        
+                with open(os.path.join(outputdir, file_name + "_popup.html"), "w") as write_to:
+                    write_to.write(content)
                 
         
     else:
