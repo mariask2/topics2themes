@@ -68,7 +68,7 @@ def get_weaker_form_of_named_color(color_name, transparancy):
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}, user_defined_min_timestamp=None, user_defined_max_timestamp=None, order_colors=None, fontsize=9):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}, user_defined_min_timestamp=None, user_defined_max_timestamp=None, order_colors=None, fontsize=9, save_wordrain_format_path=None):
 
     link_found_terms_mapping = {}
                     
@@ -138,11 +138,17 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     # Loop through the documents, and collect topics for the documents. # Store in document_info, with "base_name" of the document as the key
     document_info = {}
     max_topic_confidence_for_topic = {}
+    
+    if save_wordrain_format_path:
+        wordrain_format_texts = {}
+        
     for el in obj["topic_model_output"]["documents"]:
+        #print(el["text"]) #HERE
+    
         base_name = el["base_name"]
         filtered_labels = [l for l in el["additional_labels"] if l.replace(".", "").replace("-", "").replace(":", "").replace("T", "").isdigit()]
         if len(filtered_labels) == 0:
-            print("No timestamp", el)
+            print("No labels. You need to have a label (with a timestamp) to produce the timelines", el)
             exit()
             
         str_date = filtered_labels[0]
@@ -155,6 +161,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         else:
             timestamp = float(str_date)
       
+        # For each topic belonging to a document
         document_topics = []
         for t in el["document_topics"]:
             topic_info = {}
@@ -171,9 +178,17 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             else:
                 if topic_info["topic_confidence"] > max_topic_confidence_for_topic[topic_info["topic_index"]]:
                     max_topic_confidence_for_topic[topic_info["topic_index"]] = topic_info["topic_confidence"]
- 
+                    
+            # Only if saving to wordrain format
+            if save_wordrain_format_path:
+                if topic_info["topic_index"] not in wordrain_format_texts:
+                    wordrain_format_texts[topic_info["topic_index"]] = []
+                wordrain_format_texts[topic_info["topic_index"]].append((str(timestamp) + "_" + base_name, el["text"]))
+                    
+                
         document_info[base_name] = document_topics
 
+    
     print("Nr of documents found", len(document_info.items()))
     # Create timestamp_topics_dict
     # Where the each element is a key with a timestamp, and
@@ -191,9 +206,20 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     
     latest_timestamp_used_so_far = np.datetime64('0000-01-02')
 
+    if user_defined_min_timestamp:
+        min_timestamp_user_defined = np.datetime64(user_defined_min_timestamp)
+    if user_defined_max_timestamp:
+        max_timestamp_user_defined = np.datetime64(user_defined_max_timestamp)
+
     total_nr_of_topics_found_in_documents = 0
     for i in range(0, len(timestamps)):
         timestamp = timestamps[i]
+        
+        if np.datetime64(timestamp) > max_timestamp_user_defined:
+            continue
+        if np.datetime64(timestamp) < min_timestamp_user_defined:
+            continue
+
         base_names = sorted(meta_data_dict[timestamp]) #Collected unsorted, so need to sort here
         
         timestamp_topics_dict[timestamp] = {}
@@ -235,11 +261,11 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
                         print("Warning the spread seems to be 0.")
                         exit()
                     spread_distance = np.timedelta64(part, 'h')
-                    print("Texts with the same timestamp will be spread out with ", spread_distance, "hours")
+                    #print("Texts with the same timestamp will be spread out with ", spread_distance, "hours")
                 else:
                     seconds = math.ceil(3600*hours_between_label_dates)
                     spread_distance = np.timedelta64(seconds, 's')
-                    print("Texts with the same timestamp will be spread out with ", spread_distance, "seconds")
+                    #print("Texts with the same timestamp will be spread out with ", spread_distance, "seconds")
             else:
                 spread_distance = 1/len(base_names) #TODO does not work
                 exit("SPREAD OUT NOT YET IMPLEMENTED FOR NON_DATES")
@@ -332,9 +358,15 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         min_timestamp = np.datetime64(user_defined_min_timestamp)
     if user_defined_max_timestamp:
         max_timestamp = np.datetime64(user_defined_max_timestamp)
+        
+    
     min_timestamp = min_timestamp - (max_timestamp - min_timestamp)*extra_x_length
     max_timestamp = max_timestamp + (max_timestamp - min_timestamp)*extra_x_length
 
+    print("min_timestamp", min_timestamp)
+    print("max_timestamp", max_timestamp)
+
+    
     print("max_texts", max_texts)
     print("nr_of_texts_for_max_topic_confidence", nr_of_texts_for_max_topic_confidence)
      #70
@@ -343,9 +375,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     topic_names = []
     topic_info_for_table = [] # a sceleton of a latex table
     show_to_user_nr_topic_index_mapping = {}
-    for nr, el in enumerate(obj["topic_model_output"]["topics"]):
+    for nr, (id, el) in enumerate(sorted([(el["id"], el) for el in obj["topic_model_output"]["topics"]])):
         topic_index = el["id"]
-        show_to_user_nr_topic_index_mapping[topic_index] = nr
+        show_to_user_nr_topic_index_mapping[topic_index] = nr # The original
         terms = [t['term'] for t in el['topic_terms']]
         repr_terms = []
         for t in terms:
@@ -385,7 +417,18 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         topic_names.append(nr_str + ": " + topic_name)
         topic_info_for_table.append(((nr + 1), ", ".join(repr_terms[:10])))
 
-
+        if save_wordrain_format_path:
+            
+            folder_name_wordrain_format_path = os.path.join(save_wordrain_format_path, nr_str.replace(" ","") + "-" + topic_name.replace(".","").replace(" ", "-").replace(",", "")[:20])
+            if not os.path.exists(folder_name_wordrain_format_path):
+                os.mkdir(folder_name_wordrain_format_path)
+            for (label, text) in wordrain_format_texts[topic_index]:
+                file_name_wordrain_format_path = os.path.join(folder_name_wordrain_format_path, label)
+                with open(file_name_wordrain_format_path, "w") as fn_file_name_wordrain_format_path:
+                    fn_file_name_wordrain_format_path.write(text)
+    
+                
+                        
     topic_sorted_for_id = sorted(obj["topic_model_output"]["topics"], key=lambda t: t["id"])
     timestamps_sorted = sorted(timestamp_topics_dict.keys())
 
@@ -394,9 +437,9 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
     #plt.figure(figsize = (8.268, 11.693))
     fig, ax1 = plt.subplots(figsize = (11.693, 8.268))
 
-    ax1.set(xlim=(min_timestamp-20, max_timestamp+20))
+    #ax1.set(xlim=(min_timestamp-20, max_timestamp+20))
     ax1.set(ylim=(-len(topic_names) - 0.5, 0.5))
-    #plt.yticks([-y for y in range(0, len(topic_names), 1)], topic_names)
+
     
     if use_date_format:
         plt.gca().xaxis.set_major_locator(mdates.YearLocator())
@@ -722,9 +765,7 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
             matches = p.findall(content)
             for m in matches:
                 link = m.replace("<a xlink:href=\"", "").replace("\">", "")
-                
-                
-                
+                                
                 title_part = ""
                 if link in link_found_terms_mapping:
                     
