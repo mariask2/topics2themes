@@ -68,8 +68,21 @@ def get_weaker_form_of_named_color(color_name, transparancy):
 # Start
 #####
 
-def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}, user_defined_min_timestamp=None, user_defined_max_timestamp=None, order_colors=None, fontsize=9, save_wordrain_format_path=None, popup_link=False):
+def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coliding_dates=False, label_length=20, normalise_for_nr_of_texts=False, use_date_format=True, vertical_line_to_represent_nr_of_documents=False, log=False, hours_between_label_dates=1, width_vertical_line=0.0000001, extra_x_length=0.005, order_mapping=None, use_separate_max_confidence_for_each_topic=True, link_mapping_func=None, link_mapping_dict=None, bar_width=0.1, bar_transparency=0.2, circle_scale_factor=400, translation_dict = {}, user_defined_min_timestamp=None, user_defined_max_timestamp=None, order_colors=None, fontsize=9, save_wordrain_format_path=None, popup_link=False, min_confidence_proportion_to_plot = 0.0):
 
+    if save_wordrain_format_path is not None:
+        if not os.path.exists(save_wordrain_format_path):
+            print(save_wordrain_format_path, "is not an existing file path")
+            exit(1)
+            
+        WORDRAIN_FOLDER = "from_time_line"
+        folder_for_word_rain = os.path.join(save_wordrain_format_path, WORDRAIN_FOLDER)
+        if os.path.exists(folder_for_word_rain):
+            print("There is already a folder with exported content from the timeline:", folder_for_word_rain)
+            print("Remove this folder")
+            exit()
+        os.mkdir(folder_for_word_rain)
+    
     link_found_terms_mapping = {}
                     
     order_mapping_flattened = flatten_extend(order_mapping)
@@ -419,7 +432,10 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
 
         if save_wordrain_format_path:
             
-            folder_name_wordrain_format_path = os.path.join(save_wordrain_format_path, nr_str.replace(" ","") + "-" + topic_name.replace(".","").replace(" ", "-").replace(",", "")[:20])
+            
+            
+            folder_name_wordrain_format_path = os.path.join(folder_for_word_rain, nr_str.replace(" ","") + "-" + topic_name.replace(".","").replace(" ", "-").replace(",", "")[:20])
+            
             if not os.path.exists(folder_name_wordrain_format_path):
                 os.mkdir(folder_name_wordrain_format_path)
             for (label, text) in wordrain_format_texts[topic_index]:
@@ -687,24 +703,20 @@ def make_plot(model_file, outputdir, metadata_file_name, file_name, add_for_coli
         for topic_index, confidence in topic_dict.items():
             topic_nr_show_to_user = show_to_user_nr_topic_index_mapping[topic_index]
             y_value_for_topic_nr = get_y_value_for_user_topic_nr(topic_nr_show_to_user, order_mapping_flattened, order_mapping)
-                 
+               
             max_confidence_for_topic = max_topic_confidence_for_topic[topic_index]
+            
+            min_confidence_proportion_to_plot
+            
+            confidence_proportion = confidence/max_confidence_for_topic
+            if confidence_proportion < min_confidence_proportion_to_plot:
+                continue
+
             ty = -y_value_for_topic_nr
             if use_separate_max_confidence_for_each_topic:
                 cw2 = bar_height*confidence/max_confidence_for_topic
             else:
                 cw2 = bar_height*confidence/max_topic_confidence
-            
-            if log:
-                if confidence < 0.1:
-                    continue # Don't plot very small values
-                multiplied_confidence = confidence*10
-                if multiplied_confidence < 1:
-                    print("To small confidence to plot", multiplied_confidence, confidence)
-                    exit()
-                cw2 = bar_height*math.log(multiplied_confidence, 1000)/math.log(10*max_topic_confidence, 1000)
-
-
             
             if add_for_coliding_dates and normalise_for_nr_of_texts:
                 base_names = meta_data_dict[timestamp]
